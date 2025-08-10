@@ -51,7 +51,8 @@ export default function Clients() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/clients?limit=100');
+      console.log('Loading ALL clients...');
+      const response = await fetch('/api/clients'); // No limits - fetch everything
       
       if (!response.ok) {
         const errorData = await response.json();
