@@ -199,12 +199,12 @@ export default function Jobs() {
     return new Date(dateString).toLocaleDateString();
   };
 
-  // Filter jobs by search term - check ALL possible name fields
+  // Filter jobs by search term - check ALL possible name fields, safely handle objects
   const filteredJobs = (jobs || []).filter(job =>
-    (job.job_number || job.generated_job_id || job.reference || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (job.client?.name || job.client_name || job.client_company || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (job.recipient?.name || job.recipient_name || job.defendant_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (job.description || job.notes || '').toLowerCase().includes(searchTerm.toLowerCase())
+    safeString(job.job_number || job.generated_job_id || job.reference).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    safeString(job.client?.name || job.client_name || job.client_company).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    safeString(job.recipient?.name || job.recipient_name || job.defendant_name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    safeString(job.description || job.notes).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (error) {
