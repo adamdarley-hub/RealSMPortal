@@ -13,6 +13,7 @@ import Invoices from "./pages/Invoices";
 import Clients from "./pages/Clients";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import ApiConfig from "./pages/ApiConfig";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
