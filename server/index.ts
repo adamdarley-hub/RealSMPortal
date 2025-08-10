@@ -47,6 +47,83 @@ export function createServer() {
     res.json({ message: 'Debug endpoint working', received: req.body });
   });
 
+  // ServeManager API debug endpoint
+  app.get("/api/debug/servemanager", async (req, res) => {
+    try {
+      // Import here to avoid circular dependency
+      const { getServeManagerConfig } = await import("./routes/servemanager");
+
+      const config = await getServeManagerConfig();
+      console.log('=== SERVEMANAGER DEBUG ===');
+      console.log('API Key configured:', !!config.apiKey);
+      console.log('Base URL:', config.baseUrl);
+
+      // Test basic connectivity
+      const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+
+      // Try account endpoint first
+      const accountResponse = await fetch(`${config.baseUrl}/account`, {
+        headers: {
+          'Authorization': `Basic ${credentials}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Account endpoint status:', accountResponse.status);
+
+      if (accountResponse.ok) {
+        const accountData = await accountResponse.json();
+        console.log('Account data:', accountData);
+
+        // Try jobs endpoint
+        const jobsResponse = await fetch(`${config.baseUrl}/jobs?per_page=1`, {
+          headers: {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('Jobs endpoint status:', jobsResponse.status);
+
+        if (jobsResponse.ok) {
+          const jobsData = await jobsResponse.json();
+          console.log('Jobs structure:', Object.keys(jobsData));
+          console.log('First job:', jobsData.data?.[0] || jobsData.jobs?.[0] || 'No jobs');
+
+          res.json({
+            status: 'success',
+            account: accountData,
+            jobsStructure: Object.keys(jobsData),
+            firstJob: jobsData.data?.[0] || jobsData.jobs?.[0] || null
+          });
+        } else {
+          const jobsError = await jobsResponse.text();
+          res.json({
+            status: 'account_ok_jobs_failed',
+            account: accountData,
+            jobsError: jobsError,
+            jobsStatus: jobsResponse.status
+          });
+        }
+      } else {
+        const accountError = await accountResponse.text();
+        res.json({
+          status: 'account_failed',
+          accountError: accountError,
+          accountStatus: accountResponse.status
+        });
+      }
+
+      console.log('==========================');
+    } catch (error) {
+      console.error('Debug error:', error);
+      res.status(500).json({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // ServeManager integration routes
   app.get("/api/jobs", getJobs);
   app.get("/api/jobs/:id", getJob);
