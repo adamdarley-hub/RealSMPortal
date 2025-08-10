@@ -138,6 +138,7 @@ export class CacheService {
       
       // Cache jobs in database using upsert
       const transaction = db.transaction((allJobs: any[]) => {
+        console.log(`Processing ${allJobs.length} jobs for database insertion...`);
         for (const job of allJobs) {
           const jobId = job.id || job.uuid || job.job_number || `job_${Date.now()}_${Math.random()}`;
           
