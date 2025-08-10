@@ -135,7 +135,8 @@ export const saveConfigHandler: RequestHandler = async (req, res) => {
     res.json({ message: 'Configuration saved successfully' });
   } catch (error) {
     console.error('Error saving config:', error);
-    res.status(500).json({ error: 'Failed to save configuration' });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to save configuration';
+    res.status(500).json({ error: errorMessage });
   }
 };
 
