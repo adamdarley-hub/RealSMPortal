@@ -712,17 +712,169 @@ export class CacheService {
   
   async syncAllData(): Promise<{ [key: string]: SyncResult }> {
     console.log('🚀 Starting full sync of all data...');
-    
+
     const results: { [key: string]: SyncResult } = {};
-    
+
     // Sync jobs
     results.jobs = await this.syncJobsFromServeManager();
-    
-    // Sync clients  
+
+    // Sync clients
     results.clients = await this.syncClientsFromServeManager();
-    
+
+    // Sync servers
+    results.servers = await this.syncServersFromServeManager();
+
     console.log('🎉 Full sync completed:', results);
     return results;
+  }
+
+  // =================== SERVERS ===================
+
+  async getServersFromCache(): Promise<any[]> {
+    try {
+      const cachedServers = await db.select().from(servers).orderBy(desc(servers.name));
+
+      return cachedServers.map(server => ({
+        id: server.id,
+        servemanager_id: server.servemanager_id,
+        name: server.name,
+        first_name: server.first_name,
+        last_name: server.last_name,
+        email: server.email,
+        phone: server.phone,
+        license_number: server.license_number,
+        active: server.active,
+        status: server.status,
+        territories: server.territories ? JSON.parse(server.territories) : [],
+        created_date: server.created_date,
+        _cached: true,
+        _last_synced: server.last_synced
+      }));
+    } catch (error) {
+      console.error('Error getting servers from cache:', error);
+      return [];
+    }
+  }
+
+  async syncServersFromServeManager(): Promise<SyncResult> {
+    const startTime = Date.now();
+    let recordsSynced = 0;
+
+    try {
+      console.log('🔄 Starting servers sync from ServeManager...');
+
+      // Fetch servers from ServeManager API
+      const config = await getServeManagerConfig();
+      const response = await fetch(`${config.baseUrl}/employees`, {
+        headers: {
+          'Authorization': `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`ServeManager API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      let allServers: any[] = [];
+
+      if (data.data && Array.isArray(data.data)) {
+        allServers = data.data;
+      } else if (data.employees && Array.isArray(data.employees)) {
+        allServers = data.employees;
+      } else if (Array.isArray(data)) {
+        allServers = data;
+      }
+
+      console.log(`📥 Fetched ${allServers.length} servers from ServeManager`);
+
+      // Process and cache servers
+      for (const rawServer of allServers) {
+        const mappedServer = mapServerFromServeManager(rawServer);
+        const serverId = mappedServer.id || `server_${Date.now()}_${Math.random()}`;
+
+        const serverData = {
+          id: serverId,
+          servemanager_id: mappedServer.id || null,
+          name: mappedServer.name || null,
+          first_name: mappedServer.first_name || null,
+          last_name: mappedServer.last_name || null,
+          email: mappedServer.email || null,
+          phone: mappedServer.phone || null,
+          license_number: mappedServer.license_number || null,
+          active: mappedServer.active || true,
+          status: mappedServer.status || 'active',
+          territories: mappedServer.territories ? JSON.stringify(mappedServer.territories) : null,
+          created_date: mappedServer.created_date || new Date().toISOString(),
+          raw_data: mappedServer._raw ? JSON.stringify(mappedServer._raw) : null,
+          last_synced: new Date().toISOString()
+        };
+
+        try {
+          db.insert(servers).values(serverData).onConflictDoNothing().run();
+          recordsSynced++;
+        } catch (insertError) {
+          console.warn(`⚠️ Skipping server ${serverData.id} due to insertion error:`, insertError.message);
+        }
+      }
+
+      const duration = Date.now() - startTime;
+      console.log(`✅ Servers sync completed: ${recordsSynced} records in ${duration}ms`);
+
+      return {
+        success: true,
+        recordsSynced,
+        totalRecords: allServers.length,
+        duration
+      };
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Servers sync failed:', errorMessage);
+
+      // Use mock servers as fallback
+      const mockServers = [
+        { id: 'server1', name: 'Adam Darley', email: 'serve@allegiancelegalsolutions.com', active: true, status: 'active' }
+      ];
+
+      for (const mockServer of mockServers) {
+        const serverData = {
+          id: mockServer.id,
+          servemanager_id: mockServer.id,
+          name: mockServer.name,
+          first_name: mockServer.name.split(' ')[0],
+          last_name: mockServer.name.split(' ')[1] || '',
+          email: mockServer.email,
+          phone: null,
+          license_number: null,
+          active: mockServer.active,
+          status: mockServer.status,
+          territories: null,
+          created_date: new Date().toISOString(),
+          raw_data: JSON.stringify(mockServer),
+          last_synced: new Date().toISOString()
+        };
+
+        try {
+          db.insert(servers).values(serverData).onConflictDoNothing().run();
+          recordsSynced++;
+        } catch (insertError) {
+          console.warn(`⚠️ Skipping mock server ${serverData.id}`);
+        }
+      }
+
+      console.log(`📦 Fallback to mock servers: ${recordsSynced} records`);
+
+      return {
+        success: false,
+        recordsSynced,
+        totalRecords: 0,
+        duration,
+        error: errorMessage
+      };
+    }
   }
 }
 
