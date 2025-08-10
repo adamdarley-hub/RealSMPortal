@@ -112,15 +112,16 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
     // Identifiers - try all possible variants, ensure strings
     id: safeString(rawJob.id || rawJob.uuid || rawJob.job_id),
     uuid: safeString(rawJob.uuid || rawJob.id),
-    job_number: safeString(rawJob.job_number || rawJob.generated_job_id || rawJob.reference || rawJob.number),
+    job_number: safeString(rawJob.servemanager_job_number || rawJob.job_number || rawJob.generated_job_id || rawJob.reference || rawJob.number),
     generated_job_id: safeString(rawJob.generated_job_id || rawJob.job_number),
     reference: safeString(rawJob.reference || rawJob.ref),
 
-    // Status - try multiple field names, ensure strings
-    status: safeString(rawJob.status || rawJob.job_status || rawJob.state),
-    job_status: safeString(rawJob.job_status || rawJob.status),
-    priority: safeString(rawJob.priority || rawJob.urgency || rawJob.importance),
-    urgency: safeString(rawJob.urgency || rawJob.priority),
+    // Status - ServeManager uses service_status, job_status is often empty
+    status: safeString(rawJob.service_status || rawJob.job_status || rawJob.status || 'pending'),
+    job_status: safeString(rawJob.job_status || rawJob.service_status),
+    // Priority - ServeManager uses 'rush' boolean, convert to priority levels
+    priority: rawJob.rush === true ? 'rush' : (rawJob.rush === false ? 'routine' : safeString(rawJob.priority || rawJob.urgency || rawJob.importance || 'routine')),
+    urgency: rawJob.rush === true ? 'high' : safeString(rawJob.urgency || rawJob.priority || 'normal'),
     
     // Dates - extract all date fields
     created_at: rawJob.created_at || rawJob.date_created || rawJob.created,
@@ -130,46 +131,45 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
     completed_date: rawJob.completed_date || rawJob.date_completed,
     received_date: rawJob.received_date || rawJob.date_received,
     
-    // Client information - comprehensive extraction with safe strings
-    client_id: safeString(rawJob.client_id || rawJob.account_id || rawJob.customer_id),
-    client_name: safeString(rawJob.client_name || rawJob.client?.name || rawJob.account?.name),
-    client_company: safeString(rawJob.client_company || rawJob.client?.company || rawJob.account?.company),
-    client_email: safeString(rawJob.client_email || rawJob.client?.email || rawJob.account?.email),
-    client_phone: safeString(rawJob.client_phone || rawJob.client?.phone || rawJob.account?.phone),
-    client_address: rawJob.client_address || rawJob.client?.address || rawJob.account?.address, // Keep as object
+    // Client information - ServeManager uses client_company and client_contact
+    client_id: safeString(rawJob.client_company?.id || rawJob.client_id || rawJob.account_id || rawJob.customer_id),
+    client_name: safeString(rawJob.client_contact ? `${rawJob.client_contact.first_name || ''} ${rawJob.client_contact.last_name || ''}`.trim() : (rawJob.client_name || rawJob.client?.name || rawJob.account?.name)),
+    client_company: safeString(rawJob.client_company?.name || rawJob.client_company || rawJob.client?.company || rawJob.account?.company),
+    client_email: safeString(rawJob.client_contact?.email || rawJob.client_email || rawJob.client?.email || rawJob.account?.email),
+    client_phone: safeString(rawJob.client_contact?.phone || rawJob.client_phone || rawJob.client?.phone || rawJob.account?.phone),
+    client_address: rawJob.client_address || rawJob.client?.address || rawJob.account?.address,
     account_id: safeString(rawJob.account_id || rawJob.client_id),
 
-    // Recipient/defendant - try all naming conventions with safe strings
-    recipient_name: safeString(rawJob.recipient_name || rawJob.defendant_name ||
-                              rawJob.defendant?.name || rawJob.service_to) ||
-                   `${safeString(rawJob.defendant_first_name)} ${safeString(rawJob.defendant_last_name)}`.trim(),
-    defendant_name: safeString(rawJob.defendant_name || rawJob.recipient_name),
+    // Recipient/defendant - ServeManager uses recipient.name format
+    recipient_name: safeString(rawJob.recipient?.name || rawJob.recipient_name || rawJob.defendant_name || rawJob.defendant?.name || rawJob.service_to) || `${safeString(rawJob.defendant_first_name)} ${safeString(rawJob.defendant_last_name)}`.trim(),
+    defendant_name: safeString(rawJob.defendant_name || rawJob.recipient?.name || rawJob.recipient_name),
     defendant_first_name: safeString(rawJob.defendant_first_name || rawJob.first_name),
     defendant_last_name: safeString(rawJob.defendant_last_name || rawJob.last_name),
-    defendant_address: rawJob.defendant_address || rawJob.service_address || rawJob.address, // Keep as object
-    service_address: rawJob.service_address || rawJob.defendant_address || rawJob.address, // Keep as object
-    address: rawJob.address || rawJob.service_address || rawJob.defendant_address, // Keep as object
+    // Address - ServeManager stores addresses in addresses array
+    defendant_address: rawJob.addresses?.[0] || rawJob.defendant_address || rawJob.service_address || rawJob.address,
+    service_address: rawJob.addresses?.[0] || rawJob.service_address || rawJob.defendant_address || rawJob.address,
+    address: rawJob.addresses?.[0] || rawJob.address || rawJob.service_address || rawJob.defendant_address,
     
-    // Server information with safe strings
-    server_id: safeString(rawJob.server_id || rawJob.assigned_server_id),
-    server_name: safeString(rawJob.server_name || rawJob.assigned_server || rawJob.server?.name),
+    // Server information - ServeManager uses employee_process_server
+    server_id: safeString(rawJob.employee_process_server?.id || rawJob.server_id || rawJob.assigned_server_id),
+    server_name: safeString(rawJob.employee_process_server ? `${rawJob.employee_process_server.first_name || ''} ${rawJob.employee_process_server.last_name || ''}`.trim() : (rawJob.server_name || rawJob.assigned_server || rawJob.server?.name)),
     assigned_server: safeString(rawJob.assigned_server || rawJob.server_name),
     assigned_to: safeString(rawJob.assigned_to || rawJob.server_name),
     
-    // Financial - try all money fields
-    amount: parseFloat(rawJob.amount || rawJob.price || rawJob.cost || rawJob.fee || rawJob.total || 0),
+    // Financial - try all money fields, also check invoice data
+    amount: parseFloat(rawJob.invoice?.total || rawJob.amount || rawJob.price || rawJob.cost || rawJob.fee || rawJob.total || 0),
     price: parseFloat(rawJob.price || rawJob.amount || 0),
     cost: parseFloat(rawJob.cost || rawJob.amount || 0),
     fee: parseFloat(rawJob.fee || rawJob.amount || 0),
-    total: parseFloat(rawJob.total || rawJob.amount || 0),
+    total: parseFloat(rawJob.total || rawJob.invoice?.total || rawJob.amount || 0),
     
     // Service details
     service_type: rawJob.service_type || rawJob.type || rawJob.document_type,
     type: rawJob.type || rawJob.service_type,
     document_type: rawJob.document_type || rawJob.service_type,
-    description: rawJob.description || rawJob.notes || rawJob.comments,
+    description: rawJob.description || rawJob.service_instructions || rawJob.notes || rawJob.comments,
     notes: rawJob.notes || rawJob.description || rawJob.comments,
-    instructions: rawJob.instructions || rawJob.special_instructions,
+    instructions: rawJob.service_instructions || rawJob.instructions || rawJob.special_instructions,
     
     // Attempts
     attempts: rawJob.attempts || rawJob.service_attempts || [],
@@ -178,8 +178,8 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
     last_attempt_date: rawJob.last_attempt_date || rawJob.last_attempt,
     
     // Documents
-    documents: rawJob.documents || rawJob.files || [],
-    attachments: rawJob.attachments || rawJob.files || [],
+    documents: rawJob.documents || rawJob.documents_to_be_served || rawJob.files || [],
+    attachments: rawJob.misc_attachments || rawJob.attachments || rawJob.files || [],
     affidavit: rawJob.affidavit || rawJob.proof_of_service,
     
     // Location
@@ -190,10 +190,10 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
     // Additional fields
     tags: rawJob.tags || [],
     badges: rawJob.badges || [],
-    court: rawJob.court || rawJob.court_name,
-    case_number: rawJob.case_number || rawJob.case_id,
+    court: rawJob.court_case?.court || rawJob.court || rawJob.court_name,
+    case_number: rawJob.court_case?.number || rawJob.case_number || rawJob.case_id,
     docket_number: rawJob.docket_number || rawJob.docket,
-    plaintiff: rawJob.plaintiff || rawJob.plaintiff_name,
+    plaintiff: rawJob.court_case?.plaintiff || rawJob.plaintiff || rawJob.plaintiff_name,
     attorney: rawJob.attorney || rawJob.attorney_name,
     law_firm: rawJob.law_firm || rawJob.firm_name,
     

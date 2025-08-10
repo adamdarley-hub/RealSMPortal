@@ -607,20 +607,35 @@ export default function Jobs() {
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
                           {(() => {
-                            // Safely extract address from various formats
+                            // Safely extract address from ServeManager format
                             const getAddressString = (addr: any) => {
                               if (typeof addr === 'string') return addr;
                               if (typeof addr === 'object' && addr) {
-                                return addr.full_address || addr.address ||
+                                // ServeManager format: { street1, street2, city, state, zip }
+                                const parts = [
+                                  addr.street1,
+                                  addr.street2,
+                                  addr.street,
+                                  addr.address
+                                ].filter(Boolean);
+
+                                const street = parts.join(' ');
+                                const cityState = [addr.city, addr.state].filter(Boolean).join(', ');
+                                const zip = addr.zip || addr.postal_code;
+
+                                const fullAddr = [street, cityState, zip].filter(Boolean).join(', ');
+
+                                // Fallback to other formats
+                                return fullAddr || addr.full_address || addr.formatted_address ||
                                        `${addr.street || ''} ${addr.city || ''} ${addr.state || ''} ${addr.zip || ''}`.trim();
                               }
                               return '';
                             };
 
-                            const address = getAddressString(job.recipient?.address) ||
-                                          getAddressString(job.service_address) ||
+                            const address = getAddressString(job.service_address) ||
                                           getAddressString(job.defendant_address) ||
-                                          getAddressString(job.address);
+                                          getAddressString(job.address) ||
+                                          getAddressString(job.recipient?.address);
 
                             return address || 'Address not available';
                           })()}
