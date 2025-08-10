@@ -1,7 +1,7 @@
 {
   "serveManager": {
     "baseUrl": "https://www.servemanager.com/api",
-    "apiKey": "76cb1f17e1ea967ef0ba6eae26139321:69917baa291b80404c036b9aed8e8134c717e97eddaf8250f18a1c9c9b2a041f",
+    "apiKey": "813b4cd488f7850160602bdb8195a31f:7204f6d30348c505838d6f809cd3a225665d3c14bb88a552fa7f76033c330007",
     "enabled": true,
     "testEndpoint": "/account"
   },
