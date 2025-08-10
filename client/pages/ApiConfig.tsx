@@ -126,6 +126,9 @@ export default function ApiConfig() {
       let responseData;
       try {
         const responseText = await response.text();
+        console.log('Server response status:', response.status);
+        console.log('Server response text:', responseText);
+
         if (responseText) {
           responseData = JSON.parse(responseText);
         } else {
@@ -134,6 +137,7 @@ export default function ApiConfig() {
       } catch (parseError) {
         // If JSON parsing fails, log the actual response for debugging
         console.error('Failed to parse server response:', parseError);
+        console.error('Response status:', response.status);
         responseData = { error: `Invalid response from server (Status: ${response.status})` };
       }
 
