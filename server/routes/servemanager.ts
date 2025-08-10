@@ -67,37 +67,39 @@ async function makeServeManagerRequest(endpoint: string, options: RequestInit = 
 // Get all jobs with optional filtering
 export const getJobs: RequestHandler = async (req, res) => {
   try {
-    const { 
-      status, 
-      priority, 
-      client_id, 
-      server_id, 
-      date_from, 
-      date_to, 
-      limit = '50', 
-      offset = '0' 
+    const {
+      status,
+      priority,
+      client_id,
+      server_id,
+      date_from,
+      date_to,
+      limit = '50',
+      offset = '0'
     } = req.query;
-    
+
     // Build query parameters for ServeManager API
     const params = new URLSearchParams();
-    if (status) params.append('status', status as string);
-    if (priority) params.append('priority', priority as string);
-    if (client_id) params.append('client_id', client_id as string);
-    if (server_id) params.append('server_id', server_id as string);
+    if (status && status !== 'all') params.append('status', status as string);
+    if (priority && priority !== 'all') params.append('priority', priority as string);
+    if (client_id && client_id !== 'all') params.append('client_id', client_id as string);
+    if (server_id && server_id !== 'all') params.append('server_id', server_id as string);
     if (date_from) params.append('date_from', date_from as string);
     if (date_to) params.append('date_to', date_to as string);
     params.append('limit', limit as string);
     params.append('offset', offset as string);
-    
+
     const endpoint = `/jobs?${params.toString()}`;
     const data = await makeServeManagerRequest(endpoint);
-    
+
     res.json(data);
   } catch (error) {
     console.error('Error fetching jobs:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch jobs from ServeManager', 
-      message: error instanceof Error ? error.message : 'Unknown error' 
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({
+      error: 'Failed to fetch jobs from ServeManager',
+      message: errorMessage,
+      configured: false
     });
   }
 };
