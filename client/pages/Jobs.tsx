@@ -481,9 +481,11 @@ export default function Jobs() {
                     <TableCell className="font-medium">
                       <div>
                         <p className="font-mono text-sm">
-                          {job.job_number || job.generated_job_id || job.reference || 'N/A'}
+                          {safeString(job.job_number || job.generated_job_id || job.reference, 'N/A')}
                         </p>
-                        <p className="text-xs text-muted-foreground">{job.id || job.uuid || 'N/A'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {safeString(job.id || job.uuid, 'N/A')}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell>
