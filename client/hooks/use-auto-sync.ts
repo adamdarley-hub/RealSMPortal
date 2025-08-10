@@ -85,6 +85,16 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         }));
       }
 
+      // Restart polling if it was paused during background sync
+      if (!showLoading && !intervalRef.current && enabled && mountedRef.current) {
+        console.log('🔄 Restarting auto-sync polling after background sync');
+        intervalRef.current = setInterval(() => {
+          if (mountedRef.current) {
+            triggerSync(false);
+          }
+        }, interval);
+      }
+
       // Trigger data refresh in parent component
       if (onDataUpdate) {
         onDataUpdate();
