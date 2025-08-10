@@ -601,9 +601,16 @@ export default function Jobs() {
                           })()}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {typeof job.service_type === 'string' ? job.service_type :
-                           typeof job.type === 'string' ? job.type :
-                           typeof job.document_type === 'string' ? job.document_type : 'Service'}
+                          {(() => {
+                            // Extract contact name from various formats
+                            const contactName = typeof job.client_name === 'string' ? job.client_name :
+                                              job.client_contact ?
+                                                `${job.client_contact.first_name || ''} ${job.client_contact.last_name || ''}`.trim() :
+                                              typeof job.client?.name === 'string' ? job.client.name :
+                                              job.client?.contact_name;
+
+                            return contactName || 'No contact name';
+                          })()}
                         </p>
                       </div>
                     </TableCell>
