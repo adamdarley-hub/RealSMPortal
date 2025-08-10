@@ -545,44 +545,37 @@ export class CacheService {
       }
       
       console.log(`📥 Fetched ${allClients.length} clients, caching locally...`);
-      
-      // Cache clients
-      const transaction = db.transaction((clientsToProcess: any[]) => {
-        console.log(`Processing ${clientsToProcess.length} clients for database insertion...`);
-        for (const client of clientsToProcess) {
-          const clientId = client.id || `client_${Date.now()}_${Math.random()}`;
-          
-          const clientData = {
-            id: clientId,
-            servemanager_id: client.id,
-            name: client.name,
-            company: client.company,
-            email: client.email,
-            phone: client.phone,
-            address: client.address ? JSON.stringify(client.address) : null,
-            billing_address: client.billing_address ? JSON.stringify(client.billing_address) : null,
-            mailing_address: client.mailing_address ? JSON.stringify(client.mailing_address) : null,
-            created_date: client.created_date,
-            updated_date: client.updated_date,
-            active: client.active ? 1 : 0,
-            status: client.status,
-            raw_data: client._raw ? JSON.stringify(client._raw) : null,
-            last_synced: new Date().toISOString(),
-          };
-          
-          try {
-            db.insert(clients).values(clientData).onConflictDoUpdate({
-              target: clients.servemanager_id,
-              set: clientData
-            }).run();
-            recordsSynced++;
-          } catch (insertError) {
-            console.error('Error inserting client:', insertError);
-          }
+
+      // Process clients directly
+      console.log(`Processing ${allClients.length} clients for database insertion...`);
+      for (const client of allClients) {
+        const clientId = client.id || `client_${Date.now()}_${Math.random()}`;
+
+        const clientData = {
+          id: clientId,
+          servemanager_id: client.id || null,
+          name: client.name || null,
+          company: client.company || null,
+          email: client.email || null,
+          phone: client.phone || null,
+          address: client.address ? JSON.stringify(client.address) : null,
+          billing_address: client.billing_address ? JSON.stringify(client.billing_address) : null,
+          mailing_address: client.mailing_address ? JSON.stringify(client.mailing_address) : null,
+          created_date: client.created_date || new Date().toISOString(),
+          updated_date: client.updated_date || new Date().toISOString(),
+          active: client.active !== false,
+          status: client.status || 'active',
+          raw_data: client._raw ? JSON.stringify(client._raw) : null,
+          last_synced: new Date().toISOString(),
+        };
+
+        try {
+          db.insert(clients).values(clientData).onConflictDoNothing().run();
+          recordsSynced++;
+        } catch (insertError) {
+          console.warn(`⚠️ Skipping client ${clientData.id} due to insertion error:`, insertError.message);
         }
-      });
-      
-      transaction(allClients);
+      }
       
       const duration = Date.now() - startTime;
       console.log(`✅ Clients sync completed: ${recordsSynced} records in ${duration}ms`);
