@@ -221,32 +221,13 @@ export class CacheService {
           last_synced: new Date().toISOString(),
         };
 
-        // Insert or replace - use simpler approach to avoid parameter conflicts
+        // Simple insert/replace approach
         try {
-          // First try to insert, if it conflicts do a simple replace
-          await db.insert(jobs).values(jobData).onConflictDoNothing().run();
+          // Delete existing record first to avoid conflicts
+          db.delete(jobs).where(sql`servemanager_id = ${jobData.servemanager_id}`).run();
 
-          // Then update if it already existed
-          if (job.id || job.uuid) {
-            await db.update(jobs)
-              .set({
-                status: jobData.status,
-                priority: jobData.priority,
-                recipient_name: jobData.recipient_name,
-                client_name: jobData.client_name,
-                client_company: jobData.client_company,
-                server_name: jobData.server_name,
-                service_address: jobData.service_address,
-                defendant_address: jobData.defendant_address,
-                address: jobData.address,
-                amount: jobData.amount,
-                total: jobData.total,
-                updated_at: jobData.updated_at,
-                last_synced: jobData.last_synced,
-                raw_data: jobData.raw_data
-              })
-              .where(eq(jobs.servemanager_id, jobData.servemanager_id));
-          }
+          // Then insert fresh data
+          db.insert(jobs).values(jobData).run();
 
           recordsSynced++;
           if (recordsSynced % 50 === 0) {
