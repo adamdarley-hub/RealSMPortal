@@ -245,6 +245,16 @@ export default function Jobs() {
             </p>
           </div>
           <div className="flex gap-2">
+            {usingMockData && (
+              <Button
+                onClick={() => window.open('/api/debug/servemanager', '_blank')}
+                variant="secondary"
+                className="gap-2"
+              >
+                <AlertCircle className="w-4 h-4" />
+                Debug API
+              </Button>
+            )}
             <Button onClick={loadJobs} variant="outline" className="gap-2">
               <RefreshCw className="w-4 h-4" />
               Refresh
