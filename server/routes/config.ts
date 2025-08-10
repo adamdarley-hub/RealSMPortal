@@ -164,29 +164,49 @@ export const saveConfigHandler: RequestHandler = async (req, res) => {
 // Test ServeManager connection
 export const testServeManager: RequestHandler = async (req, res) => {
   try {
-    const { baseUrl, apiKey, testEndpoint } = req.body;
-    
+    const { baseUrl, apiKey } = req.body;
+
     if (!baseUrl || !apiKey) {
       return res.status(400).json({ error: 'Base URL and API key are required' });
     }
-    
-    const testUrl = baseUrl + (testEndpoint || '/ping');
-    
-    // Make a test request to ServeManager API
-    const response = await fetch(testUrl, {
+
+    // ServeManager uses HTTP Basic Auth with API key as username and empty password
+    const credentials = Buffer.from(`${apiKey}:`).toString('base64');
+
+    // Test connection to account endpoint first
+    const accountResponse = await fetch(`${baseUrl}/account`, {
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Basic ${credentials}`,
         'Content-Type': 'application/json',
       },
     });
-    
-    if (response.ok) {
-      res.json({ message: 'ServeManager connection successful' });
-    } else {
-      res.status(response.status).json({ 
-        error: `ServeManager API returned ${response.status}: ${response.statusText}` 
+
+    if (!accountResponse.ok) {
+      const errorText = await accountResponse.text();
+      return res.status(accountResponse.status).json({
+        error: `ServeManager API error: ${accountResponse.status} ${accountResponse.statusText} - ${errorText}`
       });
     }
+
+    // Also test companies endpoint to verify data access
+    const companiesResponse = await fetch(`${baseUrl}/companies`, {
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!companiesResponse.ok) {
+      const errorText = await companiesResponse.text();
+      return res.status(companiesResponse.status).json({
+        error: `ServeManager API permissions error: ${companiesResponse.status} ${companiesResponse.statusText} - ${errorText}`
+      });
+    }
+
+    res.json({
+      message: 'ServeManager connection successful',
+      status: 'Connected and operational'
+    });
   } catch (error) {
     console.error('ServeManager test error:', error);
     res.status(500).json({ error: 'Failed to test ServeManager connection' });
