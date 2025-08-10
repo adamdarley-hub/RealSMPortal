@@ -21,6 +21,7 @@ import {
   triggerSync,
   getSyncStatus
 } from "./routes/cached-api";
+import "./services/startup-sync"; // Auto-trigger initial sync
 import {
   getMockJobs,
   getMockClients,
