@@ -458,11 +458,14 @@ export default function Jobs() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="">New/Unassigned</SelectItem>
+                    <SelectItem value="Client Hold">Client Hold</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="assigned">Assigned</SelectItem>
                     <SelectItem value="in_progress">In Progress</SelectItem>
                     <SelectItem value="served">Served</SelectItem>
                     <SelectItem value="not_served">Not Served</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
@@ -480,9 +483,7 @@ export default function Jobs() {
                   <SelectContent>
                     <SelectItem value="all">All Priority</SelectItem>
                     <SelectItem value="rush">Rush</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="routine">Routine</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
