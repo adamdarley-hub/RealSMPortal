@@ -150,11 +150,11 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
     service_address: rawJob.service_address || rawJob.defendant_address || rawJob.address, // Keep as object
     address: rawJob.address || rawJob.service_address || rawJob.defendant_address, // Keep as object
     
-    // Server information
-    server_id: rawJob.server_id || rawJob.assigned_server_id,
-    server_name: rawJob.server_name || rawJob.assigned_server || rawJob.server?.name,
-    assigned_server: rawJob.assigned_server || rawJob.server_name,
-    assigned_to: rawJob.assigned_to || rawJob.server_name,
+    // Server information with safe strings
+    server_id: safeString(rawJob.server_id || rawJob.assigned_server_id),
+    server_name: safeString(rawJob.server_name || rawJob.assigned_server || rawJob.server?.name),
+    assigned_server: safeString(rawJob.assigned_server || rawJob.server_name),
+    assigned_to: safeString(rawJob.assigned_to || rawJob.server_name),
     
     // Financial - try all money fields
     amount: parseFloat(rawJob.amount || rawJob.price || rawJob.cost || rawJob.fee || rawJob.total || 0),
