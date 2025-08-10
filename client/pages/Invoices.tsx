@@ -111,7 +111,7 @@ export default function Invoices() {
   };
 
   // Filter invoices by search term
-  const filteredInvoices = invoices.filter(invoice => 
+  const filteredInvoices = (invoices || []).filter(invoice =>
     invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.client.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.client.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -199,7 +199,7 @@ export default function Invoices() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {invoices.filter(inv => inv.status === 'paid').length}
+                {(invoices || []).filter(inv => inv.status === 'paid').length}
               </div>
             </CardContent>
           </Card>
@@ -211,7 +211,7 @@ export default function Invoices() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-destructive">
-                {invoices.filter(inv => inv.status === 'overdue').length}
+                {(invoices || []).filter(inv => inv.status === 'overdue').length}
               </div>
             </CardContent>
           </Card>
@@ -224,7 +224,7 @@ export default function Invoices() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {formatCurrency(
-                  invoices
+                  (invoices || [])
                     .filter(inv => inv.status === 'paid')
                     .reduce((sum, inv) => sum + inv.total, 0)
                 )}
