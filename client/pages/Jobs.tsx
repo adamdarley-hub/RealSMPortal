@@ -247,13 +247,34 @@ export default function Jobs() {
     return new Date(dateString).toLocaleDateString();
   };
 
-  // Filter jobs by search term - check ALL possible name fields, safely handle objects
-  const filteredJobs = (jobs || []).filter(job =>
-    safeString(job.job_number || job.generated_job_id || job.reference).toLowerCase().includes(searchTerm.toLowerCase()) ||
-    safeString(job.client?.name || job.client_name || job.client_company).toLowerCase().includes(searchTerm.toLowerCase()) ||
-    safeString(job.recipient?.name || job.recipient_name || job.defendant_name).toLowerCase().includes(searchTerm.toLowerCase()) ||
-    safeString(job.description || job.notes).toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter jobs by search term AND filter values
+  const filteredJobs = (jobs || []).filter(job => {
+    // Search filter
+    const matchesSearch = !searchTerm || (
+      safeString(job.job_number || job.generated_job_id || job.reference).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeString(job.client?.name || job.client_name || job.client_company).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeString(job.recipient?.name || job.recipient_name || job.defendant_name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeString(job.description || job.notes).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Status filter
+    const matchesStatus = !filters.status || filters.status === 'all' ||
+      (filters.status === 'unassigned' && (job.status === '' || !job.status)) ||
+      job.status === filters.status;
+
+    // Priority filter
+    const matchesPriority = !filters.priority || filters.priority === 'all' || job.priority === filters.priority;
+
+    // Client filter
+    const matchesClient = !filters.client_id || filters.client_id === 'all' || job.client_id === filters.client_id;
+
+    // Server filter
+    const matchesServer = !filters.server_id || filters.server_id === 'all' ||
+      (filters.server_id === 'unassigned' && (!job.server_id || job.server_id === '')) ||
+      job.server_id === filters.server_id;
+
+    return matchesSearch && matchesStatus && matchesPriority && matchesClient && matchesServer;
+  });
 
   if (error) {
     return (
