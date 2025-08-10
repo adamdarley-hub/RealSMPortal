@@ -44,6 +44,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
+      console.log('🔄 Starting auto-sync request...');
+
       const response = await fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,12 +53,14 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       });
 
       clearTimeout(timeoutId);
+      console.log('📡 Sync response status:', response.status);
 
       if (!response.ok) {
         throw new Error(`Sync failed: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
+      console.log('📊 Sync result:', result);
 
       setStatus(prev => ({
         ...prev,

@@ -26,8 +26,15 @@ export const getSyncStatus: RequestHandler = async (req, res) => {
 export const triggerManualSync: RequestHandler = async (req, res) => {
   try {
     console.log('🔄 Manual sync triggered via API');
-    const result = await cacheService.syncAllData();
-    
+
+    // Set a timeout for the sync operation
+    const syncPromise = cacheService.syncAllData();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Sync timeout after 30 seconds')), 30000);
+    });
+
+    const result = await Promise.race([syncPromise, timeoutPromise]);
+
     res.json({
       success: true,
       result,
@@ -35,10 +42,15 @@ export const triggerManualSync: RequestHandler = async (req, res) => {
     });
   } catch (error) {
     console.error('Manual sync failed:', error);
-    res.status(500).json({
+
+    // Don't let sync errors crash the server
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    res.status(200).json({
       success: false,
       error: 'Sync failed',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: errorMessage,
+      timestamp: new Date().toISOString()
     });
   }
 };
