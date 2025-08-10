@@ -68,30 +68,33 @@ export default function Jobs() {
     setLoading(true);
     setError(null);
     try {
+      console.log('Loading ALL jobs with filters...');
+
       const params = new URLSearchParams();
-      if (filters.status) params.append('status', filters.status);
-      if (filters.priority) params.append('priority', filters.priority);
-      if (filters.client_id) params.append('client_id', filters.client_id);
-      if (filters.server_id) params.append('server_id', filters.server_id);
+      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
+      if (filters.priority && filters.priority !== 'all') params.append('priority', filters.priority);
+      if (filters.client_id && filters.client_id !== 'all') params.append('client_id', filters.client_id);
+      if (filters.server_id && filters.server_id !== 'all') params.append('server_id', filters.server_id);
       if (filters.date_from) params.append('date_from', filters.date_from);
       if (filters.date_to) params.append('date_to', filters.date_to);
-      params.append('limit', filters.limit?.toString() || '50');
-      params.append('offset', filters.offset?.toString() || '0');
+      // No limit/offset - fetch ALL jobs
 
       const response = await fetch(`/api/jobs?${params.toString()}`);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to load jobs');
       }
-      
-      const data: JobsResponse & { mock?: boolean; error?: string } = await response.json();
+
+      const data: JobsResponse & { mock?: boolean; error?: string; pages_fetched?: number } = await response.json();
       setJobs(data.jobs);
       setTotalJobs(data.total);
       setUsingMockData(!!data.mock);
 
       if (data.mock) {
         console.log('Using mock data due to API error:', data.error);
+      } else {
+        console.log(`Loaded ${data.total} total jobs across ${data.pages_fetched || 1} pages`);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load jobs';
