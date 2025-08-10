@@ -89,18 +89,18 @@ export default function Clients() {
     });
   };
 
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       console.log('Loading ALL clients...');
       const response = await fetch('/api/clients'); // No limits - fetch everything
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to load clients');
       }
-      
+
       const data: ClientsResponse = await response.json();
       setClients(data.clients);
       setTotalClients(data.total);
@@ -116,7 +116,7 @@ export default function Clients() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   // Filter clients by search term
   const filteredClients = (clients || []).filter(client =>
