@@ -118,22 +118,31 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
   }, [status.isSyncing, interval, onDataUpdate]);
 
   const startPolling = useCallback(() => {
-    if (intervalRef.current || !enabled) return;
+    if (intervalRef.current || !enabled || !mountedRef.current) {
+      console.log('⏭️ Skipping start polling - already running or disabled or unmounted');
+      return;
+    }
 
-    setStatus(prev => ({
-      ...prev,
-      isPolling: true,
-      nextSync: new Date(Date.now() + interval)
-    }));
+    if (mountedRef.current) {
+      setStatus(prev => ({
+        ...prev,
+        isPolling: true,
+        nextSync: new Date(Date.now() + interval)
+      }));
+    }
 
     // Delay initial sync to let page load first
     timeoutRef.current = setTimeout(() => {
-      triggerSync(false);
+      if (mountedRef.current) {
+        triggerSync(false);
+      }
     }, 5000); // Wait 5 seconds before first sync
 
     // Set up recurring sync
     intervalRef.current = setInterval(() => {
-      triggerSync(false);
+      if (mountedRef.current) {
+        triggerSync(false);
+      }
     }, interval);
 
     console.log(`🚀 Auto-sync started: every ${interval/1000}s (first sync in 5s)`);
