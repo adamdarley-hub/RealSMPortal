@@ -110,7 +110,7 @@ export default function Jobs() {
     loadServers();
   }, [filters]);
 
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -154,7 +154,7 @@ export default function Jobs() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, toast]);
 
   const loadClients = async () => {
     try {
