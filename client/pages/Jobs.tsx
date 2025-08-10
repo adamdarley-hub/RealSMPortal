@@ -175,9 +175,11 @@ export default function Jobs() {
   }, [loadJobs, loadClients]);
 
   const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
+    const newValue = value === 'all' ? undefined : value;
+    console.log(`Filter changed: ${key} = ${newValue}`);
     setFilters(prev => ({
       ...prev,
-      [key]: value === 'all' ? undefined : value,
+      [key]: newValue,
       offset: 0, // Reset to first page when filtering
     }));
   };
