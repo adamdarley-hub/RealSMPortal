@@ -300,13 +300,23 @@ export class CacheService {
       ];
 
       try {
-        // Map mock jobs using the same mapper
-        console.log('Mock jobs before mapping:', mockJobs.length);
-        const mappedMockJobs = mockJobs.map(rawJob => {
-          const mapped = mapJobFromServeManager(rawJob);
-          console.log('Mapped job:', mapped ? 'success' : 'failed');
-          return mapped;
-        });
+        // Use mock jobs directly in the correct format
+        console.log('Using mock jobs directly:', mockJobs.length);
+        const mappedMockJobs = mockJobs.map(job => ({
+          id: job.id,
+          job_number: job.job_number,
+          client_name: job.client.name,
+          client_company: job.client.company,
+          recipient_name: job.recipient.name,
+          status: job.status,
+          priority: job.priority,
+          server_name: job.server?.name,
+          created_at: job.created_date,
+          amount: job.amount,
+          description: job.description,
+          service_type: job.service_type,
+          address: job.recipient.address
+        }));
         console.log('Mapped mock jobs result:', mappedMockJobs.length, 'items');
 
         // Cache mock jobs
