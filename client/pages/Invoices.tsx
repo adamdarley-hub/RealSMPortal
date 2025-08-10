@@ -258,15 +258,15 @@ export default function Invoices() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
-                <Select 
-                  value={statusFilter} 
-                  onValueChange={setStatusFilter}
+                <Select
+                  value={statusFilter || "all"}
+                  onValueChange={(value) => setStatusFilter(value === 'all' ? '' : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Status</SelectItem>
+                    <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="sent">Sent</SelectItem>
                     <SelectItem value="paid">Paid</SelectItem>
