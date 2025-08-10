@@ -608,43 +608,40 @@ export class CacheService {
         }));
         console.log('Mapped mock clients result:', mappedMockClients.length, 'items');
 
-        // Cache mock clients
-        const transaction = db.transaction((clientsToProcess: any[]) => {
-          console.log(`Processing ${clientsToProcess.length} mock clients for database insertion...`);
-          for (const client of clientsToProcess) {
-            const clientId = client.id || `client_${Date.now()}_${Math.random()}`;
+        // Cache mock clients directly
+        console.log(`Processing ${mappedMockClients.length} mock clients for database insertion...`);
+        for (const client of mappedMockClients) {
+          const clientId = client.id || `client_${Date.now()}_${Math.random()}`;
 
-            const clientData = {
-              id: clientId,
-              servemanager_id: client.id,
-              name: client.name,
-              company: client.company,
-              email: client.email,
-              phone: client.phone,
-              address: client.address ? JSON.stringify(client.address) : null,
-              billing_address: client.billing_address ? JSON.stringify(client.billing_address) : null,
-              mailing_address: client.mailing_address ? JSON.stringify(client.mailing_address) : null,
-              created_date: client.created_date,
-              updated_date: client.updated_date,
-              active: client.active ? 1 : 0,
-              status: client.status,
-              raw_data: client._raw ? JSON.stringify(client._raw) : null,
-              last_synced: new Date().toISOString(),
-            };
+          const clientData = {
+            id: clientId,
+            servemanager_id: client.id,
+            name: client.name,
+            company: client.company,
+            email: client.email,
+            phone: client.phone,
+            address: client.address ? JSON.stringify(client.address) : null,
+            billing_address: null,
+            mailing_address: null,
+            created_date: client.created_date,
+            updated_date: client.created_date,
+            active: client.active ? 1 : 0,
+            status: 'active',
+            raw_data: null,
+            last_synced: new Date().toISOString(),
+          };
 
-            try {
-              db.insert(clients).values(clientData).onConflictDoUpdate({
-                target: clients.servemanager_id,
-                set: clientData
-              }).run();
-              recordsSynced++;
-            } catch (insertError) {
-              console.error('Error inserting mock client:', insertError);
-            }
+          try {
+            db.insert(clients).values(clientData).onConflictDoUpdate({
+              target: clients.servemanager_id,
+              set: clientData
+            }).run();
+            recordsSynced++;
+            console.log(`✅ Inserted mock client: ${clientId}`);
+          } catch (insertError) {
+            console.error('Error inserting mock client:', insertError);
           }
-        });
-
-        transaction(mappedMockClients);
+        }
         console.log(`✅ Mock clients cached: ${recordsSynced} records`);
 
         return {
