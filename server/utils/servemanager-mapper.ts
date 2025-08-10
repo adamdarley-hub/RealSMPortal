@@ -109,18 +109,18 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
   
   // Extract all possible fields
   const mapped: ServeManagerJob = {
-    // Identifiers - try all possible variants
-    id: rawJob.id || rawJob.uuid || rawJob.job_id,
-    uuid: rawJob.uuid || rawJob.id,
-    job_number: rawJob.job_number || rawJob.generated_job_id || rawJob.reference || rawJob.number,
-    generated_job_id: rawJob.generated_job_id || rawJob.job_number,
-    reference: rawJob.reference || rawJob.ref,
-    
-    // Status - try multiple field names
-    status: rawJob.status || rawJob.job_status || rawJob.state,
-    job_status: rawJob.job_status || rawJob.status,
-    priority: rawJob.priority || rawJob.urgency || rawJob.importance,
-    urgency: rawJob.urgency || rawJob.priority,
+    // Identifiers - try all possible variants, ensure strings
+    id: safeString(rawJob.id || rawJob.uuid || rawJob.job_id),
+    uuid: safeString(rawJob.uuid || rawJob.id),
+    job_number: safeString(rawJob.job_number || rawJob.generated_job_id || rawJob.reference || rawJob.number),
+    generated_job_id: safeString(rawJob.generated_job_id || rawJob.job_number),
+    reference: safeString(rawJob.reference || rawJob.ref),
+
+    // Status - try multiple field names, ensure strings
+    status: safeString(rawJob.status || rawJob.job_status || rawJob.state),
+    job_status: safeString(rawJob.job_status || rawJob.status),
+    priority: safeString(rawJob.priority || rawJob.urgency || rawJob.importance),
+    urgency: safeString(rawJob.urgency || rawJob.priority),
     
     // Dates - extract all date fields
     created_at: rawJob.created_at || rawJob.date_created || rawJob.created,
