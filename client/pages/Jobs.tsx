@@ -267,7 +267,31 @@ export default function Jobs() {
       (filters.server_id === 'unassigned' && (!job.server_id || job.server_id === '')) ||
       job.server_id === filters.server_id;
 
-    return matchesSearch && matchesStatus && matchesPriority && matchesClient && matchesServer;
+    const result = matchesSearch && matchesStatus && matchesPriority && matchesClient && matchesServer;
+
+    // Debug first job that gets filtered
+    if (job === jobs[0] && (filters.status || filters.priority || filters.client_id || filters.server_id || searchTerm)) {
+      console.log(`Filter debug for job ${job.id}:`, {
+        job: {
+          status: job.status,
+          priority: job.priority,
+          client_id: job.client_id,
+          server_id: job.server_id
+        },
+        filters,
+        searchTerm,
+        matches: {
+          search: matchesSearch,
+          status: matchesStatus,
+          priority: matchesPriority,
+          client: matchesClient,
+          server: matchesServer,
+          result
+        }
+      });
+    }
+
+    return result;
   });
 
   if (error) {
