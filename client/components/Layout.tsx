@@ -32,10 +32,10 @@ interface LayoutProps {
 // Mock user data - in real app this would come from authentication
 const currentUser = {
   name: "Sarah Johnson",
-  email: "sarah@lawfirm.com",
-  role: "client", // or "admin"
+  email: "sarah@processservice.com",
+  role: "admin", // or "client"
   avatar: "",
-  company: "Johnson & Associates Law"
+  company: "ServePortal Admin"
 };
 
 const clientNavItems = [
