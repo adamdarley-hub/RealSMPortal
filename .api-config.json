@@ -1,0 +1,14 @@
+{
+  "serveManager": {
+    "baseUrl": "https://www.servemanager.com/api",
+    "apiKey": "76cb1f17e1ea967ef0ba6eae26139321:69917baa291b80404c036b9aed8e8134c717e97eddaf8250f18a1c9c9b2a041f",
+    "enabled": true,
+    "testEndpoint": "/account"
+  },
+  "radar": {
+    "publishableKey": "",
+    "secretKey": "",
+    "enabled": false,
+    "environment": "test"
+  }
+}
