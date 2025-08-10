@@ -90,18 +90,10 @@ export default function Jobs() {
     setLoading(true);
     setError(null);
     try {
-      console.log('Loading ALL jobs with filters...');
+      console.log('Loading ALL jobs (no backend filters - using frontend filtering)...');
 
-      const params = new URLSearchParams();
-      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
-      if (filters.priority && filters.priority !== 'all') params.append('priority', filters.priority);
-      if (filters.client_id && filters.client_id !== 'all') params.append('client_id', filters.client_id);
-      if (filters.server_id && filters.server_id !== 'all') params.append('server_id', filters.server_id);
-      if (filters.date_from) params.append('date_from', filters.date_from);
-      if (filters.date_to) params.append('date_to', filters.date_to);
-      // No limit/offset - fetch ALL jobs
-
-      const response = await fetch(`/api/jobs?${params.toString()}`);
+      // Fetch ALL jobs without any backend filtering
+      const response = await fetch('/api/jobs');
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -130,7 +122,7 @@ export default function Jobs() {
     } finally {
       setLoading(false);
     }
-  }, [filters, toast]);
+  }, [toast]);
 
   const loadClients = useCallback(async () => {
     try {
