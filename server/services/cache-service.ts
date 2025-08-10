@@ -25,7 +25,9 @@ export class CacheService {
       // Apply filters
       const conditions = [];
       if (filters.status && filters.status !== 'all') {
-        conditions.push(eq(jobs.status, filters.status));
+        // Map "unassigned" filter to empty status in database
+        const statusValue = filters.status === 'unassigned' ? '' : filters.status;
+        conditions.push(eq(jobs.status, statusValue));
       }
       if (filters.priority && filters.priority !== 'all') {
         conditions.push(eq(jobs.priority, filters.priority));
