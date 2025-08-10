@@ -85,6 +85,21 @@ export default function Jobs() {
   const [totalJobs, setTotalJobs] = useState(0);
   const { toast } = useToast();
 
+  // Auto-sync setup with 30-second intervals
+  const { status: syncStatus, manualSync } = useAutoSync({
+    enabled: true,
+    interval: 30000, // 30 seconds
+    onDataUpdate: () => {
+      // Reload data when sync completes
+      loadJobs();
+      loadClients();
+      toast({
+        title: "Data Updated",
+        description: "Jobs have been automatically synced",
+      });
+    }
+  });
+
   // Load data on component mount
   useEffect(() => {
     loadJobs();
