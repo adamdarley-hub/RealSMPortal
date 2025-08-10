@@ -60,35 +60,7 @@ export default function Clients() {
   const [totalClients, setTotalClients] = useState(0);
   const { toast } = useToast();
 
-  // Memoize the onDataUpdate callback to prevent infinite re-renders
-  const onDataUpdate = useCallback(() => {
-    loadClients();
-    toast({
-      title: "Data Updated",
-      description: "Clients have been automatically synced",
-    });
-  }, [loadClients, toast]);
-
-  // Auto-sync setup
-  const { status: syncStatus, manualSync } = useAutoSync({
-    enabled: true,
-    interval: 30000, // 30 seconds
-    onDataUpdate
-  });
-
-  useEffect(() => {
-    loadClients();
-  }, [loadClients]);
-
-  const refreshClients = async () => {
-    manualSync();
-    await loadClients();
-    toast({
-      title: "Refreshed",
-      description: "Client data has been refreshed successfully",
-    });
-  };
-
+  // Declare loadClients function first before using it in callbacks
   const loadClients = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -117,6 +89,35 @@ export default function Clients() {
       setLoading(false);
     }
   }, [toast]);
+
+  // Memoize the onDataUpdate callback to prevent infinite re-renders
+  const onDataUpdate = useCallback(() => {
+    loadClients();
+    toast({
+      title: "Data Updated",
+      description: "Clients have been automatically synced",
+    });
+  }, [loadClients, toast]);
+
+  // Auto-sync setup
+  const { status: syncStatus, manualSync } = useAutoSync({
+    enabled: true,
+    interval: 30000, // 30 seconds
+    onDataUpdate
+  });
+
+  useEffect(() => {
+    loadClients();
+  }, [loadClients]);
+
+  const refreshClients = async () => {
+    manualSync();
+    await loadClients();
+    toast({
+      title: "Refreshed",
+      description: "Client data has been refreshed successfully",
+    });
+  };
 
   // Filter clients by search term
   const filteredClients = (clients || []).filter(client =>
