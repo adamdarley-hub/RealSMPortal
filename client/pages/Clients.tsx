@@ -31,9 +31,26 @@ import {
   Loader2,
   RefreshCw,
   AlertCircle,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAutoSync } from "@/hooks/use-auto-sync";
 import { Client, ClientsResponse } from "@shared/servemanager";
+
+// Helper function to format time ago
+const formatTimeAgo = (date: Date): string => {
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  if (seconds < 60) return `${seconds}s ago`;
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return date.toLocaleDateString();
+};
 
 export default function Clients() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -42,6 +59,19 @@ export default function Clients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [totalClients, setTotalClients] = useState(0);
   const { toast } = useToast();
+
+  // Auto-sync setup
+  const { status: syncStatus, manualSync } = useAutoSync({
+    enabled: true,
+    interval: 30000, // 30 seconds
+    onDataUpdate: () => {
+      loadClients();
+      toast({
+        title: "Data Updated",
+        description: "Clients have been automatically synced",
+      });
+    }
+  });
 
   useEffect(() => {
     loadClients();

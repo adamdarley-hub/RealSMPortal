@@ -21,7 +21,12 @@ import {
   triggerSync,
   getSyncStatus
 } from "./routes/cached-api";
+import {
+  getSyncStatus as getDetailedSyncStatus,
+  triggerManualSync
+} from "./routes/sync-status";
 import "./services/startup-sync"; // Auto-trigger initial sync
+import "./services/background-sync"; // Auto-trigger background sync
 import {
   getMockJobs,
   getMockClients,
@@ -141,8 +146,10 @@ export function createServer() {
   app.get("/api/jobs/:id", getCachedJob);     // ⚡ INSTANT - Single job from cache
 
   // Cache management routes
-  app.post("/api/sync", triggerSync);         // 🔄 Trigger manual sync
-  app.get("/api/sync/status", getSyncStatus); // 📊 Get sync status
+  app.post("/api/sync", triggerManualSync);        // 🔄 Trigger manual sync with better response
+  app.get("/api/sync/status", getDetailedSyncStatus); // 📊 Get detailed sync status
+  app.post("/api/sync/legacy", triggerSync);       // 🔄 Legacy sync endpoint
+  app.get("/api/sync/legacy-status", getSyncStatus); // 📊 Legacy sync status
 
   // Direct ServeManager routes (for admin/debugging)
   app.get("/api/servemanager/jobs", getJobs);
