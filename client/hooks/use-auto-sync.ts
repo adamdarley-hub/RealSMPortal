@@ -112,7 +112,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           errorMessage = 'Sync timeout - using cached data';
           console.log('🕐 Auto-sync request timed out after 30 seconds, using cached data');
         } else if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error';
+          errorMessage = 'Server unavailable - using cached data';
         } else {
           errorMessage = error.message;
         }
