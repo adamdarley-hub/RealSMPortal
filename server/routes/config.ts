@@ -108,7 +108,9 @@ export const getConfig: RequestHandler = async (req, res) => {
 // Save API configuration
 export const saveConfigHandler: RequestHandler = async (req, res) => {
   try {
+    console.log('Received config save request');
     const config: ApiConfig = req.body;
+    console.log('Config received:', JSON.stringify(config, null, 2));
     
     // Validate required fields
     if (config.serveManager?.enabled && !config.serveManager.baseUrl) {
