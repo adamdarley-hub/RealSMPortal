@@ -216,6 +216,9 @@ export default function Jobs() {
       case "pending": return "bg-muted text-muted-foreground";
       case "not_served": return "bg-destructive text-destructive-foreground";
       case "cancelled": return "bg-secondary text-secondary-foreground";
+      case "completed": return "bg-success text-success-foreground";
+      case "Client Hold": return "bg-orange-500 text-white";
+      case "": return "bg-blue-500 text-white"; // New/Unassigned jobs
       default: return "bg-muted text-muted-foreground";
     }
   };
