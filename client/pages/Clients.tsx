@@ -92,12 +92,10 @@ export default function Clients() {
 
   // Memoize the onDataUpdate callback to prevent infinite re-renders
   const onDataUpdate = useCallback(() => {
+    // Reload data when sync completes (silent reload - no toast notifications)
     loadClients();
-    toast({
-      title: "Data Updated",
-      description: "Clients have been automatically synced",
-    });
-  }, [loadClients, toast]);
+    // Note: Removed toast notification as requested - auto-sync should be silent
+  }, [loadClients]);
 
   // Auto-sync setup
   const { status: syncStatus, manualSync } = useAutoSync({
