@@ -266,7 +266,10 @@ export const getClients: RequestHandler = async (req, res) => {
         console.log(`Clients page ${page}: Found ${pageClients.length} clients`);
 
         if (pageClients.length > 0) {
-          allClients.push(...pageClients);
+          // Map ALL raw clients through our comprehensive mapper
+          const mappedClients = pageClients.map(rawClient => mapClientFromServeManager(rawClient));
+          allClients.push(...mappedClients);
+
           hasMorePages = pageClients.length === 100;
           page++;
         } else {
