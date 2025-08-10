@@ -14,6 +14,14 @@ import {
   updateJob
 } from "./routes/servemanager";
 import {
+  getCachedJobs,
+  getCachedClients,
+  getCachedServers,
+  getCachedJob,
+  triggerSync,
+  getSyncStatus
+} from "./routes/cached-api";
+import {
   getMockJobs,
   getMockClients,
   getMockServers,
