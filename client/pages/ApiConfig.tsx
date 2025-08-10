@@ -125,10 +125,16 @@ export default function ApiConfig() {
       // Read the response body once
       let responseData;
       try {
-        responseData = await response.json();
+        const responseText = await response.text();
+        if (responseText) {
+          responseData = JSON.parse(responseText);
+        } else {
+          responseData = { error: 'Empty response from server' };
+        }
       } catch (parseError) {
-        // If JSON parsing fails, treat as generic error
-        responseData = { error: 'Invalid response from server' };
+        // If JSON parsing fails, log the actual response for debugging
+        console.error('Failed to parse server response:', parseError);
+        responseData = { error: `Invalid response from server (Status: ${response.status})` };
       }
 
       if (response.ok) {
