@@ -383,26 +383,19 @@ export default function ApiConfig() {
                   <Label htmlFor="servemanager-enabled">Enable ServeManager Integration</Label>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="servemanager-url">API Base URL</Label>
-                    <Input
-                      id="servemanager-url"
-                      placeholder="https://www.servemanager.com/api"
-                      value={config.serveManager.baseUrl}
-                      onChange={(e) => updateServeManagerConfig('baseUrl', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="servemanager-test">Test Endpoint</Label>
-                    <Input
-                      id="servemanager-test"
-                      placeholder="/ping"
-                      value={config.serveManager.testEndpoint}
-                      onChange={(e) => updateServeManagerConfig('testEndpoint', e.target.value)}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="servemanager-url">API Base URL</Label>
+                  <Input
+                    id="servemanager-url"
+                    placeholder="https://www.servemanager.com/api"
+                    value={config.serveManager.baseUrl}
+                    onChange={(e) => updateServeManagerConfig('baseUrl', e.target.value)}
+                    readOnly
+                    className="bg-muted"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This is the standard ServeManager API URL
+                  </p>
                 </div>
 
                 <div className="space-y-2">
