@@ -9,6 +9,7 @@ import {
   getClients,
   getServers,
   getInvoices,
+  getContacts,
   createJob,
   updateJob
 } from "./routes/servemanager";
