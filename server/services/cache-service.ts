@@ -148,94 +148,93 @@ export class CacheService {
       
       console.log(`📥 Fetched ${allJobs.length} jobs from ServeManager, caching locally...`);
       
-      // Cache jobs in database using upsert
-      const transaction = db.transaction((jobsToProcess: any[]) => {
-        console.log(`Processing ${jobsToProcess.length} jobs for database insertion...`);
-        for (const job of jobsToProcess) {
-          const jobId = job.id || job.uuid || job.job_number || `job_${Date.now()}_${Math.random()}`;
-          
-          // Prepare data for insertion
-          const jobData = {
-            id: jobId,
-            servemanager_id: job.id || job.uuid,
-            uuid: job.uuid,
-            job_number: job.job_number,
-            generated_job_id: job.generated_job_id,
-            reference: job.reference,
-            status: job.status,
-            job_status: job.job_status,
-            priority: job.priority,
-            urgency: job.urgency,
-            created_at: job.created_at,
-            updated_at: job.updated_at,
-            due_date: job.due_date,
-            service_date: job.service_date,
-            completed_date: job.completed_date,
-            received_date: job.received_date,
-            client_id: job.client_id,
-            client_name: job.client_name,
-            client_company: job.client_company,
-            client_email: job.client_email,
-            client_phone: job.client_phone,
-            client_address: job.client_address ? JSON.stringify(job.client_address) : null,
-            account_id: job.account_id,
-            recipient_name: job.recipient_name,
-            defendant_name: job.defendant_name,
-            defendant_first_name: job.defendant_first_name,
-            defendant_last_name: job.defendant_last_name,
-            defendant_address: job.defendant_address ? JSON.stringify(job.defendant_address) : null,
-            service_address: job.service_address ? JSON.stringify(job.service_address) : null,
-            address: job.address ? JSON.stringify(job.address) : null,
-            server_id: job.server_id,
-            server_name: job.server_name,
-            assigned_server: job.assigned_server,
-            assigned_to: job.assigned_to,
-            amount: job.amount,
-            price: job.price,
-            cost: job.cost,
-            fee: job.fee,
-            total: job.total,
-            service_type: job.service_type,
-            type: job.type,
-            document_type: job.document_type,
-            description: job.description,
-            notes: job.notes,
-            instructions: job.instructions,
-            attempt_count: job.attempt_count,
-            last_attempt: job.last_attempt,
-            last_attempt_date: job.last_attempt_date,
-            latitude: job.latitude,
-            longitude: job.longitude,
-            court: job.court,
-            case_number: job.case_number,
-            docket_number: job.docket_number,
-            plaintiff: job.plaintiff,
-            attorney: job.attorney,
-            law_firm: job.law_firm,
-            attempts: job.attempts ? JSON.stringify(job.attempts) : null,
-            documents: job.documents ? JSON.stringify(job.documents) : null,
-            attachments: job.attachments ? JSON.stringify(job.attachments) : null,
-            gps_coordinates: job.gps_coordinates ? JSON.stringify(job.gps_coordinates) : null,
-            tags: job.tags ? JSON.stringify(job.tags) : null,
-            badges: job.badges ? JSON.stringify(job.badges) : null,
-            raw_data: job._raw ? JSON.stringify(job._raw) : null,
-            last_synced: new Date().toISOString(),
-          };
-          
-          // Insert or replace
-          try {
-            db.insert(jobs).values(jobData).onConflictDoUpdate({
-              target: jobs.servemanager_id,
-              set: jobData
-            }).run();
-            recordsSynced++;
-          } catch (insertError) {
-            console.error('Error inserting job:', insertError);
+      // Cache jobs in database - process directly
+      console.log(`Processing ${allJobs.length} real ServeManager jobs for database insertion...`);
+      for (const job of allJobs) {
+        const jobId = job.id || job.uuid || job.job_number || `job_${Date.now()}_${Math.random()}`;
+
+        // Prepare data for insertion
+        const jobData = {
+          id: jobId,
+          servemanager_id: job.id || job.uuid,
+          uuid: job.uuid,
+          job_number: job.job_number,
+          generated_job_id: job.generated_job_id,
+          reference: job.reference,
+          status: job.status,
+          job_status: job.job_status,
+          priority: job.priority,
+          urgency: job.urgency,
+          created_at: job.created_at,
+          updated_at: job.updated_at,
+          due_date: job.due_date,
+          service_date: job.service_date,
+          completed_date: job.completed_date,
+          received_date: job.received_date,
+          client_id: job.client_id,
+          client_name: job.client_name,
+          client_company: job.client_company,
+          client_email: job.client_email,
+          client_phone: job.client_phone,
+          client_address: job.client_address ? JSON.stringify(job.client_address) : null,
+          account_id: job.account_id,
+          recipient_name: job.recipient_name,
+          defendant_name: job.defendant_name,
+          defendant_first_name: job.defendant_first_name,
+          defendant_last_name: job.defendant_last_name,
+          defendant_address: job.defendant_address ? JSON.stringify(job.defendant_address) : null,
+          service_address: job.service_address ? JSON.stringify(job.service_address) : null,
+          address: job.address ? JSON.stringify(job.address) : null,
+          server_id: job.server_id,
+          server_name: job.server_name,
+          assigned_server: job.assigned_server,
+          assigned_to: job.assigned_to,
+          amount: job.amount,
+          price: job.price,
+          cost: job.cost,
+          fee: job.fee,
+          total: job.total,
+          service_type: job.service_type,
+          type: job.type,
+          document_type: job.document_type,
+          description: job.description,
+          notes: job.notes,
+          instructions: job.instructions,
+          attempt_count: job.attempt_count,
+          last_attempt: job.last_attempt,
+          last_attempt_date: job.last_attempt_date,
+          latitude: job.latitude,
+          longitude: job.longitude,
+          court: job.court,
+          case_number: job.case_number,
+          docket_number: job.docket_number,
+          plaintiff: job.plaintiff,
+          attorney: job.attorney,
+          law_firm: job.law_firm,
+          attempts: job.attempts ? JSON.stringify(job.attempts) : null,
+          documents: job.documents ? JSON.stringify(job.documents) : null,
+          attachments: job.attachments ? JSON.stringify(job.attachments) : null,
+          gps_coordinates: job.gps_coordinates ? JSON.stringify(job.gps_coordinates) : null,
+          tags: job.tags ? JSON.stringify(job.tags) : null,
+          badges: job.badges ? JSON.stringify(job.badges) : null,
+          raw_data: job._raw ? JSON.stringify(job._raw) : null,
+          last_synced: new Date().toISOString(),
+        };
+
+        // Insert or replace
+        try {
+          db.insert(jobs).values(jobData).onConflictDoUpdate({
+            target: jobs.servemanager_id,
+            set: jobData
+          }).run();
+          recordsSynced++;
+          if (recordsSynced % 50 === 0) {
+            console.log(`✅ Processed ${recordsSynced} jobs...`);
           }
+        } catch (insertError) {
+          console.error('Error inserting job:', insertError);
         }
-      });
-      
-      transaction(allJobs);
+      }
       
       const duration = Date.now() - startTime;
       
