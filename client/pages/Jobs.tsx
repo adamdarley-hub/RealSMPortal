@@ -478,11 +478,22 @@ export default function Jobs() {
                     <TableCell>
                       <div>
                         <p className="font-medium">
-                          {job.client?.company || job.client_company ||
-                           job.client?.name || job.client_name || 'Unknown Client'}
+                          {(() => {
+                            // Handle client data safely - extract string values from objects
+                            const clientCompany = typeof job.client_company === 'string' ? job.client_company :
+                                                 typeof job.client?.company === 'string' ? job.client.company :
+                                                 job.client?.name?.company || job.client?.name;
+                            const clientName = typeof job.client_name === 'string' ? job.client_name :
+                                             typeof job.client?.name === 'string' ? job.client.name :
+                                             job.client?.name?.name;
+
+                            return clientCompany || clientName || 'Unknown Client';
+                          })()}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {job.service_type || job.type || job.document_type || 'Service'}
+                          {typeof job.service_type === 'string' ? job.service_type :
+                           typeof job.type === 'string' ? job.type :
+                           typeof job.document_type === 'string' ? job.document_type : 'Service'}
                         </p>
                       </div>
                     </TableCell>
