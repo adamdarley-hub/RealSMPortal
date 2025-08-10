@@ -146,7 +146,7 @@ export class CacheService {
         }
       }
       
-      console.log(`��� Fetched ${allJobs.length} jobs from ServeManager, caching locally...`);
+      console.log(`📥 Fetched ${allJobs.length} jobs from ServeManager, caching locally...`);
       
       // Cache jobs in database - process directly
       console.log(`Processing ${allJobs.length} real ServeManager jobs for database insertion...`);
@@ -221,29 +221,33 @@ export class CacheService {
           last_synced: new Date().toISOString(),
         };
 
-        // Insert or replace
+        // Insert or replace - use simpler approach to avoid parameter conflicts
         try {
-          // Use replace instead of onConflictDoUpdate to avoid parameter conflicts
-          await db.insert(jobs).values(jobData).onConflictDoUpdate({
-            target: jobs.servemanager_id,
-            set: {
-              // Explicitly set fields to avoid parameter conflicts
-              status: jobData.status,
-              priority: jobData.priority,
-              recipient_name: jobData.recipient_name,
-              client_name: jobData.client_name,
-              client_company: jobData.client_company,
-              server_name: jobData.server_name,
-              service_address: jobData.service_address,
-              defendant_address: jobData.defendant_address,
-              address: jobData.address,
-              amount: jobData.amount,
-              total: jobData.total,
-              updated_at: jobData.updated_at,
-              last_synced: jobData.last_synced,
-              raw_data: jobData.raw_data
-            }
-          });
+          // First try to insert, if it conflicts do a simple replace
+          await db.insert(jobs).values(jobData).onConflictDoNothing().run();
+
+          // Then update if it already existed
+          if (job.id || job.uuid) {
+            await db.update(jobs)
+              .set({
+                status: jobData.status,
+                priority: jobData.priority,
+                recipient_name: jobData.recipient_name,
+                client_name: jobData.client_name,
+                client_company: jobData.client_company,
+                server_name: jobData.server_name,
+                service_address: jobData.service_address,
+                defendant_address: jobData.defendant_address,
+                address: jobData.address,
+                amount: jobData.amount,
+                total: jobData.total,
+                updated_at: jobData.updated_at,
+                last_synced: jobData.last_synced,
+                raw_data: jobData.raw_data
+              })
+              .where(eq(jobs.servemanager_id, jobData.servemanager_id));
+          }
+
           recordsSynced++;
           if (recordsSynced % 50 === 0) {
             console.log(`✅ Processed ${recordsSynced} jobs...`);
