@@ -137,9 +137,9 @@ export class CacheService {
       console.log(`📥 Fetched ${allJobs.length} jobs from ServeManager, caching locally...`);
       
       // Cache jobs in database using upsert
-      const transaction = db.transaction((allJobs: any[]) => {
-        console.log(`Processing ${allJobs.length} jobs for database insertion...`);
-        for (const job of allJobs) {
+      const transaction = db.transaction((jobsToProcess: any[]) => {
+        console.log(`Processing ${jobsToProcess.length} jobs for database insertion...`);
+        for (const job of jobsToProcess) {
           const jobId = job.id || job.uuid || job.job_number || `job_${Date.now()}_${Math.random()}`;
           
           // Prepare data for insertion
