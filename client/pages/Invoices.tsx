@@ -60,10 +60,11 @@ export default function Invoices() {
     setLoading(true);
     setError(null);
     try {
+      console.log('Loading ALL invoices...');
       const params = new URLSearchParams();
-      if (statusFilter) params.append('status', statusFilter);
-      params.append('limit', '100');
-      
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
+      // No limit - fetch everything
+
       const response = await fetch(`/api/invoices?${params.toString()}`);
       
       if (!response.ok) {
