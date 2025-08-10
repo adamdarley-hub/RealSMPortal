@@ -193,13 +193,29 @@ export default function Jobs() {
                 <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
                 <h3 className="text-lg font-semibold">Unable to Load Jobs</h3>
                 <p className="text-muted-foreground">{error}</p>
-                <p className="text-sm text-muted-foreground">
-                  Make sure ServeManager API is configured in Settings → API Configuration
-                </p>
-                <Button onClick={loadJobs} className="gap-2">
-                  <RefreshCw className="w-4 h-4" />
-                  Retry
-                </Button>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    To get started:
+                  </p>
+                  <ol className="text-sm text-muted-foreground text-left space-y-1 max-w-md mx-auto">
+                    <li>1. Go to Settings → API Configuration</li>
+                    <li>2. Enable ServeManager integration</li>
+                    <li>3. Enter your API credentials</li>
+                    <li>4. Test the connection</li>
+                    <li>5. Save your configuration</li>
+                  </ol>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={loadJobs} variant="outline" className="gap-2">
+                    <RefreshCw className="w-4 h-4" />
+                    Retry
+                  </Button>
+                  <Button asChild className="gap-2">
+                    <a href="/settings">
+                      Go to Settings
+                    </a>
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
