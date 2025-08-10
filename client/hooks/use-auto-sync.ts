@@ -39,6 +39,13 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       return;
     }
 
+    // Temporarily pause polling during sync to prevent timeouts
+    if (intervalRef.current && !showLoading) {
+      console.log('⏸️ Temporarily pausing auto-sync during background sync');
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
     if (showLoading && mountedRef.current) {
       setStatus(prev => ({ ...prev, isSyncing: true, error: null }));
     }
