@@ -121,7 +121,19 @@ export class CacheService {
           }
           
           if (pageJobs.length > 0) {
-            const mappedJobs = pageJobs.map(rawJob => mapJobFromServeManager(rawJob));
+            console.log(`📊 Page ${page} structure:`, {
+              jobsCount: pageJobs.length,
+              firstJobKeys: Object.keys(pageJobs[0] || {}),
+              firstJobSample: pageJobs[0]
+            });
+            const mappedJobs = pageJobs.map(rawJob => {
+              const mapped = mapJobFromServeManager(rawJob);
+              if (!mapped) {
+                console.error('❌ Mapping failed for job:', rawJob);
+              }
+              return mapped;
+            }).filter(Boolean); // Remove any undefined results
+            console.log(`✅ Mapped ${mappedJobs.length} of ${pageJobs.length} jobs`);
             allJobs.push(...mappedJobs);
             hasMorePages = pageJobs.length === 100;
             page++;
