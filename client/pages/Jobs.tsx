@@ -445,32 +445,32 @@ export default function Jobs() {
                   <TableRow key={job.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">
                       <div>
-                        <p className="font-mono text-sm">{job.job_number}</p>
-                        <p className="text-xs text-muted-foreground">{job.id}</p>
+                        <p className="font-mono text-sm">{job.job_number || 'N/A'}</p>
+                        <p className="text-xs text-muted-foreground">{job.id || 'N/A'}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{job.client.company || job.client.name}</p>
-                        <p className="text-sm text-muted-foreground">{job.service_type}</p>
+                        <p className="font-medium">{job.client?.company || job.client?.name || 'Unknown Client'}</p>
+                        <p className="text-sm text-muted-foreground">{job.service_type || 'Service'}</p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(job.status)}>
-                        {job.status.replace('_', ' ')}
+                      <Badge className={getStatusColor(job.status || 'pending')}>
+                        {(job.status || 'pending').replace('_', ' ')}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={getPriorityColor(job.priority)}>
-                        {job.priority}
+                      <Badge variant="outline" className={getPriorityColor(job.priority || 'medium')}>
+                        {job.priority || 'medium'}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{job.recipient.name}</p>
+                        <p className="font-medium">{job.recipient?.name || 'Unknown Recipient'}</p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
-                          {job.recipient.address.full_address}
+                          {job.recipient?.address?.full_address || 'Address not available'}
                         </p>
                       </div>
                     </TableCell>
@@ -478,7 +478,7 @@ export default function Jobs() {
                       {job.server ? (
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-muted-foreground" />
-                          {job.server.name}
+                          {job.server.name || 'Unknown Server'}
                         </div>
                       ) : (
                         <Badge variant="secondary">Unassigned</Badge>
@@ -491,7 +491,7 @@ export default function Jobs() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      {formatCurrency(job.amount)}
+                      {formatCurrency(job.amount || 0)}
                     </TableCell>
                   </TableRow>
                 ))}
