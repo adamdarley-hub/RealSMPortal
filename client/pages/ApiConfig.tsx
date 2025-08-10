@@ -93,6 +93,25 @@ export default function ApiConfig() {
   };
 
   const saveConfiguration = async () => {
+    // Basic validation
+    if (config.serveManager.enabled && (!config.serveManager.baseUrl || !config.serveManager.apiKey || config.serveManager.apiKey.startsWith('***'))) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter ServeManager API URL and key before saving",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (config.radar.enabled && (!config.radar.publishableKey)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter radar.io publishable key before saving",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       const response = await fetch('/api/config', {
