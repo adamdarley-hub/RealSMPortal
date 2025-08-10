@@ -109,8 +109,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       let errorMessage = 'Sync failed';
       if (error instanceof Error) {
         if (error.name === 'AbortError' || error.message.includes('aborted')) {
-          errorMessage = 'Sync timeout';
-          console.log('🕐 Auto-sync request timed out after 15 seconds');
+          errorMessage = 'Sync timeout - using cached data';
+          console.log('🕐 Auto-sync request timed out after 30 seconds, using cached data');
         } else if (error.message.includes('Failed to fetch')) {
           errorMessage = 'Network error';
         } else {
