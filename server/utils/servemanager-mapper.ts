@@ -130,25 +130,25 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
     completed_date: rawJob.completed_date || rawJob.date_completed,
     received_date: rawJob.received_date || rawJob.date_received,
     
-    // Client information - comprehensive extraction
-    client_id: rawJob.client_id || rawJob.account_id || rawJob.customer_id,
-    client_name: rawJob.client_name || rawJob.client?.name || rawJob.account?.name,
-    client_company: rawJob.client_company || rawJob.client?.company || rawJob.account?.company,
-    client_email: rawJob.client_email || rawJob.client?.email || rawJob.account?.email,
-    client_phone: rawJob.client_phone || rawJob.client?.phone || rawJob.account?.phone,
-    client_address: rawJob.client_address || rawJob.client?.address || rawJob.account?.address,
-    account_id: rawJob.account_id || rawJob.client_id,
-    
-    // Recipient/defendant - try all naming conventions
-    recipient_name: rawJob.recipient_name || rawJob.defendant_name || 
-                   rawJob.defendant?.name || rawJob.service_to ||
-                   `${rawJob.defendant_first_name || ''} ${rawJob.defendant_last_name || ''}`.trim(),
-    defendant_name: rawJob.defendant_name || rawJob.recipient_name,
-    defendant_first_name: rawJob.defendant_first_name || rawJob.first_name,
-    defendant_last_name: rawJob.defendant_last_name || rawJob.last_name,
-    defendant_address: rawJob.defendant_address || rawJob.service_address || rawJob.address,
-    service_address: rawJob.service_address || rawJob.defendant_address || rawJob.address,
-    address: rawJob.address || rawJob.service_address || rawJob.defendant_address,
+    // Client information - comprehensive extraction with safe strings
+    client_id: safeString(rawJob.client_id || rawJob.account_id || rawJob.customer_id),
+    client_name: safeString(rawJob.client_name || rawJob.client?.name || rawJob.account?.name),
+    client_company: safeString(rawJob.client_company || rawJob.client?.company || rawJob.account?.company),
+    client_email: safeString(rawJob.client_email || rawJob.client?.email || rawJob.account?.email),
+    client_phone: safeString(rawJob.client_phone || rawJob.client?.phone || rawJob.account?.phone),
+    client_address: rawJob.client_address || rawJob.client?.address || rawJob.account?.address, // Keep as object
+    account_id: safeString(rawJob.account_id || rawJob.client_id),
+
+    // Recipient/defendant - try all naming conventions with safe strings
+    recipient_name: safeString(rawJob.recipient_name || rawJob.defendant_name ||
+                              rawJob.defendant?.name || rawJob.service_to) ||
+                   `${safeString(rawJob.defendant_first_name)} ${safeString(rawJob.defendant_last_name)}`.trim(),
+    defendant_name: safeString(rawJob.defendant_name || rawJob.recipient_name),
+    defendant_first_name: safeString(rawJob.defendant_first_name || rawJob.first_name),
+    defendant_last_name: safeString(rawJob.defendant_last_name || rawJob.last_name),
+    defendant_address: rawJob.defendant_address || rawJob.service_address || rawJob.address, // Keep as object
+    service_address: rawJob.service_address || rawJob.defendant_address || rawJob.address, // Keep as object
+    address: rawJob.address || rawJob.service_address || rawJob.defendant_address, // Keep as object
     
     // Server information
     server_id: rawJob.server_id || rawJob.assigned_server_id,
