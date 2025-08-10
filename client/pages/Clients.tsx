@@ -77,6 +77,15 @@ export default function Clients() {
     loadClients();
   }, []);
 
+  const refreshClients = async () => {
+    manualSync();
+    await loadClients();
+    toast({
+      title: "Refreshed",
+      description: "Client data has been refreshed successfully",
+    });
+  };
+
   const loadClients = async () => {
     setLoading(true);
     setError(null);
