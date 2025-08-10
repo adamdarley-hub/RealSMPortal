@@ -131,16 +131,18 @@ export const getSyncStatus: RequestHandler = async (req, res) => {
   try {
     const syncStatus = await cacheService.getSyncStatus();
     const dbStats = getDatabaseStats();
-    
+    const initialSyncStatus = getInitialSyncStatus();
+
     res.json({
+      initial_sync: initialSyncStatus,
       sync_status: syncStatus,
       database_stats: dbStats,
       timestamp: new Date().toISOString()
     });
-    
+
   } catch (error) {
     console.error('Error getting sync status:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get sync status',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
