@@ -347,6 +347,27 @@ export default function Jobs() {
               <RefreshCw className={`w-4 h-4 ${syncStatus.isSyncing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
+            <Button
+              onClick={async () => {
+                console.log('🔄 Force refreshing all data...');
+                try {
+                  const response = await fetch('/api/force-refresh', { method: 'POST' });
+                  const result = await response.json();
+                  console.log('✅ Force refresh result:', result);
+                  // Reload data after force refresh
+                  loadJobs();
+                  loadClients();
+                } catch (error) {
+                  console.error('❌ Force refresh failed:', error);
+                }
+              }}
+              variant="destructive"
+              className="gap-2"
+              disabled={syncStatus.isSyncing}
+            >
+              <RefreshCw className="w-4 h-4" />
+              Force Refresh
+            </Button>
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="gap-2">
