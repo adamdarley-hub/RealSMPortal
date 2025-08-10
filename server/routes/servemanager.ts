@@ -138,6 +138,15 @@ export const getJobs: RequestHandler = async (req, res) => {
 
         console.log(`Page ${page}: Found ${pageJobs.length} jobs`);
 
+        // Log the ACTUAL structure of the first job to understand ServeManager's format
+        if (pageJobs.length > 0 && page === 1) {
+          console.log('=== FIRST RAW JOB FROM SERVEMANAGER ===');
+          console.log(JSON.stringify(pageJobs[0], null, 2));
+          console.log('=== JOB KEYS AVAILABLE ===');
+          console.log('Available keys:', Object.keys(pageJobs[0]));
+          console.log('=====================================');
+        }
+
         if (pageJobs.length > 0) {
           allJobs.push(...pageJobs);
           // Continue if we got a full page (suggests more data)
