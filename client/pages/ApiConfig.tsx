@@ -404,7 +404,7 @@ export default function ApiConfig() {
                     <Input
                       id="servemanager-key"
                       type={showServeManagerKey ? "text" : "password"}
-                      placeholder="Enter your ServeManager API key"
+                      placeholder="sm_api_... (get from ServeManager API Keys page)"
                       value={config.serveManager.apiKey}
                       onChange={(e) => updateServeManagerConfig('apiKey', e.target.value)}
                       className="pr-10"
@@ -419,6 +419,9 @@ export default function ApiConfig() {
                       {showServeManagerKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </Button>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Your API key uses HTTP Basic Authentication. Get it from ServeManager API Keys page.
+                  </p>
                 </div>
 
                 <Button 
