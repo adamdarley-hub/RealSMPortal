@@ -149,7 +149,10 @@ export const getJobs: RequestHandler = async (req, res) => {
         }
 
         if (pageJobs.length > 0) {
-          allJobs.push(...pageJobs);
+          // Map ALL raw jobs through our comprehensive mapper
+          const mappedJobs = pageJobs.map(rawJob => mapJobFromServeManager(rawJob));
+          allJobs.push(...mappedJobs);
+
           // Continue if we got a full page (suggests more data)
           hasMorePages = pageJobs.length === 100;
           page++;
