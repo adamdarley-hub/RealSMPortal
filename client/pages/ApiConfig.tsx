@@ -184,7 +184,6 @@ export default function ApiConfig() {
         body: JSON.stringify({
           baseUrl: config.serveManager.baseUrl,
           apiKey: config.serveManager.apiKey,
-          testEndpoint: config.serveManager.testEndpoint,
         }),
       });
 
