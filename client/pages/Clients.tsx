@@ -67,7 +67,7 @@ export default function Clients() {
       title: "Data Updated",
       description: "Clients have been automatically synced",
     });
-  }, [toast]);
+  }, [loadClients, toast]);
 
   // Auto-sync setup
   const { status: syncStatus, manualSync } = useAutoSync({
@@ -78,7 +78,7 @@ export default function Clients() {
 
   useEffect(() => {
     loadClients();
-  }, []);
+  }, [loadClients]);
 
   const refreshClients = async () => {
     manualSync();
