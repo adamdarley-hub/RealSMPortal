@@ -496,10 +496,10 @@ export default function Jobs() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {job.server ? (
+                      {(job.server?.name || job.server_name || job.assigned_server) ? (
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-muted-foreground" />
-                          {job.server.name || 'Unknown Server'}
+                          {job.server?.name || job.server_name || job.assigned_server}
                         </div>
                       ) : (
                         <Badge variant="secondary">Unassigned</Badge>
@@ -508,11 +508,11 @@ export default function Jobs() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-muted-foreground" />
-                        {formatDate(job.due_date)}
+                        {formatDate(job.due_date || job.service_date)}
                       </div>
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      {formatCurrency(job.amount || 0)}
+                      {formatCurrency(job.amount || job.price || job.cost || job.fee || job.total || 0)}
                     </TableCell>
                   </TableRow>
                 ))}
