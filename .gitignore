@@ -25,3 +25,10 @@ dist-ssr
 
 .config/
 !.env
+
+# Database files
+data/
+*.db
+*.db-wal
+*.db-shm
+.api-config.json
