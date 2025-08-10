@@ -122,6 +122,15 @@ export default function ApiConfig() {
         body: JSON.stringify(config),
       });
 
+      // Read the response body once
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        // If JSON parsing fails, treat as generic error
+        responseData = { error: 'Invalid response from server' };
+      }
+
       if (response.ok) {
         toast({
           title: "Success",
@@ -130,8 +139,7 @@ export default function ApiConfig() {
         // Reload the configuration to get the masked keys
         await loadConfiguration();
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save configuration');
+        throw new Error(responseData.error || `Server error: ${response.status}`);
       }
     } catch (error) {
       console.error('Failed to save configuration:', error);
