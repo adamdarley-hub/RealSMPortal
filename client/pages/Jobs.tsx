@@ -510,16 +510,37 @@ export default function Jobs() {
                     <TableCell>
                       <div>
                         <p className="font-medium">
-                          {job.recipient?.name || job.recipient_name || job.defendant_name ||
-                           `${job.defendant_first_name || ''} ${job.defendant_last_name || ''}`.trim() || 'Unknown Recipient'}
+                          {(() => {
+                            // Safely extract recipient name from various formats
+                            const recipientName = typeof job.recipient_name === 'string' ? job.recipient_name :
+                                                 typeof job.defendant_name === 'string' ? job.defendant_name :
+                                                 typeof job.recipient?.name === 'string' ? job.recipient.name :
+                                                 job.recipient?.name?.name ||
+                                                 `${job.defendant_first_name || ''} ${job.defendant_last_name || ''}`.trim();
+
+                            return recipientName || 'Unknown Recipient';
+                          })()}
                         </p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
-                          {job.recipient?.address?.full_address ||
-                           job.service_address?.full_address ||
-                           job.defendant_address?.full_address ||
-                           job.address?.full_address ||
-                           'Address not available'}
+                          {(() => {
+                            // Safely extract address from various formats
+                            const getAddressString = (addr: any) => {
+                              if (typeof addr === 'string') return addr;
+                              if (typeof addr === 'object' && addr) {
+                                return addr.full_address || addr.address ||
+                                       `${addr.street || ''} ${addr.city || ''} ${addr.state || ''} ${addr.zip || ''}`.trim();
+                              }
+                              return '';
+                            };
+
+                            const address = getAddressString(job.recipient?.address) ||
+                                          getAddressString(job.service_address) ||
+                                          getAddressString(job.defendant_address) ||
+                                          getAddressString(job.address);
+
+                            return address || 'Address not available';
+                          })()}
                         </p>
                       </div>
                     </TableCell>
