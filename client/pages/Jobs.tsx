@@ -278,6 +278,26 @@ export default function Jobs() {
           </div>
         </div>
 
+        {/* Mock Data Warning */}
+        {usingMockData && (
+          <Alert className="border-warning bg-warning/10">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Using Demo Data:</strong> ServeManager API is not responding. Showing sample data for demonstration.
+              <Button variant="link" className="p-0 h-auto font-normal" asChild>
+                <a href="/settings" className="underline">Configure API settings</a>
+              </Button> or
+              <Button
+                variant="link"
+                className="p-0 h-auto font-normal underline ml-1"
+                onClick={() => window.open('/api/debug/servemanager', '_blank')}
+              >
+                debug the connection
+              </Button>.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Filters and Search */}
         <Card>
           <CardHeader>
