@@ -597,8 +597,19 @@ export class CacheService {
       ];
 
       try {
-        // Map mock clients using the same mapper
-        const mappedMockClients = mockClients.map(rawClient => mapClientFromServeManager(rawClient));
+        // Use mock clients directly in the correct format
+        console.log('Using mock clients directly:', mockClients.length);
+        const mappedMockClients = mockClients.map(client => ({
+          id: client.id,
+          name: client.name,
+          company: client.company,
+          email: client.email,
+          phone: client.phone,
+          address: client.address,
+          created_date: client.created_date,
+          active: client.active
+        }));
+        console.log('Mapped mock clients result:', mappedMockClients.length, 'items');
 
         // Cache mock clients
         const transaction = db.transaction((clientsToProcess: any[]) => {
