@@ -452,14 +452,21 @@ export default function Jobs() {
                   <TableRow key={job.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">
                       <div>
-                        <p className="font-mono text-sm">{job.job_number || 'N/A'}</p>
-                        <p className="text-xs text-muted-foreground">{job.id || 'N/A'}</p>
+                        <p className="font-mono text-sm">
+                          {job.job_number || job.generated_job_id || job.reference || 'N/A'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{job.id || job.uuid || 'N/A'}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{job.client?.company || job.client?.name || 'Unknown Client'}</p>
-                        <p className="text-sm text-muted-foreground">{job.service_type || 'Service'}</p>
+                        <p className="font-medium">
+                          {job.client?.company || job.client_company ||
+                           job.client?.name || job.client_name || 'Unknown Client'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {job.service_type || job.type || job.document_type || 'Service'}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell>
