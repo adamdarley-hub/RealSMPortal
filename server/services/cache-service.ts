@@ -223,13 +223,10 @@ export class CacheService {
           last_synced: new Date().toISOString(),
         };
 
-        // Simple insert/replace approach with better error handling
+        // Use simple insert with conflict resolution
         try {
-          // Delete existing record first to avoid conflicts
-          db.delete(jobs).where(sql`servemanager_id = ${jobData.servemanager_id}`).run();
-
-          // Then insert fresh data
-          db.insert(jobs).values(jobData).run();
+          // Use insertOrIgnore to handle conflicts gracefully
+          const result = db.insert(jobs).values(jobData).onConflictDoNothing().run();
 
           recordsSynced++;
           if (recordsSynced % 50 === 0) {
