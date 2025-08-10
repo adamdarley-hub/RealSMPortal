@@ -319,92 +319,89 @@ export class CacheService {
         }));
         console.log('Mapped mock jobs result:', mappedMockJobs.length, 'items');
 
-        // Cache mock jobs
-        const transaction = db.transaction((jobsToProcess: any[]) => {
-          console.log(`Processing ${jobsToProcess.length} mock jobs for database insertion...`);
-          for (const job of jobsToProcess) {
-            const jobId = job.id || job.uuid || job.job_number || `job_${Date.now()}_${Math.random()}`;
+        // Cache mock jobs directly without transaction for testing
+        console.log(`Processing ${mappedMockJobs.length} mock jobs for database insertion...`);
+        for (const job of mappedMockJobs) {
+          const jobId = job.id || `job_${Date.now()}_${Math.random()}`;
 
-            const jobData = {
-              id: jobId,
-              servemanager_id: job.id || job.uuid,
-              uuid: job.uuid,
-              job_number: job.job_number,
-              generated_job_id: job.generated_job_id,
-              reference: job.reference,
-              status: job.status,
-              job_status: job.job_status,
-              priority: job.priority,
-              urgency: job.urgency,
-              created_at: job.created_at,
-              updated_at: job.updated_at,
-              due_date: job.due_date,
-              service_date: job.service_date,
-              completed_date: job.completed_date,
-              received_date: job.received_date,
-              client_id: job.client_id,
-              client_name: job.client_name,
-              client_company: job.client_company,
-              client_email: job.client_email,
-              client_phone: job.client_phone,
-              client_address: job.client_address ? JSON.stringify(job.client_address) : null,
-              account_id: job.account_id,
-              recipient_name: job.recipient_name,
-              defendant_name: job.defendant_name,
-              defendant_first_name: job.defendant_first_name,
-              defendant_last_name: job.defendant_last_name,
-              defendant_address: job.defendant_address ? JSON.stringify(job.defendant_address) : null,
-              service_address: job.service_address ? JSON.stringify(job.service_address) : null,
-              address: job.address ? JSON.stringify(job.address) : null,
-              server_id: job.server_id,
-              server_name: job.server_name,
-              assigned_server: job.assigned_server,
-              assigned_to: job.assigned_to,
-              amount: job.amount,
-              price: job.price,
-              cost: job.cost,
-              fee: job.fee,
-              total: job.total,
-              service_type: job.service_type,
-              type: job.type,
-              document_type: job.document_type,
-              description: job.description,
-              notes: job.notes,
-              instructions: job.instructions,
-              attempt_count: job.attempt_count,
-              last_attempt: job.last_attempt,
-              last_attempt_date: job.last_attempt_date,
-              latitude: job.latitude,
-              longitude: job.longitude,
-              court: job.court,
-              case_number: job.case_number,
-              docket_number: job.docket_number,
-              plaintiff: job.plaintiff,
-              attorney: job.attorney,
-              law_firm: job.law_firm,
-              attempts: job.attempts ? JSON.stringify(job.attempts) : null,
-              documents: job.documents ? JSON.stringify(job.documents) : null,
-              attachments: job.attachments ? JSON.stringify(job.attachments) : null,
-              gps_coordinates: job.gps_coordinates ? JSON.stringify(job.gps_coordinates) : null,
-              tags: job.tags ? JSON.stringify(job.tags) : null,
-              badges: job.badges ? JSON.stringify(job.badges) : null,
-              raw_data: job._raw ? JSON.stringify(job._raw) : null,
-              last_synced: new Date().toISOString(),
-            };
+          const jobData = {
+            id: jobId,
+            servemanager_id: job.id,
+            uuid: job.id,
+            job_number: job.job_number,
+            generated_job_id: job.job_number,
+            reference: null,
+            status: job.status,
+            job_status: job.status,
+            priority: job.priority,
+            urgency: job.priority,
+            created_at: job.created_at,
+            updated_at: job.created_at,
+            due_date: null,
+            service_date: null,
+            completed_date: null,
+            received_date: job.created_at,
+            client_id: null,
+            client_name: job.client_name,
+            client_company: job.client_company,
+            client_email: null,
+            client_phone: null,
+            client_address: job.address ? JSON.stringify(job.address) : null,
+            account_id: null,
+            recipient_name: job.recipient_name,
+            defendant_name: job.recipient_name,
+            defendant_first_name: null,
+            defendant_last_name: null,
+            defendant_address: job.address ? JSON.stringify(job.address) : null,
+            service_address: job.address ? JSON.stringify(job.address) : null,
+            address: job.address ? JSON.stringify(job.address) : null,
+            server_id: null,
+            server_name: job.server_name,
+            assigned_server: job.server_name,
+            assigned_to: job.server_name,
+            amount: job.amount,
+            price: job.amount,
+            cost: 0,
+            fee: job.amount,
+            total: job.amount,
+            service_type: job.service_type,
+            type: job.service_type,
+            document_type: null,
+            description: job.description,
+            notes: null,
+            instructions: null,
+            attempt_count: 0,
+            last_attempt: null,
+            last_attempt_date: null,
+            latitude: null,
+            longitude: null,
+            court: null,
+            case_number: null,
+            docket_number: null,
+            plaintiff: null,
+            attorney: null,
+            law_firm: null,
+            attempts: null,
+            documents: null,
+            attachments: null,
+            gps_coordinates: null,
+            tags: null,
+            badges: null,
+            raw_data: null,
+            last_synced: new Date().toISOString(),
+          };
 
-            try {
-              db.insert(jobs).values(jobData).onConflictDoUpdate({
-                target: jobs.servemanager_id,
-                set: jobData
-              }).run();
-              recordsSynced++;
-            } catch (insertError) {
-              console.error('Error inserting mock job:', insertError);
-            }
+          try {
+            db.insert(jobs).values(jobData).onConflictDoUpdate({
+              target: jobs.servemanager_id,
+              set: jobData
+            }).run();
+            recordsSynced++;
+            console.log(`✅ Inserted mock job: ${jobId}`);
+          } catch (insertError) {
+            console.error('Error inserting mock job:', insertError);
           }
-        });
-
-        transaction(mappedMockJobs);
+        }
         console.log(`✅ Mock jobs cached: ${recordsSynced} records`);
 
         await this.updateSyncLog('jobs', {
