@@ -126,10 +126,12 @@ export default function Jobs() {
 
   const loadServers = async () => {
     try {
-      const response = await fetch('/api/servers?limit=100');
+      console.log('Loading ALL servers/employees...');
+      const response = await fetch('/api/servers'); // No limits
       if (response.ok) {
         const data = await response.json();
-        setServers(data.servers);
+        setServers(data.servers || []);
+        console.log(`Loaded ${data.total} total servers from endpoint: ${data.endpoint_used || 'unknown'}`);
       }
     } catch (error) {
       console.error('Error loading servers:', error);
