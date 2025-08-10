@@ -133,7 +133,9 @@ export const saveConfigHandler: RequestHandler = async (req, res) => {
       config.radar.secretKey = existingConfig.radar?.secretKey || '';
     }
     
+    console.log('About to save config...');
     await saveConfig(config);
+    console.log('Config saved successfully');
     res.json({ message: 'Configuration saved successfully' });
   } catch (error) {
     console.error('Error saving config:', error);
