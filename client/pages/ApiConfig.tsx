@@ -45,7 +45,7 @@ const defaultConfig: ApiConfig = {
     baseUrl: 'https://www.servemanager.com/api',
     apiKey: '',
     enabled: false,
-    testEndpoint: '/ping',
+    testEndpoint: '/account',
   },
   radar: {
     publishableKey: '',
