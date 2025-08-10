@@ -94,7 +94,7 @@ export default function Jobs() {
       title: "Data Updated",
       description: "Jobs have been automatically synced",
     });
-  }, [toast]);
+  }, [loadJobs, loadClients, toast]);
 
   // Auto-sync setup with 30-second intervals
   const { status: syncStatus, manualSync } = useAutoSync({
@@ -108,7 +108,7 @@ export default function Jobs() {
     loadJobs();
     loadClients();
     loadServers();
-  }, [filters]);
+  }, [loadJobs, loadClients, filters]);
 
   const loadJobs = useCallback(async () => {
     setLoading(true);
