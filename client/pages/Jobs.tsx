@@ -218,7 +218,8 @@ export default function Jobs() {
       case "cancelled": return "bg-secondary text-secondary-foreground";
       case "completed": return "bg-success text-success-foreground";
       case "Client Hold": return "bg-orange-500 text-white";
-      case "": return "bg-blue-500 text-white"; // New/Unassigned jobs
+      case "unassigned": return "bg-blue-500 text-white"; // New/Unassigned jobs
+      case "": return "bg-blue-500 text-white"; // Handle actual empty status from API
       default: return "bg-muted text-muted-foreground";
     }
   };
