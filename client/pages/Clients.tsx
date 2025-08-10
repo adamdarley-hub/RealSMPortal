@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,17 +60,20 @@ export default function Clients() {
   const [totalClients, setTotalClients] = useState(0);
   const { toast } = useToast();
 
+  // Memoize the onDataUpdate callback to prevent infinite re-renders
+  const onDataUpdate = useCallback(() => {
+    loadClients();
+    toast({
+      title: "Data Updated",
+      description: "Clients have been automatically synced",
+    });
+  }, [toast]);
+
   // Auto-sync setup
   const { status: syncStatus, manualSync } = useAutoSync({
     enabled: true,
     interval: 30000, // 30 seconds
-    onDataUpdate: () => {
-      loadClients();
-      toast({
-        title: "Data Updated",
-        description: "Clients have been automatically synced",
-      });
-    }
+    onDataUpdate
   });
 
   useEffect(() => {
