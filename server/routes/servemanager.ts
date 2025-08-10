@@ -30,7 +30,7 @@ function decrypt(text: string): string {
   }
 }
 
-async function getServeManagerConfig() {
+export async function getServeManagerConfig() {
   try {
     const data = await fs.readFile(CONFIG_FILE, 'utf8');
     const config = JSON.parse(data);
