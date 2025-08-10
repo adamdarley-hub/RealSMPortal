@@ -21,17 +21,27 @@ async function getServeManagerConfig() {
   try {
     const data = await fs.readFile(CONFIG_FILE, 'utf8');
     const config = JSON.parse(data);
-    
+
     if (!config.serveManager?.enabled) {
-      throw new Error('ServeManager integration is not enabled');
+      throw new Error('ServeManager integration is not enabled. Please configure it in Settings → API Configuration.');
     }
-    
+
+    if (!config.serveManager?.baseUrl || !config.serveManager?.apiKey) {
+      throw new Error('ServeManager API URL or key is missing. Please check your configuration.');
+    }
+
     return {
       baseUrl: config.serveManager.baseUrl,
       apiKey: decrypt(config.serveManager.apiKey),
     };
   } catch (error) {
-    throw new Error('ServeManager configuration not found or invalid');
+    if (error instanceof Error && error.message.includes('ENOENT')) {
+      throw new Error('ServeManager is not configured yet. Please go to Settings → API Configuration to set it up.');
+    }
+    if (error instanceof Error && (error.message.includes('enabled') || error.message.includes('missing'))) {
+      throw error;
+    }
+    throw new Error('ServeManager configuration not found or invalid. Please check Settings → API Configuration.');
   }
 }
 
