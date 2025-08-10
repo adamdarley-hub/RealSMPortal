@@ -108,14 +108,18 @@ export default function ApiConfig() {
           title: "Success",
           description: "API configuration saved successfully",
         });
+        // Reload the configuration to get the masked keys
+        await loadConfiguration();
       } else {
-        throw new Error('Failed to save configuration');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save configuration');
       }
     } catch (error) {
       console.error('Failed to save configuration:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save API configuration';
       toast({
         title: "Error",
-        description: "Failed to save API configuration",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
