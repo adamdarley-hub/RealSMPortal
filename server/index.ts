@@ -41,6 +41,12 @@ export function createServer() {
   app.post("/api/test-servemanager", testServeManager);
   app.post("/api/test-radar", testRadar);
 
+  // Debug endpoint
+  app.post("/api/debug", (req, res) => {
+    console.log('Debug endpoint hit:', req.body);
+    res.json({ message: 'Debug endpoint working', received: req.body });
+  });
+
   // ServeManager integration routes
   app.get("/api/jobs", getJobs);
   app.get("/api/jobs/:id", getJob);
