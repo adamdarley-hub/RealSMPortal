@@ -162,10 +162,32 @@ export default function Clients() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={loadClients} variant="outline" className="gap-2">
-              <RefreshCw className="w-4 h-4" />
+            {/* Real-time sync status indicator */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg text-sm">
+              {syncStatus.isPolling ? (
+                <Wifi className="w-4 h-4 text-green-500" />
+              ) : (
+                <WifiOff className="w-4 h-4 text-red-500" />
+              )}
+              <span className="text-xs">
+                {syncStatus.isSyncing ? (
+                  <span className="flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Syncing...
+                  </span>
+                ) : syncStatus.lastSync ? (
+                  `Updated ${formatTimeAgo(syncStatus.lastSync)}`
+                ) : (
+                  'Not synced'
+                )}
+              </span>
+            </div>
+
+            <Button onClick={refreshClients} variant="outline" className="gap-2" disabled={syncStatus.isSyncing}>
+              <RefreshCw className={`w-4 h-4 ${syncStatus.isSyncing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
+
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="gap-2">
