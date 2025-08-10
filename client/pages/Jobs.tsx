@@ -138,6 +138,7 @@ export default function Jobs() {
       limit: 50,
       offset: 0,
     });
+    setSearchTerm("");
   };
 
   const getStatusColor = (status: string) => {
