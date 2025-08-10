@@ -128,7 +128,7 @@ export default function Jobs() {
   const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value || undefined,
+      [key]: value === 'all' ? undefined : value,
       offset: 0, // Reset to first page when filtering
     }));
   };
@@ -270,15 +270,15 @@ export default function Jobs() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
-                <Select 
-                  value={filters.status || ""} 
+                <Select
+                  value={filters.status || "all"}
                   onValueChange={(value) => handleFilterChange('status', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Status</SelectItem>
+                    <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="assigned">Assigned</SelectItem>
                     <SelectItem value="in_progress">In Progress</SelectItem>
@@ -291,15 +291,15 @@ export default function Jobs() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Priority</label>
-                <Select 
-                  value={filters.priority || ""} 
+                <Select
+                  value={filters.priority || "all"}
                   onValueChange={(value) => handleFilterChange('priority', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Priority" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Priority</SelectItem>
+                    <SelectItem value="all">All Priority</SelectItem>
                     <SelectItem value="rush">Rush</SelectItem>
                     <SelectItem value="high">High</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
@@ -310,15 +310,15 @@ export default function Jobs() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Client</label>
-                <Select 
-                  value={filters.client_id || ""} 
+                <Select
+                  value={filters.client_id || "all"}
                   onValueChange={(value) => handleFilterChange('client_id', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Clients" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Clients</SelectItem>
+                    <SelectItem value="all">All Clients</SelectItem>
                     {clients.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
                         {client.company || client.name}
@@ -330,15 +330,15 @@ export default function Jobs() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Server</label>
-                <Select 
-                  value={filters.server_id || ""} 
+                <Select
+                  value={filters.server_id || "all"}
                   onValueChange={(value) => handleFilterChange('server_id', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Servers" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Servers</SelectItem>
+                    <SelectItem value="all">All Servers</SelectItem>
                     <SelectItem value="unassigned">Unassigned</SelectItem>
                     {servers.map((server) => (
                       <SelectItem key={server.id} value={server.id}>
