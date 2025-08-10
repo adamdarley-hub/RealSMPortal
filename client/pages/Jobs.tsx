@@ -197,6 +197,16 @@ export default function Jobs() {
     setSearchTerm("");
   };
 
+  const refreshJobs = async () => {
+    // Trigger manual sync and reload
+    manualSync();
+    await loadJobs();
+    toast({
+      title: "Refreshed",
+      description: "Job data has been refreshed successfully",
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "served": return "bg-success text-success-foreground";
