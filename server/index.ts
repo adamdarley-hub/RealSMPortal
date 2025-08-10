@@ -133,15 +133,25 @@ export function createServer() {
     }
   });
 
-  // ServeManager integration routes
-  app.get("/api/jobs", getJobs);
-  app.get("/api/jobs/:id", getJob);
-  app.post("/api/jobs", createJob);
-  app.put("/api/jobs/:id", updateJob);
-  app.get("/api/clients", getClients);
-  app.get("/api/servers", getServers);
-  app.get("/api/invoices", getInvoices);
-  app.get("/api/contacts", getContacts);
+  // CACHED API ROUTES (Instant Response from Local Database)
+  app.get("/api/jobs", getCachedJobs);        // ⚡ INSTANT - Serve from local cache
+  app.get("/api/clients", getCachedClients);  // ⚡ INSTANT - Serve from local cache
+  app.get("/api/servers", getCachedServers);  // ⚡ INSTANT - Serve from local cache
+  app.get("/api/jobs/:id", getCachedJob);     // ⚡ INSTANT - Single job from cache
+
+  // Cache management routes
+  app.post("/api/sync", triggerSync);         // 🔄 Trigger manual sync
+  app.get("/api/sync/status", getSyncStatus); // 📊 Get sync status
+
+  // Direct ServeManager routes (for admin/debugging)
+  app.get("/api/servemanager/jobs", getJobs);
+  app.get("/api/servemanager/jobs/:id", getJob);
+  app.post("/api/servemanager/jobs", createJob);
+  app.put("/api/servemanager/jobs/:id", updateJob);
+  app.get("/api/servemanager/clients", getClients);
+  app.get("/api/servemanager/servers", getServers);
+  app.get("/api/servemanager/invoices", getInvoices);
+  app.get("/api/servemanager/contacts", getContacts);
 
   // Mock data routes for development (fallback when ServeManager not configured)
   app.get("/api/mock/jobs", getMockJobs);
