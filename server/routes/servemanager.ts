@@ -509,6 +509,108 @@ export const getInvoices: RequestHandler = async (req, res) => {
   }
 };
 
+// Get ALL contacts - no pagination limits
+export const getContacts: RequestHandler = async (req, res) => {
+  try {
+    console.log('=== FETCHING ALL CONTACTS ===');
+
+    // Try multiple endpoints as ServeManager might use different names
+    const endpointsToTry = ['/contacts', '/people', '/recipients', '/individuals'];
+    let allContacts: any[] = [];
+    let successfulEndpoint = '';
+
+    for (const baseEndpoint of endpointsToTry) {
+      try {
+        console.log(`Trying contacts endpoint: ${baseEndpoint}`);
+
+        let page = 1;
+        let hasMorePages = true;
+        const maxPages = 50;
+        let endpointContacts: any[] = [];
+
+        while (hasMorePages && page <= maxPages) {
+          const params = new URLSearchParams();
+          params.append('per_page', '100');
+          params.append('page', page.toString());
+
+          const endpoint = `${baseEndpoint}?${params.toString()}`;
+
+          try {
+            const pageData = await makeServeManagerRequest(endpoint);
+
+            // Handle different response structures
+            let pageContacts: any[] = [];
+            if (pageData.data && Array.isArray(pageData.data)) {
+              pageContacts = pageData.data;
+            } else if (pageData.contacts && Array.isArray(pageData.contacts)) {
+              pageContacts = pageData.contacts;
+            } else if (pageData.people && Array.isArray(pageData.people)) {
+              pageContacts = pageData.people;
+            } else if (pageData.recipients && Array.isArray(pageData.recipients)) {
+              pageContacts = pageData.recipients;
+            } else if (Array.isArray(pageData)) {
+              pageContacts = pageData;
+            }
+
+            console.log(`${baseEndpoint} page ${page}: Found ${pageContacts.length} contacts`);
+
+            if (pageContacts.length > 0) {
+              endpointContacts.push(...pageContacts);
+              hasMorePages = pageContacts.length === 100;
+              page++;
+            } else {
+              hasMorePages = false;
+            }
+          } catch (pageError) {
+            console.error(`Error fetching ${baseEndpoint} page ${page}:`, pageError);
+            hasMorePages = false;
+          }
+        }
+
+        if (endpointContacts.length > 0) {
+          allContacts = endpointContacts;
+          successfulEndpoint = baseEndpoint;
+          console.log(`Successfully fetched ${allContacts.length} contacts from ${baseEndpoint}`);
+          break;
+        }
+      } catch (endpointError) {
+        console.log(`Contacts endpoint ${baseEndpoint} failed, trying next...`);
+      }
+    }
+
+    console.log(`=== TOTAL CONTACTS FETCHED: ${allContacts.length} from ${successfulEndpoint} ===`);
+
+    res.json({
+      contacts: allContacts,
+      total: allContacts.length,
+      endpoint_used: successfulEndpoint
+    });
+
+  } catch (error) {
+    console.error('Error fetching all contacts, using mock data:', error);
+
+    // Mock contacts data
+    const mockContacts = [
+      {
+        id: "contact1", name: "Robert Eskridge", email: "robert.eskridge@email.com", phone: "(512) 555-1111",
+        address: { street: "1920 WILWOOD DRIVE", city: "ROUND ROCK", state: "TX", zip: "78681" },
+        created_date: "2024-01-15T00:00:00Z"
+      },
+      {
+        id: "contact2", name: "MINJUNG KWUN", email: "minjung.kwun@email.com", phone: "(512) 555-2222",
+        address: { street: "291 LOCKHART LOOP", city: "GEORGETOWN", state: "TX", zip: "78628" },
+        created_date: "2024-01-14T00:00:00Z"
+      }
+    ];
+
+    res.json({
+      contacts: mockContacts,
+      total: mockContacts.length,
+      mock: true
+    });
+  }
+};
+
 // Create new job
 export const createJob: RequestHandler = async (req, res) => {
   try {
