@@ -1,0 +1,224 @@
+import { RequestHandler } from "express";
+import fs from 'fs/promises';
+import path from 'path';
+import crypto from 'crypto';
+
+const CONFIG_FILE = path.join(process.cwd(), '.api-config.json');
+const ENCRYPTION_KEY = process.env.CONFIG_ENCRYPTION_KEY || 'default-key-change-in-production';
+
+function decrypt(text: string): string {
+  try {
+    const decipher = crypto.createDecipher('aes192', ENCRYPTION_KEY);
+    let decrypted = decipher.update(text, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (error) {
+    return text; // Return original if decryption fails
+  }
+}
+
+async function getServeManagerConfig() {
+  try {
+    const data = await fs.readFile(CONFIG_FILE, 'utf8');
+    const config = JSON.parse(data);
+    
+    if (!config.serveManager?.enabled) {
+      throw new Error('ServeManager integration is not enabled');
+    }
+    
+    return {
+      baseUrl: config.serveManager.baseUrl,
+      apiKey: decrypt(config.serveManager.apiKey),
+    };
+  } catch (error) {
+    throw new Error('ServeManager configuration not found or invalid');
+  }
+}
+
+async function makeServeManagerRequest(endpoint: string, options: RequestInit = {}) {
+  const config = await getServeManagerConfig();
+  
+  const response = await fetch(`${config.baseUrl}${endpoint}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${config.apiKey}`,
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`ServeManager API error: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+// Get all jobs with optional filtering
+export const getJobs: RequestHandler = async (req, res) => {
+  try {
+    const { 
+      status, 
+      priority, 
+      client_id, 
+      server_id, 
+      date_from, 
+      date_to, 
+      limit = '50', 
+      offset = '0' 
+    } = req.query;
+    
+    // Build query parameters for ServeManager API
+    const params = new URLSearchParams();
+    if (status) params.append('status', status as string);
+    if (priority) params.append('priority', priority as string);
+    if (client_id) params.append('client_id', client_id as string);
+    if (server_id) params.append('server_id', server_id as string);
+    if (date_from) params.append('date_from', date_from as string);
+    if (date_to) params.append('date_to', date_to as string);
+    params.append('limit', limit as string);
+    params.append('offset', offset as string);
+    
+    const endpoint = `/jobs?${params.toString()}`;
+    const data = await makeServeManagerRequest(endpoint);
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch jobs from ServeManager', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+};
+
+// Get single job details
+export const getJob: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await makeServeManagerRequest(`/jobs/${id}`);
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching job:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch job from ServeManager',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Get all clients
+export const getClients: RequestHandler = async (req, res) => {
+  try {
+    const { limit = '100', offset = '0' } = req.query;
+    const params = new URLSearchParams();
+    params.append('limit', limit as string);
+    params.append('offset', offset as string);
+    
+    const endpoint = `/clients?${params.toString()}`;
+    const data = await makeServeManagerRequest(endpoint);
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching clients:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch clients from ServeManager',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Get all servers
+export const getServers: RequestHandler = async (req, res) => {
+  try {
+    const { limit = '100', offset = '0' } = req.query;
+    const params = new URLSearchParams();
+    params.append('limit', limit as string);
+    params.append('offset', offset as string);
+    
+    const endpoint = `/servers?${params.toString()}`;
+    const data = await makeServeManagerRequest(endpoint);
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching servers:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch servers from ServeManager',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Get invoices
+export const getInvoices: RequestHandler = async (req, res) => {
+  try {
+    const { 
+      status, 
+      client_id, 
+      date_from, 
+      date_to, 
+      limit = '50', 
+      offset = '0' 
+    } = req.query;
+    
+    const params = new URLSearchParams();
+    if (status) params.append('status', status as string);
+    if (client_id) params.append('client_id', client_id as string);
+    if (date_from) params.append('date_from', date_from as string);
+    if (date_to) params.append('date_to', date_to as string);
+    params.append('limit', limit as string);
+    params.append('offset', offset as string);
+    
+    const endpoint = `/invoices?${params.toString()}`;
+    const data = await makeServeManagerRequest(endpoint);
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching invoices:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch invoices from ServeManager',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Create new job
+export const createJob: RequestHandler = async (req, res) => {
+  try {
+    const jobData = req.body;
+    
+    const data = await makeServeManagerRequest('/jobs', {
+      method: 'POST',
+      body: JSON.stringify(jobData),
+    });
+    
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('Error creating job:', error);
+    res.status(500).json({ 
+      error: 'Failed to create job in ServeManager',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+// Update job
+export const updateJob: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const jobData = req.body;
+    
+    const data = await makeServeManagerRequest(`/jobs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(jobData),
+    });
+    
+    res.json(data);
+  } catch (error) {
+    console.error('Error updating job:', error);
+    res.status(500).json({ 
+      error: 'Failed to update job in ServeManager',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
