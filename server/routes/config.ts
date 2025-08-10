@@ -61,17 +61,22 @@ async function loadConfig(): Promise<Partial<ApiConfig>> {
 }
 
 async function saveConfig(config: ApiConfig): Promise<void> {
-  const configToSave = { ...config };
-  
-  // Encrypt sensitive fields
-  if (configToSave.serveManager?.apiKey) {
-    configToSave.serveManager.apiKey = encrypt(configToSave.serveManager.apiKey);
+  try {
+    const configToSave = { ...config };
+
+    // Encrypt sensitive fields only if they exist and aren't already masked
+    if (configToSave.serveManager?.apiKey && !configToSave.serveManager.apiKey.startsWith('***')) {
+      configToSave.serveManager.apiKey = encrypt(configToSave.serveManager.apiKey);
+    }
+    if (configToSave.radar?.secretKey && !configToSave.radar.secretKey.startsWith('***')) {
+      configToSave.radar.secretKey = encrypt(configToSave.radar.secretKey);
+    }
+
+    await fs.writeFile(CONFIG_FILE, JSON.stringify(configToSave, null, 2));
+  } catch (error) {
+    console.error('Error saving config file:', error);
+    throw new Error(`Failed to save configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-  if (configToSave.radar?.secretKey) {
-    configToSave.radar.secretKey = encrypt(configToSave.radar.secretKey);
-  }
-  
-  await fs.writeFile(CONFIG_FILE, JSON.stringify(configToSave, null, 2));
 }
 
 // Get API configuration
