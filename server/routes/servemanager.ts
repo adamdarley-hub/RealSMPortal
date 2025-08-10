@@ -368,7 +368,10 @@ export const getServers: RequestHandler = async (req, res) => {
             console.log(`${baseEndpoint} page ${page}: Found ${pageServers.length} servers`);
 
             if (pageServers.length > 0) {
-              endpointServers.push(...pageServers);
+              // Map ALL raw servers through our comprehensive mapper
+              const mappedServers = pageServers.map(rawServer => mapServerFromServeManager(rawServer));
+              endpointServers.push(...mappedServers);
+
               hasMorePages = pageServers.length === 100;
               page++;
             } else {
