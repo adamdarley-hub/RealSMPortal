@@ -218,53 +218,89 @@ export const getJob: RequestHandler = async (req, res) => {
   }
 };
 
-// Get all clients
+// Get ALL clients - no pagination limits
 export const getClients: RequestHandler = async (req, res) => {
   try {
-    const { limit = '100', offset = '0' } = req.query;
-    const params = new URLSearchParams();
-    params.append('per_page', limit as string);
-    params.append('page', Math.floor(parseInt(offset as string) / parseInt(limit as string) + 1).toString());
+    console.log('=== FETCHING ALL CLIENTS ===');
 
-    const endpoint = `/clients?${params.toString()}`;
-    const data = await makeServeManagerRequest(endpoint);
+    // Fetch ALL clients with pagination loop
+    let allClients: any[] = [];
+    let page = 1;
+    let hasMorePages = true;
+    const maxPages = 50; // Safety limit
 
-    // Handle different response structures
-    let clients, total;
-    if (data.data) {
-      clients = data.data;
-      total = data.total || data.data.length;
-    } else if (data.clients) {
-      clients = data.clients;
-      total = data.total || data.clients.length;
-    } else {
-      clients = Array.isArray(data) ? data : [];
-      total = clients.length;
+    while (hasMorePages && page <= maxPages) {
+      const params = new URLSearchParams();
+      params.append('per_page', '100'); // Max per page
+      params.append('page', page.toString());
+
+      const endpoint = `/clients?${params.toString()}`;
+      console.log(`Fetching clients page ${page}`);
+
+      try {
+        const pageData = await makeServeManagerRequest(endpoint);
+
+        // Handle different response structures
+        let pageClients: any[] = [];
+        if (pageData.data && Array.isArray(pageData.data)) {
+          pageClients = pageData.data;
+        } else if (pageData.clients && Array.isArray(pageData.clients)) {
+          pageClients = pageData.clients;
+        } else if (Array.isArray(pageData)) {
+          pageClients = pageData;
+        }
+
+        console.log(`Clients page ${page}: Found ${pageClients.length} clients`);
+
+        if (pageClients.length > 0) {
+          allClients.push(...pageClients);
+          hasMorePages = pageClients.length === 100;
+          page++;
+        } else {
+          hasMorePages = false;
+        }
+      } catch (pageError) {
+        console.error(`Error fetching clients page ${page}:`, pageError);
+        hasMorePages = false;
+      }
     }
 
-    res.json({ clients, total, limit: parseInt(limit as string), offset: parseInt(offset as string) });
-  } catch (error) {
-    console.error('Error fetching clients, using mock data:', error);
+    console.log(`=== TOTAL CLIENTS FETCHED: ${allClients.length} ===`);
 
-    // Fallback to mock data
+    res.json({
+      clients: allClients,
+      total: allClients.length,
+      pages_fetched: page - 1
+    });
+
+  } catch (error) {
+    console.error('Error fetching all clients, using mock data:', error);
+
+    // Enhanced mock data
     const mockClients = [
       {
-        id: "client1",
-        name: "Pronto Process Service",
-        company: "Pronto Process Service",
-        email: "info@prontoprocess.com",
-        phone: "(512) 555-0123",
+        id: "client1", name: "Pronto Process Service", company: "Pronto Process Service",
+        email: "info@prontoprocess.com", phone: "(512) 555-0123",
         address: { street: "123 Main St", city: "Austin", state: "TX", zip: "78701" },
-        created_date: "2023-06-15T00:00:00Z",
-        active: true
+        created_date: "2023-06-15T00:00:00Z", active: true
+      },
+      {
+        id: "client2", name: "Kerr Civil Process Service", company: "Kerr Civil Process Service",
+        email: "contact@kerrprocess.com", phone: "(512) 555-0456",
+        address: { street: "456 Oak Ave", city: "Georgetown", state: "TX", zip: "78626" },
+        created_date: "2023-08-20T00:00:00Z", active: true
+      },
+      {
+        id: "client3", name: "Johnson & Associates Law", company: "Johnson & Associates Law",
+        email: "admin@johnsonlaw.com", phone: "(512) 555-0789",
+        address: { street: "789 Legal Lane", city: "Round Rock", state: "TX", zip: "78664" },
+        created_date: "2023-03-10T00:00:00Z", active: true
       }
     ];
 
     res.json({
       clients: mockClients,
       total: mockClients.length,
-      limit: parseInt(req.query.limit as string || '100'),
-      offset: parseInt(req.query.offset as string || '0'),
       mock: true
     });
   }
