@@ -112,10 +112,12 @@ export default function Jobs() {
 
   const loadClients = async () => {
     try {
-      const response = await fetch('/api/clients?limit=100');
+      console.log('Loading ALL clients...');
+      const response = await fetch('/api/clients'); // No limits
       if (response.ok) {
         const data = await response.json();
-        setClients(data.clients);
+        setClients(data.clients || []);
+        console.log(`Loaded ${data.total} total clients`);
       }
     } catch (error) {
       console.error('Error loading clients:', error);
