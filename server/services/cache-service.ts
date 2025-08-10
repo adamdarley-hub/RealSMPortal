@@ -223,7 +223,7 @@ export class CacheService {
           last_synced: new Date().toISOString(),
         };
 
-        // Simple insert/replace approach
+        // Simple insert/replace approach with better error handling
         try {
           // Delete existing record first to avoid conflicts
           db.delete(jobs).where(sql`servemanager_id = ${jobData.servemanager_id}`).run();
@@ -236,7 +236,8 @@ export class CacheService {
             console.log(`✅ Processed ${recordsSynced} jobs...`);
           }
         } catch (insertError) {
-          console.error('Error inserting job:', insertError);
+          console.warn(`⚠️ Skipping job ${jobData.id} due to insertion error:`, insertError.message);
+          // Continue processing other jobs instead of failing the entire sync
         }
       }
       
