@@ -306,53 +306,108 @@ export const getClients: RequestHandler = async (req, res) => {
   }
 };
 
-// Get all servers
+// Get ALL servers/employees - no pagination limits
 export const getServers: RequestHandler = async (req, res) => {
   try {
-    const { limit = '100', offset = '0' } = req.query;
-    const params = new URLSearchParams();
-    params.append('per_page', limit as string);
-    params.append('page', Math.floor(parseInt(offset as string) / parseInt(limit as string) + 1).toString());
+    console.log('=== FETCHING ALL SERVERS/EMPLOYEES ===');
 
-    const endpoint = `/servers?${params.toString()}`;
-    const data = await makeServeManagerRequest(endpoint);
+    // Try multiple endpoints as ServeManager might use different names
+    const endpointsToTry = ['/servers', '/employees', '/staff', '/process_servers'];
+    let allServers: any[] = [];
+    let successfulEndpoint = '';
 
-    // Handle different response structures
-    let servers, total;
-    if (data.data) {
-      servers = data.data;
-      total = data.total || data.data.length;
-    } else if (data.servers) {
-      servers = data.servers;
-      total = data.total || data.servers.length;
-    } else {
-      servers = Array.isArray(data) ? data : [];
-      total = servers.length;
+    for (const baseEndpoint of endpointsToTry) {
+      try {
+        console.log(`Trying endpoint: ${baseEndpoint}`);
+
+        let page = 1;
+        let hasMorePages = true;
+        const maxPages = 50;
+        let endpointServers: any[] = [];
+
+        while (hasMorePages && page <= maxPages) {
+          const params = new URLSearchParams();
+          params.append('per_page', '100');
+          params.append('page', page.toString());
+
+          const endpoint = `${baseEndpoint}?${params.toString()}`;
+
+          try {
+            const pageData = await makeServeManagerRequest(endpoint);
+
+            // Handle different response structures
+            let pageServers: any[] = [];
+            if (pageData.data && Array.isArray(pageData.data)) {
+              pageServers = pageData.data;
+            } else if (pageData.servers && Array.isArray(pageData.servers)) {
+              pageServers = pageData.servers;
+            } else if (pageData.employees && Array.isArray(pageData.employees)) {
+              pageServers = pageData.employees;
+            } else if (pageData.staff && Array.isArray(pageData.staff)) {
+              pageServers = pageData.staff;
+            } else if (Array.isArray(pageData)) {
+              pageServers = pageData;
+            }
+
+            console.log(`${baseEndpoint} page ${page}: Found ${pageServers.length} servers`);
+
+            if (pageServers.length > 0) {
+              endpointServers.push(...pageServers);
+              hasMorePages = pageServers.length === 100;
+              page++;
+            } else {
+              hasMorePages = false;
+            }
+          } catch (pageError) {
+            console.error(`Error fetching ${baseEndpoint} page ${page}:`, pageError);
+            hasMorePages = false;
+          }
+        }
+
+        if (endpointServers.length > 0) {
+          allServers = endpointServers;
+          successfulEndpoint = baseEndpoint;
+          console.log(`Successfully fetched ${allServers.length} servers from ${baseEndpoint}`);
+          break;
+        }
+      } catch (endpointError) {
+        console.log(`Endpoint ${baseEndpoint} failed, trying next...`);
+      }
     }
 
-    res.json({ servers, total, limit: parseInt(limit as string), offset: parseInt(offset as string) });
-  } catch (error) {
-    console.error('Error fetching servers, using mock data:', error);
+    console.log(`=== TOTAL SERVERS FETCHED: ${allServers.length} from ${successfulEndpoint} ===`);
 
-    // Fallback to mock data
+    res.json({
+      servers: allServers,
+      total: allServers.length,
+      endpoint_used: successfulEndpoint
+    });
+
+  } catch (error) {
+    console.error('Error fetching all servers, using mock data:', error);
+
+    // Enhanced mock data with more servers
     const mockServers = [
       {
-        id: "server1",
-        name: "Adam Darley",
-        email: "adam@serveportal.com",
-        phone: "(512) 555-0789",
-        license_number: "TX12345",
-        active: true,
-        territories: ["Austin", "Georgetown", "Round Rock"],
+        id: "server1", name: "Adam Darley", email: "adam@serveportal.com", phone: "(512) 555-0789",
+        license_number: "TX12345", active: true, territories: ["Austin", "Georgetown", "Round Rock"],
         created_date: "2023-01-15T00:00:00Z"
+      },
+      {
+        id: "server2", name: "Sarah Wilson", email: "sarah@serveportal.com", phone: "(512) 555-0234",
+        license_number: "TX12346", active: true, territories: ["Austin", "Cedar Park"],
+        created_date: "2023-02-20T00:00:00Z"
+      },
+      {
+        id: "server3", name: "Mike Rodriguez", email: "mike@serveportal.com", phone: "(512) 555-0567",
+        license_number: "TX12347", active: true, territories: ["Georgetown", "Leander"],
+        created_date: "2023-04-10T00:00:00Z"
       }
     ];
 
     res.json({
       servers: mockServers,
       total: mockServers.length,
-      limit: parseInt(req.query.limit as string || '100'),
-      offset: parseInt(req.query.offset as string || '0'),
       mock: true
     });
   }
