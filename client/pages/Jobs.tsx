@@ -481,10 +481,17 @@ export default function Jobs() {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{job.recipient?.name || 'Unknown Recipient'}</p>
+                        <p className="font-medium">
+                          {job.recipient?.name || job.recipient_name || job.defendant_name ||
+                           `${job.defendant_first_name || ''} ${job.defendant_last_name || ''}`.trim() || 'Unknown Recipient'}
+                        </p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
-                          {job.recipient?.address?.full_address || 'Address not available'}
+                          {job.recipient?.address?.full_address ||
+                           job.service_address?.full_address ||
+                           job.defendant_address?.full_address ||
+                           job.address?.full_address ||
+                           'Address not available'}
                         </p>
                       </div>
                     </TableCell>
