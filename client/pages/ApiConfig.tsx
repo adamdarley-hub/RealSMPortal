@@ -368,9 +368,9 @@ export default function ApiConfig() {
                 <CardDescription>
                   Configure connection to ServeManager API for job management, client data, and service tracking.
                   <br />
-                  <a href="https://www.servemanager.com/api" target="_blank" rel="noopener noreferrer" 
+                  Get your API key from: <a href="https://www.servemanager.com/api_keys" target="_blank" rel="noopener noreferrer"
                      className="text-primary hover:underline">
-                    View ServeManager API Documentation →
+                    ServeManager API Keys →
                   </a>
                 </CardDescription>
               </CardHeader>
