@@ -126,6 +126,16 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         }));
       }
 
+      // Restart polling if it was paused during background sync (even on error)
+      if (!showLoading && !intervalRef.current && enabled && mountedRef.current) {
+        console.log('🔄 Restarting auto-sync polling after sync error');
+        intervalRef.current = setInterval(() => {
+          if (mountedRef.current) {
+            triggerSync(false);
+          }
+        }, interval);
+      }
+
       // Don't let sync errors completely break the app
       // Still trigger data refresh to use cached data
       if (onDataUpdate && !showLoading) {
