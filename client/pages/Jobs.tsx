@@ -85,9 +85,14 @@ export default function Jobs() {
         throw new Error(errorData.message || 'Failed to load jobs');
       }
       
-      const data: JobsResponse = await response.json();
+      const data: JobsResponse & { mock?: boolean; error?: string } = await response.json();
       setJobs(data.jobs);
       setTotalJobs(data.total);
+      setUsingMockData(!!data.mock);
+
+      if (data.mock) {
+        console.log('Using mock data due to API error:', data.error);
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load jobs';
       setError(errorMessage);
