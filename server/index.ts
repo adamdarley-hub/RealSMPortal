@@ -50,5 +50,11 @@ export function createServer() {
   app.get("/api/servers", getServers);
   app.get("/api/invoices", getInvoices);
 
+  // Mock data routes for development (fallback when ServeManager not configured)
+  app.get("/api/mock/jobs", getMockJobs);
+  app.get("/api/mock/clients", getMockClients);
+  app.get("/api/mock/servers", getMockServers);
+  app.get("/api/mock/invoices", getMockInvoices);
+
   return app;
 }
