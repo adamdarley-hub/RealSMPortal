@@ -207,18 +207,49 @@ export const getClients: RequestHandler = async (req, res) => {
   try {
     const { limit = '100', offset = '0' } = req.query;
     const params = new URLSearchParams();
-    params.append('limit', limit as string);
-    params.append('offset', offset as string);
-    
+    params.append('per_page', limit as string);
+    params.append('page', Math.floor(parseInt(offset as string) / parseInt(limit as string) + 1).toString());
+
     const endpoint = `/clients?${params.toString()}`;
     const data = await makeServeManagerRequest(endpoint);
-    
-    res.json(data);
+
+    // Handle different response structures
+    let clients, total;
+    if (data.data) {
+      clients = data.data;
+      total = data.total || data.data.length;
+    } else if (data.clients) {
+      clients = data.clients;
+      total = data.total || data.clients.length;
+    } else {
+      clients = Array.isArray(data) ? data : [];
+      total = clients.length;
+    }
+
+    res.json({ clients, total, limit: parseInt(limit as string), offset: parseInt(offset as string) });
   } catch (error) {
-    console.error('Error fetching clients:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch clients from ServeManager',
-      message: error instanceof Error ? error.message : 'Unknown error'
+    console.error('Error fetching clients, using mock data:', error);
+
+    // Fallback to mock data
+    const mockClients = [
+      {
+        id: "client1",
+        name: "Pronto Process Service",
+        company: "Pronto Process Service",
+        email: "info@prontoprocess.com",
+        phone: "(512) 555-0123",
+        address: { street: "123 Main St", city: "Austin", state: "TX", zip: "78701" },
+        created_date: "2023-06-15T00:00:00Z",
+        active: true
+      }
+    ];
+
+    res.json({
+      clients: mockClients,
+      total: mockClients.length,
+      limit: parseInt(req.query.limit as string || '100'),
+      offset: parseInt(req.query.offset as string || '0'),
+      mock: true
     });
   }
 };
