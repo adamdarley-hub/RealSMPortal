@@ -40,17 +40,24 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
     }
 
     try {
+      // Add timeout and better error handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
       const response = await fetch('/api/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`Sync failed: ${response.status}`);
+        throw new Error(`Sync failed: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
-      
+
       setStatus(prev => ({
         ...prev,
         lastSync: new Date(),
@@ -68,32 +75,53 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
     } catch (error) {
       console.error('❌ Auto-sync failed:', error);
+
+      // Handle different types of errors gracefully
+      let errorMessage = 'Sync failed';
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Sync timeout';
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       setStatus(prev => ({
         ...prev,
         isSyncing: false,
-        error: error instanceof Error ? error.message : 'Sync failed'
+        error: errorMessage
       }));
+
+      // Don't let sync errors completely break the app
+      // Still trigger data refresh to use cached data
+      if (onDataUpdate && !showLoading) {
+        onDataUpdate();
+      }
     }
   }, [status.isSyncing, interval, onDataUpdate]);
 
   const startPolling = useCallback(() => {
     if (intervalRef.current || !enabled) return;
 
-    setStatus(prev => ({ 
-      ...prev, 
+    setStatus(prev => ({
+      ...prev,
       isPolling: true,
       nextSync: new Date(Date.now() + interval)
     }));
 
-    // Initial sync
-    triggerSync(false);
+    // Delay initial sync to let page load first
+    timeoutRef.current = setTimeout(() => {
+      triggerSync(false);
+    }, 5000); // Wait 5 seconds before first sync
 
     // Set up recurring sync
     intervalRef.current = setInterval(() => {
       triggerSync(false);
     }, interval);
 
-    console.log(`🚀 Auto-sync started: every ${interval/1000}s`);
+    console.log(`🚀 Auto-sync started: every ${interval/1000}s (first sync in 5s)`);
   }, [enabled, interval, triggerSync]);
 
   const stopPolling = useCallback(() => {
