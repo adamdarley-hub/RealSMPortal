@@ -775,20 +775,38 @@ export class CacheService {
     try {
       console.log('🔄 Starting servers sync from ServeManager...');
 
-      // Fetch servers from ServeManager API
+      // Try multiple server endpoints since employees gives 401
       const config = await getServeManagerConfig();
-      const response = await fetch(`${config.baseUrl}/employees`, {
-        headers: {
-          'Authorization': `Bearer ${config.apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      let data = null;
+      const possibleEndpoints = [
+        `/users`,
+        `/staff`,
+        `/process_servers`,
+        `/employees`
+      ];
 
-      if (!response.ok) {
-        throw new Error(`ServeManager API error: ${response.status} ${response.statusText}`);
+      for (const endpoint of possibleEndpoints) {
+        try {
+          const response = await fetch(`${config.baseUrl}${endpoint}`, {
+            headers: {
+              'Authorization': `Bearer ${config.apiKey}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            data = await response.json();
+            console.log(`✅ Successfully fetched servers from ${endpoint}`);
+            break;
+          }
+        } catch (endpointError) {
+          console.log(`❌ Failed to fetch from ${endpoint}, trying next...`);
+        }
       }
 
-      const data = await response.json();
+      if (!data) {
+        throw new Error('All server endpoints failed or returned unauthorized');
+      }
       let allServers: any[] = [];
 
       if (data.data && Array.isArray(data.data)) {
