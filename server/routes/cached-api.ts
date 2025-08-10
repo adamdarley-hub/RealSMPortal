@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { cacheService } from "../services/cache-service";
 import { getDatabaseStats } from "../db/database";
+import { getInitialSyncStatus } from "../services/startup-sync";
 
 // Get jobs from cache (instant response)
 export const getCachedJobs: RequestHandler = async (req, res) => {
