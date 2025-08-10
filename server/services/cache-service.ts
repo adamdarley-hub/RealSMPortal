@@ -343,8 +343,9 @@ export class CacheService {
       console.log(`📥 Fetched ${allClients.length} clients, caching locally...`);
       
       // Cache clients
-      const transaction = db.transaction((allClients: any[]) => {
-        for (const client of allClients) {
+      const transaction = db.transaction((clientsToProcess: any[]) => {
+        console.log(`Processing ${clientsToProcess.length} clients for database insertion...`);
+        for (const client of clientsToProcess) {
           const clientId = client.id || `client_${Date.now()}_${Math.random()}`;
           
           const clientData = {
