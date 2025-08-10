@@ -499,8 +499,27 @@ export class CacheService {
           params.append('per_page', '100');
           params.append('page', page.toString());
           
-          const endpoint = `/clients?${params.toString()}`;
-          const pageData = await makeServeManagerRequest(endpoint);
+          // Try multiple possible client endpoints since /clients returns 404
+          let pageData = null;
+          const possibleEndpoints = [
+            `/companies?${params.toString()}`,
+            `/accounts?${params.toString()}`,
+            `/clients?${params.toString()}`
+          ];
+
+          for (const endpoint of possibleEndpoints) {
+            try {
+              pageData = await makeServeManagerRequest(endpoint);
+              console.log(`✅ Successfully fetched from ${endpoint}`);
+              break;
+            } catch (endpointError) {
+              console.log(`❌ Failed to fetch from ${endpoint}, trying next...`);
+            }
+          }
+
+          if (!pageData) {
+            throw new Error('All client endpoints failed');
+          }
           
           let pageClients: any[] = [];
           if (pageData.data && Array.isArray(pageData.data)) {
