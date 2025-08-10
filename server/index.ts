@@ -12,6 +12,12 @@ import {
   createJob,
   updateJob
 } from "./routes/servemanager";
+import {
+  getMockJobs,
+  getMockClients,
+  getMockServers,
+  getMockInvoices
+} from "./routes/mock-data";
 
 export function createServer() {
   const app = express();
