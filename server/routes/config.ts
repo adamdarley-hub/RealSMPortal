@@ -44,17 +44,18 @@ async function loadConfig(): Promise<Partial<ApiConfig>> {
   try {
     const data = await fs.readFile(CONFIG_FILE, 'utf8');
     const config = JSON.parse(data);
-    
+
     // Decrypt sensitive fields
-    if (config.serveManager?.apiKey) {
+    if (config.serveManager?.apiKey && !config.serveManager.apiKey.startsWith('***')) {
       config.serveManager.apiKey = decrypt(config.serveManager.apiKey);
     }
-    if (config.radar?.secretKey) {
+    if (config.radar?.secretKey && !config.radar.secretKey.startsWith('***')) {
       config.radar.secretKey = decrypt(config.radar.secretKey);
     }
-    
+
     return config;
   } catch (error) {
+    console.log('Config file not found, returning empty config');
     // Return empty config if file doesn't exist
     return {};
   }
