@@ -59,20 +59,24 @@ async function getServeManagerConfig() {
 
 async function makeServeManagerRequest(endpoint: string, options: RequestInit = {}) {
   const config = await getServeManagerConfig();
-  
+
+  // ServeManager uses HTTP Basic Auth with API key as username and empty password
+  const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+
   const response = await fetch(`${config.baseUrl}${endpoint}`, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${config.apiKey}`,
+      'Authorization': `Basic ${credentials}`,
       'Content-Type': 'application/json',
       ...options.headers,
     },
   });
-  
+
   if (!response.ok) {
-    throw new Error(`ServeManager API error: ${response.status} ${response.statusText}`);
+    const errorText = await response.text();
+    throw new Error(`ServeManager API error: ${response.status} ${response.statusText} - ${errorText}`);
   }
-  
+
   return response.json();
 }
 
