@@ -226,6 +226,7 @@ export default function Jobs() {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "rush": return "bg-destructive text-destructive-foreground border-destructive";
+      case "routine": return "bg-muted text-muted-foreground border-muted";
       case "high": return "bg-warning text-warning-foreground border-warning";
       case "medium": return "bg-info text-info-foreground border-info";
       case "low": return "bg-success text-success-foreground border-success";
