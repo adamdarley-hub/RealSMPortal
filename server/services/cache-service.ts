@@ -146,7 +146,7 @@ export class CacheService {
         }
       }
       
-      console.log(`📥 Fetched ${allJobs.length} jobs from ServeManager, caching locally...`);
+      console.log(`��� Fetched ${allJobs.length} jobs from ServeManager, caching locally...`);
       
       // Cache jobs in database - process directly
       console.log(`Processing ${allJobs.length} real ServeManager jobs for database insertion...`);
@@ -223,10 +223,27 @@ export class CacheService {
 
         // Insert or replace
         try {
-          db.insert(jobs).values(jobData).onConflictDoUpdate({
+          // Use replace instead of onConflictDoUpdate to avoid parameter conflicts
+          await db.insert(jobs).values(jobData).onConflictDoUpdate({
             target: jobs.servemanager_id,
-            set: jobData
-          }).run();
+            set: {
+              // Explicitly set fields to avoid parameter conflicts
+              status: jobData.status,
+              priority: jobData.priority,
+              recipient_name: jobData.recipient_name,
+              client_name: jobData.client_name,
+              client_company: jobData.client_company,
+              server_name: jobData.server_name,
+              service_address: jobData.service_address,
+              defendant_address: jobData.defendant_address,
+              address: jobData.address,
+              amount: jobData.amount,
+              total: jobData.total,
+              updated_at: jobData.updated_at,
+              last_synced: jobData.last_synced,
+              raw_data: jobData.raw_data
+            }
+          });
           recordsSynced++;
           if (recordsSynced % 50 === 0) {
             console.log(`✅ Processed ${recordsSynced} jobs...`);
