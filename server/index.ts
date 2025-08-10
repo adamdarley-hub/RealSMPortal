@@ -150,6 +150,7 @@ export function createServer() {
   app.get("/api/sync/status", getDetailedSyncStatus); // 📊 Get detailed sync status
   app.post("/api/sync/legacy", triggerSync);       // 🔄 Legacy sync endpoint
   app.get("/api/sync/legacy-status", getSyncStatus); // 📊 Legacy sync status
+  app.post("/api/force-refresh", require("./routes/force-refresh").forceRefresh); // 🔄 Clear cache and force refresh
 
   // Direct ServeManager routes (for admin/debugging)
   app.get("/api/servemanager/jobs", getJobs);
