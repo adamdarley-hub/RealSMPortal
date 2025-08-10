@@ -1,6 +1,18 @@
 // Comprehensive data mapper for ServeManager API responses
 // This extracts ALL available fields, even if we don't use them yet
 
+// Helper function to safely extract string values from potentially nested objects
+function safeString(value: any, fallback: string = ''): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return value.toString();
+  if (typeof value === 'boolean') return value.toString();
+  if (typeof value === 'object' && value) {
+    // Try common string properties
+    return value.name || value.title || value.value || value.text || value.toString?.() || String(value);
+  }
+  return fallback;
+}
+
 export interface ServeManagerJob {
   // Core identifiers
   id?: string;
