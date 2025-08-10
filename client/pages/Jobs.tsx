@@ -462,7 +462,7 @@ export default function Jobs() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="">New/Unassigned</SelectItem>
+                    <SelectItem value="unassigned">New/Unassigned</SelectItem>
                     <SelectItem value="Client Hold">Client Hold</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="assigned">Assigned</SelectItem>
