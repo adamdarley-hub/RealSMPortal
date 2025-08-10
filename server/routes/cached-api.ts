@@ -82,23 +82,23 @@ export const getCachedServers: RequestHandler = async (req, res) => {
   try {
     const startTime = Date.now();
     console.log('👨‍💼 Serving servers from local cache...');
-    
-    // For now, return empty array since we'll sync servers next
-    const servers: any[] = [];
+
+    const servers = await cacheService.getServersFromCache();
     const responseTime = Date.now() - startTime;
-    
+
     console.log(`⚡ Served ${servers.length} servers from cache in ${responseTime}ms`);
-    
+
     res.json({
       servers,
       total: servers.length,
       cached: true,
-      response_time_ms: responseTime
+      response_time_ms: responseTime,
+      last_synced: servers[0]?._last_synced || null
     });
-    
+
   } catch (error) {
     console.error('Error serving cached servers:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get servers from cache',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
