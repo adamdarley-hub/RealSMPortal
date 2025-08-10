@@ -545,14 +545,22 @@ export default function Jobs() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {(job.server?.name || job.server_name || job.assigned_server) ? (
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-muted-foreground" />
-                          {job.server?.name || job.server_name || job.assigned_server}
-                        </div>
-                      ) : (
-                        <Badge variant="secondary">Unassigned</Badge>
-                      )}
+                      {(() => {
+                        // Safely extract server name from various formats
+                        const serverName = typeof job.server_name === 'string' ? job.server_name :
+                                         typeof job.assigned_server === 'string' ? job.assigned_server :
+                                         typeof job.server?.name === 'string' ? job.server.name :
+                                         job.server?.name?.name;
+
+                        return serverName ? (
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            {serverName}
+                          </div>
+                        ) : (
+                          <Badge variant="secondary">Unassigned</Badge>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
