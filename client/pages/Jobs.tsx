@@ -172,7 +172,7 @@ export default function Jobs() {
     loadJobs();
     loadClients();
     loadServers();
-  }, [loadJobs, loadClients, filters]);
+  }, [loadJobs, loadClients]);
 
   const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
     setFilters(prev => ({
