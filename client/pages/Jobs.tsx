@@ -85,31 +85,7 @@ export default function Jobs() {
   const [totalJobs, setTotalJobs] = useState(0);
   const { toast } = useToast();
 
-  // Memoize the onDataUpdate callback to prevent infinite re-renders
-  const onDataUpdate = useCallback(() => {
-    // Reload data when sync completes
-    loadJobs();
-    loadClients();
-    toast({
-      title: "Data Updated",
-      description: "Jobs have been automatically synced",
-    });
-  }, [loadJobs, loadClients, toast]);
-
-  // Auto-sync setup with 30-second intervals
-  const { status: syncStatus, manualSync } = useAutoSync({
-    enabled: true,
-    interval: 30000, // 30 seconds
-    onDataUpdate
-  });
-
-  // Load data on component mount
-  useEffect(() => {
-    loadJobs();
-    loadClients();
-    loadServers();
-  }, [loadJobs, loadClients, filters]);
-
+  // Declare load functions first before using them in callbacks
   const loadJobs = useCallback(async () => {
     setLoading(true);
     setError(null);
