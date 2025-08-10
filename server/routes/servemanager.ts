@@ -80,10 +80,10 @@ async function makeServeManagerRequest(endpoint: string, options: RequestInit = 
   return response.json();
 }
 
-// Get all jobs with optional filtering
+// Get ALL jobs with optional filtering - no pagination limits
 export const getJobs: RequestHandler = async (req, res) => {
   try {
-    console.log('=== JOBS DEBUG ===');
+    console.log('=== FETCHING ALL JOBS ===');
 
     const config = await getServeManagerConfig();
     console.log('API Key exists:', !!config.apiKey);
@@ -95,92 +95,108 @@ export const getJobs: RequestHandler = async (req, res) => {
       client_id,
       server_id,
       date_from,
-      date_to,
-      limit = '50',
-      offset = '0'
+      date_to
     } = req.query;
 
-    // ServeManager might use different parameter names, let's try both
-    const params = new URLSearchParams();
-    if (status && status !== 'all') params.append('status', status as string);
-    if (priority && priority !== 'all') params.append('priority', priority as string);
-    if (client_id && client_id !== 'all') params.append('client_id', client_id as string);
-    if (server_id && server_id !== 'all') params.append('server_id', server_id as string);
-    if (date_from) params.append('date_from', date_from as string);
-    if (date_to) params.append('date_to', date_to as string);
+    // Build filter parameters
+    const filterParams = new URLSearchParams();
+    if (status && status !== 'all') filterParams.append('status', status as string);
+    if (priority && priority !== 'all') filterParams.append('priority', priority as string);
+    if (client_id && client_id !== 'all') filterParams.append('client_id', client_id as string);
+    if (server_id && server_id !== 'all') filterParams.append('server_id', server_id as string);
+    if (date_from) filterParams.append('date_from', date_from as string);
+    if (date_to) filterParams.append('date_to', date_to as string);
 
-    // Try pagination with per_page parameter (common in APIs)
-    params.append('per_page', limit as string);
-    params.append('page', Math.floor(parseInt(offset as string) / parseInt(limit as string) + 1).toString());
+    // Fetch ALL jobs with pagination loop
+    let allJobs: any[] = [];
+    let page = 1;
+    let hasMorePages = true;
+    const maxPages = 100; // Safety limit to prevent infinite loops
 
-    const endpoint = `/jobs?${params.toString()}`;
-    console.log('Fetching from:', `${config.baseUrl}${endpoint}`);
+    console.log('Starting pagination loop to fetch ALL jobs...');
 
-    const data = await makeServeManagerRequest(endpoint);
-    console.log('Response keys:', Object.keys(data));
-    console.log('Data length:', data.data?.length || data.jobs?.length || 'No data/jobs array');
-    console.log('First job:', data.data?.[0] || data.jobs?.[0] || 'No jobs found');
-    console.log('==================');
+    while (hasMorePages && page <= maxPages) {
+      const params = new URLSearchParams(filterParams);
+      params.append('per_page', '100'); // Max per page
+      params.append('page', page.toString());
 
-    // Handle different response structures
-    let jobs, total;
-    if (data.data) {
-      jobs = data.data;
-      total = data.total || data.data.length;
-    } else if (data.jobs) {
-      jobs = data.jobs;
-      total = data.total || data.jobs.length;
-    } else if (Array.isArray(data)) {
-      jobs = data;
-      total = data.length;
-    } else {
-      jobs = [];
-      total = 0;
+      const endpoint = `/jobs?${params.toString()}`;
+      console.log(`Fetching page ${page} from: ${config.baseUrl}${endpoint}`);
+
+      try {
+        const pageData = await makeServeManagerRequest(endpoint);
+
+        // Handle different response structures
+        let pageJobs: any[] = [];
+        if (pageData.data && Array.isArray(pageData.data)) {
+          pageJobs = pageData.data;
+        } else if (pageData.jobs && Array.isArray(pageData.jobs)) {
+          pageJobs = pageData.jobs;
+        } else if (Array.isArray(pageData)) {
+          pageJobs = pageData;
+        }
+
+        console.log(`Page ${page}: Found ${pageJobs.length} jobs`);
+
+        if (pageJobs.length > 0) {
+          allJobs.push(...pageJobs);
+          // Continue if we got a full page (suggests more data)
+          hasMorePages = pageJobs.length === 100;
+          page++;
+        } else {
+          hasMorePages = false;
+        }
+      } catch (pageError) {
+        console.error(`Error fetching page ${page}:`, pageError);
+        hasMorePages = false;
+      }
     }
 
+    console.log(`=== TOTAL JOBS FETCHED: ${allJobs.length} across ${page - 1} pages ===`);
+
     res.json({
-      jobs,
-      total,
-      limit: parseInt(limit as string),
-      offset: parseInt(offset as string)
+      jobs: allJobs,
+      total: allJobs.length,
+      pages_fetched: page - 1,
+      complete: page <= maxPages
     });
+
   } catch (error) {
-    console.error('Error fetching jobs:', error);
+    console.error('Error fetching all jobs:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.log('Jobs API failed, falling back to mock data');
 
-    // Fallback to mock data if API fails
+    // Enhanced mock data with more variety
     const mockJobs = [
       {
-        id: "20527876",
-        job_number: "20527876",
+        id: "20527876", job_number: "20527876",
         client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
-        recipient: {
-          name: "Robert Eskridge",
-          address: {
-            street: "1920 WILWOOD DRIVE",
-            city: "ROUND ROCK",
-            state: "TX",
-            zip: "78681",
-            full_address: "1920 WILWOOD DRIVE, ROUND ROCK TX 78681"
-          }
-        },
-        status: "pending",
-        priority: "routine",
-        server: { id: "server1", name: "Adam Darley" },
-        due_date: null,
-        created_date: "2024-01-15T10:00:00Z",
-        amount: 50.00,
-        description: "Service of Process - Divorce Papers",
-        service_type: "Service"
+        recipient: { name: "Robert Eskridge", address: { street: "1920 WILWOOD DRIVE", city: "ROUND ROCK", state: "TX", zip: "78681", full_address: "1920 WILWOOD DRIVE, ROUND ROCK TX 78681" }},
+        status: "pending", priority: "routine", server: { id: "server1", name: "Adam Darley" },
+        due_date: null, created_date: "2024-01-15T10:00:00Z", amount: 50.00,
+        description: "Service of Process - Divorce Papers", service_type: "Service"
+      },
+      {
+        id: "20527766", job_number: "20527766",
+        client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
+        recipient: { name: "MINJUNG KWUN", address: { street: "291 LOCKHART LOOP", city: "GEORGETOWN", state: "TX", zip: "78628", full_address: "291 LOCKHART LOOP, GEORGETOWN TX 78628" }},
+        status: "pending", priority: "routine", server: { id: "server1", name: "Adam Darley" },
+        due_date: null, created_date: "2024-01-14T09:30:00Z", amount: 50.00,
+        description: "Subpoena Service", service_type: "Service"
+      },
+      {
+        id: "20508743", job_number: "20508743",
+        client: { id: "client2", name: "Kerr Civil Process Service", company: "Kerr Civil Process Service" },
+        recipient: { name: "WILLIAMSON CENTRAL APPRAISAL DISTRICT", address: { street: "625 FM 1460", city: "Georgetown", state: "TX", zip: "78626", full_address: "625 FM 1460, Georgetown TX 78626" }},
+        status: "pending", priority: "routine", server: null,
+        due_date: "2024-08-20", created_date: "2024-01-10T08:15:00Z", amount: 0.00,
+        description: "Court Papers - Personal Injury", service_type: "Service"
       }
     ];
 
     res.json({
       jobs: mockJobs,
       total: mockJobs.length,
-      limit: parseInt(limit as string),
-      offset: parseInt(offset as string),
       mock: true,
       error: errorMessage
     });
