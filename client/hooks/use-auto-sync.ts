@@ -31,18 +31,24 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const mountedRef = useRef(true);
 
   const triggerSync = useCallback(async (showLoading = true) => {
-    if (status.isSyncing) return;
+    if (status.isSyncing) {
+      console.log('⏭️ Skipping sync - already in progress');
+      return;
+    }
 
-    if (showLoading) {
+    if (showLoading && mountedRef.current) {
       setStatus(prev => ({ ...prev, isSyncing: true, error: null }));
     }
 
     try {
       // Add timeout and better error handling
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      const timeoutId = setTimeout(() => {
+        controller.abort(new Error('Request timeout after 15 seconds'));
+      }, 15000); // 15 second timeout
 
       console.log('🔄 Starting auto-sync request...');
 
@@ -62,13 +68,15 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       const result = await response.json();
       console.log('📊 Sync result:', result);
 
-      setStatus(prev => ({
-        ...prev,
-        lastSync: new Date(),
-        nextSync: new Date(Date.now() + interval),
-        isSyncing: false,
-        error: null
-      }));
+      if (mountedRef.current) {
+        setStatus(prev => ({
+          ...prev,
+          lastSync: new Date(),
+          nextSync: new Date(Date.now() + interval),
+          isSyncing: false,
+          error: null
+        }));
+      }
 
       // Trigger data refresh in parent component
       if (onDataUpdate) {
@@ -83,8 +91,9 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       // Handle different types of errors gracefully
       let errorMessage = 'Sync failed';
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
+        if (error.name === 'AbortError' || error.message.includes('aborted')) {
           errorMessage = 'Sync timeout';
+          console.log('🕐 Auto-sync request timed out after 15 seconds');
         } else if (error.message.includes('Failed to fetch')) {
           errorMessage = 'Network error';
         } else {
@@ -92,11 +101,13 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         }
       }
 
-      setStatus(prev => ({
-        ...prev,
-        isSyncing: false,
-        error: errorMessage
-      }));
+      if (mountedRef.current) {
+        setStatus(prev => ({
+          ...prev,
+          isSyncing: false,
+          error: errorMessage
+        }));
+      }
 
       // Don't let sync errors completely break the app
       // Still trigger data refresh to use cached data
@@ -138,9 +149,10 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       timeoutRef.current = null;
     }
 
-    setStatus(prev => ({ 
-      ...prev, 
+    setStatus(prev => ({
+      ...prev,
       isPolling: false,
+      isSyncing: false, // Reset syncing state when stopping
       nextSync: null
     }));
 
@@ -165,6 +177,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      mountedRef.current = false;
       stopPolling();
     };
   }, [stopPolling]);
