@@ -176,7 +176,7 @@ export default function Jobs() {
   };
 
   // Filter jobs by search term
-  const filteredJobs = jobs.filter(job => 
+  const filteredJobs = (jobs || []).filter(job =>
     job.job_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.recipient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
