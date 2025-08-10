@@ -301,7 +301,13 @@ export class CacheService {
 
       try {
         // Map mock jobs using the same mapper
-        const mappedMockJobs = mockJobs.map(rawJob => mapJobFromServeManager(rawJob));
+        console.log('Mock jobs before mapping:', mockJobs.length);
+        const mappedMockJobs = mockJobs.map(rawJob => {
+          const mapped = mapJobFromServeManager(rawJob);
+          console.log('Mapped job:', mapped ? 'success' : 'failed');
+          return mapped;
+        });
+        console.log('Mapped mock jobs result:', mappedMockJobs.length, 'items');
 
         // Cache mock jobs
         const transaction = db.transaction((jobsToProcess: any[]) => {
