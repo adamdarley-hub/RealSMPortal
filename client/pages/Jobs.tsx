@@ -156,7 +156,7 @@ export default function Jobs() {
     }
   }, [filters, toast]);
 
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     try {
       console.log('Loading ALL clients...');
       const response = await fetch('/api/clients'); // No limits
@@ -168,7 +168,7 @@ export default function Jobs() {
     } catch (error) {
       console.error('Error loading clients:', error);
     }
-  };
+  }, []);
 
   const loadServers = async () => {
     try {
