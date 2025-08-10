@@ -58,7 +58,7 @@ export async function getServeManagerConfig() {
   }
 }
 
-async function makeServeManagerRequest(endpoint: string, options: RequestInit = {}) {
+export async function makeServeManagerRequest(endpoint: string, options: RequestInit = {}) {
   const config = await getServeManagerConfig();
 
   // ServeManager uses HTTP Basic Auth with API key as username and empty password
