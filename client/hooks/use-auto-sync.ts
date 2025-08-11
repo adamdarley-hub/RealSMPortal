@@ -118,12 +118,18 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
       // Handle different types of errors gracefully
       let errorMessage = 'Sync failed';
+      let shouldRetry = true;
+
       if (error instanceof Error) {
         if (error.name === 'AbortError' || error.message.includes('aborted')) {
           errorMessage = 'Sync timeout - using cached data';
           console.log('🕐 Auto-sync request timed out after 30 seconds, using cached data');
-        } else if (error.message.includes('Failed to fetch')) {
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('Network connection failed')) {
           errorMessage = 'Server unavailable - using cached data';
+          console.log('🌐 Network error detected, will continue with cached data');
+        } else if (error.message.includes('Fetch API is not available')) {
+          errorMessage = 'Browser fetch blocked - using cached data';
+          shouldRetry = false; // Don't keep retrying if fetch is blocked
         } else {
           errorMessage = error.message;
         }
@@ -138,7 +144,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       }
 
       // Restart polling if it was paused during background sync (even on error)
-      if (!showLoading && !intervalRef.current && enabled && mountedRef.current) {
+      // But only if we should retry (don't retry if fetch is blocked)
+      if (!showLoading && !intervalRef.current && enabled && mountedRef.current && shouldRetry) {
         console.log('🔄 Restarting auto-sync polling after sync error');
         intervalRef.current = setInterval(() => {
           if (mountedRef.current) {
@@ -150,6 +157,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       // Don't let sync errors completely break the app
       // Still trigger data refresh to use cached data
       if (onDataUpdate && !showLoading) {
+        console.log('📦 Triggering data refresh with cached data due to sync error');
         onDataUpdate();
       }
     }
