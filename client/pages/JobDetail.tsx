@@ -243,17 +243,17 @@ const extractServiceAttempts = (job: Job) => {
   return job.attempts.map((attempt: any, index: number) => {
     // Debug log for each attempt to understand status fields
     console.log(`🔍 Attempt ${index + 1} status analysis:`, {
-      served: attempt.served,
-      status: attempt.status,
-      result: attempt.result,
-      service_status: attempt.service_status,
+      success: attempt.success,  // Primary field from API docs
+      service_status: attempt.service_status,  // API docs show \"Served\"
+      served_at: attempt.served_at,  // Timestamp when served
+      mobile: attempt.mobile,  // Boolean for mobile vs manual
       allStatusFields: {
+        success: attempt.success,
+        service_status: attempt.service_status,
+        served_at: attempt.served_at,
         served: attempt.served,
         status: attempt.status,
-        result: attempt.result,
-        service_status: attempt.service_status,
-        success: attempt.success,
-        successful: attempt.successful
+        result: attempt.result
       },
       allFields: Object.keys(attempt)
     });
