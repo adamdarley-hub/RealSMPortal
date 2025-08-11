@@ -292,14 +292,34 @@ export default function JobDetail() {
     loadJob();
   }, [id, toast]);
 
-  const toggleAttemptExpansion = (attemptId: number) => {
-    setServiceAttempts(prev => 
-      prev.map(attempt => 
-        attempt.id === attemptId 
-          ? { ...attempt, expanded: !attempt.expanded }
-          : attempt
-      )
-    );
+  const toggleAttemptExpansion = (attemptId: string | number) => {
+    const id = String(attemptId);
+    setExpandedAttempts(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(id)) {
+        newExpanded.delete(id);
+      } else {
+        newExpanded.add(id);
+      }
+      return newExpanded;
+    });
+  };
+
+  const isAttemptExpanded = (attemptId: string | number) => {
+    return expandedAttempts.has(String(attemptId));
+  };
+
+  const handlePhotoClick = (photo: any) => {
+    setSelectedPhoto(photo);
+    setIsPhotoModalOpen(true);
+  };
+
+  const handlePrintJob = () => {
+    setIsPrintMode(true);
+    setTimeout(() => {
+      window.print();
+      setIsPrintMode(false);
+    }, 100);
   };
 
   if (loading) {
