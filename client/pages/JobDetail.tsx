@@ -478,7 +478,10 @@ export default function JobDetail() {
           throw new Error(`Failed to load job: ${response.status}`);
         }
 
-        const jobData = await response.json();
+        const rawJobData = await response.json();
+        // Handle both direct job data and wrapped responses
+        const jobData = rawJobData.data || rawJobData;
+
         console.log('📄 Raw job data received:', {
           id: jobData.id,
           jobNumber: jobData.job_number || jobData.generated_job_id,
@@ -486,7 +489,9 @@ export default function JobDetail() {
           hasAttempts: !!jobData.attempts,
           attemptsLength: jobData.attempts?.length || 0,
           rawAttempts: jobData.attempts,
-          jobKeys: Object.keys(jobData)
+          jobKeys: Object.keys(jobData),
+          isWrapped: !!rawJobData.data,
+          rawDataStructure: Object.keys(rawJobData)
         });
 
         setJob(jobData);
