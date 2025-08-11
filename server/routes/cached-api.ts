@@ -153,15 +153,42 @@ export const getSyncStatus: RequestHandler = async (req, res) => {
 export const getCachedJob: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // For now, return error - we'll implement single job lookup later
-    res.status(404).json({
-      error: 'Single job lookup not implemented yet',
-      message: 'Use the jobs list endpoint instead'
+    const startTime = Date.now();
+
+    console.log(`🔍 Looking up job ${id} from cache...`);
+
+    if (!id) {
+      res.status(400).json({
+        error: 'Job ID is required',
+        message: 'Please provide a valid job ID'
+      });
+      return;
+    }
+
+    const job = await cacheService.getJobFromCache(id);
+    const responseTime = Date.now() - startTime;
+
+    if (!job) {
+      console.log(`❌ Job ${id} not found in cache`);
+      res.status(404).json({
+        error: 'Job not found',
+        message: `Job with ID ${id} was not found in the cache`
+      });
+      return;
+    }
+
+    console.log(`⚡ Served job ${id} from cache in ${responseTime}ms`);
+
+    res.json({
+      ...job,
+      cached: true,
+      response_time_ms: responseTime,
+      _last_synced: job.last_synced
     });
-    
+
   } catch (error) {
-    res.status(500).json({ 
+    console.error('Error getting job from cache:', error);
+    res.status(500).json({
       error: 'Failed to get job from cache',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
