@@ -2,7 +2,7 @@ import { RequestHandler } from 'express';
 import fetch from 'node-fetch';
 
 // Generic proxy endpoint that can handle any S3 URL
-export const genericProxy: RequestHandler = async (req, res) => {
+const genericProxy: RequestHandler = async (req, res) => {
   try {
     const { url } = req.query;
     const { preview = 'false' } = req.query;
