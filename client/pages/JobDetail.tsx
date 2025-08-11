@@ -111,28 +111,22 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-// Helper function to get preview URL for inline viewing
-const getPreviewUrl = (downloadUrl: string, documentId: string, jobId: string, type = 'document'): string => {
-  if (!downloadUrl || !documentId || !jobId) return '';
+// Helper function to get preview URL for inline viewing using generic proxy
+const getPreviewUrl = (downloadUrl: string): string => {
+  if (!downloadUrl) return '';
 
-  // Use proxy endpoint to avoid S3 URL expiration issues
-  return `/api/proxy/document/${jobId}/${documentId}/${type}`;
+  // Use generic proxy endpoint to avoid S3 URL expiration issues
+  const encodedUrl = encodeURIComponent(downloadUrl);
+  return `/api/proxy?url=${encodedUrl}&preview=true`;
 };
 
-// Helper function to get download URL with proper headers
-const getProxyDownloadUrl = (downloadUrl: string, documentId: string, jobId: string, type = 'document'): string => {
-  if (!downloadUrl || !documentId || !jobId) return '';
+// Helper function to get download URL with proper headers using generic proxy
+const getProxyDownloadUrl = (downloadUrl: string): string => {
+  if (!downloadUrl) return '';
 
-  // Use proxy endpoint with download=true parameter
-  return `/api/proxy/document/${jobId}/${documentId}/${type}?download=true`;
-};
-
-// Helper function to get photo proxy URL
-const getPhotoProxyUrl = (photoId: string, attemptId: string, jobId: string, download = false): string => {
-  if (!photoId || !attemptId || !jobId) return '';
-
-  const downloadParam = download ? '?download=true' : '';
-  return `/api/proxy/photo/${jobId}/${attemptId}/${photoId}${downloadParam}`;
+  // Use generic proxy endpoint with preview=false for download
+  const encodedUrl = encodeURIComponent(downloadUrl);
+  return `/api/proxy?url=${encodedUrl}&preview=false`;
 };
 
 // Helper to get status color
