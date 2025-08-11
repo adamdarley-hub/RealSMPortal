@@ -207,67 +207,93 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
 export function mapClientFromServeManager(rawClient: any): any {
   if (!rawClient) return { _raw: rawClient };
 
-  // Extract name from various possible formats
-  const extractName = () => {
-    if (rawClient.name) return rawClient.name;
-    if (rawClient.client_name) return rawClient.client_name;
-    if (rawClient.contact_name) return rawClient.contact_name;
-    if (rawClient.first_name || rawClient.last_name) {
-      return `${rawClient.first_name || ''} ${rawClient.last_name || ''}`.trim();
-    }
-    // Try to get primary contact name
+  // Extract contact person name from contacts array
+  const extractContactName = () => {
     if (rawClient.contacts && Array.isArray(rawClient.contacts) && rawClient.contacts.length > 0) {
       const primaryContact = rawClient.contacts.find(c => c.primary) || rawClient.contacts[0];
       if (primaryContact.first_name || primaryContact.last_name) {
         return `${primaryContact.first_name || ''} ${primaryContact.last_name || ''}`.trim();
       }
+      if (primaryContact.name) return primaryContact.name;
     }
+    // Fallback to top-level fields if no contacts
+    if (rawClient.first_name || rawClient.last_name) {
+      return `${rawClient.first_name || ''} ${rawClient.last_name || ''}`.trim();
+    }
+    if (rawClient.contact_name) return rawClient.contact_name;
     return null;
   };
 
-  // Extract company from various possible formats
+  // Extract company name (ServeManager companies have name field as company name)
   const extractCompany = () => {
     if (rawClient.company) return rawClient.company;
     if (rawClient.company_name) return rawClient.company_name;
     if (rawClient.business_name) return rawClient.business_name;
-    if (rawClient.name && !rawClient.first_name) return rawClient.name; // Company name in name field
+    if (rawClient.name) return rawClient.name; // ServeManager company name is in 'name' field
     return null;
   };
 
-  // Extract email from various sources
+  // Extract email from contacts or email_addresses array
   const extractEmail = () => {
-    if (rawClient.email) return rawClient.email;
-    if (rawClient.email_address) return rawClient.email_address;
-    // Try to get primary contact email
+    // Try email_addresses array first
+    if (rawClient.email_addresses && Array.isArray(rawClient.email_addresses) && rawClient.email_addresses.length > 0) {
+      const primaryEmail = rawClient.email_addresses.find(e => e.primary) || rawClient.email_addresses[0];
+      return primaryEmail.email || primaryEmail.address;
+    }
+    // Try contacts array
     if (rawClient.contacts && Array.isArray(rawClient.contacts) && rawClient.contacts.length > 0) {
       const primaryContact = rawClient.contacts.find(c => c.primary) || rawClient.contacts[0];
       return primaryContact.email || primaryContact.email_address;
     }
-    return null;
+    // Try direct fields
+    return rawClient.email || rawClient.email_address || null;
   };
 
-  // Extract phone from various sources
+  // Extract phone from contacts or phone_numbers array
   const extractPhone = () => {
-    if (rawClient.phone) return rawClient.phone;
-    if (rawClient.phone_number) return rawClient.phone_number;
-    if (rawClient.telephone) return rawClient.telephone;
-    // Try to get primary contact phone
+    // Try phone_numbers array first
+    if (rawClient.phone_numbers && Array.isArray(rawClient.phone_numbers) && rawClient.phone_numbers.length > 0) {
+      const primaryPhone = rawClient.phone_numbers.find(p => p.primary) || rawClient.phone_numbers[0];
+      return primaryPhone.phone || primaryPhone.number;
+    }
+    // Try contacts array
     if (rawClient.contacts && Array.isArray(rawClient.contacts) && rawClient.contacts.length > 0) {
       const primaryContact = rawClient.contacts.find(c => c.primary) || rawClient.contacts[0];
       return primaryContact.phone || primaryContact.phone_number || primaryContact.telephone;
     }
+    // Try direct fields
+    return rawClient.phone || rawClient.phone_number || rawClient.telephone || null;
+  };
+
+  // Extract address from addresses array
+  const extractAddress = () => {
+    if (rawClient.addresses && Array.isArray(rawClient.addresses) && rawClient.addresses.length > 0) {
+      const primaryAddress = rawClient.addresses.find(a => a.primary) || rawClient.addresses[0];
+      return {
+        street: primaryAddress.street || primaryAddress.street1 || primaryAddress.address,
+        street2: primaryAddress.street2,
+        city: primaryAddress.city,
+        state: primaryAddress.state || primaryAddress.province,
+        zip: primaryAddress.zip || primaryAddress.postal_code,
+        country: primaryAddress.country
+      };
+    }
+    // Fallback to direct address fields
+    if (rawClient.address) return rawClient.address;
+    if (rawClient.billing_address) return rawClient.billing_address;
+    if (rawClient.mailing_address) return rawClient.mailing_address;
     return null;
   };
 
   return {
-    id: rawClient.id || rawClient.uuid || rawClient.client_id,
-    name: extractName(),
+    id: String(rawClient.id || rawClient.uuid || rawClient.client_id), // Convert to string to avoid decimal display
+    name: extractContactName(),
     company: extractCompany(),
     email: extractEmail(),
     phone: extractPhone(),
-    address: rawClient.address || rawClient.billing_address || rawClient.mailing_address,
-    billing_address: rawClient.billing_address || rawClient.address,
-    mailing_address: rawClient.mailing_address || rawClient.address,
+    address: extractAddress(),
+    billing_address: rawClient.billing_address || extractAddress(),
+    mailing_address: rawClient.mailing_address || extractAddress(),
     created_date: rawClient.created_at || rawClient.date_created || rawClient.created,
     updated_date: rawClient.updated_at || rawClient.date_updated,
     active: rawClient.active !== false, // Default to true unless explicitly false
