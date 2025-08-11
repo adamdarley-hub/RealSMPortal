@@ -180,6 +180,37 @@ const getServiceAddressString = (job: Job) => {
   return 'No address available';
 };
 
+// Helper function to detect if attempt was via mobile app
+const isMobileAttempt = (attempt: any): boolean => {
+  const method = (attempt.method || attempt.source || '').toLowerCase();
+  const deviceType = (attempt.device_type || '').toLowerCase();
+  const createdVia = (attempt.created_via || '').toLowerCase();
+  const appType = (attempt.app_type || '').toLowerCase();
+
+  // Check for mobile indicators
+  return method.includes('mobile') ||
+         method.includes('app') ||
+         deviceType.includes('mobile') ||
+         deviceType.includes('ios') ||
+         deviceType.includes('android') ||
+         createdVia.includes('mobile') ||
+         createdVia.includes('app') ||
+         appType.includes('mobile') ||
+         appType.length > 0;
+};
+
+// Helper function to get method display name and color
+const getMethodDisplay = (attempt: any) => {
+  const isMobile = isMobileAttempt(attempt);
+  const method = attempt.method || attempt.source || (isMobile ? "Mobile App" : "Manual Entry");
+
+  return {
+    name: isMobile ? "Mobile App" : "Manual Entry",
+    color: isMobile ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-700 border-gray-200",
+    icon: isMobile ? "📱" : "💻"
+  };
+};
+
 // Helper function to extract service attempts from job data
 const extractServiceAttempts = (job: Job) => {
   if (!job.attempts || !Array.isArray(job.attempts)) {
@@ -188,6 +219,7 @@ const extractServiceAttempts = (job: Job) => {
 
   return job.attempts.map((attempt: any, index: number) => {
     const isSuccessful = attempt.served === true || attempt.status === 'served' || attempt.result === 'served';
+    const methodDisplay = getMethodDisplay(attempt);
 
     return {
       id: attempt.id || index + 1,
@@ -196,7 +228,10 @@ const extractServiceAttempts = (job: Job) => {
       statusColor: isSuccessful ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800",
       date: formatDateTime(attempt.attempted_at || attempt.date || attempt.created_at),
       server: attempt.server_name || attempt.process_server || attempt.employee_name || "Unknown Server",
-      method: attempt.method || attempt.source || "Manual Entry",
+      method: methodDisplay.name,
+      methodColor: methodDisplay.color,
+      methodIcon: methodDisplay.icon,
+      isMobileAttempt: isMobileAttempt(attempt),
       expanded: index === 0, // Expand first attempt by default
       details: {
         serveType: attempt.serve_type || attempt.service_type || "Personal",
@@ -568,9 +603,16 @@ export default function JobDetail() {
                               <Badge className={attempt.statusColor}>
                                 {attempt.status}
                               </Badge>
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                              <Badge variant="outline" className={attempt.methodColor}>
+                                <span className="mr-1">{attempt.methodIcon}</span>
                                 {attempt.method}
                               </Badge>
+                              {attempt.details.photos.length > 0 && (
+                                <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                                  <ImageIcon className="w-3 h-3 mr-1" />
+                                  {attempt.details.photos.length} photo{attempt.details.photos.length > 1 ? 's' : ''}
+                                </Badge>
+                              )}
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-slate-500">{attempt.date}</p>
