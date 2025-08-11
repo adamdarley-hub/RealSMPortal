@@ -407,6 +407,7 @@ export default function JobDetail() {
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isPrintMode, setIsPrintMode] = useState(false);
+  const [urlRefreshCount, setUrlRefreshCount] = useState(0);
 
   // Load job data
   useEffect(() => {
