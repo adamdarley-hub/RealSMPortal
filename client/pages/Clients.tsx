@@ -329,7 +329,10 @@ export default function Clients() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {new Date(client.created_date).toLocaleDateString()}
+                      {client.created_date
+                        ? new Date(client.created_date).toLocaleDateString()
+                        : 'No date available'
+                      }
                     </TableCell>
                   </TableRow>
                 ))}
