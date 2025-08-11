@@ -19,8 +19,10 @@ export const genericProxy: RequestHandler = async (req, res) => {
     const response = await fetch(decodedUrl);
 
     if (!response.ok) {
-      if (response.status === 403) {
-        // Instead of returning JSON for expired URLs, return a proper error page
+      console.log(`❌ Proxy fetch failed: ${response.status} ${response.statusText}`);
+
+      // Handle various S3 error responses for expired/invalid URLs
+      if (response.status === 403 || response.status === 400 || response.status === 404) {
         const errorHtml = `
           <html>
             <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
@@ -29,6 +31,8 @@ export const genericProxy: RequestHandler = async (req, res) => {
               <button onclick="window.parent.location.reload()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 Refresh Page
               </button>
+              <br><br>
+              <small style="color: #666;">Error: ${response.status} ${response.statusText}</small>
             </body>
           </html>
         `;
