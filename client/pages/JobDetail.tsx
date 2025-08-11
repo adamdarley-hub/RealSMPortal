@@ -801,35 +801,45 @@ export default function JobDetail() {
                                 </div>
                               </div>
 
-                              {attempt.details.photos.length > 0 && (
+                              {/* Attempt Photos - only in expanded view */}
+                              {attempt.details.photos && attempt.details.photos.length > 0 && (
                                 <div>
-                                  <label className="text-sm font-medium text-slate-700 mb-3 block">
-                                    Attempt Photos
-                                  </label>
-                                  <div className="grid grid-cols-2 gap-4">
-                                    {attempt.details.photos.map((photo, photoIndex) => (
-                                      <div key={photo.id} className="space-y-2">
+                                  <label className="text-sm font-medium text-slate-700 mb-2 block">Attempt Photos</label>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    {attempt.details.photos.map((photo: any) => (
+                                      <div key={photo.id} className="border rounded-lg overflow-hidden group">
                                         <div
-                                          className="relative cursor-pointer border rounded-lg overflow-hidden group aspect-video"
+                                          className="relative cursor-pointer"
                                           onClick={() => handlePhotoClick(photo, attempt.isMobileAttempt)}
                                         >
                                           <img
                                             src={photo.thumbnailUrl || photo.url}
-                                            alt={`${attempt.isMobileAttempt ? 'Mobile' : 'Manual'} Attempt Photo ${photoIndex + 1}`}
-                                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                            alt={photo.name}
+                                            className="w-full h-24 object-cover transition-transform group-hover:scale-105"
                                             onError={(e) => {
-                                              e.currentTarget.src = photo.url;
+                                              // Hide broken images
+                                              e.currentTarget.style.display = 'none';
                                             }}
                                           />
                                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
                                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                              <Eye className="w-6 h-6 text-white" />
+                                              <Button size="sm" variant="secondary" className="gap-1">
+                                                <Eye className="w-4 h-4" />
+                                                View
+                                              </Button>
                                             </div>
                                           </div>
                                         </div>
-                                        <p className="text-sm font-medium text-center">
-                                          {attempt.isMobileAttempt ? 'Mobile' : 'Manual'} Attempt Photo {photoIndex + 1}
-                                        </p>
+                                        <div className="p-2">
+                                          <p className="text-xs font-medium truncate" title={photo.name}>
+                                            {photo.name}
+                                          </p>
+                                          {photo.size && (
+                                            <p className="text-xs text-muted-foreground">
+                                              {formatFileSize(photo.size)}
+                                            </p>
+                                          )}
+                                        </div>
                                       </div>
                                     ))}
                                   </div>
@@ -1133,7 +1143,7 @@ export default function JobDetail() {
             {selectedPhoto?.uploadedAt && (
               <DialogDescription>
                 Uploaded: {formatDateTime(selectedPhoto.uploadedAt)}
-                {selectedPhoto.size && ` • Size: ${formatFileSize(selectedPhoto.size)}`}
+                {selectedPhoto.size && ` ��� Size: ${formatFileSize(selectedPhoto.size)}`}
               </DialogDescription>
             )}
           </DialogHeader>
