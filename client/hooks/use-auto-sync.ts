@@ -92,11 +92,19 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal
       }).catch((fetchError) => {
+        console.warn('🌐 Network error during sync:', fetchError.message);
+
         // Handle network errors more gracefully
         if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
           throw new Error('Network connection failed - using cached data');
         }
-        throw fetchError;
+
+        // Check if it's an abort error
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Request timeout - using cached data');
+        }
+
+        throw new Error(`Network error: ${fetchError.message}`);
       });
 
       clearTimeout(timeoutId);
