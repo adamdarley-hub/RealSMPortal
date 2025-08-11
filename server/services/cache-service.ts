@@ -1050,6 +1050,30 @@ export class CacheService {
       };
     }
   }
+
+  // =================== INSTANT UPDATES ===================
+
+  async updateSingleJob(jobId: string, freshJobData: any): Promise<void> {
+    try {
+      console.log(`🔄 Updating cache for job ${jobId}...`);
+
+      // Map the fresh data using existing mapper
+      const mappedJob = mapJobFromServeManager(freshJobData);
+
+      // Update the job in the database
+      await db.update(jobs)
+        .set({
+          ...mappedJob,
+          _last_synced: new Date().toISOString()
+        })
+        .where(eq(jobs.id, jobId));
+
+      console.log(`✅ Cache updated for job ${jobId}`);
+    } catch (error) {
+      console.error(`❌ Failed to update cache for job ${jobId}:`, error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance
