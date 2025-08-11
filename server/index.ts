@@ -205,15 +205,15 @@ export function createServer() {
   app.get("/api/mock/servers", getMockServers);
   app.get("/api/mock/invoices", getMockInvoices);
 
-  // Temporarily disabled change detection to improve stability
-  // setTimeout(() => {
-  //   try {
-  //     changeDetector.startMonitoring();
-  //     console.log('🚀 Real-time change detection started');
-  //   } catch (error) {
-  //     console.warn('⚠️ Real-time change detection failed to start:', error.message);
-  //   }
-  // }, 10000);
+  // Initialize real-time services after initial sync completes
+  setTimeout(() => {
+    try {
+      changeDetector.startMonitoring();
+      console.log('🚀 Real-time change detection started');
+    } catch (error) {
+      console.warn('⚠️ Real-time change detection failed to start:', error.message);
+    }
+  }, 15000); // Start after 15 seconds to allow initial data load
 
   return app;
 }
