@@ -341,10 +341,10 @@ const extractServiceAttempts = (job: Job) => {
             uploadedAt: photo.created_at || photo.uploaded_at
           })),
         gps: {
-          latitude: attempt.latitude || attempt.lat || null,
-          longitude: attempt.longitude || attempt.lng || null,
-          accuracy: attempt.accuracy ? `${attempt.accuracy} ft` : "Unknown",
-          time: formatDateTime(attempt.gps_time || attempt.location_time || attempt.attempted_at)
+          latitude: attempt.lat || attempt.latitude || null,
+          longitude: attempt.lng || attempt.longitude || null,
+          accuracy: attempt.gps_accuracy ? `${attempt.gps_accuracy} ft` : (attempt.accuracy ? `${attempt.accuracy} ft` : null),
+          time: formatDateTime(attempt.gps_timestamp || attempt.device_timestamp || attempt.gps_time || attempt.location_time || attempt.attempted_at)
         }
       }
     };
