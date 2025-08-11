@@ -498,6 +498,10 @@ export default function JobDetail() {
         setJob(freshJob);
         setServiceAttempts(freshAttempts);
         console.log('✅ Job data refreshed directly from ServeManager');
+
+        // Also trigger a background sync to update the cache so when we navigate back,
+        // we see the updated data instead of stale cache
+        fetch('/api/sync', { method: 'POST' }).catch(e => console.log('Background cache update failed:', e));
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
