@@ -352,6 +352,9 @@ export default function JobDetail() {
         console.log('📊 Job data loaded:', {
           jobId: jobData.id,
           attemptsFound: realAttempts.length,
+          jobServiceStatus: jobData.service_status,
+          jobStatus: jobData.job_status,
+          jobOverallStatus: jobData.status,
           rawAttempts: jobData.attempts,
           extractedAttempts: realAttempts
         });
