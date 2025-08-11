@@ -21,10 +21,10 @@ class ChangeDetector extends EventEmitter {
     // Take initial snapshots
     await this.takeSnapshots(jobIds);
 
-    // Check for changes every 3 seconds (much smarter than full refresh)
+    // Check for changes every 10 seconds (balanced between responsiveness and API load)
     this.monitorInterval = setInterval(async () => {
       await this.detectChanges(jobIds);
-    }, 3000);
+    }, 10000);
   }
 
   async stopMonitoring() {
