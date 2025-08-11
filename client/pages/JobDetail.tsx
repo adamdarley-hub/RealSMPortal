@@ -413,15 +413,20 @@ const extractServiceAttempts = (job: Job) => {
 
               return isImage && hasValidStructure;
             })
-            .map((photo: any, photoIndex: number) => ({
-              id: photo.id,
-              name: photo.title || photo.name || `Photo ${photoIndex + 1}`,
-              url: photo.upload?.links?.download_url || photo.download_url || photo.url,
-              thumbnailUrl: photo.upload?.links?.thumbnail_url || photo.thumbnail_url || photo.upload?.links?.download_url || photo.download_url || photo.url,
-              type: photo.upload?.content_type || photo.content_type || 'image/jpeg',
-              size: photo.upload?.file_size || photo.file_size,
-              uploadedAt: photo.created_at || photo.updated_at
-            }));
+            .map((photo: any, photoIndex: number) => {
+              // Use proxy URLs instead of direct S3 URLs to avoid expiration and CORS issues
+              const proxyUrl = `/api/proxy/photo/${job.id}/${attempt.id}/${photo.id}`;
+
+              return {
+                id: photo.id,
+                name: photo.title || photo.name || `Photo ${photoIndex + 1}`,
+                url: proxyUrl,
+                thumbnailUrl: proxyUrl, // Use same proxy URL for thumbnail
+                type: photo.upload?.content_type || photo.content_type || 'image/jpeg',
+                size: photo.upload?.file_size || photo.file_size,
+                uploadedAt: photo.created_at || photo.updated_at
+              };
+            });
         })(),
         gps: {
           latitude: attempt.lat || attempt.latitude || null,
