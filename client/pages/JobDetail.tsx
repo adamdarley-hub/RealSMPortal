@@ -884,7 +884,7 @@ export default function JobDetail() {
 
             <TabsContent value="documents">
               {(() => {
-                const documentsToBeServed = job.raw_data?.documents_to_be_served || job.documents_to_be_served || [];
+                const documentsToBeServed = job.raw_data?.documents_to_be_served || job.documents_to_be_served || job.data?.documents_to_be_served || [];
 
                 if (documentsToBeServed.length === 0) {
                   return (
