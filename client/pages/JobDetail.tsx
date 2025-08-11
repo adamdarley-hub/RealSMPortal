@@ -770,6 +770,18 @@ export default function JobDetail() {
                             </div>
                           )}
 
+                          {/* Show when no photos */}
+                          {attempt.details.photos.length === 0 && (
+                            <div className="mt-3 mb-3 border-t pt-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <ImageIcon className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm text-gray-500">
+                                  No photos available for this attempt
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
                           {isAttemptExpanded(attempt.id) && (
                             <div className="space-y-4 border-t pt-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
