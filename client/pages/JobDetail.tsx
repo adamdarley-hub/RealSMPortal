@@ -111,6 +111,27 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
+// Helper function to get preview URL for inline viewing
+const getPreviewUrl = (downloadUrl: string): string => {
+  if (!downloadUrl) return '';
+
+  // If it's already a ServeManager URL, add view parameter for inline display
+  if (downloadUrl.includes('servemanager.com')) {
+    const url = new URL(downloadUrl);
+    url.searchParams.set('view', 'inline');
+    return url.toString();
+  }
+
+  // For other URLs, use them directly and let the browser handle inline display
+  return downloadUrl;
+};
+
+// Helper function to get download URL with proper headers
+const getProxyDownloadUrl = (downloadUrl: string): string => {
+  if (!downloadUrl) return '';
+  return downloadUrl; // Keep original URL for downloads
+};
+
 // Helper to get status color
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
