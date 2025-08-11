@@ -917,7 +917,12 @@ export default function JobDetail() {
                                 {currentDocument.upload?.links?.download_url && (
                                   <Button size="sm" variant="outline" asChild>
                                     <a
-                                      href={getProxyDownloadUrl(currentDocument.upload.links.download_url)}
+                                      href={getProxyDownloadUrl(
+                                        currentDocument.upload.links.download_url,
+                                        currentDocument.id,
+                                        job.id,
+                                        'document'
+                                      )}
                                       download={currentDocument.title}
                                       target="_blank"
                                       rel="noopener noreferrer"
