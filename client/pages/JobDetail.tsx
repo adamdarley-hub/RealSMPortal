@@ -623,6 +623,54 @@ export default function JobDetail() {
                             </div>
                           </div>
 
+                          {/* Photo Preview Strip - Always visible */}
+                          {attempt.details.photos.length > 0 && (
+                            <div className="mt-3 mb-3 border-t pt-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <ImageIcon className="w-4 h-4 text-gray-500" />
+                                <span className="text-sm font-medium text-gray-700">
+                                  {attempt.isMobileAttempt ? 'Mobile' : 'Manual'} Attempt Photos ({attempt.details.photos.length})
+                                </span>
+                              </div>
+                              <div className="flex gap-2 overflow-x-auto pb-2">
+                                {attempt.details.photos.slice(0, 6).map((photo, photoIndex) => (
+                                  <div
+                                    key={photo.id}
+                                    className="flex-shrink-0 relative cursor-pointer group border rounded-lg overflow-hidden"
+                                    onClick={() => handlePhotoClick(photo)}
+                                    style={{ width: '80px', height: '60px' }}
+                                  >
+                                    <img
+                                      src={photo.thumbnailUrl || photo.url}
+                                      alt={`${attempt.isMobileAttempt ? 'Mobile' : 'Manual'} Attempt Photo ${photoIndex + 1}`}
+                                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                      onError={(e) => {
+                                        e.currentTarget.src = photo.url;
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
+                                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Eye className="w-4 h-4 text-white" />
+                                      </div>
+                                    </div>
+                                    {attempt.isMobileAttempt && (
+                                      <div className="absolute top-1 left-1">
+                                        <Badge variant="secondary" className="text-xs px-1 py-0 bg-blue-500 text-white">
+                                          📱
+                                        </Badge>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                                {attempt.details.photos.length > 6 && (
+                                  <div className="flex-shrink-0 flex items-center justify-center border rounded-lg bg-gray-50 text-gray-500 text-xs" style={{ width: '80px', height: '60px' }}>
+                                    +{attempt.details.photos.length - 6} more
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
                           {isAttemptExpanded(attempt.id) && (
                             <div className="space-y-4 border-t pt-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
