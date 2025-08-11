@@ -149,6 +149,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       const isNetworkError = error instanceof Error &&
         (error.message.includes('Network connection failed') ||
          error.message.includes('Failed to fetch') ||
+         error.message.includes('Request timeout') ||
+         error.message.includes('Network error') ||
          error.message.includes('Server unavailable'));
 
       if (isNetworkError) {
