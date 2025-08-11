@@ -727,11 +727,11 @@ export default function JobDetail() {
               </Badge>
               {isRealTimeConnected ? (
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  🔴 Live Updates
+                  🔄 Auto-Refresh (5s)
                 </Badge>
               ) : (
                 <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                  📡 Connecting...
+                  🔄 Starting Monitor...
                 </Badge>
               )}
               <div className="flex items-center gap-2">
