@@ -347,28 +347,65 @@ const extractServiceAttempts = (job: Job) => {
         photos: (() => {
           // ServeManager stores photos in misc_attachments array
           const miscAttachments = attempt.misc_attachments || attempt.attachments || [];
-          console.log(`🖼️ Attempt ${index + 1} photo extraction:`, {
-            miscAttachmentsCount: miscAttachments.length,
-            rawMiscAttachments: miscAttachments,
-            attemptKeys: Object.keys(attempt)
+
+          // Comprehensive debug logging
+          console.log(`🖼️ Attempt ${index + 1} FULL photo extraction debug:`, {
+            attemptId: attempt.id,
+            attemptKeys: Object.keys(attempt),
+            hasMiscAttachments: !!attempt.misc_attachments,
+            hasAttachments: !!attempt.attachments,
+            miscAttachmentsLength: miscAttachments.length,
+            miscAttachmentsRaw: miscAttachments,
+            // Also check for other possible attachment fields
+            photos: attempt.photos,
+            images: attempt.images,
+            files: attempt.files,
+            attachments_detail: attempt.attachments,
+            fullAttemptData: attempt
           });
+
+          if (miscAttachments.length === 0) {
+            console.log(`❌ No misc_attachments found for attempt ${index + 1}. Checking other fields...`);
+            // Try other possible photo locations
+            const alternativePhotos = attempt.photos || attempt.images || attempt.files || [];
+            console.log(`🔍 Alternative photo sources:`, {
+              photos: attempt.photos,
+              images: attempt.images,
+              files: attempt.files,
+              alternativePhotosLength: alternativePhotos.length
+            });
+          }
 
           return miscAttachments
             .filter((attachment: any) => {
               // Check if it's an image attachment
               const isImage = attachment.upload?.content_type?.startsWith('image/') ||
-                             attachment.upload?.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
-              const hasValidStructure = attachment.id && attachment.title && attachment.upload?.links?.download_url;
-              console.log(`📷 Attachment check:`, { attachment, isImage, hasValidStructure });
+                             attachment.upload?.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i) ||
+                             attachment.content_type?.startsWith('image/') ||
+                             attachment.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
+
+              const hasValidStructure = attachment.id &&
+                                      (attachment.title || attachment.name) &&
+                                      (attachment.upload?.links?.download_url || attachment.download_url || attachment.url);
+
+              console.log(`📷 Attachment ${attachment.id} check:`, {
+                attachment,
+                isImage,
+                hasValidStructure,
+                contentType: attachment.upload?.content_type || attachment.content_type,
+                fileName: attachment.upload?.file_name || attachment.file_name,
+                downloadUrl: attachment.upload?.links?.download_url || attachment.download_url || attachment.url
+              });
+
               return isImage && hasValidStructure;
             })
             .map((photo: any, photoIndex: number) => ({
               id: photo.id,
-              name: photo.title,
-              url: photo.upload.links.download_url,
-              thumbnailUrl: photo.upload.links.thumbnail_url || photo.upload.links.download_url,
-              type: photo.upload.content_type || 'image/jpeg',
-              size: photo.upload.file_size,
+              name: photo.title || photo.name || `Photo ${photoIndex + 1}`,
+              url: photo.upload?.links?.download_url || photo.download_url || photo.url,
+              thumbnailUrl: photo.upload?.links?.thumbnail_url || photo.thumbnail_url || photo.upload?.links?.download_url || photo.download_url || photo.url,
+              type: photo.upload?.content_type || photo.content_type || 'image/jpeg',
+              size: photo.upload?.file_size || photo.file_size,
               uploadedAt: photo.created_at || photo.updated_at
             }));
         })(),
