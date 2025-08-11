@@ -985,13 +985,8 @@ export default function JobDetail() {
                                       size="sm"
                                       variant="outline"
                                       onClick={() => {
-                                        // Open preview in new window using proxy
-                                        const previewUrl = getPreviewUrl(
-                                          attachment.upload.links.download_url,
-                                          attachment.id,
-                                          job.id,
-                                          'attachment'
-                                        );
+                                        // Open preview in new window using generic proxy
+                                        const previewUrl = getPreviewUrl(attachment.upload.links.download_url);
                                         window.open(previewUrl, '_blank');
                                       }}
                                     >
@@ -1000,12 +995,7 @@ export default function JobDetail() {
                                     </Button>
                                     <Button size="sm" variant="outline" asChild>
                                       <a
-                                        href={getProxyDownloadUrl(
-                                          attachment.upload.links.download_url,
-                                          attachment.id,
-                                          job.id,
-                                          'attachment'
-                                        )}
+                                        href={getProxyDownloadUrl(attachment.upload.links.download_url)}
                                         download={attachment.title}
                                         target="_blank"
                                         rel="noopener noreferrer"
