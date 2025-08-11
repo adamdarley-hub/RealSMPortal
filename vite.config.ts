@@ -16,10 +16,6 @@ export default defineConfig(({ mode }) => ({
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
-      },
-      '/ws': {
-        target: 'ws://localhost:3001',
-        ws: true,
       }
     }
   },
@@ -40,28 +36,10 @@ function expressPlugin(): Plugin {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
     configureServer(server) {
-      // Start backend server with WebSocket support on port 3001 using child process
-      const { spawn } = require('child_process');
+      const app = createServer();
 
-      const backendProcess = spawn('node', ['scripts/start-backend.js'], {
-        stdio: 'inherit',
-        cwd: process.cwd()
-      });
-
-      // Clean up on exit
-      process.on('exit', () => {
-        backendProcess.kill();
-      });
-
-      process.on('SIGINT', () => {
-        backendProcess.kill();
-        process.exit();
-      });
-
-      process.on('SIGTERM', () => {
-        backendProcess.kill();
-        process.exit();
-      });
+      // Add Express app as middleware to Vite dev server
+      server.middlewares.use(app);
     },
   };
 }
