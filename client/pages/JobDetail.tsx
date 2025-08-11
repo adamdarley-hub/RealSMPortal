@@ -618,10 +618,52 @@ export default function JobDetail() {
                   <CardDescription>Billing information for this job</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    <DollarSign className="w-12 h-12 mx-auto mb-4" />
-                    <p>No invoices available for this job</p>
-                  </div>
+                  {job.raw_data?.invoice ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
+                        <div>
+                          <label className="text-sm font-medium text-slate-700">Invoice ID</label>
+                          <p className="text-sm text-slate-900">{job.raw_data.invoice.id}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700">Status</label>
+                          <Badge variant="outline">{job.raw_data.invoice.status}</Badge>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700">Subtotal</label>
+                          <p className="text-sm text-slate-900">{formatCurrency(parseFloat(job.raw_data.invoice.subtotal))}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700">Total</label>
+                          <p className="text-sm text-slate-900 font-semibold">{formatCurrency(parseFloat(job.raw_data.invoice.total))}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700">Balance Due</label>
+                          <p className="text-sm text-slate-900">{formatCurrency(parseFloat(job.raw_data.invoice.balance_due))}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700">Created</label>
+                          <p className="text-sm text-slate-900">{formatDate(job.raw_data.invoice.created_at)}</p>
+                        </div>
+                      </div>
+
+                      {job.raw_data.invoice.pdf_download_url && (
+                        <div className="flex justify-center">
+                          <Button asChild className="gap-2">
+                            <a href={job.raw_data.invoice.pdf_download_url} target="_blank" rel="noopener noreferrer">
+                              <FileText className="w-4 h-4" />
+                              Download Invoice PDF
+                            </a>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <DollarSign className="w-12 h-12 mx-auto mb-4" />
+                      <p>No invoices available for this job</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
