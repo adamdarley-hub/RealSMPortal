@@ -44,7 +44,6 @@ import {
   Maximize2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useRealTimeJob } from "@/hooks/use-real-time-job";
 import { Job } from "@shared/servemanager";
 
 // Helper function to safely extract string values
