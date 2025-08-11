@@ -449,19 +449,47 @@ export default function JobDetail() {
 
       try {
         setLoading(true);
-        // Always fetch fresh data for job details to ensure latest attempts are shown
-        const response = await fetch(`/api/jobs/${id}?refresh=true`);
+
+        // First try cached data for fast loading
+        let response = await fetch(`/api/jobs/${id}`);
 
         if (!response.ok) {
           throw new Error(`Failed to load job: ${response.status}`);
         }
 
-        const jobData = await response.json();
+        let jobData = await response.json();
         setJob(jobData);
 
         // Extract real service attempts from job data
-        const realAttempts = extractServiceAttempts(jobData);
+        let realAttempts = extractServiceAttempts(jobData);
         setServiceAttempts(realAttempts);
+
+        // If no attempts found or data is old (cached), try to get fresh data
+        if (realAttempts.length === 0 || jobData.cached !== false) {
+          try {
+            console.log('🔄 No attempts found or using cached data, fetching fresh data...');
+            const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`);
+
+            if (freshResponse.ok) {
+              const freshJobData = await freshResponse.json();
+              const freshAttempts = extractServiceAttempts(freshJobData);
+
+              // Only update if we got more attempts or fresher data
+              if (freshAttempts.length > realAttempts.length || freshJobData.cached === false) {
+                setJob(freshJobData);
+                setServiceAttempts(freshAttempts);
+                realAttempts = freshAttempts;
+                console.log('✅ Updated with fresh data:', {
+                  originalAttempts: realAttempts.length,
+                  freshAttempts: freshAttempts.length
+                });
+              }
+            }
+          } catch (freshError) {
+            console.log('⚠️ Fresh data fetch failed, using cached data:', freshError);
+            // Continue with cached data - don't fail the whole load
+          }
+        }
 
         // Expand first attempt by default to show photos
         if (realAttempts.length > 0) {
