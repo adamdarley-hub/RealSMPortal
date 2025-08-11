@@ -871,89 +871,15 @@ export default function JobDetail() {
                       const currentDocument = documentsToBeServed[currentDocumentIndex];
 
                       return (
-                        <div className="space-y-4">
-                          {/* Navigation Controls */}
-                          {documentsToBeServed.length > 1 && (
-                            <div className="flex items-center justify-between bg-muted p-4 rounded-lg">
-                              <div className="flex items-center gap-4">
-                                <span className="text-sm font-medium">
-                                  {currentDocumentIndex + 1} of {documentsToBeServed.length}
-                                </span>
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentDocumentIndex(Math.max(0, currentDocumentIndex - 1))}
-                                    disabled={currentDocumentIndex === 0}
-                                  >
-                                    <ChevronLeft className="w-4 h-4" />
-                                    Previous
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentDocumentIndex(Math.min(documentsToBeServed.length - 1, currentDocumentIndex + 1))}
-                                    disabled={currentDocumentIndex === documentsToBeServed.length - 1}
-                                  >
-                                    Next
-                                    <ChevronRight className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
+                        <div className="w-full">
+                          {/* Simple PDF Viewer */}
+                          {currentDocument.upload?.links?.download_url && (
+                            <iframe
+                              src={currentDocument.upload.links.download_url}
+                              className="w-full h-[800px] border rounded-lg"
+                              title={`Document: ${currentDocument.title}`}
+                            />
                           )}
-
-                          {/* Document Header */}
-                          <div className="border rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-4">
-                              <div>
-                                <h3 className="text-xl font-semibold">{currentDocument.title || currentDocument.name || 'Document'}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  {currentDocument.upload?.page_count && `${currentDocument.upload.page_count} pages`}
-                                  {currentDocument.received_at && ` • Received: ${formatDate(currentDocument.received_at)}`}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {currentDocument.upload?.links?.download_url && (
-                                  <Button size="sm" variant="outline" asChild>
-                                    <a
-                                      href={getProxyDownloadUrl(
-                                        currentDocument.upload.links.download_url,
-                                        currentDocument.id,
-                                        job.id,
-                                        'document'
-                                      )}
-                                      download={currentDocument.title}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <Download className="w-4 h-4 mr-1" />
-                                      Download
-                                    </a>
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* PDF Viewer */}
-                            {currentDocument.upload?.links?.download_url && (
-                              <div className="border rounded-lg overflow-hidden">
-                                <iframe
-                                  src={getPreviewUrl(
-                                    currentDocument.upload.links.download_url,
-                                    currentDocument.id,
-                                    job.id,
-                                    'document'
-                                  )}
-                                  className="w-full h-[600px] border-0"
-                                  title={`Document: ${currentDocument.title}`}
-                                  onError={(e) => {
-                                    console.error('PDF viewer error:', e);
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </div>
                         </div>
                       );
                     })()}
