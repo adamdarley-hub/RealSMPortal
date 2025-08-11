@@ -62,6 +62,29 @@ export function createServer() {
     res.json({ message: 'Debug endpoint working', received: req.body });
   });
 
+  // Debug endpoint for client data
+  app.get("/api/debug/client", async (req, res) => {
+    try {
+      const { CacheService } = await import("./services/cache-service");
+      const cacheService = new CacheService();
+      const clients = await cacheService.getClientsFromCache();
+
+      if (clients.length > 0) {
+        const firstClient = clients[0];
+        res.json({
+          mapped: firstClient,
+          rawData: firstClient._raw || 'No raw data available',
+          addressDetail: firstClient.address,
+          rawAddresses: firstClient._raw?.addresses || 'No addresses in raw data'
+        });
+      } else {
+        res.json({ error: 'No clients found in cache' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ServeManager API debug endpoint
   app.get("/api/debug/servemanager", async (req, res) => {
     try {
