@@ -239,7 +239,7 @@ const getMethodDisplay = (attempt: any) => {
   return {
     name: isMobile ? "Mobile App" : "Manual Entry",
     color: isMobile ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-700 border-gray-200",
-    icon: isMobile ? "📱" : "�����"
+    icon: isMobile ? "📱" : "���"
   };
 };
 
@@ -453,10 +453,29 @@ export default function JobDetail() {
   const [isPrintMode, setIsPrintMode] = useState(false);
   const [urlRefreshCount, setUrlRefreshCount] = useState(0);
 
+  // Real-time updates for this job
+  const { isConnected: isRealTimeConnected } = useRealTimeJob({
+    jobId: id || '',
+    onJobUpdate: (updatedJob) => {
+      console.log('🎉 Real-time job update received!', updatedJob);
+      setJob(updatedJob);
+      const freshAttempts = extractServiceAttempts(updatedJob);
+      setServiceAttempts(freshAttempts);
+
+      // Expand newest attempt
+      if (freshAttempts.length > 0) {
+        const newestAttempt = freshAttempts[freshAttempts.length - 1];
+        setExpandedAttempts(new Set([String(newestAttempt.id)]));
+      }
+    },
+    onNewAttempt: (newAttempts) => {
+      console.log('🎉 New attempts received via real-time!', newAttempts);
+      // The onJobUpdate will handle the actual UI update
+    }
+  });
+
   // Load job data
   useEffect(() => {
-    let monitorInterval: NodeJS.Timeout | null = null;
-
     const loadJob = async () => {
       if (!id) {
         setError("No job ID provided");
