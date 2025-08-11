@@ -169,12 +169,20 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       // Restart polling if it was paused during background sync (even on error)
       // But only if we should retry (don't retry if fetch is blocked)
       if (!showLoading && !intervalRef.current && enabled && mountedRef.current && shouldRetry) {
-        console.log('🔄 Restarting auto-sync polling after sync error');
+        // Use exponential backoff for network errors
+        const isNetworkError = errorMessage.includes('Network connection failed') ||
+                              errorMessage.includes('Failed to fetch') ||
+                              errorMessage.includes('Server unavailable');
+
+        const backoffDelay = isNetworkError ? Math.min(interval * 2, 120000) : interval; // Max 2 minutes
+
+        console.log(`🔄 Restarting auto-sync polling after sync error (delay: ${backoffDelay/1000}s)`);
+
         intervalRef.current = setInterval(() => {
           if (mountedRef.current) {
             triggerSync(false);
           }
-        }, interval);
+        }, backoffDelay);
       }
 
       // Don't let sync errors completely break the app
