@@ -59,10 +59,21 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
       console.log('🔄 Starting auto-sync request...');
 
+      // Check if fetch is available (could be blocked by extensions)
+      if (typeof fetch === 'undefined') {
+        throw new Error('Fetch API is not available');
+      }
+
       const response = await fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal
+      }).catch((fetchError) => {
+        // Handle network errors more gracefully
+        if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+          throw new Error('Network connection failed - using cached data');
+        }
+        throw fetchError;
       });
 
       clearTimeout(timeoutId);
