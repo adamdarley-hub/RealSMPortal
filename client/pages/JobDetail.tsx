@@ -572,7 +572,7 @@ export default function JobDetail() {
                             </div>
                           </div>
 
-                          {attempt.expanded && (
+                          {isAttemptExpanded(attempt.id) && (
                             <div className="space-y-4 border-t pt-4">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
