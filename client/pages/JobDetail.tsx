@@ -883,37 +883,156 @@ export default function JobDetail() {
             </TabsContent>
 
             <TabsContent value="documents">
-              {(() => {
-                // Handle multiple possible data structures from cache vs fresh API
-                const documentsToBeServed =
-                  job.raw_data?.documents_to_be_served ||  // Cached/mapped data
-                  job.documents_to_be_served ||            // Direct field
-                  job.data?.documents_to_be_served ||      // Fresh ServeManager API response
-                  [];
+              <Card>
+                <CardHeader>
+                  <CardTitle>Documents</CardTitle>
+                  <CardDescription>Legal documents and attachments for this job</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    // Handle multiple possible data structures from cache vs fresh API
+                    const documentsToBeServed =
+                      job.raw_data?.documents_to_be_served ||  // Cached/mapped data
+                      job.documents_to_be_served ||            // Direct field
+                      job.data?.documents_to_be_served ||      // Fresh ServeManager API response
+                      [];
 
-                if (documentsToBeServed.length === 0) {
-                  return (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <FileText className="w-12 h-12 mx-auto mb-4" />
-                      <p>No documents to be served</p>
-                    </div>
-                  );
-                }
+                    if (documentsToBeServed.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <FileText className="w-12 h-12 mx-auto mb-4" />
+                          <p>No documents to be served</p>
+                        </div>
+                      );
+                    }
 
-                const currentDocument = documentsToBeServed[currentDocumentIndex];
+                    return (
+                      <div className="space-y-6">
+                        {/* Documents List */}
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4">Documents to be Served</h3>
+                          <p className="text-sm text-muted-foreground mb-4">Legal documents that need to be served to the recipient</p>
 
-                return (
-                  <div className="w-full h-full">
-                    {currentDocument.upload?.links?.download_url && (
-                      <iframe
-                        src={getPreviewUrl(currentDocument.upload.links.download_url)}
-                        className="w-full h-screen border-0"
-                        title={`Document: ${currentDocument.title}`}
-                      />
-                    )}
-                  </div>
-                );
-              })()}
+                          <div className="space-y-4">
+                            {documentsToBeServed.map((document, index) => (
+                              <div key={document.id || index} className="border rounded-lg p-4">
+                                <div className="flex items-center justify-between">
+                                  <div className="space-y-2">
+                                    <h4 className="font-medium text-lg">{document.title || 'Document'}</h4>
+                                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                                      {document.pages && (
+                                        <span>{document.pages} page{document.pages > 1 ? 's' : ''}</span>
+                                      )}
+                                      {document.received_at && (
+                                        <span>Received: {formatDate(document.received_at)}</span>
+                                      )}
+                                      {document.created_at && !document.received_at && (
+                                        <span>Created: {formatDate(document.created_at)}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    {currentDocumentIndex === index && (
+                                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                        Viewing
+                                      </Badge>
+                                    )}
+                                    {document.upload?.links?.download_url && (
+                                      <>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => setCurrentDocumentIndex(index)}
+                                          className="gap-2"
+                                        >
+                                          <Eye className="w-4 h-4" />
+                                          View
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          asChild
+                                          className="gap-2"
+                                        >
+                                          <a
+                                            href={getProxyDownloadUrl(document.upload.links.download_url)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                          >
+                                            <Download className="w-4 h-4" />
+                                            Download
+                                          </a>
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Document Viewer */}
+                        {documentsToBeServed.length > 0 && (
+                          <div>
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-lg font-semibold">Document Viewer</h3>
+                              {documentsToBeServed.length > 1 && (
+                                <div className="flex items-center space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentDocumentIndex(Math.max(0, currentDocumentIndex - 1))}
+                                    disabled={currentDocumentIndex === 0}
+                                  >
+                                    <ChevronLeft className="w-4 h-4" />
+                                  </Button>
+                                  <span className="text-sm text-muted-foreground">
+                                    {currentDocumentIndex + 1} of {documentsToBeServed.length}
+                                  </span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentDocumentIndex(Math.min(documentsToBeServed.length - 1, currentDocumentIndex + 1))}
+                                    disabled={currentDocumentIndex === documentsToBeServed.length - 1}
+                                  >
+                                    <ChevronRight className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="border rounded-lg overflow-hidden" style={{ height: '600px' }}>
+                              {(() => {
+                                const currentDocument = documentsToBeServed[currentDocumentIndex];
+
+                                if (!currentDocument?.upload?.links?.download_url) {
+                                  return (
+                                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                                      <div className="text-center">
+                                        <FileText className="w-12 h-12 mx-auto mb-4" />
+                                        <p>Document preview not available</p>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+
+                                return (
+                                  <iframe
+                                    src={getPreviewUrl(currentDocument.upload.links.download_url)}
+                                    className="w-full h-full border-0"
+                                    title={`Document: ${currentDocument.title}`}
+                                  />
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="invoices">
