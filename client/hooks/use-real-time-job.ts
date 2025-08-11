@@ -33,7 +33,7 @@ export function useRealTimeJob(options: UseRealTimeJobOptions) {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const isDev = import.meta.env.DEV;
 
-      // In development, connect to the backend server port (3001)
+      // In development, connect directly to backend (since Vite proxy doesn't handle WebSocket to root)
       // In production, use the same host as the frontend
       const wsUrl = isDev
         ? `${protocol}//localhost:3001`
