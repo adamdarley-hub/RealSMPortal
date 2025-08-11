@@ -615,7 +615,11 @@ export default function Jobs() {
               </TableHeader>
               <TableBody>
                 {filteredJobs.map((job) => (
-                  <TableRow key={job.id} className="hover:bg-muted/50">
+                  <TableRow
+                    key={job.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => navigate(`/jobs/${job.id}`)}
+                  >
                     <TableCell className="font-medium">
                       <div>
                         <p className="font-mono text-sm">
