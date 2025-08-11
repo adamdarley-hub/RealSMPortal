@@ -934,7 +934,12 @@ export default function JobDetail() {
                             {currentDocument.upload?.links?.download_url && (
                               <div className="border rounded-lg overflow-hidden">
                                 <iframe
-                                  src={getPreviewUrl(currentDocument.upload.links.download_url)}
+                                  src={getPreviewUrl(
+                                    currentDocument.upload.links.download_url,
+                                    currentDocument.id,
+                                    job.id,
+                                    'document'
+                                  )}
                                   className="w-full h-[600px] border-0"
                                   title={`Document: ${currentDocument.title}`}
                                   onError={(e) => {
