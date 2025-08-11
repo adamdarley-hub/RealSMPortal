@@ -815,7 +815,7 @@ export default function JobDetail() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700">Attempts</label>
-                      <p className="text-sm text-slate-900">{serviceAttempts.length || job.attempt_count || 0}</p>
+                      <p className="text-sm text-slate-900">{serviceAttempts.length}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700">Client</label>
