@@ -524,72 +524,8 @@ export default function JobDetail() {
           setExpandedAttempts(new Set([String(realAttempts[0].id)]));
         }
 
-        // Start continuous monitoring for new attempts after successful load
-        let currentAttemptCount = realAttempts.length;
-
-        // Use a less aggressive monitoring interval to avoid conflicts with auto-sync
-        monitorInterval = setInterval(async () => {
-          try {
-            // Only monitor if browser is online and not during auto-sync
-            if (!navigator.onLine) {
-              console.log('⏸️ Offline - skipping attempt monitoring');
-              return;
-            }
-
-            console.log('👀 Monitoring for new attempts...', { currentCount: currentAttemptCount });
-
-            // Add timeout to prevent hanging requests
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-            const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`, {
-              signal: controller.signal,
-              headers: {
-                'Content-Type': 'application/json',
-              }
-            });
-
-            clearTimeout(timeoutId);
-
-            if (freshResponse.ok) {
-              const freshJobData = await freshResponse.json();
-              const freshAttempts = extractServiceAttempts(freshJobData);
-
-              // Check if we have new attempts
-              if (freshAttempts.length > currentAttemptCount) {
-                console.log('🎉 New attempts detected!', {
-                  before: currentAttemptCount,
-                  after: freshAttempts.length,
-                  newAttempts: freshAttempts.length - currentAttemptCount
-                });
-
-                setJob(freshJobData);
-                setServiceAttempts(freshAttempts);
-                currentAttemptCount = freshAttempts.length;
-
-                // Expand the newest attempt
-                if (freshAttempts.length > 0) {
-                  const newestAttempt = freshAttempts[freshAttempts.length - 1];
-                  setExpandedAttempts(new Set([String(newestAttempt.id)]));
-                }
-
-                toast({
-                  title: "New Attempt Added!",
-                  description: `Found ${freshAttempts.length - currentAttemptCount} new attempt(s)`,
-                });
-              }
-            }
-          } catch (error) {
-            // Handle different types of errors gracefully
-            if (error.name === 'AbortError') {
-              console.log('⏸️ Monitoring request timeout - will retry next cycle');
-            } else if (error.message?.includes('Failed to fetch')) {
-              console.log('⚠️ Network error during monitoring - using cached data');
-            } else {
-              console.log('⚠️ Monitoring check failed:', error);
-            }
-          }
-        }, 15000); // Reduced frequency to 15 seconds to avoid conflicts
+        // Real-time updates are now handled by the useRealTimeJob hook
+        console.log('🔌 Real-time monitoring enabled for instant updates');
 
         console.log('���� Job data loaded:', {
           jobId: jobData.id,
