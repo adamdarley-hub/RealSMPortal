@@ -690,6 +690,15 @@ export default function JobDetail() {
               <Badge className={getStatusColor(job.status || 'pending')}>
                 {(job.status || 'pending').replace('_', ' ')}
               </Badge>
+              {isRealTimeConnected ? (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  🔴 Live Updates
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                  📡 Connecting...
+                </Badge>
+              )}
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" className="gap-2">
                   <Share className="w-4 h-4" />
