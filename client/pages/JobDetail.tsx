@@ -272,7 +272,7 @@ const extractServiceAttempts = (job: Job) => {
 
   return job.attempts.map((attempt: any, index: number) => {
     // Debug log for each attempt to understand status fields
-    console.log(`��� Attempt ${index + 1} status analysis:`, {
+    console.log(`🔍 Attempt ${index + 1} status analysis:`, {
       success: attempt.success,  // Primary field from API docs
       service_status: attempt.service_status,  // API docs show \"Served\"
       served_at: attempt.served_at,  // Timestamp when served
@@ -382,7 +382,7 @@ const extractServiceAttempts = (job: Job) => {
             console.log(`❌ No misc_attachments found for attempt ${index + 1}. Checking other fields...`);
             // Try other possible photo locations
             const alternativePhotos = attempt.photos || attempt.images || attempt.files || [];
-            console.log(`�� Alternative photo sources:`, {
+            console.log(`🔍 Alternative photo sources:`, {
               photos: attempt.photos,
               images: attempt.images,
               files: attempt.files,
@@ -461,26 +461,17 @@ export default function JobDetail() {
     console.log('🔄 Manual refresh button clicked for job:', id);
     setIsRefreshing(true);
     try {
-      console.log('🔄 Triggering fresh sync from ServeManager...');
+      console.log('🔄 Fetching fresh data directly from ServeManager...');
 
-      // First trigger a sync to get fresh data from ServeManager
-      const syncResponse = await fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (!syncResponse.ok) {
-        throw new Error('Sync failed');
-      }
-
-      // Now get the updated job data
-      const response = await fetch(`/api/jobs/${id}`);
+      // Get fresh data directly from ServeManager using refresh parameter
+      const response = await fetch(`/api/jobs/${id}?refresh=true`);
       if (response.ok) {
         const freshJob = await response.json();
         const currentAttempts = extractServiceAttempts(job);
         const freshAttempts = extractServiceAttempts(freshJob);
 
         console.log(`🔍 Current attempts: ${currentAttempts.length}, Fresh attempts: ${freshAttempts.length}`);
+        console.log('🔍 Fresh job data:', freshJob);
 
         // Check for new attempts
         if (freshAttempts.length > currentAttempts.length) {
@@ -506,7 +497,9 @@ export default function JobDetail() {
 
         setJob(freshJob);
         setServiceAttempts(freshAttempts);
-        console.log('✅ Job data refreshed from ServeManager');
+        console.log('✅ Job data refreshed directly from ServeManager');
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
       console.error('❌ Manual refresh failed:', error);
