@@ -817,8 +817,11 @@ export default function JobDetail() {
                                             alt={photo.name}
                                             className="w-full h-24 object-cover transition-transform group-hover:scale-105"
                                             onError={(e) => {
-                                              // Hide broken images
-                                              e.currentTarget.style.display = 'none';
+                                              // Hide broken images and their container
+                                              const container = e.currentTarget.closest('.border');
+                                              if (container) {
+                                                container.style.display = 'none';
+                                              }
                                             }}
                                           />
                                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
