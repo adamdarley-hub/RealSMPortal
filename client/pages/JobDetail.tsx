@@ -502,6 +502,41 @@ export default function JobDetail() {
           setExpandedAttempts(new Set([String(realAttempts[0].id)]));
         }
 
+        // Background check for fresh data if cached data is old or missing attempts
+        const isOldData = jobData.cached !== false;
+        const hasNoAttempts = realAttempts.length === 0;
+
+        if (isOldData || hasNoAttempts) {
+          // Don't await this - let it happen in background
+          setTimeout(async () => {
+            try {
+              console.log('🔄 Background refresh for latest attempts...');
+              const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`);
+
+              if (freshResponse.ok) {
+                const freshJobData = await freshResponse.json();
+                const freshAttempts = extractServiceAttempts(freshJobData);
+
+                // Only update if we got more/better data
+                if (freshAttempts.length > realAttempts.length || (hasNoAttempts && freshAttempts.length > 0)) {
+                  console.log('✅ Background refresh found new attempts:', {
+                    before: realAttempts.length,
+                    after: freshAttempts.length
+                  });
+                  setJob(freshJobData);
+                  setServiceAttempts(freshAttempts);
+
+                  if (freshAttempts.length > 0) {
+                    setExpandedAttempts(new Set([String(freshAttempts[0].id)]));
+                  }
+                }
+              }
+            } catch (error) {
+              console.log('⚠️ Background refresh failed (no impact on user):', error);
+            }
+          }, 1000); // 1 second delay so initial load shows first
+        }
+
         console.log('���� Job data loaded:', {
           jobId: jobData.id,
           attemptsFound: realAttempts.length,
