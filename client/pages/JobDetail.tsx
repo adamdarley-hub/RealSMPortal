@@ -234,6 +234,23 @@ const extractServiceAttempts = (job: Job) => {
   }
 
   return job.attempts.map((attempt: any, index: number) => {
+    // Debug log for each attempt to understand status fields
+    console.log(`🔍 Attempt ${index + 1} status analysis:`, {
+      served: attempt.served,
+      status: attempt.status,
+      result: attempt.result,
+      service_status: attempt.service_status,
+      allStatusFields: {
+        served: attempt.served,
+        status: attempt.status,
+        result: attempt.result,
+        service_status: attempt.service_status,
+        success: attempt.success,
+        successful: attempt.successful
+      },
+      allFields: Object.keys(attempt)
+    });
+
     // ServeManager attempt success detection based on API documentation
     const isSuccessful = (
       attempt.served === true ||
