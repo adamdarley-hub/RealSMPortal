@@ -1,0 +1,180 @@
+import { EventEmitter } from 'events';
+
+interface JobChange {
+  jobId: string;
+  changeType: 'new_attempt' | 'status_change' | 'document_added' | 'job_updated';
+  data: any;
+  timestamp: Date;
+}
+
+class ChangeDetector extends EventEmitter {
+  private jobSnapshots: Map<string, any> = new Map();
+  private isMonitoring = false;
+  private monitorInterval: NodeJS.Timeout | null = null;
+
+  async startMonitoring(jobIds: string[] = []) {
+    if (this.isMonitoring) return;
+    
+    this.isMonitoring = true;
+    console.log('🔍 Starting intelligent change detection...');
+
+    // Take initial snapshots
+    await this.takeSnapshots(jobIds);
+
+    // Check for changes every 3 seconds (much smarter than full refresh)
+    this.monitorInterval = setInterval(async () => {
+      await this.detectChanges(jobIds);
+    }, 3000);
+  }
+
+  async stopMonitoring() {
+    this.isMonitoring = false;
+    if (this.monitorInterval) {
+      clearInterval(this.monitorInterval);
+      this.monitorInterval = null;
+    }
+    console.log('🛑 Stopped change detection');
+  }
+
+  private async takeSnapshots(jobIds: string[]) {
+    try {
+      const { makeServeManagerRequest } = await import('../routes/servemanager');
+      
+      // If no specific jobs, monitor recent jobs (last 50)
+      if (jobIds.length === 0) {
+        const recentJobs = await makeServeManagerRequest('/jobs?per_page=50&sort=updated_at&order=desc');
+        jobIds = recentJobs.data?.map((job: any) => job.id.toString()) || [];
+      }
+
+      for (const jobId of jobIds) {
+        try {
+          const job = await makeServeManagerRequest(`/jobs/${jobId}`);
+          this.jobSnapshots.set(jobId, {
+            attemptCount: job.attempts?.length || 0,
+            lastUpdated: job.updated_at,
+            status: job.service_status,
+            lastAttemptId: job.attempts?.[job.attempts.length - 1]?.id,
+            documentCount: job.documents_to_be_served?.length || 0
+          });
+        } catch (error) {
+          console.log(`⚠️ Could not snapshot job ${jobId}:`, error.message);
+        }
+      }
+      
+      console.log(`📸 Took snapshots of ${this.jobSnapshots.size} jobs`);
+    } catch (error) {
+      console.error('❌ Failed to take snapshots:', error);
+    }
+  }
+
+  private async detectChanges(jobIds: string[]) {
+    try {
+      const { makeServeManagerRequest } = await import('../routes/servemanager');
+      
+      // Check each monitored job for changes
+      for (const [jobId, snapshot] of this.jobSnapshots.entries()) {
+        try {
+          const freshJob = await makeServeManagerRequest(`/jobs/${jobId}`);
+          const currentState = {
+            attemptCount: freshJob.attempts?.length || 0,
+            lastUpdated: freshJob.updated_at,
+            status: freshJob.service_status,
+            lastAttemptId: freshJob.attempts?.[freshJob.attempts.length - 1]?.id,
+            documentCount: freshJob.documents_to_be_served?.length || 0
+          };
+
+          // Detect specific changes
+          const changes: JobChange[] = [];
+
+          // New attempt detected
+          if (currentState.attemptCount > snapshot.attemptCount) {
+            const newAttempts = freshJob.attempts?.slice(snapshot.attemptCount) || [];
+            changes.push({
+              jobId,
+              changeType: 'new_attempt',
+              data: { newAttempts, job: freshJob },
+              timestamp: new Date()
+            });
+            console.log(`🎉 New attempt detected for job ${jobId}!`);
+          }
+
+          // Status change
+          if (currentState.status !== snapshot.status) {
+            changes.push({
+              jobId,
+              changeType: 'status_change',
+              data: { oldStatus: snapshot.status, newStatus: currentState.status, job: freshJob },
+              timestamp: new Date()
+            });
+            console.log(`📈 Status change for job ${jobId}: ${snapshot.status} → ${currentState.status}`);
+          }
+
+          // New documents
+          if (currentState.documentCount > snapshot.documentCount) {
+            changes.push({
+              jobId,
+              changeType: 'document_added',
+              data: { job: freshJob },
+              timestamp: new Date()
+            });
+            console.log(`📄 New document for job ${jobId}`);
+          }
+
+          // Job updated (catch-all for other changes)
+          if (currentState.lastUpdated !== snapshot.lastUpdated) {
+            changes.push({
+              jobId,
+              changeType: 'job_updated',
+              data: { job: freshJob },
+              timestamp: new Date()
+            });
+          }
+
+          // Emit changes and update snapshot
+          for (const change of changes) {
+            this.emit('change', change);
+          }
+
+          if (changes.length > 0) {
+            this.jobSnapshots.set(jobId, currentState);
+            
+            // Update local cache immediately
+            await this.updateLocalCache(jobId, freshJob);
+          }
+
+        } catch (error) {
+          console.log(`⚠️ Could not check job ${jobId} for changes:`, error.message);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Change detection failed:', error);
+    }
+  }
+
+  private async updateLocalCache(jobId: string, freshJobData: any) {
+    try {
+      const { cacheService } = await import('./cache-service');
+      
+      // Update just this one job in the cache
+      await cacheService.updateSingleJob(jobId, freshJobData);
+      console.log(`💾 Updated cache for job ${jobId}`);
+    } catch (error) {
+      console.error(`❌ Failed to update cache for job ${jobId}:`, error);
+    }
+  }
+
+  // Add a job to monitoring
+  addJobToMonitoring(jobId: string) {
+    if (!this.jobSnapshots.has(jobId)) {
+      this.takeSnapshots([jobId]);
+    }
+  }
+
+  // Get current monitored jobs
+  getMonitoredJobs(): string[] {
+    return Array.from(this.jobSnapshots.keys());
+  }
+}
+
+// Singleton instance
+export const changeDetector = new ChangeDetector();
