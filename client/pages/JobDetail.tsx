@@ -702,10 +702,10 @@ export default function JobDetail() {
                               {attempt.details.photos.length > 0 && (
                                 <div>
                                   <label className="text-sm font-medium text-slate-700 mb-2 block">
-                                    Attempt Photos ({attempt.details.photos.length})
+                                    {attempt.isMobileAttempt ? 'Mobile App' : 'Manual Entry'} Photos ({attempt.details.photos.length})
                                   </label>
                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    {attempt.details.photos.map((photo) => (
+                                    {attempt.details.photos.map((photo, photoIndex) => (
                                       <div key={photo.id} className="border rounded-lg overflow-hidden group">
                                         <div
                                           className="relative cursor-pointer"
@@ -713,7 +713,7 @@ export default function JobDetail() {
                                         >
                                           <img
                                             src={photo.thumbnailUrl || photo.url}
-                                            alt={photo.name}
+                                            alt={`${attempt.isMobileAttempt ? 'Mobile' : 'Manual'} Attempt Photo ${photoIndex + 1}`}
                                             className="w-full h-24 object-cover transition-transform group-hover:scale-105"
                                             onError={(e) => {
                                               // Fallback to main URL if thumbnail fails
@@ -725,17 +725,24 @@ export default function JobDetail() {
                                               <Eye className="w-6 h-6 text-white" />
                                             </div>
                                           </div>
-                                          {photo.size && (
-                                            <div className="absolute top-1 right-1">
-                                              <Badge variant="secondary" className="text-xs">
+                                          <div className="absolute top-1 right-1">
+                                            {photo.size && (
+                                              <Badge variant="secondary" className="text-xs mr-1">
                                                 {formatFileSize(photo.size)}
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          {attempt.isMobileAttempt && (
+                                            <div className="absolute top-1 left-1">
+                                              <Badge variant="secondary" className="text-xs px-1 py-0 bg-blue-500 text-white">
+                                                📱
                                               </Badge>
                                             </div>
                                           )}
                                         </div>
                                         <div className="p-2">
                                           <p className="text-xs font-medium truncate" title={photo.name}>
-                                            {photo.name}
+                                            {attempt.isMobileAttempt ? 'Mobile' : 'Manual'} Attempt Photo {photoIndex + 1}
                                           </p>
                                           {photo.uploadedAt && (
                                             <p className="text-xs text-muted-foreground">
