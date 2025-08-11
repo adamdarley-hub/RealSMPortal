@@ -397,7 +397,7 @@ export default function JobDetail() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-slate-700">Recipient Name</label>
-                      <p className="text-sm text-slate-900">{safeString(job.recipient_name || job.defendant_name, 'Unknown')}</p>
+                      <p className="text-sm text-slate-900">{getRecipientName(job)}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700">Service Address</label>
