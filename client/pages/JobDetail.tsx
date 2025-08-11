@@ -272,7 +272,7 @@ const extractServiceAttempts = (job: Job) => {
 
   return job.attempts.map((attempt: any, index: number) => {
     // Debug log for each attempt to understand status fields
-    console.log(`🔍 Attempt ${index + 1} status analysis:`, {
+    console.log(`��� Attempt ${index + 1} status analysis:`, {
       success: attempt.success,  // Primary field from API docs
       service_status: attempt.service_status,  // API docs show \"Served\"
       served_at: attempt.served_at,  // Timestamp when served
@@ -382,7 +382,7 @@ const extractServiceAttempts = (job: Job) => {
             console.log(`❌ No misc_attachments found for attempt ${index + 1}. Checking other fields...`);
             // Try other possible photo locations
             const alternativePhotos = attempt.photos || attempt.images || attempt.files || [];
-            console.log(`🔍 Alternative photo sources:`, {
+            console.log(`�� Alternative photo sources:`, {
               photos: attempt.photos,
               images: attempt.images,
               files: attempt.files,
@@ -458,6 +458,7 @@ export default function JobDetail() {
   const handleManualRefresh = async () => {
     if (!id) return;
 
+    console.log('🔄 Manual refresh button clicked for job:', id);
     setIsRefreshing(true);
     try {
       console.log('🔄 Triggering fresh sync from ServeManager...');
