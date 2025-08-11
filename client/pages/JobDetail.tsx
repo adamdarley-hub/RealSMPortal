@@ -81,116 +81,54 @@ const getPriorityColor = (priority: string) => {
   }
 };
 
-// Mock service attempts data (will be replaced with real data)
-const mockServiceAttempts = [
-  {
-    id: 1,
-    number: 1,
-    status: "Unsuccessful Attempt",
-    statusColor: "bg-red-100 text-red-800",
-    date: "7/22/2025 at 3:36:08 PM",
-    server: "Michael Caudle",
-    method: "Mobile App",
-    expanded: false,
-    details: {
-      serveType: "Personal",
-      serviceStatus: "No answer",
-      recipient: "Nobody home",
-      address: "1609 WILDWOOD DRIVE, ROUND ROCK, TX 78681",
-      description: "No vehicles present, no lights on, appeared vacant",
-      photos: [],
-      gps: {
-        latitude: 30.490788,
-        longitude: -97.700998,
-        accuracy: "15.2 ft",
-        time: "7/22/2025, 3:36:22 PM"
-      }
-    }
-  },
-  {
-    id: 2,
-    number: 2,
-    status: "Unsuccessful Attempt",
-    statusColor: "bg-red-100 text-red-800",
-    date: "7/25/2025 at 4:52:00 PM",
-    server: "Adam Darley",
-    method: "Mobile App",
-    expanded: false,
-    details: {
-      serveType: "Personal",
-      serviceStatus: "No answer",
-      recipient: "Nobody home",
-      address: "1609 WILDWOOD DRIVE, ROUND ROCK, TX 78681",
-      description: "Vehicle present in driveway, no answer at door",
-      photos: [],
-      gps: {
-        latitude: 30.490788,
-        longitude: -97.700998,
-        accuracy: "12.8 ft",
-        time: "7/25/2025, 4:52:15 PM"
-      }
-    }
-  },
-  {
-    id: 3,
-    number: 3,
-    status: "Unsuccessful Attempt",
-    statusColor: "bg-red-100 text-red-800",
-    date: "7/26/2025 at 8:31:13 AM",
-    server: "Adam Darley",
-    method: "Mobile App",
-    expanded: false,
-    details: {
-      serveType: "Personal",
-      serviceStatus: "No answer",
-      recipient: "Nobody home",
-      address: "1609 WILDWOOD DRIVE, ROUND ROCK, TX 78681",
-      description: "Multiple vehicles present, lights on, music heard but no answer",
-      photos: [],
-      gps: {
-        latitude: 30.490788,
-        longitude: -97.700998,
-        accuracy: "8.9 ft",
-        time: "7/26/2025, 8:31:35 AM"
-      }
-    }
-  },
-  {
-    id: 4,
-    number: 4,
-    status: "Successful",
-    statusColor: "bg-green-100 text-green-800",
-    date: "8/2/2025 at 7:00:00 PM",
-    server: "Adam Darley",
-    method: "Mobile App",
-    expanded: true,
-    details: {
-      serveType: "Personal",
-      serviceStatus: "Served",
-      recipient: "Robert Eskridge personally served",
-      address: "1609 WILDWOOD DRIVE, ROUND ROCK, TX 78681",
-      description: "Male, Hispanic, approximately 35 years old, 5'10\", 180 lbs, brown hair, brown eyes. Positively identified as Robert Eskridge through driver's license verification.",
-      photos: [
-        {
-          id: 1,
-          name: "Service Photo 1",
-          url: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop"
-        },
-        {
-          id: 2,
-          name: "Service Photo 2", 
-          url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop"
-        }
-      ],
-      gps: {
-        latitude: 30.490788,
-        longitude: -97.700998,
-        accuracy: "5.2 ft",
-        time: "8/2/2025, 7:00:22 PM"
-      }
-    }
+// Helper function to extract service attempts from job data
+const extractServiceAttempts = (job: Job) => {
+  if (!job.attempts || !Array.isArray(job.attempts)) {
+    return [];
   }
-];
+
+  return job.attempts.map((attempt: any, index: number) => {
+    const isSuccessful = attempt.served === true || attempt.status === 'served' || attempt.result === 'served';
+
+    return {
+      id: attempt.id || index + 1,
+      number: index + 1,
+      status: isSuccessful ? "Successful" : "Unsuccessful Attempt",
+      statusColor: isSuccessful ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800",
+      date: formatDateTime(attempt.attempted_at || attempt.date || attempt.created_at),
+      server: attempt.server_name || attempt.process_server || attempt.employee_name || "Unknown Server",
+      method: attempt.method || attempt.source || "Manual Entry",
+      expanded: index === 0, // Expand first attempt by default
+      details: {
+        serveType: attempt.serve_type || attempt.service_type || "Personal",
+        serviceStatus: attempt.status || attempt.result || (isSuccessful ? "Served" : "Not Served"),
+        recipient: attempt.recipient || attempt.served_to || attempt.description || "Unknown",
+        address: (() => {
+          if (attempt.address) {
+            if (typeof attempt.address === 'string') return attempt.address;
+            if (typeof attempt.address === 'object') {
+              return `${attempt.address.street || attempt.address.address1 || ''} ${attempt.address.street2 || ''}`.trim() +
+                     `, ${attempt.address.city || ''}, ${attempt.address.state || ''} ${attempt.address.zip || attempt.address.postal_code || ''}`;
+            }
+          }
+          return "Address not available";
+        })(),
+        description: attempt.notes || attempt.description || attempt.comments || "No additional details",
+        photos: (attempt.attachments || attempt.photos || []).map((photo: any, photoIndex: number) => ({
+          id: photo.id || photoIndex,
+          name: photo.name || photo.filename || `Photo ${photoIndex + 1}`,
+          url: photo.url || photo.download_url || photo.file_url
+        })),
+        gps: {
+          latitude: attempt.latitude || attempt.lat || null,
+          longitude: attempt.longitude || attempt.lng || null,
+          accuracy: attempt.accuracy ? `${attempt.accuracy} ft` : "Unknown",
+          time: formatDateTime(attempt.gps_time || attempt.location_time || attempt.attempted_at)
+        }
+      }
+    };
+  });
+};
 
 export default function JobDetail() {
   const { id } = useParams<{ id: string }>();
