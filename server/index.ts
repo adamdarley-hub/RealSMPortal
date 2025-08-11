@@ -178,9 +178,14 @@ export function createServer() {
   // Document proxy routes (handles S3 URL expiration)
   const { getDocumentProxy, getAttemptPhotoProxy } = require("./routes/document-proxy");
   const { genericProxy } = require("./routes/generic-proxy");
+  const { getDocumentPreview, getDocumentDownload } = require("./routes/fresh-documents");
   app.get("/api/proxy/document/:jobId/:documentId/:type?", getDocumentProxy);      // 📄 Proxy for documents
   app.get("/api/proxy/photo/:jobId/:attemptId/:photoId", getAttemptPhotoProxy);   // 📸 Proxy for attempt photos
   app.get("/api/proxy", genericProxy);                                            // 🔗 Generic proxy for any URL
+
+  // Fresh document endpoints (fetch fresh URLs from ServeManager on-demand)
+  app.get("/api/jobs/:jobId/documents/:documentId/preview", getDocumentPreview);   // 📄 Fresh document preview
+  app.get("/api/jobs/:jobId/documents/:documentId/download", getDocumentDownload); // 💾 Fresh document download
 
   // Direct ServeManager routes (for admin/debugging)
   app.get("/api/servemanager/jobs", getJobs);
