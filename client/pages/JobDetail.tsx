@@ -21,6 +21,19 @@ import {
   DollarSign,
   Building,
   Clock,
+  Download,
+  Printer,
+  Navigation,
+  Image as ImageIcon,
+  ExternalLink,
+  Copy,
+  Share,
+  Edit,
+  Check,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Job } from "@shared/servemanager";
