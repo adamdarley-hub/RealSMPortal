@@ -206,13 +206,65 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
 
 export function mapClientFromServeManager(rawClient: any): any {
   if (!rawClient) return { _raw: rawClient };
-  
+
+  // Extract name from various possible formats
+  const extractName = () => {
+    if (rawClient.name) return rawClient.name;
+    if (rawClient.client_name) return rawClient.client_name;
+    if (rawClient.contact_name) return rawClient.contact_name;
+    if (rawClient.first_name || rawClient.last_name) {
+      return `${rawClient.first_name || ''} ${rawClient.last_name || ''}`.trim();
+    }
+    // Try to get primary contact name
+    if (rawClient.contacts && Array.isArray(rawClient.contacts) && rawClient.contacts.length > 0) {
+      const primaryContact = rawClient.contacts.find(c => c.primary) || rawClient.contacts[0];
+      if (primaryContact.first_name || primaryContact.last_name) {
+        return `${primaryContact.first_name || ''} ${primaryContact.last_name || ''}`.trim();
+      }
+    }
+    return null;
+  };
+
+  // Extract company from various possible formats
+  const extractCompany = () => {
+    if (rawClient.company) return rawClient.company;
+    if (rawClient.company_name) return rawClient.company_name;
+    if (rawClient.business_name) return rawClient.business_name;
+    if (rawClient.name && !rawClient.first_name) return rawClient.name; // Company name in name field
+    return null;
+  };
+
+  // Extract email from various sources
+  const extractEmail = () => {
+    if (rawClient.email) return rawClient.email;
+    if (rawClient.email_address) return rawClient.email_address;
+    // Try to get primary contact email
+    if (rawClient.contacts && Array.isArray(rawClient.contacts) && rawClient.contacts.length > 0) {
+      const primaryContact = rawClient.contacts.find(c => c.primary) || rawClient.contacts[0];
+      return primaryContact.email || primaryContact.email_address;
+    }
+    return null;
+  };
+
+  // Extract phone from various sources
+  const extractPhone = () => {
+    if (rawClient.phone) return rawClient.phone;
+    if (rawClient.phone_number) return rawClient.phone_number;
+    if (rawClient.telephone) return rawClient.telephone;
+    // Try to get primary contact phone
+    if (rawClient.contacts && Array.isArray(rawClient.contacts) && rawClient.contacts.length > 0) {
+      const primaryContact = rawClient.contacts.find(c => c.primary) || rawClient.contacts[0];
+      return primaryContact.phone || primaryContact.phone_number || primaryContact.telephone;
+    }
+    return null;
+  };
+
   return {
     id: rawClient.id || rawClient.uuid || rawClient.client_id,
-    name: rawClient.name || rawClient.client_name || rawClient.contact_name,
-    company: rawClient.company || rawClient.company_name || rawClient.business_name,
-    email: rawClient.email || rawClient.email_address,
-    phone: rawClient.phone || rawClient.phone_number || rawClient.telephone,
+    name: extractName(),
+    company: extractCompany(),
+    email: extractEmail(),
+    phone: extractPhone(),
     address: rawClient.address || rawClient.billing_address || rawClient.mailing_address,
     billing_address: rawClient.billing_address || rawClient.address,
     mailing_address: rawClient.mailing_address || rawClient.address,
