@@ -260,7 +260,7 @@ const extractServiceAttempts = (job: Job) => {
     });
 
     // ServeManager attempt success detection based on API documentation
-    const isSuccessful = (
+    let isSuccessful = (
       attempt.served === true ||
       attempt.status === 'served' ||
       attempt.status === 'Served' ||
@@ -269,6 +269,23 @@ const extractServiceAttempts = (job: Job) => {
       attempt.service_status === 'served' ||
       attempt.service_status === 'Served'
     );
+
+    // If job is served but no attempt is marked successful, mark the last attempt as successful
+    if (!isSuccessful && jobIsServed && index === job.attempts.length - 1) {
+      // Check if no other attempt was already marked successful
+      const hasSuccessfulAttempt = job.attempts.some((a: any) =>
+        a.served === true ||
+        a.status === 'served' ||
+        a.status === 'Served' ||
+        a.result === 'served' ||
+        a.result === 'Served'
+      );
+
+      if (!hasSuccessfulAttempt) {
+        isSuccessful = true;
+        console.log(`✅ Marking attempt ${index + 1} as successful because job is served and no explicit successful attempt found`);
+      }
+    }
     const methodDisplay = getMethodDisplay(attempt);
 
     return {
