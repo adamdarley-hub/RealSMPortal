@@ -393,7 +393,7 @@ export default function JobDetail() {
   const [error, setError] = useState<string | null>(null);
   const [serviceAttempts, setServiceAttempts] = useState<any[]>([]);
   const [activeJobTab, setActiveJobTab] = useState("job-info");
-  const [activeMainTab, setActiveMainTab] = useState("documents");
+  const [activeMainTab, setActiveMainTab] = useState("overview");
   const [expandedAttempts, setExpandedAttempts] = useState<Set<string>>(new Set(['1'])); // First attempt expanded by default
   const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
