@@ -175,6 +175,10 @@ export function createServer() {
   app.get("/api/sync/legacy-status", getSyncStatus); // 📊 Legacy sync status
   app.post("/api/force-refresh", require("./routes/force-refresh").forceRefresh); // 🔄 Clear cache and force refresh
 
+  // Generic proxy route (handles any S3 URL expiration)
+  const { genericProxy } = require("./routes/generic-proxy");
+  app.get("/api/proxy", genericProxy);                                           // 🌐 Generic proxy for any URL
+
   // Document proxy routes (handles S3 URL expiration)
   const { getDocumentProxy, getAttemptPhotoProxy } = require("./routes/document-proxy");
   app.get("/api/proxy/document/:jobId/:documentId/:type?", getDocumentProxy);      // 📄 Proxy for documents
