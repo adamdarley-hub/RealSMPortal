@@ -13,8 +13,9 @@ class WebSocketService {
   private server: any = null;
 
   init(server: any) {
-    this.server = server;
-    this.wss = new WebSocketServer({ server });
+    try {
+      this.server = server;
+      this.wss = new WebSocketServer({ server });
 
     this.wss.on('connection', (ws: WebSocket, req) => {
       const clientId = this.generateClientId();
@@ -57,7 +58,11 @@ class WebSocketService {
       this.broadcastChange(change);
     });
 
-    console.log('🌐 WebSocket service initialized');
+      console.log('🌐 WebSocket service initialized');
+    } catch (error) {
+      console.warn('⚠️ WebSocket service initialization failed:', error.message);
+      console.log('🔄 Real-time updates will be disabled');
+    }
   }
 
   private handleClientMessage(clientId: string, message: any) {
