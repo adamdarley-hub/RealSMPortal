@@ -1061,11 +1061,29 @@ export default function JobDetail() {
                                 }
 
                                 return (
-                                  <iframe
-                                    src={getPreviewUrl(documentUrl)}
-                                    className="w-full h-full border-0"
-                                    title={`Document: ${currentDocument.title}`}
-                                  />
+                                  <div className="relative w-full h-full">
+                                    <iframe
+                                      src={getPreviewUrl(documentUrl)}
+                                      className="w-full h-full border-0"
+                                      title={`Document: ${currentDocument.title}`}
+                                      onError={(e) => {
+                                        console.log('📄 Document iframe failed to load, refreshing...', e);
+                                        refreshJobData();
+                                      }}
+                                    />
+                                    <div className="absolute top-2 right-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={refreshJobData}
+                                        className="gap-2 bg-white/90 backdrop-blur"
+                                        title="Refresh if document won't load"
+                                      >
+                                        <Download className="w-3 h-3" />
+                                        Refresh
+                                      </Button>
+                                    </div>
+                                  </div>
                                 );
                               })()}
                             </div>
