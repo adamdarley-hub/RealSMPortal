@@ -173,12 +173,16 @@ export const getCachedJob: RequestHandler = async (req, res) => {
         const { makeServeManagerRequest } = await import('./servemanager');
         const freshData = await makeServeManagerRequest(`/jobs/${id}`);
 
+        // Unwrap the data if it's wrapped in a data property
+        const actualJobData = freshData.data || freshData;
+
         // Debug logging for job 20483264 fresh data
         if (id === '20483264') {
-          console.log(`🔍 FRESH DEBUG Job 20483264 - Full structure:`, Object.keys(freshData));
-          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempts type:`, typeof freshData.attempts);
-          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempts:`, freshData.attempts);
-          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempt count:`, freshData.attempts?.length || 0);
+          console.log(`🔍 FRESH DEBUG Job 20483264 - Raw structure:`, Object.keys(freshData));
+          console.log(`🔍 FRESH DEBUG Job 20483264 - Unwrapped structure:`, Object.keys(actualJobData));
+          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempts type:`, typeof actualJobData.attempts);
+          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempts:`, actualJobData.attempts);
+          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempt count:`, actualJobData.attempts?.length || 0);
         }
 
         // Return fresh data with same structure as cached data
@@ -186,7 +190,7 @@ export const getCachedJob: RequestHandler = async (req, res) => {
         console.log(`🔄 Served fresh job ${id} from ServeManager in ${responseTime}ms`);
 
         res.json({
-          ...freshData,
+          ...actualJobData,
           cached: false,
           response_time_ms: responseTime,
           _last_synced: new Date().toISOString()
