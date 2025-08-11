@@ -502,45 +502,62 @@ export default function JobDetail() {
           setExpandedAttempts(new Set([String(realAttempts[0].id)]));
         }
 
-        // Background check for fresh data if cached data is old or missing attempts
-        const isOldData = jobData.cached !== false;
-        const hasNoAttempts = realAttempts.length === 0;
+        // Start continuous monitoring for new attempts
+        let currentAttemptCount = realAttempts.length;
 
-        if (isOldData || hasNoAttempts) {
-          // Don't await this - let it happen in background
-          setTimeout(async () => {
+        const startContinuousMonitoring = () => {
+          const monitorInterval = setInterval(async () => {
             try {
-              console.log('🔄 Background refresh for latest attempts...');
+              console.log('👀 Monitoring for new attempts...', { currentCount: currentAttemptCount });
               const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`);
 
               if (freshResponse.ok) {
                 const freshJobData = await freshResponse.json();
                 const freshAttempts = extractServiceAttempts(freshJobData);
 
-                // Only update if we got more/better data
-                if (freshAttempts.length > realAttempts.length || (hasNoAttempts && freshAttempts.length > 0)) {
-                  console.log('✅ Background refresh found new attempts:', {
-                    before: realAttempts.length,
-                    after: freshAttempts.length
+                // Check if we have new attempts
+                if (freshAttempts.length > currentAttemptCount) {
+                  console.log('🎉 New attempts detected!', {
+                    before: currentAttemptCount,
+                    after: freshAttempts.length,
+                    newAttempts: freshAttempts.length - currentAttemptCount
                   });
+
                   setJob(freshJobData);
                   setServiceAttempts(freshAttempts);
+                  currentAttemptCount = freshAttempts.length;
 
+                  // Expand the newest attempt
                   if (freshAttempts.length > 0) {
-                    setExpandedAttempts(new Set([String(freshAttempts[0].id)]));
+                    const newestAttempt = freshAttempts[freshAttempts.length - 1];
+                    setExpandedAttempts(new Set([String(newestAttempt.id)]));
                   }
 
                   toast({
-                    title: "Updated",
-                    description: `Found ${freshAttempts.length - realAttempts.length} new attempt(s)`,
+                    title: "New Attempt Added!",
+                    description: `${freshAttempts.length - (freshAttempts.length - freshAttempts.length + currentAttemptCount)} new service attempt(s) detected`,
                   });
                 }
               }
             } catch (error) {
-              console.log('⚠️ Background refresh failed (no impact on user):', error);
+              console.log('⚠️ Monitoring check failed:', error);
             }
-          }, 500); // Reduced to 0.5 seconds for faster updates
-        }
+          }, 5000); // Check every 5 seconds
+
+          // Store interval ID for cleanup
+          return monitorInterval;
+        };
+
+        // Start monitoring after initial load
+        const monitorInterval = startContinuousMonitoring();
+
+        // Cleanup function will be handled by useEffect cleanup
+        return () => {
+          if (monitorInterval) {
+            clearInterval(monitorInterval);
+            console.log('🛑 Stopped continuous monitoring');
+          }
+        };
 
         console.log('���� Job data loaded:', {
           jobId: jobData.id,
