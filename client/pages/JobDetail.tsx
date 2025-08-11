@@ -258,35 +258,39 @@ const extractServiceAttempts = (job: Job) => {
       allFields: Object.keys(attempt)
     });
 
-    // ServeManager attempt success detection based on API documentation
-    let isSuccessful = (
-      attempt.success === true ||  // Primary field from API docs
-      attempt.service_status === 'Served' ||  // API docs show this as "Served"
-      attempt.served_at !== null && attempt.served_at !== undefined ||  // If served_at timestamp exists
-      // Fallback checks for other possible field names
-      attempt.served === true ||
-      attempt.status === 'served' ||
-      attempt.status === 'Served' ||
-      attempt.result === 'served' ||
-      attempt.result === 'Served'
-    );
+    // ServeManager attempt success detection based on serve_type field
+    const serveType = attempt.serve_type || attempt.service_type || '';
+    const successfulServeTypes = [
+      "Authorized", "Business", "Corporation", "Government Agency", "Mail",
+      "Personal/Individual", "Posted", "Registered Agent", "Secretary of State",
+      "Substitute Service - Abode", "Substitute Service - Business", "Substitute Service - Personal"
+    ];
+    const unsuccessfulServeTypes = ["Bad Address", "Non-Service", "Unsuccessful Attempt"];
 
-    // If job is served but no attempt is marked successful, mark the last attempt as successful
-    if (!isSuccessful && jobIsServed && index === job.attempts.length - 1) {
-      // Check if no other attempt was already marked successful
-      const hasSuccessfulAttempt = job.attempts.some((a: any) =>
-        a.served === true ||
-        a.status === 'served' ||
-        a.status === 'Served' ||
-        a.result === 'served' ||
-        a.result === 'Served'
+    let isSuccessful = false;
+
+    if (successfulServeTypes.includes(serveType)) {
+      isSuccessful = true;
+    } else if (unsuccessfulServeTypes.includes(serveType)) {
+      isSuccessful = false;
+    } else {
+      // Fallback to other detection methods if serve_type is not available
+      isSuccessful = (
+        attempt.success === true ||
+        attempt.service_status === 'Served' ||
+        attempt.served_at !== null && attempt.served_at !== undefined ||
+        attempt.served === true ||
+        attempt.status === 'served' ||
+        attempt.status === 'Served'
       );
-
-      if (!hasSuccessfulAttempt) {
-        isSuccessful = true;
-        console.log(`✅ Marking attempt ${index + 1} as successful because job is served and no explicit successful attempt found`);
-      }
     }
+
+    console.log(`🔍 Attempt ${index + 1} success detection:`, {
+      serveType,
+      isSuccessful,
+      successfulTypes: successfulServeTypes,
+      unsuccessfulTypes: unsuccessfulServeTypes
+    });
     const methodDisplay = getMethodDisplay(attempt);
 
     return {
