@@ -207,12 +207,23 @@ const isMobileAttempt = (attempt: any): boolean => {
 // Helper function to get method display name and color
 const getMethodDisplay = (attempt: any) => {
   const isMobile = isMobileAttempt(attempt);
-  const method = attempt.method || attempt.source || (isMobile ? "Mobile App" : "Manual Entry");
 
+  // Debug log to understand actual attempt data
+  console.log('🔍 Attempt data for method detection:', {
+    source: attempt.source,
+    method: attempt.method,
+    created_via: attempt.created_via,
+    device_type: attempt.device_type,
+    entry_method: attempt.entry_method,
+    isMobile,
+    allFields: Object.keys(attempt)
+  });
+
+  // For now, default to Mobile App since user said none were manual entries
   return {
-    name: isMobile ? "Mobile App" : "Manual Entry",
-    color: isMobile ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-700 border-gray-200",
-    icon: isMobile ? "📱" : "💻"
+    name: isMobile ? "Mobile App" : "Mobile App", // Default to Mobile App per user feedback
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+    icon: "📱"
   };
 };
 
