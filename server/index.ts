@@ -175,6 +175,11 @@ export function createServer() {
   app.get("/api/sync/legacy-status", getSyncStatus); // 📊 Legacy sync status
   app.post("/api/force-refresh", require("./routes/force-refresh").forceRefresh); // 🔄 Clear cache and force refresh
 
+  // Document proxy routes (handles S3 URL expiration)
+  const { getDocumentProxy, getAttemptPhotoProxy } = require("./routes/document-proxy");
+  app.get("/api/proxy/document/:jobId/:documentId/:type?", getDocumentProxy);      // 📄 Proxy for documents
+  app.get("/api/proxy/photo/:jobId/:attemptId/:photoId", getAttemptPhotoProxy);   // 📸 Proxy for attempt photos
+
   // Direct ServeManager routes (for admin/debugging)
   app.get("/api/servemanager/jobs", getJobs);
   app.get("/api/servemanager/jobs/:id", getJob);
