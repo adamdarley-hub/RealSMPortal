@@ -844,8 +844,49 @@ export default function JobDetail() {
                 {/* Service Attempts */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Service Attempts</CardTitle>
-                    <CardDescription>History of service attempts for this job</CardDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Service Attempts</CardTitle>
+                        <CardDescription>History of service attempts for this job</CardDescription>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            console.log('🔄 Manual refresh triggered...');
+                            const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`);
+
+                            if (freshResponse.ok) {
+                              const freshJobData = await freshResponse.json();
+                              const freshAttempts = extractServiceAttempts(freshJobData);
+
+                              setJob(freshJobData);
+                              setServiceAttempts(freshAttempts);
+
+                              if (freshAttempts.length > 0) {
+                                setExpandedAttempts(new Set([String(freshAttempts[0].id)]));
+                              }
+
+                              toast({
+                                title: "Refreshed",
+                                description: `Loaded ${freshAttempts.length} attempt(s) from server`,
+                              });
+                            }
+                          } catch (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to refresh attempts",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        className="gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        Refresh
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
