@@ -328,22 +328,32 @@ const extractServiceAttempts = (job: Job) => {
           return "Address not available";
         })(),
         description: attempt.notes || attempt.description || attempt.comments || "No additional details",
-        photos: (attempt.attachments || attempt.photos || attempt.misc_attachments || [])
-          .filter((item: any) => {
-            const fileName = item.name || item.filename || '';
-            const mimeType = item.mime_type || item.type || '';
-            return mimeType.startsWith('image/') ||
-                   fileName.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
-          })
-          .map((photo: any, photoIndex: number) => ({
-            id: photo.id || photoIndex,
-            name: photo.name || photo.filename || `Photo ${photoIndex + 1}`,
-            url: photo.url || photo.download_url || photo.file_url || photo.links?.download_url,
-            thumbnailUrl: photo.thumbnail_url || photo.links?.thumbnail_url,
-            type: photo.mime_type || photo.type || 'image/jpeg',
-            size: photo.size || photo.file_size,
-            uploadedAt: photo.created_at || photo.uploaded_at
-          })),
+        photos: (() => {
+          const attachments = attempt.attachments || attempt.photos || attempt.misc_attachments || [];
+          console.log(`🖼️ Attempt ${index + 1} photo extraction:`, {
+            attachments: attachments.length,
+            rawAttachments: attachments,
+            attemptKeys: Object.keys(attempt)
+          });
+
+          return attachments
+            .filter((item: any) => {
+              const fileName = item.name || item.filename || '';
+              const mimeType = item.mime_type || item.type || '';
+              const isImage = mimeType.startsWith('image/') || fileName.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
+              console.log(`📷 Photo filter check:`, { fileName, mimeType, isImage, item });
+              return isImage;
+            })
+            .map((photo: any, photoIndex: number) => ({
+              id: photo.id || photoIndex,
+              name: photo.name || photo.filename || `Photo ${photoIndex + 1}`,
+              url: photo.url || photo.download_url || photo.file_url || photo.links?.download_url,
+              thumbnailUrl: photo.thumbnail_url || photo.links?.thumbnail_url,
+              type: photo.mime_type || photo.type || 'image/jpeg',
+              size: photo.size || photo.file_size,
+              uploadedAt: photo.created_at || photo.uploaded_at
+            }));
+        })(),
         gps: {
           latitude: attempt.lat || attempt.latitude || null,
           longitude: attempt.lng || attempt.longitude || null,
