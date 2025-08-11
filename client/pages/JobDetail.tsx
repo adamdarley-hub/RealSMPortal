@@ -817,6 +817,55 @@ export default function JobDetail() {
           </Tabs>
         </div>
       </main>
+
+      {/* Photo Modal */}
+      <Dialog open={isPhotoModalOpen} onOpenChange={setIsPhotoModalOpen}>
+        <DialogContent className="max-w-4xl w-full">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>{selectedPhoto?.name}</span>
+              <div className="flex items-center gap-2">
+                {selectedPhoto?.url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="gap-2"
+                  >
+                    <a
+                      href={selectedPhoto.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download={selectedPhoto.name}
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </DialogTitle>
+            {selectedPhoto?.uploadedAt && (
+              <DialogDescription>
+                Uploaded: {formatDateTime(selectedPhoto.uploadedAt)}
+                {selectedPhoto.size && ` • Size: ${formatFileSize(selectedPhoto.size)}`}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          <div className="flex items-center justify-center p-4">
+            {selectedPhoto?.url && (
+              <img
+                src={selectedPhoto.url}
+                alt={selectedPhoto.name}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                onError={(e) => {
+                  console.error('Failed to load image:', selectedPhoto.url);
+                }}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
