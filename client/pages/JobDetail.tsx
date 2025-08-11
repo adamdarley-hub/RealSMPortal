@@ -712,7 +712,7 @@ export default function JobDetail() {
                                       <div key={photo.id} className="border rounded-lg overflow-hidden group">
                                         <div
                                           className="relative cursor-pointer"
-                                          onClick={() => handlePhotoClick(photo)}
+                                          onClick={() => handlePhotoClick(photo, attempt.isMobileAttempt)}
                                         >
                                           <img
                                             src={photo.thumbnailUrl || photo.url}
