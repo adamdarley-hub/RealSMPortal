@@ -27,6 +27,8 @@ import {
 } from "./routes/sync-status";
 import "./services/startup-sync"; // Auto-trigger initial sync
 import "./services/background-sync"; // Auto-trigger background sync
+import { changeDetector } from "./services/change-detector";
+import { webSocketService } from "./services/websocket-service";
 import {
   getMockJobs,
   getMockClients,
