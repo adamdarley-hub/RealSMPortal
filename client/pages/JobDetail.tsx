@@ -602,29 +602,47 @@ export default function JobDetail() {
 
                               {attempt.details.photos.length > 0 && (
                                 <div>
-                                  <label className="text-sm font-medium text-slate-700 mb-2 block">Attempt Photos</label>
+                                  <label className="text-sm font-medium text-slate-700 mb-2 block">
+                                    Attempt Photos ({attempt.details.photos.length})
+                                  </label>
                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     {attempt.details.photos.map((photo) => (
-                                      <div key={photo.id} className="border rounded-lg overflow-hidden">
-                                        <div className="group relative cursor-pointer">
-                                          <img 
-                                            src={photo.url} 
+                                      <div key={photo.id} className="border rounded-lg overflow-hidden group">
+                                        <div
+                                          className="relative cursor-pointer"
+                                          onClick={() => handlePhotoClick(photo)}
+                                        >
+                                          <img
+                                            src={photo.thumbnailUrl || photo.url}
                                             alt={photo.name}
-                                            className="w-full h-24 object-cover"
+                                            className="w-full h-24 object-cover transition-transform group-hover:scale-105"
+                                            onError={(e) => {
+                                              // Fallback to main URL if thumbnail fails
+                                              e.currentTarget.src = photo.url;
+                                            }}
                                           />
-                                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
-                                            <Button 
-                                              variant="secondary" 
-                                              size="sm"
-                                              className="opacity-0 group-hover:opacity-100 transition-opacity gap-1"
-                                            >
-                                              <Eye className="w-4 h-4" />
-                                              View
-                                            </Button>
+                                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                              <Eye className="w-6 h-6 text-white" />
+                                            </div>
                                           </div>
+                                          {photo.size && (
+                                            <div className="absolute top-1 right-1">
+                                              <Badge variant="secondary" className="text-xs">
+                                                {formatFileSize(photo.size)}
+                                              </Badge>
+                                            </div>
+                                          )}
                                         </div>
                                         <div className="p-2">
-                                          <p className="text-xs font-medium truncate">{photo.name}</p>
+                                          <p className="text-xs font-medium truncate" title={photo.name}>
+                                            {photo.name}
+                                          </p>
+                                          {photo.uploadedAt && (
+                                            <p className="text-xs text-muted-foreground">
+                                              {formatDate(photo.uploadedAt)}
+                                            </p>
+                                          )}
                                         </div>
                                       </div>
                                     ))}
