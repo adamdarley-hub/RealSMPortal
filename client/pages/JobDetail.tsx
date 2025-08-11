@@ -329,29 +329,31 @@ const extractServiceAttempts = (job: Job) => {
         })(),
         description: attempt.notes || attempt.description || attempt.comments || "No additional details",
         photos: (() => {
-          // Use attempt.photos array as specified in the data structure
-          const photos = attempt.photos || [];
+          // ServeManager stores photos in misc_attachments array
+          const miscAttachments = attempt.misc_attachments || attempt.attachments || [];
           console.log(`🖼️ Attempt ${index + 1} photo extraction:`, {
-            photosCount: photos.length,
-            rawPhotos: photos,
+            miscAttachmentsCount: miscAttachments.length,
+            rawMiscAttachments: miscAttachments,
             attemptKeys: Object.keys(attempt)
           });
 
-          return photos
-            .filter((photo: any) => {
-              // Ensure photo has required structure
-              const hasValidStructure = photo.id && photo.title && photo.upload?.links?.download_url;
-              console.log(`📷 Photo structure check:`, { photo, hasValidStructure });
-              return hasValidStructure;
+          return miscAttachments
+            .filter((attachment: any) => {
+              // Check if it's an image attachment
+              const isImage = attachment.upload?.content_type?.startsWith('image/') ||
+                             attachment.upload?.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
+              const hasValidStructure = attachment.id && attachment.title && attachment.upload?.links?.download_url;
+              console.log(`📷 Attachment check:`, { attachment, isImage, hasValidStructure });
+              return isImage && hasValidStructure;
             })
             .map((photo: any, photoIndex: number) => ({
               id: photo.id,
               name: photo.title,
               url: photo.upload.links.download_url,
               thumbnailUrl: photo.upload.links.thumbnail_url || photo.upload.links.download_url,
-              type: 'image/jpeg',
+              type: photo.upload.content_type || 'image/jpeg',
               size: photo.upload.file_size,
-              uploadedAt: photo.created_at || photo.upload.created_at
+              uploadedAt: photo.created_at || photo.updated_at
             }));
         })(),
         gps: {
