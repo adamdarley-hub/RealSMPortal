@@ -507,10 +507,29 @@ export default function JobDetail() {
         // Start continuous monitoring for new attempts after successful load
         let currentAttemptCount = realAttempts.length;
 
+        // Use a less aggressive monitoring interval to avoid conflicts with auto-sync
         monitorInterval = setInterval(async () => {
           try {
+            // Only monitor if browser is online and not during auto-sync
+            if (!navigator.onLine) {
+              console.log('⏸️ Offline - skipping attempt monitoring');
+              return;
+            }
+
             console.log('👀 Monitoring for new attempts...', { currentCount: currentAttemptCount });
-            const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`);
+
+            // Add timeout to prevent hanging requests
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+            const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`, {
+              signal: controller.signal,
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            });
+
+            clearTimeout(timeoutId);
 
             if (freshResponse.ok) {
               const freshJobData = await freshResponse.json();
@@ -541,9 +560,16 @@ export default function JobDetail() {
               }
             }
           } catch (error) {
-            console.log('⚠️ Monitoring check failed:', error);
+            // Handle different types of errors gracefully
+            if (error.name === 'AbortError') {
+              console.log('⏸️ Monitoring request timeout - will retry next cycle');
+            } else if (error.message?.includes('Failed to fetch')) {
+              console.log('⚠️ Network error during monitoring - using cached data');
+            } else {
+              console.log('⚠️ Monitoring check failed:', error);
+            }
           }
-        }, 5000); // Check every 5 seconds
+        }, 15000); // Reduced frequency to 15 seconds to avoid conflicts
 
         console.log('���� Job data loaded:', {
           jobId: jobData.id,
