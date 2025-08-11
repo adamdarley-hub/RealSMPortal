@@ -599,7 +599,33 @@ export default function JobDetail() {
             </div>
           </div>
 
-          {/* Main Job Info Card */}
+          {/* Direct PDF Viewer - No Tabs or Cards */}
+          {(() => {
+            const documentsToBeServed = job.raw_data?.documents_to_be_served || job.documents_to_be_served || [];
+
+            if (documentsToBeServed.length === 0) {
+              return (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-4" />
+                  <p>No documents to be served</p>
+                </div>
+              );
+            }
+
+            const currentDocument = documentsToBeServed[0];
+
+            return (
+              <div className="w-full" style={{ height: 'calc(100vh - 200px)' }}>
+                {currentDocument.upload?.links?.download_url && (
+                  <iframe
+                    src={getPreviewUrl(currentDocument.upload.links.download_url)}
+                    className="w-full h-full border-0"
+                    title={`Document: ${currentDocument.title}`}
+                  />
+                )}
+              </div>
+            );
+          })()}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
