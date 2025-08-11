@@ -924,7 +924,7 @@ export default function JobDetail() {
                               </div>
                               <iframe
                                 key={`${currentDocument.id}-${urlRefreshCount}`}
-                                src={currentDocument.upload.links.download_url}
+                                src={getPreviewUrl(currentDocument.upload.links.download_url)}
                                 className="w-full h-[800px] border rounded-lg"
                                 title={`Document: ${currentDocument.title}`}
                                 onError={(e) => {
