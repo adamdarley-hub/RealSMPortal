@@ -27,12 +27,21 @@ export const genericProxy: RequestHandler = async (req, res) => {
           <html>
             <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
               <h2>Document Temporarily Unavailable</h2>
-              <p>The document URL has expired. Please refresh the page to reload the document.</p>
-              <button onclick="window.parent.location.reload()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              <p>The document URL has expired. Please refresh the page to get fresh document links.</p>
+              <button onclick="refreshJobData()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                Refresh Document
+              </button>
+              <button onclick="window.parent.location.reload()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
                 Refresh Page
               </button>
               <br><br>
               <small style="color: #666;">Error: ${response.status} ${response.statusText}</small>
+              <script>
+                function refreshJobData() {
+                  // Send message to parent window to refresh job data
+                  window.parent.postMessage({ type: 'REFRESH_JOB' }, '*');
+                }
+              </script>
             </body>
           </html>
         `;
