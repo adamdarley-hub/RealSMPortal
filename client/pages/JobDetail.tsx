@@ -1140,12 +1140,15 @@ export default function JobDetail() {
                 )}
               </div>
             </DialogTitle>
-            {selectedPhoto?.uploadedAt && (
-              <DialogDescription>
-                Uploaded: {formatDateTime(selectedPhoto.uploadedAt)}
-                {selectedPhoto.size && ` ��� Size: ${formatFileSize(selectedPhoto.size)}`}
-              </DialogDescription>
-            )}
+            <DialogDescription>
+              {selectedPhoto?.uploadedAt && `Uploaded: ${formatDateTime(selectedPhoto.uploadedAt)}`}
+              {selectedPhoto?.size && (
+                <>
+                  {selectedPhoto?.uploadedAt && ' • '}
+                  Size: {formatFileSize(selectedPhoto.size)}
+                </>
+              )}
+            </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center p-4">
             {selectedPhoto?.url && (
