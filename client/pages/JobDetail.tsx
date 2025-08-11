@@ -1016,7 +1016,19 @@ export default function JobDetail() {
         <DialogContent className="max-w-4xl w-full">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span>{selectedPhoto?.name}</span>
+              <div className="flex items-center gap-2">
+                <span>{selectedPhoto?.name}</span>
+                {selectedPhoto?.isMobileAttempt && (
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    📱 Mobile App
+                  </Badge>
+                )}
+                {selectedPhoto?.isMobileAttempt === false && (
+                  <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                    💻 Manual Entry
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 {selectedPhoto?.url && (
                   <Button
