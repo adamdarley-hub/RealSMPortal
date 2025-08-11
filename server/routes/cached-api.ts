@@ -170,9 +170,20 @@ export const getCachedJob: RequestHandler = async (req, res) => {
     if (refresh === 'true') {
       console.log(`🔄 Refresh requested for job ${id}, fetching fresh data...`);
       try {
-        const { getJob } = await import('./servemanager');
-        const freshJob = await getJob(req, res);
-        return; // getJob will handle the response
+        const { makeServeManagerRequest } = await import('./servemanager');
+        const freshData = await makeServeManagerRequest(`/jobs/${id}`);
+
+        // Return fresh data with same structure as cached data
+        const responseTime = Date.now() - startTime;
+        console.log(`🔄 Served fresh job ${id} from ServeManager in ${responseTime}ms`);
+
+        res.json({
+          ...freshData,
+          cached: false,
+          response_time_ms: responseTime,
+          _last_synced: new Date().toISOString()
+        });
+        return;
       } catch (error) {
         console.error(`❌ Failed to refresh job ${id}:`, error);
         // Fall back to cache if refresh fails
