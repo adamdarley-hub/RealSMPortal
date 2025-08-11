@@ -1006,12 +1006,38 @@ export default function JobDetail() {
                               {(() => {
                                 const currentDocument = documentsToBeServed[currentDocumentIndex];
 
-                                if (!currentDocument?.upload?.links?.download_url) {
+                                // Try multiple possible URL paths
+                                const documentUrl =
+                                  currentDocument?.upload?.links?.download_url ||
+                                  currentDocument?.upload?.download_url ||
+                                  currentDocument?.download_url ||
+                                  currentDocument?.links?.download_url ||
+                                  currentDocument?.file_url;
+
+                                console.log('📄 Document URL debug:', {
+                                  documentTitle: currentDocument?.title,
+                                  hasUpload: !!currentDocument?.upload,
+                                  hasUploadLinks: !!currentDocument?.upload?.links,
+                                  documentUrl: documentUrl,
+                                  documentKeys: currentDocument ? Object.keys(currentDocument) : [],
+                                  uploadKeys: currentDocument?.upload ? Object.keys(currentDocument.upload) : []
+                                });
+
+                                if (!documentUrl) {
                                   return (
                                     <div className="flex items-center justify-center h-full text-muted-foreground">
-                                      <div className="text-center">
+                                      <div className="text-center space-y-4">
                                         <FileText className="w-12 h-12 mx-auto mb-4" />
                                         <p>Document preview not available</p>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={refreshJobData}
+                                          className="gap-2"
+                                        >
+                                          <Download className="w-4 h-4" />
+                                          Refresh Document URLs
+                                        </Button>
                                       </div>
                                     </div>
                                   );
@@ -1019,7 +1045,7 @@ export default function JobDetail() {
 
                                 return (
                                   <iframe
-                                    src={getPreviewUrl(currentDocument.upload.links.download_url)}
+                                    src={getPreviewUrl(documentUrl)}
                                     className="w-full h-full border-0"
                                     title={`Document: ${currentDocument.title}`}
                                   />
