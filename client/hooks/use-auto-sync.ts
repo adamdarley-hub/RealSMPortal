@@ -276,9 +276,27 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       console.log('🌐 Back online - resuming auto-sync');
       if (mountedRef.current) {
         setStatus(prev => ({ ...prev, isOnline: true, error: null }));
-        // Trigger a sync when coming back online
+        // Trigger a sync when coming back online and restart normal polling
         if (enabled) {
+          // Clear any existing intervals with backoff delays
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+
+          // Immediate sync attempt
           setTimeout(() => triggerSync(false), 1000); // Small delay to ensure connection is stable
+
+          // Resume normal polling interval
+          setTimeout(() => {
+            if (mountedRef.current && enabled && !intervalRef.current) {
+              intervalRef.current = setInterval(() => {
+                if (mountedRef.current) {
+                  triggerSync(false);
+                }
+              }, interval);
+            }
+          }, 2000);
         }
       }
     };
