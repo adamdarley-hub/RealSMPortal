@@ -549,7 +549,7 @@ export default function JobDetail() {
                                 className="p-1 h-8 w-8"
                                 onClick={() => toggleAttemptExpansion(attempt.id)}
                               >
-                                {attempt.expanded ? (
+                                {isAttemptExpanded(attempt.id) ? (
                                   <ChevronUp className="w-4 h-4" />
                                 ) : (
                                   <ChevronDown className="w-4 h-4" />
