@@ -535,7 +535,7 @@ export default function JobDetail() {
         setLoading(true);
         console.log(`🔍 Loading job ${id}...`);
 
-        const response = await fetch(`/api/jobs/${id}?refresh=true`);
+        const response = await fetch(`/api/servemanager/jobs/${id}`);
 
         if (!response.ok) {
           throw new Error(`Failed to load job: ${response.status}`);
