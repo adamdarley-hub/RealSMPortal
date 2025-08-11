@@ -171,7 +171,15 @@ const extractServiceAttempts = (job: Job) => {
       details: {
         serveType: attempt.serve_type || attempt.service_type || "Personal",
         serviceStatus: attempt.status || attempt.result || (isSuccessful ? "Served" : "Not Served"),
-        recipient: attempt.recipient || attempt.served_to || attempt.description || "Unknown",
+        recipient: (() => {
+          if (attempt.recipient) {
+            if (typeof attempt.recipient === 'string') return attempt.recipient;
+            if (typeof attempt.recipient === 'object' && attempt.recipient.name) return attempt.recipient.name;
+          }
+          if (attempt.served_to && typeof attempt.served_to === 'string') return attempt.served_to;
+          if (attempt.description && typeof attempt.description === 'string') return attempt.description;
+          return "Unknown";
+        })(),
         address: (() => {
           if (attempt.address) {
             if (typeof attempt.address === 'string') return attempt.address;
