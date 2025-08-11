@@ -72,6 +72,7 @@ const formatTimeAgo = (date: Date): string => {
 };
 
 export default function Jobs() {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [servers, setServers] = useState<Server[]>([]);
