@@ -238,7 +238,7 @@ const getMethodDisplay = (attempt: any) => {
   return {
     name: isMobile ? "Mobile App" : "Manual Entry",
     color: isMobile ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-700 border-gray-200",
-    icon: isMobile ? "📱" : "💻"
+    icon: isMobile ? "📱" : "���"
   };
 };
 
@@ -504,62 +504,46 @@ export default function JobDetail() {
           setExpandedAttempts(new Set([String(realAttempts[0].id)]));
         }
 
-        // Start continuous monitoring for new attempts
+        // Start continuous monitoring for new attempts after successful load
         let currentAttemptCount = realAttempts.length;
 
-        const startContinuousMonitoring = () => {
-          const monitorInterval = setInterval(async () => {
-            try {
-              console.log('👀 Monitoring for new attempts...', { currentCount: currentAttemptCount });
-              const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`);
+        monitorInterval = setInterval(async () => {
+          try {
+            console.log('👀 Monitoring for new attempts...', { currentCount: currentAttemptCount });
+            const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`);
 
-              if (freshResponse.ok) {
-                const freshJobData = await freshResponse.json();
-                const freshAttempts = extractServiceAttempts(freshJobData);
+            if (freshResponse.ok) {
+              const freshJobData = await freshResponse.json();
+              const freshAttempts = extractServiceAttempts(freshJobData);
 
-                // Check if we have new attempts
-                if (freshAttempts.length > currentAttemptCount) {
-                  console.log('🎉 New attempts detected!', {
-                    before: currentAttemptCount,
-                    after: freshAttempts.length,
-                    newAttempts: freshAttempts.length - currentAttemptCount
-                  });
+              // Check if we have new attempts
+              if (freshAttempts.length > currentAttemptCount) {
+                console.log('🎉 New attempts detected!', {
+                  before: currentAttemptCount,
+                  after: freshAttempts.length,
+                  newAttempts: freshAttempts.length - currentAttemptCount
+                });
 
-                  setJob(freshJobData);
-                  setServiceAttempts(freshAttempts);
-                  currentAttemptCount = freshAttempts.length;
+                setJob(freshJobData);
+                setServiceAttempts(freshAttempts);
+                currentAttemptCount = freshAttempts.length;
 
-                  // Expand the newest attempt
-                  if (freshAttempts.length > 0) {
-                    const newestAttempt = freshAttempts[freshAttempts.length - 1];
-                    setExpandedAttempts(new Set([String(newestAttempt.id)]));
-                  }
-
-                  toast({
-                    title: "New Attempt Added!",
-                    description: `${freshAttempts.length - (freshAttempts.length - freshAttempts.length + currentAttemptCount)} new service attempt(s) detected`,
-                  });
+                // Expand the newest attempt
+                if (freshAttempts.length > 0) {
+                  const newestAttempt = freshAttempts[freshAttempts.length - 1];
+                  setExpandedAttempts(new Set([String(newestAttempt.id)]));
                 }
+
+                toast({
+                  title: "New Attempt Added!",
+                  description: `Found ${freshAttempts.length - currentAttemptCount} new attempt(s)`,
+                });
               }
-            } catch (error) {
-              console.log('⚠️ Monitoring check failed:', error);
             }
-          }, 5000); // Check every 5 seconds
-
-          // Store interval ID for cleanup
-          return monitorInterval;
-        };
-
-        // Start monitoring after initial load
-        const monitorInterval = startContinuousMonitoring();
-
-        // Cleanup function will be handled by useEffect cleanup
-        return () => {
-          if (monitorInterval) {
-            clearInterval(monitorInterval);
-            console.log('🛑 Stopped continuous monitoring');
+          } catch (error) {
+            console.log('⚠️ Monitoring check failed:', error);
           }
-        };
+        }, 5000); // Check every 5 seconds
 
         console.log('���� Job data loaded:', {
           jobId: jobData.id,
