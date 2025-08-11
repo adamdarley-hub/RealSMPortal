@@ -155,72 +155,98 @@ export class CacheService {
       for (const job of allJobs) {
         const jobId = job.id || job.uuid || job.job_number || `job_${Date.now()}_${Math.random()}`;
 
-        // Prepare data for insertion with proper null handling
+        // Prepare data for insertion with proper null handling and explicit field mapping
         const jobData = {
-          id: jobId,
-          servemanager_id: job.id || job.uuid || jobId,
-          uuid: job.uuid || null,
-          job_number: job.job_number || null,
-          generated_job_id: job.generated_job_id || null,
-          reference: job.reference || null,
-          status: job.status || null,
-          job_status: job.job_status || null,
-          priority: job.priority || null,
-          urgency: job.urgency || null,
-          created_at: job.created_at || null,
-          updated_at: job.updated_at || null,
-          due_date: job.due_date || null,
-          service_date: job.service_date || null,
-          completed_date: job.completed_date || null,
-          received_date: job.received_date || null,
-          client_id: job.client_id || null,
-          client_name: job.client_name || null,
-          client_company: job.client_company || null,
-          client_email: job.client_email || null,
-          client_phone: job.client_phone || null,
+          // Primary key and identifiers (from schema)
+          id: String(jobId),
+          servemanager_id: String(job.id || job.uuid || jobId),
+          uuid: job.uuid ? String(job.uuid) : null,
+          job_number: job.job_number ? String(job.job_number) : null,
+          generated_job_id: job.generated_job_id ? String(job.generated_job_id) : null,
+          reference: job.reference ? String(job.reference) : null,
+
+          // Status and priority
+          status: job.status ? String(job.status) : null,
+          job_status: job.job_status ? String(job.job_status) : null,
+          priority: job.priority ? String(job.priority) : null,
+          urgency: job.urgency ? String(job.urgency) : null,
+
+          // Dates
+          created_at: job.created_at ? String(job.created_at) : null,
+          updated_at: job.updated_at ? String(job.updated_at) : null,
+          due_date: job.due_date ? String(job.due_date) : null,
+          service_date: job.service_date ? String(job.service_date) : null,
+          completed_date: job.completed_date ? String(job.completed_date) : null,
+          received_date: job.received_date ? String(job.received_date) : null,
+
+          // Client information
+          client_id: job.client_id ? String(job.client_id) : null,
+          client_name: job.client_name ? String(job.client_name) : null,
+          client_company: job.client_company ? String(job.client_company) : null,
+          client_email: job.client_email ? String(job.client_email) : null,
+          client_phone: job.client_phone ? String(job.client_phone) : null,
           client_address: job.client_address ? JSON.stringify(job.client_address) : null,
-          account_id: job.account_id || null,
-          recipient_name: job.recipient_name || null,
-          defendant_name: job.defendant_name || null,
-          defendant_first_name: job.defendant_first_name || null,
-          defendant_last_name: job.defendant_last_name || null,
+          account_id: job.account_id ? String(job.account_id) : null,
+
+          // Recipient information
+          recipient_name: job.recipient_name ? String(job.recipient_name) : null,
+          defendant_name: job.defendant_name ? String(job.defendant_name) : null,
+          defendant_first_name: job.defendant_first_name ? String(job.defendant_first_name) : null,
+          defendant_last_name: job.defendant_last_name ? String(job.defendant_last_name) : null,
           defendant_address: job.defendant_address ? JSON.stringify(job.defendant_address) : null,
           service_address: job.service_address ? JSON.stringify(job.service_address) : null,
           address: job.address ? JSON.stringify(job.address) : null,
-          server_id: job.server_id || null,
-          server_name: job.server_name || null,
-          assigned_server: job.assigned_server || null,
-          assigned_to: job.assigned_to || null,
-          amount: job.amount || null,
-          price: job.price || null,
-          cost: job.cost || null,
-          fee: job.fee || null,
-          total: job.total || null,
-          service_type: job.service_type || null,
-          type: job.type || null,
-          document_type: job.document_type || null,
-          description: job.description || null,
-          notes: job.notes || null,
-          instructions: job.instructions || null,
-          attempt_count: job.attempt_count || null,
-          last_attempt: job.last_attempt || null,
-          last_attempt_date: job.last_attempt_date || null,
-          latitude: job.latitude || null,
-          longitude: job.longitude || null,
-          court: job.court || null,
-          case_number: job.case_number || null,
-          docket_number: job.docket_number || null,
-          plaintiff: job.plaintiff || null,
-          attorney: job.attorney || null,
-          law_firm: job.law_firm || null,
+
+          // Server information
+          server_id: job.server_id ? String(job.server_id) : null,
+          server_name: job.server_name ? String(job.server_name) : null,
+          assigned_server: job.assigned_server ? String(job.assigned_server) : null,
+          assigned_to: job.assigned_to ? String(job.assigned_to) : null,
+
+          // Financial information (real numbers)
+          amount: typeof job.amount === 'number' ? job.amount : null,
+          price: typeof job.price === 'number' ? job.price : null,
+          cost: typeof job.cost === 'number' ? job.cost : null,
+          fee: typeof job.fee === 'number' ? job.fee : null,
+          total: typeof job.total === 'number' ? job.total : null,
+
+          // Service information
+          service_type: job.service_type ? String(job.service_type) : null,
+          type: job.type ? String(job.type) : null,
+          document_type: job.document_type ? String(job.document_type) : null,
+          description: job.description ? String(job.description) : null,
+          notes: job.notes ? String(job.notes) : null,
+          instructions: job.instructions ? String(job.instructions) : null,
+
+          // Attempt information
+          attempt_count: typeof job.attempt_count === 'number' ? job.attempt_count : null,
+          last_attempt: job.last_attempt ? String(job.last_attempt) : null,
+          last_attempt_date: job.last_attempt_date ? String(job.last_attempt_date) : null,
+
+          // Location data (real numbers)
+          latitude: typeof job.latitude === 'number' ? job.latitude : null,
+          longitude: typeof job.longitude === 'number' ? job.longitude : null,
+
+          // Additional fields
+          court: job.court ? String(job.court) : null,
+          case_number: job.case_number ? String(job.case_number) : null,
+          docket_number: job.docket_number ? String(job.docket_number) : null,
+          plaintiff: job.plaintiff ? String(job.plaintiff) : null,
+          attorney: job.attorney ? String(job.attorney) : null,
+          law_firm: job.law_firm ? String(job.law_firm) : null,
+
+          // Complex data as JSON
           attempts: job.attempts ? JSON.stringify(job.attempts) : null,
           documents: job.documents ? JSON.stringify(job.documents) : null,
           attachments: job.attachments ? JSON.stringify(job.attachments) : null,
           gps_coordinates: job.gps_coordinates ? JSON.stringify(job.gps_coordinates) : null,
           tags: job.tags ? JSON.stringify(job.tags) : null,
           badges: job.badges ? JSON.stringify(job.badges) : null,
+
+          // Metadata
           raw_data: job._raw ? JSON.stringify(job._raw) : null,
           last_synced: new Date().toISOString(),
+          // Note: created_local has a default value in schema, so we don't need to provide it
         };
 
         // Use simple insert with conflict resolution
