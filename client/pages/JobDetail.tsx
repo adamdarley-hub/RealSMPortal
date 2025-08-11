@@ -640,7 +640,7 @@ export default function JobDetail() {
                                   <div
                                     key={photo.id}
                                     className="flex-shrink-0 relative cursor-pointer group border rounded-lg overflow-hidden"
-                                    onClick={() => handlePhotoClick(photo)}
+                                    onClick={() => handlePhotoClick(photo, attempt.isMobileAttempt)}
                                     style={{ width: '80px', height: '60px' }}
                                   >
                                     <img
