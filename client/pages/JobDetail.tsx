@@ -571,6 +571,14 @@ export default function JobDetail() {
     };
 
     loadJob();
+
+    // Cleanup function - stop monitoring when component unmounts or job changes
+    return () => {
+      if (monitorInterval) {
+        clearInterval(monitorInterval);
+        console.log('🛑 Stopped continuous monitoring');
+      }
+    };
   }, [id, toast]);
 
   // Listen for refresh messages from iframe
