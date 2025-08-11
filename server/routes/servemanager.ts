@@ -145,6 +145,27 @@ export const getJobs: RequestHandler = async (req, res) => {
           console.log(JSON.stringify(pageJobs[0], null, 2));
           console.log('=== JOB KEYS AVAILABLE ===');
           console.log('Available keys:', Object.keys(pageJobs[0]));
+
+          // Log attempt structure if available
+          if (pageJobs[0].attempts && Array.isArray(pageJobs[0].attempts)) {
+            console.log('=== ATTEMPTS STRUCTURE ===');
+            console.log('Number of attempts:', pageJobs[0].attempts.length);
+            pageJobs[0].attempts.forEach((attempt, index) => {
+              console.log(`Attempt ${index + 1}:`, {
+                keys: Object.keys(attempt),
+                status: attempt.status,
+                result: attempt.result,
+                served: attempt.served,
+                method: attempt.method,
+                source: attempt.source,
+                device_type: attempt.device_type,
+                created_via: attempt.created_via,
+                app_type: attempt.app_type,
+                attempt_date: attempt.attempt_date || attempt.attempted_at || attempt.date,
+                photos: attempt.photos?.length || attempt.attachments?.length || attempt.misc_attachments?.length || 0
+              });
+            });
+          }
           console.log('=====================================');
         }
 
