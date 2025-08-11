@@ -269,12 +269,48 @@ export function mapClientFromServeManager(rawClient: any): any {
   const extractAddress = () => {
     if (rawClient.addresses && Array.isArray(rawClient.addresses) && rawClient.addresses.length > 0) {
       const primaryAddress = rawClient.addresses.find(a => a.primary) || rawClient.addresses[0];
+
+      // Try all possible street field names
+      const street = primaryAddress.street ||
+                   primaryAddress.street1 ||
+                   primaryAddress.address ||
+                   primaryAddress.line1 ||
+                   primaryAddress.address_line_1 ||
+                   primaryAddress.street_address ||
+                   primaryAddress.address1;
+
+      const street2 = primaryAddress.street2 ||
+                     primaryAddress.line2 ||
+                     primaryAddress.address_line_2 ||
+                     primaryAddress.address2;
+
+      const city = primaryAddress.city ||
+                  primaryAddress.locality ||
+                  primaryAddress.town;
+
+      const state = primaryAddress.state ||
+                   primaryAddress.province ||
+                   primaryAddress.region ||
+                   primaryAddress.state_province;
+
+      const zip = primaryAddress.zip ||
+                 primaryAddress.postal_code ||
+                 primaryAddress.zipcode ||
+                 primaryAddress.postcode;
+
+      // Log what we found for debugging
+      console.log('🏠 Address extraction debug:', {
+        foundFields: Object.keys(primaryAddress),
+        extracted: { street, street2, city, state, zip },
+        rawAddress: primaryAddress
+      });
+
       return {
-        street: primaryAddress.street || primaryAddress.street1 || primaryAddress.address,
-        street2: primaryAddress.street2,
-        city: primaryAddress.city,
-        state: primaryAddress.state || primaryAddress.province,
-        zip: primaryAddress.zip || primaryAddress.postal_code,
+        street,
+        street2,
+        city,
+        state,
+        zip,
         country: primaryAddress.country
       };
     }
