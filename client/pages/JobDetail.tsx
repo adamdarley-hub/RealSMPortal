@@ -1061,21 +1061,21 @@ export default function JobDetail() {
                                 return (
                                   <div className="relative w-full h-full">
                                     <iframe
-                                      src={getPreviewUrl(documentUrl)}
+                                      src={getPreviewUrl(currentDocument.id, job.id)}
                                       className="w-full h-full border-0"
                                       title={`Document: ${currentDocument.title}`}
-                                      onError={(e) => {
-                                        console.log('📄 Document iframe failed to load, refreshing...', e);
-                                        refreshJobData();
-                                      }}
+                                      key={`${currentDocument.id}-${urlRefreshCount}`}
                                     />
                                     <div className="absolute top-2 right-2">
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={refreshJobData}
+                                        onClick={() => {
+                                          setUrlRefreshCount(prev => prev + 1);
+                                          console.log('🔄 Refreshing document viewer...');
+                                        }}
                                         className="gap-2 bg-white/90 backdrop-blur"
-                                        title="Refresh if document won't load"
+                                        title="Refresh document viewer"
                                       >
                                         <Download className="w-3 h-3" />
                                         Refresh
