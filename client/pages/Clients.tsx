@@ -271,34 +271,42 @@ export default function Clients() {
                       <div className="flex items-center gap-2">
                         <Building className="w-4 h-4 text-muted-foreground" />
                         <div>
-                          <p className="font-medium">{client.company}</p>
-                          <p className="text-xs text-muted-foreground">{client.id}</p>
+                          <p className="font-medium">{client.company || 'No company name'}</p>
+                          <p className="text-xs text-muted-foreground">{client.id || 'No ID'}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <p className="font-medium">{client.name}</p>
+                      <p className="font-medium">{client.name || 'No contact name'}</p>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-muted-foreground" />
-                        <a 
-                          href={`mailto:${client.email}`}
-                          className="text-primary hover:underline"
-                        >
-                          {client.email}
-                        </a>
+                        {client.email ? (
+                          <a
+                            href={`mailto:${client.email}`}
+                            className="text-primary hover:underline"
+                          >
+                            {client.email}
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground">No email</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Phone className="w-4 h-4 text-muted-foreground" />
-                        <a 
-                          href={`tel:${client.phone}`}
-                          className="text-primary hover:underline"
-                        >
-                          {client.phone}
-                        </a>
+                        {client.phone ? (
+                          <a
+                            href={`tel:${client.phone}`}
+                            className="text-primary hover:underline"
+                          >
+                            {client.phone}
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground">No phone</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
