@@ -818,7 +818,7 @@ export default function JobDetail() {
                                           onClick={() => handlePhotoClick(photo, attempt.isMobileAttempt)}
                                         >
                                           <img
-                                            src={`/api/proxy/photo/${job.id}/${attempt.id}/${photo.id}`}
+                                            src={photo.url}
                                             alt={photo.name}
                                             className="w-full h-24 object-cover transition-transform group-hover:scale-105"
                                             onError={(e) => {
