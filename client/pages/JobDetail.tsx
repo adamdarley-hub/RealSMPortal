@@ -727,6 +727,20 @@ export default function JobDetail() {
                 </Button>
                 <Button
                   variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={handleManualRefresh}
+                  disabled={isRefreshing}
+                >
+                  {isRefreshing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Clock className="w-4 h-4" />
+                  )}
+                  {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                </Button>
+                <Button
+                  variant="outline"
                   className="gap-2"
                   onClick={handlePrintJob}
                   disabled={isPrintMode}
