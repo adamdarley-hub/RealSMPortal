@@ -425,6 +425,11 @@ export default function JobDetail() {
         const realAttempts = extractServiceAttempts(jobData);
         setServiceAttempts(realAttempts);
 
+        // Expand first attempt by default to show photos
+        if (realAttempts.length > 0) {
+          setExpandedAttempts(new Set([String(realAttempts[0].id)]));
+        }
+
         console.log('���� Job data loaded:', {
           jobId: jobData.id,
           attemptsFound: realAttempts.length,
