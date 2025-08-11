@@ -364,8 +364,11 @@ export default function JobDetail() {
     return expandedAttempts.has(String(attemptId));
   };
 
-  const handlePhotoClick = (photo: any) => {
-    setSelectedPhoto(photo);
+  const handlePhotoClick = (photo: any, isMobileAttempt?: boolean) => {
+    setSelectedPhoto({
+      ...photo,
+      isMobileAttempt: isMobileAttempt
+    });
     setIsPhotoModalOpen(true);
   };
 
