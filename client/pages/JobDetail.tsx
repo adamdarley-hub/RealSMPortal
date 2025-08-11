@@ -182,21 +182,26 @@ const getServiceAddressString = (job: Job) => {
 
 // Helper function to detect if attempt was via mobile app
 const isMobileAttempt = (attempt: any): boolean => {
-  const method = (attempt.method || attempt.source || '').toLowerCase();
-  const deviceType = (attempt.device_type || '').toLowerCase();
+  // ServeManager uses these fields to indicate mobile vs web entry
+  const source = (attempt.source || '').toLowerCase();
+  const method = (attempt.method || '').toLowerCase();
   const createdVia = (attempt.created_via || '').toLowerCase();
-  const appType = (attempt.app_type || '').toLowerCase();
+  const deviceType = (attempt.device_type || '').toLowerCase();
+  const entryMethod = (attempt.entry_method || '').toLowerCase();
 
-  // Check for mobile indicators
-  return method.includes('mobile') ||
+  // Check for mobile indicators based on ServeManager API
+  return source === 'mobile' ||
+         source === 'mobile_app' ||
+         source.includes('app') ||
+         method.includes('mobile') ||
          method.includes('app') ||
-         deviceType.includes('mobile') ||
-         deviceType.includes('ios') ||
-         deviceType.includes('android') ||
          createdVia.includes('mobile') ||
          createdVia.includes('app') ||
-         appType.includes('mobile') ||
-         appType.length > 0;
+         deviceType === 'mobile' ||
+         deviceType === 'ios' ||
+         deviceType === 'android' ||
+         entryMethod === 'mobile' ||
+         entryMethod === 'app';
 };
 
 // Helper function to get method display name and color
@@ -218,7 +223,16 @@ const extractServiceAttempts = (job: Job) => {
   }
 
   return job.attempts.map((attempt: any, index: number) => {
-    const isSuccessful = attempt.served === true || attempt.status === 'served' || attempt.result === 'served';
+    // ServeManager attempt success detection based on API documentation
+    const isSuccessful = (
+      attempt.served === true ||
+      attempt.status === 'served' ||
+      attempt.status === 'Served' ||
+      attempt.result === 'served' ||
+      attempt.result === 'Served' ||
+      attempt.service_status === 'served' ||
+      attempt.service_status === 'Served'
+    );
     const methodDisplay = getMethodDisplay(attempt);
 
     return {
