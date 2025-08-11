@@ -111,13 +111,12 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-// Helper function to get preview URL for inline viewing using generic proxy
-const getPreviewUrl = (downloadUrl: string): string => {
-  if (!downloadUrl) return '';
+// Helper function to get preview URL for inline viewing using fresh document fetch
+const getPreviewUrl = (documentId: string | number, jobId: string): string => {
+  if (!documentId || !jobId) return '';
 
-  // Use generic proxy endpoint to avoid S3 URL expiration issues
-  const encodedUrl = encodeURIComponent(downloadUrl);
-  return `/api/proxy?url=${encodedUrl}&preview=true`;
+  // Use fresh document endpoint that fetches current URLs from ServeManager
+  return `/api/jobs/${jobId}/documents/${documentId}/preview`;
 };
 
 // Helper function to get download URL with proper headers using generic proxy
