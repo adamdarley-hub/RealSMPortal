@@ -450,11 +450,34 @@ export default function JobDetail() {
       try {
         setLoading(true);
 
-        // First try cached data for fast loading
-        let response = await fetch(`/api/jobs/${id}`);
+        // Helper function to fetch with timeout
+        const fetchWithTimeout = async (url: string, timeoutMs: number = 10000) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+          try {
+            const response = await fetch(url, {
+              signal: controller.signal,
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            });
+            clearTimeout(timeoutId);
+            return response;
+          } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+              throw new Error(`Request timeout after ${timeoutMs}ms`);
+            }
+            throw error;
+          }
+        };
+
+        // First try cached data for fast loading (5 second timeout)
+        let response = await fetchWithTimeout(`/api/jobs/${id}`, 5000);
 
         if (!response.ok) {
-          throw new Error(`Failed to load job: ${response.status}`);
+          throw new Error(`Failed to load job: ${response.status} ${response.statusText}`);
         }
 
         let jobData = await response.json();
@@ -468,7 +491,7 @@ export default function JobDetail() {
         if (realAttempts.length === 0 || jobData.cached !== false) {
           try {
             console.log('🔄 No attempts found or using cached data, fetching fresh data...');
-            const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`);
+            const freshResponse = await fetchWithTimeout(`/api/jobs/${id}?refresh=true`, 15000);
 
             if (freshResponse.ok) {
               const freshJobData = await freshResponse.json();
