@@ -775,22 +775,21 @@ export default function JobDetail() {
 
                               {attempt.details.photos.length > 0 && (
                                 <div>
-                                  <label className="text-sm font-medium text-slate-700 mb-2 block">
-                                    {attempt.isMobileAttempt ? 'Mobile App' : 'Manual Entry'} Photos ({attempt.details.photos.length})
+                                  <label className="text-sm font-medium text-slate-700 mb-3 block">
+                                    Attempt Photos
                                   </label>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                  <div className="grid grid-cols-2 gap-4">
                                     {attempt.details.photos.map((photo, photoIndex) => (
-                                      <div key={photo.id} className="border rounded-lg overflow-hidden group">
+                                      <div key={photo.id} className="space-y-2">
                                         <div
-                                          className="relative cursor-pointer"
+                                          className="relative cursor-pointer border rounded-lg overflow-hidden group aspect-video"
                                           onClick={() => handlePhotoClick(photo, attempt.isMobileAttempt)}
                                         >
                                           <img
                                             src={photo.thumbnailUrl || photo.url}
                                             alt={`${attempt.isMobileAttempt ? 'Mobile' : 'Manual'} Attempt Photo ${photoIndex + 1}`}
-                                            className="w-full h-24 object-cover transition-transform group-hover:scale-105"
+                                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                             onError={(e) => {
-                                              // Fallback to main URL if thumbnail fails
                                               e.currentTarget.src = photo.url;
                                             }}
                                           />
@@ -799,31 +798,10 @@ export default function JobDetail() {
                                               <Eye className="w-6 h-6 text-white" />
                                             </div>
                                           </div>
-                                          <div className="absolute top-1 right-1">
-                                            {photo.size && (
-                                              <Badge variant="secondary" className="text-xs mr-1">
-                                                {formatFileSize(photo.size)}
-                                              </Badge>
-                                            )}
-                                          </div>
-                                          {attempt.isMobileAttempt && (
-                                            <div className="absolute top-1 left-1">
-                                              <Badge variant="secondary" className="text-xs px-1 py-0 bg-blue-500 text-white">
-                                                📱
-                                              </Badge>
-                                            </div>
-                                          )}
                                         </div>
-                                        <div className="p-2">
-                                          <p className="text-xs font-medium truncate" title={photo.name}>
-                                            {attempt.isMobileAttempt ? 'Mobile' : 'Manual'} Attempt Photo {photoIndex + 1}
-                                          </p>
-                                          {photo.uploadedAt && (
-                                            <p className="text-xs text-muted-foreground">
-                                              {formatDate(photo.uploadedAt)}
-                                            </p>
-                                          )}
-                                        </div>
+                                        <p className="text-sm font-medium text-center">
+                                          {attempt.isMobileAttempt ? 'Mobile' : 'Manual'} Attempt Photo {photoIndex + 1}
+                                        </p>
                                       </div>
                                     ))}
                                   </div>
