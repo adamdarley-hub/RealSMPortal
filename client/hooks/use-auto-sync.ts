@@ -27,7 +27,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
     lastSync: null,
     nextSync: null,
     isSyncing: false,
-    error: null
+    error: null,
+    isOnline: navigator.onLine
   });
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
