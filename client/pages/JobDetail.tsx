@@ -233,6 +233,14 @@ const extractServiceAttempts = (job: Job) => {
     return [];
   }
 
+  // Check if the overall job is served to help identify successful attempts
+  const jobIsServed = (
+    job.service_status === 'Served' ||
+    job.service_status === 'served' ||
+    job.status === 'Served' ||
+    job.status === 'served'
+  );
+
   return job.attempts.map((attempt: any, index: number) => {
     // Debug log for each attempt to understand status fields
     console.log(`🔍 Attempt ${index + 1} status analysis:`, {
