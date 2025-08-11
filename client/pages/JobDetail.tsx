@@ -373,8 +373,9 @@ const extractServiceAttempts = (job: Job) => {
             .map((photo: any, photoIndex: number) => ({
               id: photo.id,
               name: photo.title,
-              url: photo.upload.links.download_url,
-              thumbnailUrl: photo.upload.links.thumbnail_url || photo.upload.links.download_url,
+              url: getPhotoProxyUrl(photo.id, attempt.id, job.id, false),
+              thumbnailUrl: getPhotoProxyUrl(photo.id, attempt.id, job.id, false),
+              downloadUrl: getPhotoProxyUrl(photo.id, attempt.id, job.id, true),
               type: photo.upload.content_type || 'image/jpeg',
               size: photo.upload.file_size,
               uploadedAt: photo.created_at || photo.updated_at
