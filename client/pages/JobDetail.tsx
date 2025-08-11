@@ -449,70 +449,39 @@ export default function JobDetail() {
 
       try {
         setLoading(true);
+        console.log(`🔍 Loading job ${id}...`);
 
-        // Helper function to fetch with timeout
-        const fetchWithTimeout = async (url: string, timeoutMs: number = 10000) => {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-          try {
-            const response = await fetch(url, {
-              signal: controller.signal,
-              headers: {
-                'Content-Type': 'application/json',
-              }
-            });
-            clearTimeout(timeoutId);
-            return response;
-          } catch (error) {
-            clearTimeout(timeoutId);
-            if (error.name === 'AbortError') {
-              throw new Error(`Request timeout after ${timeoutMs}ms`);
-            }
-            throw error;
-          }
-        };
-
-        // First try cached data for fast loading (5 second timeout)
-        let response = await fetchWithTimeout(`/api/jobs/${id}`, 5000);
+        const response = await fetch(`/api/jobs/${id}`);
 
         if (!response.ok) {
-          throw new Error(`Failed to load job: ${response.status} ${response.statusText}`);
+          throw new Error(`Failed to load job: ${response.status}`);
         }
 
-        let jobData = await response.json();
+        const jobData = await response.json();
+        console.log('📄 Raw job data received:', {
+          id: jobData.id,
+          jobNumber: jobData.job_number || jobData.generated_job_id,
+          clientName: jobData.client_company || jobData.client_name,
+          hasAttempts: !!jobData.attempts,
+          attemptsLength: jobData.attempts?.length || 0,
+          rawAttempts: jobData.attempts,
+          jobKeys: Object.keys(jobData)
+        });
+
         setJob(jobData);
 
         // Extract real service attempts from job data
-        let realAttempts = extractServiceAttempts(jobData);
-        setServiceAttempts(realAttempts);
-
-        // If no attempts found or data is old (cached), try to get fresh data
-        if (realAttempts.length === 0 || jobData.cached !== false) {
-          try {
-            console.log('🔄 No attempts found or using cached data, fetching fresh data...');
-            const freshResponse = await fetchWithTimeout(`/api/jobs/${id}?refresh=true`, 15000);
-
-            if (freshResponse.ok) {
-              const freshJobData = await freshResponse.json();
-              const freshAttempts = extractServiceAttempts(freshJobData);
-
-              // Only update if we got more attempts or fresher data
-              if (freshAttempts.length > realAttempts.length || freshJobData.cached === false) {
-                setJob(freshJobData);
-                setServiceAttempts(freshAttempts);
-                realAttempts = freshAttempts;
-                console.log('✅ Updated with fresh data:', {
-                  originalAttempts: realAttempts.length,
-                  freshAttempts: freshAttempts.length
-                });
-              }
-            }
-          } catch (freshError) {
-            console.log('⚠️ Fresh data fetch failed, using cached data:', freshError);
-            // Continue with cached data - don't fail the whole load
+        const realAttempts = extractServiceAttempts(jobData);
+        console.log('🔍 Extracted service attempts:', {
+          extractedCount: realAttempts.length,
+          extractedAttempts: realAttempts,
+          extractionInput: {
+            hasAttempts: !!jobData.attempts,
+            attemptsArray: jobData.attempts
           }
-        }
+        });
+
+        setServiceAttempts(realAttempts);
 
         // Expand first attempt by default to show photos
         if (realAttempts.length > 0) {
