@@ -30,7 +30,8 @@ const safeString = (value: any, fallback: string = ''): string => {
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return value.toString();
   if (typeof value === 'object' && value) {
-    return value.name || value.title || value.value || value.text || String(value);
+    // Try common string properties but don't stringify the whole object
+    return value.name || value.title || value.value || value.text || fallback;
   }
   return fallback;
 };
