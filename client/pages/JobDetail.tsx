@@ -449,7 +449,8 @@ export default function JobDetail() {
 
       try {
         setLoading(true);
-        const response = await fetch(`/api/jobs/${id}`);
+        // Always fetch fresh data for job details to ensure latest attempts are shown
+        const response = await fetch(`/api/jobs/${id}?refresh=true`);
 
         if (!response.ok) {
           throw new Error(`Failed to load job: ${response.status}`);
