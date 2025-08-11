@@ -565,10 +565,48 @@ export default function JobDetail() {
                   <CardDescription>Documents associated with this job</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="w-12 h-12 mx-auto mb-4" />
-                    <p>No documents available for this job</p>
-                  </div>
+                  {(() => {
+                    const documents = extractDocuments(job);
+
+                    if (documents.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <FileText className="w-12 h-12 mx-auto mb-4" />
+                          <p>No documents available for this job</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        {documents.map((doc) => (
+                          <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <FileText className="w-8 h-8 text-blue-500" />
+                              <div>
+                                <p className="font-medium">{doc.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {doc.type} {doc.size && `• ${doc.size}`}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <p className="text-sm text-muted-foreground">
+                                {doc.uploadedAt && formatDate(doc.uploadedAt)}
+                              </p>
+                              {doc.url && (
+                                <Button size="sm" variant="outline" asChild>
+                                  <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                                    View
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>
