@@ -529,12 +529,17 @@ export default function JobDetail() {
                   if (freshAttempts.length > 0) {
                     setExpandedAttempts(new Set([String(freshAttempts[0].id)]));
                   }
+
+                  toast({
+                    title: "Updated",
+                    description: `Found ${freshAttempts.length - realAttempts.length} new attempt(s)`,
+                  });
                 }
               }
             } catch (error) {
               console.log('⚠️ Background refresh failed (no impact on user):', error);
             }
-          }, 1000); // 1 second delay so initial load shows first
+          }, 500); // Reduced to 0.5 seconds for faster updates
         }
 
         console.log('���� Job data loaded:', {
