@@ -935,45 +935,34 @@ export default function JobDetail() {
                                         Viewing
                                       </Badge>
                                     )}
-                                    {(() => {
-                                      const documentUrl =
-                                        document?.upload?.links?.download_url ||
-                                        document?.upload?.download_url ||
-                                        document?.download_url ||
-                                        document?.links?.download_url ||
-                                        document?.file_url;
-
-                                      if (!documentUrl) return null;
-
-                                      return (
-                                        <>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentDocumentIndex(index)}
-                                            className="gap-2"
+                                    {document.id && (
+                                      <>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => setCurrentDocumentIndex(index)}
+                                          className="gap-2"
+                                        >
+                                          <Eye className="w-4 h-4" />
+                                          View
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          asChild
+                                          className="gap-2"
+                                        >
+                                          <a
+                                            href={getProxyDownloadUrl(document.id, job.id)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
                                           >
-                                            <Eye className="w-4 h-4" />
-                                            View
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            asChild
-                                            className="gap-2"
-                                          >
-                                            <a
-                                              href={getProxyDownloadUrl(documentUrl)}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                            >
-                                              <Download className="w-4 h-4" />
-                                              Download
-                                            </a>
-                                          </Button>
-                                        </>
-                                      );
-                                    })()}
+                                            <Download className="w-4 h-4" />
+                                            Download
+                                          </a>
+                                        </Button>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                               </div>
