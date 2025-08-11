@@ -413,7 +413,9 @@ export default function JobDetail() {
           jobStatus: jobData.job_status,
           jobOverallStatus: jobData.status,
           rawAttempts: jobData.attempts,
-          extractedAttempts: realAttempts
+          extractedAttempts: realAttempts,
+          hasPhotos: realAttempts.some(a => a.details.photos.length > 0),
+          totalPhotos: realAttempts.reduce((sum, a) => sum + a.details.photos.length, 0)
         });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to load job';
