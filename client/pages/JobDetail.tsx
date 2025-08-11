@@ -112,24 +112,27 @@ const formatFileSize = (bytes: number): string => {
 };
 
 // Helper function to get preview URL for inline viewing
-const getPreviewUrl = (downloadUrl: string): string => {
-  if (!downloadUrl) return '';
+const getPreviewUrl = (downloadUrl: string, documentId: string, jobId: string, type = 'document'): string => {
+  if (!downloadUrl || !documentId || !jobId) return '';
 
-  // If it's already a ServeManager URL, add view parameter for inline display
-  if (downloadUrl.includes('servemanager.com')) {
-    const url = new URL(downloadUrl);
-    url.searchParams.set('view', 'inline');
-    return url.toString();
-  }
-
-  // For other URLs, use them directly and let the browser handle inline display
-  return downloadUrl;
+  // Use proxy endpoint to avoid S3 URL expiration issues
+  return `/api/proxy/document/${jobId}/${documentId}/${type}`;
 };
 
 // Helper function to get download URL with proper headers
-const getProxyDownloadUrl = (downloadUrl: string): string => {
-  if (!downloadUrl) return '';
-  return downloadUrl; // Keep original URL for downloads
+const getProxyDownloadUrl = (downloadUrl: string, documentId: string, jobId: string, type = 'document'): string => {
+  if (!downloadUrl || !documentId || !jobId) return '';
+
+  // Use proxy endpoint with download=true parameter
+  return `/api/proxy/document/${jobId}/${documentId}/${type}?download=true`;
+};
+
+// Helper function to get photo proxy URL
+const getPhotoProxyUrl = (photoId: string, attemptId: string, jobId: string, download = false): string => {
+  if (!photoId || !attemptId || !jobId) return '';
+
+  const downloadParam = download ? '?download=true' : '';
+  return `/api/proxy/photo/${jobId}/${attemptId}/${photoId}${downloadParam}`;
 };
 
 // Helper to get status color
