@@ -41,6 +41,8 @@ import {
   AlertCircle,
   Wifi,
   WifiOff,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSync } from "@/hooks/use-auto-sync";
@@ -71,6 +73,9 @@ const formatTimeAgo = (date: Date): string => {
   return date.toLocaleDateString();
 };
 
+type SortField = 'recipient' | 'client' | 'status' | 'priority' | 'server' | 'received_date';
+type SortDirection = 'asc' | 'desc';
+
 export default function Jobs() {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -85,6 +90,8 @@ export default function Jobs() {
     offset: 0,
   });
   const [totalJobs, setTotalJobs] = useState(0);
+  const [sortField, setSortField] = useState<SortField>('received_date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { toast } = useToast();
 
   // Declare load functions first before using them in callbacks
@@ -243,8 +250,63 @@ export default function Jobs() {
     return new Date(dateString).toLocaleDateString();
   };
 
-  // Filter jobs by search term AND filter values
-  const filteredJobs = (jobs || []).filter(job => {
+  const formatReceivedDate = (dateString: string | null) => {
+    if (!dateString) return "Unknown";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' ?
+      <ChevronUp className="w-4 h-4" /> :
+      <ChevronDown className="w-4 h-4" />;
+  };
+
+  const getSortableValue = (job: Job, field: SortField): string => {
+    switch (field) {
+      case 'recipient':
+        return (job.recipient_name || job.defendant_name || job.recipient?.name || 'Unknown Recipient').toLowerCase();
+      case 'client':
+        const clientCompany = typeof job.client_company === 'string' ? job.client_company :
+                             typeof job.client?.company === 'string' ? job.client.company :
+                             job.client?.name?.company || job.client?.name;
+        const clientName = typeof job.client_name === 'string' ? job.client_name :
+                         typeof job.client?.name === 'string' ? job.client.name :
+                         job.client?.name?.name;
+        return (clientCompany || clientName || 'Unknown Client').toLowerCase();
+      case 'status':
+        return (job.status || 'pending').toLowerCase();
+      case 'priority':
+        return (job.priority || 'medium').toLowerCase();
+      case 'server':
+        const serverName = typeof job.server_name === 'string' ? job.server_name :
+                         typeof job.assigned_server === 'string' ? job.assigned_server :
+                         typeof job.server?.name === 'string' ? job.server.name :
+                         job.server?.name?.name;
+        return (serverName || 'unassigned').toLowerCase();
+      case 'received_date':
+        return job.created_at || job.received_date || '';
+      default:
+        return '';
+    }
+  };
+
+  // Filter and sort jobs
+  const filteredAndSortedJobs = (jobs || []).filter(job => {
     // Search filter
     const matchesSearch = !searchTerm || (
       safeString(job.job_number || job.generated_job_id || job.reference).toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -294,6 +356,20 @@ export default function Jobs() {
     }
 
     return result;
+  }).sort((a, b) => {
+    const aValue = getSortableValue(a, sortField);
+    const bValue = getSortableValue(b, sortField);
+
+    if (sortField === 'received_date') {
+      // For dates, convert to timestamps for proper sorting
+      const aDate = new Date(aValue).getTime() || 0;
+      const bDate = new Date(bValue).getTime() || 0;
+      return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
+    }
+
+    // For strings, use localeCompare
+    const comparison = aValue.localeCompare(bValue);
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
 
   if (error) {
@@ -594,7 +670,7 @@ export default function Jobs() {
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 </CardTitle>
                 <CardDescription>
-                  Showing {filteredJobs.length} of {totalJobs} jobs
+                  Showing {filteredAndSortedJobs.length} of {totalJobs} jobs
                 </CardDescription>
               </div>
             </div>
@@ -603,72 +679,69 @@ export default function Jobs() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Job ID</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Recipient</TableHead>
-                  <TableHead>Server</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('recipient')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Recipient
+                      {getSortIcon('recipient')}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('client')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Client
+                      {getSortIcon('client')}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Status
+                      {getSortIcon('status')}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('priority')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Priority
+                      {getSortIcon('priority')}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('server')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Server
+                      {getSortIcon('server')}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('received_date')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Received Date
+                      {getSortIcon('received_date')}
+                    </div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredJobs.map((job) => (
+                {filteredAndSortedJobs.map((job) => (
                   <TableRow
                     key={job.id}
                     className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => navigate(`/jobs/${job.id}`)}
                   >
-                    <TableCell className="font-medium">
-                      <div>
-                        <p className="font-mono text-sm">
-                          {safeString(job.job_number || job.generated_job_id || job.reference, 'N/A')}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {safeString(job.id || job.uuid, 'N/A')}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {(() => {
-                            // Handle client data safely - extract string values from objects
-                            const clientCompany = typeof job.client_company === 'string' ? job.client_company :
-                                                 typeof job.client?.company === 'string' ? job.client.company :
-                                                 job.client?.name?.company || job.client?.name;
-                            const clientName = typeof job.client_name === 'string' ? job.client_name :
-                                             typeof job.client?.name === 'string' ? job.client.name :
-                                             job.client?.name?.name;
-
-                            return clientCompany || clientName || 'Unknown Client';
-                          })()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {(() => {
-                            // Extract contact name from various formats
-                            const contactName = typeof job.client_name === 'string' ? job.client_name :
-                                              job.client_contact ?
-                                                `${job.client_contact.first_name || ''} ${job.client_contact.last_name || ''}`.trim() :
-                                              typeof job.client?.name === 'string' ? job.client.name :
-                                              job.client?.contact_name;
-
-                            return contactName || 'No contact name';
-                          })()}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(job.status || 'pending')}>
-                        {(job.status || 'pending').replace('_', ' ')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getPriorityColor(job.priority || 'medium')}>
-                        {job.priority || 'medium'}
-                      </Badge>
-                    </TableCell>
                     <TableCell>
                       <div>
                         <p className="font-medium">
@@ -722,6 +795,45 @@ export default function Jobs() {
                       </div>
                     </TableCell>
                     <TableCell>
+                      <div>
+                        <p className="font-medium">
+                          {(() => {
+                            // Handle client data safely - extract string values from objects
+                            const clientCompany = typeof job.client_company === 'string' ? job.client_company :
+                                                 typeof job.client?.company === 'string' ? job.client.company :
+                                                 job.client?.name?.company || job.client?.name;
+                            const clientName = typeof job.client_name === 'string' ? job.client_name :
+                                             typeof job.client?.name === 'string' ? job.client.name :
+                                             job.client?.name?.name;
+
+                            return clientCompany || clientName || 'Unknown Client';
+                          })()}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {(() => {
+                            // Extract contact name from various formats
+                            const contactName = typeof job.client_name === 'string' ? job.client_name :
+                                              job.client_contact ?
+                                                `${job.client_contact.first_name || ''} ${job.client_contact.last_name || ''}`.trim() :
+                                              typeof job.client?.name === 'string' ? job.client.name :
+                                              job.client?.contact_name;
+
+                            return contactName || 'No contact name';
+                          })()}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(job.status || 'pending')}>
+                        {(job.status || 'pending').replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={getPriorityColor(job.priority || 'medium')}>
+                        {job.priority || 'medium'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       {(() => {
                         // Safely extract server name from various formats
                         const serverName = typeof job.server_name === 'string' ? job.server_name :
@@ -742,18 +854,15 @@ export default function Jobs() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-muted-foreground" />
-                        {formatDate(job.due_date || job.service_date)}
+                        {formatReceivedDate(job.created_at || job.received_date)}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(job.amount || job.price || job.cost || job.fee || job.total || 0)}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
 
-            {filteredJobs.length === 0 && !loading && (
+            {filteredAndSortedJobs.length === 0 && !loading && (
               <div className="text-center py-8">
                 <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Jobs Found</h3>
