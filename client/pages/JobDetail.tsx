@@ -809,23 +809,23 @@ export default function JobDetail() {
                               )}
 
                               <div>
-                                <label className="text-sm font-medium text-slate-700">Location</label>
-                                <div className="grid grid-cols-2 gap-4 mt-1">
+                                <label className="text-sm font-medium text-slate-700 mb-3 block">Location</label>
+                                <div className="grid grid-cols-2 gap-6">
                                   <div>
-                                    <p className="text-xs text-slate-500">Latitude</p>
-                                    <p className="text-sm">{attempt.details.gps.latitude}</p>
+                                    <label className="text-sm font-medium text-slate-700">Latitude</label>
+                                    <p className="text-sm text-slate-900">{attempt.details.gps.latitude || 'N/A'}</p>
                                   </div>
                                   <div>
-                                    <p className="text-xs text-slate-500">Longitude</p>
-                                    <p className="text-sm">{attempt.details.gps.longitude}</p>
+                                    <label className="text-sm font-medium text-slate-700">Longitude</label>
+                                    <p className="text-sm text-slate-900">{attempt.details.gps.longitude || 'N/A'}</p>
                                   </div>
                                   <div>
-                                    <p className="text-xs text-slate-500">GPS Accuracy</p>
-                                    <p className="text-sm">{attempt.details.gps.accuracy}</p>
+                                    <label className="text-sm font-medium text-slate-700">GPS Accuracy</label>
+                                    <p className="text-sm text-slate-900">{attempt.details.gps.accuracy || 'N/A'}</p>
                                   </div>
                                   <div>
-                                    <p className="text-xs text-slate-500">GPS Time</p>
-                                    <p className="text-sm">{attempt.details.gps.time}</p>
+                                    <label className="text-sm font-medium text-slate-700">GPS Time</label>
+                                    <p className="text-sm text-slate-900">{attempt.details.gps.time || 'N/A'}</p>
                                   </div>
                                 </div>
                               </div>
