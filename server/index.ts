@@ -219,6 +219,9 @@ export function createServerWithWebSockets() {
   const app = createServer();
   const server = require('http').createServer(app);
 
+  // Attach the Express app to the server for easy access
+  (server as any).app = app;
+
   // Initialize WebSocket service
   webSocketService.init(server);
 
