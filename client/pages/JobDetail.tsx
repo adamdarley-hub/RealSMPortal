@@ -161,6 +161,17 @@ export default function JobDetail() {
 
         const jobData = await response.json();
         setJob(jobData);
+
+        // Extract real service attempts from job data
+        const realAttempts = extractServiceAttempts(jobData);
+        setServiceAttempts(realAttempts);
+
+        console.log('📊 Job data loaded:', {
+          jobId: jobData.id,
+          attemptsFound: realAttempts.length,
+          rawAttempts: jobData.attempts,
+          extractedAttempts: realAttempts
+        });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to load job';
         setError(errorMessage);
