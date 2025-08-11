@@ -460,15 +460,32 @@ export default function JobDetail() {
 
     setIsRefreshing(true);
     try {
+      console.log('🔄 Triggering fresh sync from ServeManager...');
+
+      // First trigger a sync to get fresh data from ServeManager
+      const syncResponse = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!syncResponse.ok) {
+        throw new Error('Sync failed');
+      }
+
+      // Now get the updated job data
       const response = await fetch(`/api/jobs/${id}`);
       if (response.ok) {
         const freshJob = await response.json();
         const currentAttempts = extractServiceAttempts(job);
         const freshAttempts = extractServiceAttempts(freshJob);
 
+        console.log(`🔍 Current attempts: ${currentAttempts.length}, Fresh attempts: ${freshAttempts.length}`);
+
         // Check for new attempts
         if (freshAttempts.length > currentAttempts.length) {
           const newAttemptCount = freshAttempts.length - currentAttempts.length;
+          console.log(`🎉 Found ${newAttemptCount} new attempt(s)!`);
+
           toast({
             title: "New Service Attempt!",
             description: `${newAttemptCount} new attempt(s) found`,
@@ -479,11 +496,16 @@ export default function JobDetail() {
             const newestAttempt = freshAttempts[freshAttempts.length - 1];
             setExpandedAttempts(new Set([String(newestAttempt.id)]));
           }
+        } else {
+          toast({
+            title: "Refreshed",
+            description: "Job data is up to date",
+          });
         }
 
         setJob(freshJob);
         setServiceAttempts(freshAttempts);
-        console.log('🔄 Job data refreshed manually');
+        console.log('✅ Job data refreshed from ServeManager');
       }
     } catch (error) {
       console.error('❌ Manual refresh failed:', error);
