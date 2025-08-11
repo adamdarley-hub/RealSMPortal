@@ -40,29 +40,27 @@ function expressPlugin(): Plugin {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
     configureServer(server) {
-      // Start backend server with WebSocket support on port 3001
-      import("./server/index.js").then(({ createServerWithWebSockets }) => {
-        const backendServer = createServerWithWebSockets();
+      // Start backend server with WebSocket support on port 3001 using child process
+      const { spawn } = require('child_process');
 
-        backendServer.listen(3001, () => {
-          console.log(`🚀 Backend server with WebSocket support running on port 3001`);
-          console.log(`🔧 API: http://localhost:3001/api`);
-          console.log(`📡 WebSocket: ws://localhost:3001`);
-        });
-      }).catch(async () => {
-        // Fallback to dynamic import if ES modules fail
-        try {
-          const serverModule = await import("./server");
-          const backendServer = serverModule.createServerWithWebSockets();
+      const backendProcess = spawn('node', ['scripts/start-backend.js'], {
+        stdio: 'inherit',
+        cwd: process.cwd()
+      });
 
-          backendServer.listen(3001, () => {
-            console.log(`🚀 Backend server with WebSocket support running on port 3001`);
-            console.log(`🔧 API: http://localhost:3001/api`);
-            console.log(`📡 WebSocket: ws://localhost:3001`);
-          });
-        } catch (error) {
-          console.error("Failed to start backend server:", error);
-        }
+      // Clean up on exit
+      process.on('exit', () => {
+        backendProcess.kill();
+      });
+
+      process.on('SIGINT', () => {
+        backendProcess.kill();
+        process.exit();
+      });
+
+      process.on('SIGTERM', () => {
+        backendProcess.kill();
+        process.exit();
       });
     },
   };
