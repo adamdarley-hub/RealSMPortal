@@ -914,7 +914,7 @@ export default function JobDetail() {
                                     size="sm"
                                     variant="outline"
                                     onClick={() => {
-                                      window.open(currentDocument.upload.links.download_url, '_blank');
+                                      window.open(getPreviewUrl(currentDocument.upload.links.download_url), '_blank');
                                     }}
                                   >
                                     <ExternalLink className="w-4 h-4 mr-1" />
