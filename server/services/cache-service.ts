@@ -555,8 +555,11 @@ export class CacheService {
             name: allClients[0].name,
             company: allClients[0].company,
             email: allClients[0].email,
-            phone: allClients[0].phone
+            phone: allClients[0].phone,
+            address: allClients[0].address
           },
+          addressDetail: allClients[0]._raw?.addresses?.[0],
+          contactDetail: allClients[0]._raw?.contacts?.[0],
           rawSample: allClients[0]._raw
         });
       }
