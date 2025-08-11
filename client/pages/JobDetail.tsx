@@ -452,62 +452,50 @@ export default function JobDetail() {
   const [isPrintMode, setIsPrintMode] = useState(false);
   const [urlRefreshCount, setUrlRefreshCount] = useState(0);
 
-  // Real-time updates using polling for reliable updates
-  const [isRealTimeConnected, setIsRealTimeConnected] = useState(false);
-  const [lastAttemptCount, setLastAttemptCount] = useState<number>(0);
+  // Simple manual refresh functionality
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Set up polling to check for changes every 5 seconds
-  useEffect(() => {
-    if (!id || !job) return;
+  const handleManualRefresh = async () => {
+    if (!id) return;
 
-    setIsRealTimeConnected(true);
-    const currentAttempts = extractServiceAttempts(job);
-    setLastAttemptCount(currentAttempts.length);
+    setIsRefreshing(true);
+    try {
+      const response = await fetch(`/api/jobs/${id}`);
+      if (response.ok) {
+        const freshJob = await response.json();
+        const currentAttempts = extractServiceAttempts(job);
+        const freshAttempts = extractServiceAttempts(freshJob);
 
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/jobs/${id}`);
-        if (response.ok) {
-          const freshJob = await response.json();
-          const freshAttempts = extractServiceAttempts(freshJob);
+        // Check for new attempts
+        if (freshAttempts.length > currentAttempts.length) {
+          const newAttemptCount = freshAttempts.length - currentAttempts.length;
+          toast({
+            title: "New Service Attempt!",
+            description: `${newAttemptCount} new attempt(s) found`,
+          });
 
-          // Check for new attempts
-          if (freshAttempts.length > lastAttemptCount) {
-            const newAttemptCount = freshAttempts.length - lastAttemptCount;
-            console.log(`🎉 ${newAttemptCount} new attempt(s) detected via polling!`);
-
-            toast({
-              title: "New Service Attempt!",
-              description: `${newAttemptCount} new attempt(s) added`,
-            });
-
-            // Update the job data
-            setJob(freshJob);
-            setServiceAttempts(freshAttempts);
-            setLastAttemptCount(freshAttempts.length);
-
-            // Expand the newest attempt
-            if (freshAttempts.length > 0) {
-              const newestAttempt = freshAttempts[freshAttempts.length - 1];
-              setExpandedAttempts(new Set([String(newestAttempt.id)]));
-            }
-          } else if (freshJob.updated_at !== job.updated_at) {
-            // Job was updated in some other way
-            console.log('📝 Job updated via polling');
-            setJob(freshJob);
-            setServiceAttempts(freshAttempts);
+          // Expand the newest attempt
+          if (freshAttempts.length > 0) {
+            const newestAttempt = freshAttempts[freshAttempts.length - 1];
+            setExpandedAttempts(new Set([String(newestAttempt.id)]));
           }
         }
-      } catch (error) {
-        console.log('⚠️ Polling update failed:', error);
-      }
-    }, 5000); // Check every 5 seconds
 
-    return () => {
-      clearInterval(interval);
-      setIsRealTimeConnected(false);
-    };
-  }, [id, job?.updated_at, lastAttemptCount, toast]);
+        setJob(freshJob);
+        setServiceAttempts(freshAttempts);
+        console.log('🔄 Job data refreshed manually');
+      }
+    } catch (error) {
+      console.error('❌ Manual refresh failed:', error);
+      toast({
+        title: "Refresh Failed",
+        description: "Could not refresh job data",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Load job data
   useEffect(() => {
