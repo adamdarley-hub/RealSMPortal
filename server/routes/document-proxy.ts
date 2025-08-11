@@ -88,11 +88,29 @@ export const getAttemptPhotoProxy: RequestHandler = async (req, res) => {
 
     console.log('📸 Photo proxy request:', { jobId, attemptId, photoId, download });
 
-    // Get job from cache
-    const { cacheService } = await import('../services/cache-service');
-    const job = await cacheService.getJobFromCache(jobId);
+    // Get fresh job data from ServeManager instead of cache to avoid expired URLs
+    const { getServeManagerConfig } = await import('./servemanager');
+    const config = await getServeManagerConfig();
 
-    console.log('📸 Job lookup result:', {
+    const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+
+    console.log('📸 Fetching fresh job data from ServeManager...');
+    const jobResponse = await fetch(`${config.baseUrl}/jobs/${jobId}`, {
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!jobResponse.ok) {
+      console.log('❌ Failed to fetch job from ServeManager:', jobResponse.status);
+      return res.status(404).json({ error: 'Job not found in ServeManager' });
+    }
+
+    const jobData = await jobResponse.json();
+    const job = jobData.data || jobData; // Handle both wrapped and unwrapped responses
+
+    console.log('📸 Fresh job lookup result:', {
       jobFound: !!job,
       jobId: job?.id,
       hasAttempts: !!job?.attempts,
@@ -100,7 +118,7 @@ export const getAttemptPhotoProxy: RequestHandler = async (req, res) => {
     });
 
     if (!job || !job.attempts) {
-      console.log('❌ Job or attempts not found:', { job: !!job, attempts: job?.attempts?.length });
+      console.log('❌ Job or attempts not found in fresh data:', { job: !!job, attempts: job?.attempts?.length });
       return res.status(404).json({ error: 'Job or attempts not found' });
     }
 
