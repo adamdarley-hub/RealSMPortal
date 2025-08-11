@@ -244,7 +244,21 @@ const getMethodDisplay = (attempt: any) => {
 
 // Helper function to extract service attempts from job data
 const extractServiceAttempts = (job: Job) => {
+  console.log('🔍 extractServiceAttempts called with:', {
+    hasAttempts: !!job.attempts,
+    attemptsType: typeof job.attempts,
+    isArray: Array.isArray(job.attempts),
+    attemptsLength: job.attempts?.length,
+    jobId: job.id,
+    jobKeys: Object.keys(job)
+  });
+
   if (!job.attempts || !Array.isArray(job.attempts)) {
+    console.log('❌ No attempts found or not array:', {
+      attempts: job.attempts,
+      hasAttempts: !!job.attempts,
+      isArray: Array.isArray(job.attempts)
+    });
     return [];
   }
 
