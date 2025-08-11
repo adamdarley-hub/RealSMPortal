@@ -202,6 +202,16 @@ export const getCachedJob: RequestHandler = async (req, res) => {
       return;
     }
 
+    // Debug logging for job 20483264
+    if (id === '20483264') {
+      const attempts = job.attempts || [];
+      console.log(`🔍 DEBUG Job 20483264 - Attempt count: ${attempts.length}`);
+      console.log(`🔍 DEBUG Job 20483264 - Last updated: ${job.updated_at}`);
+      if (attempts.length > 0) {
+        console.log(`🔍 DEBUG Job 20483264 - Latest attempt:`, attempts[attempts.length - 1]?.attempted_at);
+      }
+    }
+
     console.log(`⚡ Served job ${id} from cache in ${responseTime}ms`);
 
     res.json({
