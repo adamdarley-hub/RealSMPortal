@@ -210,7 +210,7 @@ export default function JobDetail() {
         const realAttempts = extractServiceAttempts(jobData);
         setServiceAttempts(realAttempts);
 
-        console.log('���� Job data loaded:', {
+        console.log('📊 Job data loaded:', {
           jobId: jobData.id,
           attemptsFound: realAttempts.length,
           rawAttempts: jobData.attempts,
@@ -377,14 +377,7 @@ export default function JobDetail() {
                     <div>
                       <label className="text-sm font-medium text-slate-700">Service Address</label>
                       <div className="text-sm text-slate-900">
-                        {(() => {
-                          const address = job.service_address || job.address;
-                          if (typeof address === 'object' && address) {
-                            return `${address.address1 || address.street || ''} ${address.address2 || ''}`.trim() + 
-                                   `, ${address.city || ''}, ${address.state || ''} ${address.postal_code || address.zip || ''}`;
-                          }
-                          return 'No address available';
-                        })()}
+                        {getServiceAddressString(job)}
                       </div>
                     </div>
                     <div>
