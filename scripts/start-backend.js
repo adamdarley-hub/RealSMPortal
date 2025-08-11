@@ -1,4 +1,4 @@
-import { createServerWithWebSockets } from '../server/index.js';
+import { createServerWithWebSockets } from '../server/index.ts';
 
 const backendServer = createServerWithWebSockets();
 
