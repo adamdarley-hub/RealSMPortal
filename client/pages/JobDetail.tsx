@@ -824,152 +824,174 @@ export default function JobDetail() {
             </TabsContent>
 
             <TabsContent value="documents">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Documents</CardTitle>
-                  <CardDescription>Documents associated with this job</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {(() => {
-                    const documents = extractDocuments(job);
+              <div className="space-y-4">
+                {/* Documents to be Served Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Documents to be Served</CardTitle>
+                    <CardDescription>Legal documents that need to be served to the recipient</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const documentsToBeServed = job.raw_data?.documents_to_be_served || job.documents_to_be_served || [];
 
-                    if (documents.length === 0) {
+                      if (documentsToBeServed.length === 0) {
+                        return (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <FileText className="w-12 h-12 mx-auto mb-4" />
+                            <p>No documents to be served</p>
+                          </div>
+                        );
+                      }
+
+                      const currentDocument = documentsToBeServed[currentDocumentIndex];
+
                       return (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <FileText className="w-12 h-12 mx-auto mb-4" />
-                          <p>No documents available for this job</p>
+                        <div className="space-y-4">
+                          {/* Navigation Controls */}
+                          {documentsToBeServed.length > 1 && (
+                            <div className="flex items-center justify-between bg-muted p-4 rounded-lg">
+                              <div className="flex items-center gap-4">
+                                <span className="text-sm font-medium">
+                                  {currentDocumentIndex + 1} of {documentsToBeServed.length}
+                                </span>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentDocumentIndex(Math.max(0, currentDocumentIndex - 1))}
+                                    disabled={currentDocumentIndex === 0}
+                                  >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    Previous
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentDocumentIndex(Math.min(documentsToBeServed.length - 1, currentDocumentIndex + 1))}
+                                    disabled={currentDocumentIndex === documentsToBeServed.length - 1}
+                                  >
+                                    Next
+                                    <ChevronRight className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Document Header */}
+                          <div className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <h3 className="text-xl font-semibold">{currentDocument.title || currentDocument.name || 'Document'}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {currentDocument.upload?.page_count && `${currentDocument.upload.page_count} pages`}
+                                  {currentDocument.received_at && ` • Received: ${formatDate(currentDocument.received_at)}`}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {currentDocument.upload?.links?.download_url && (
+                                  <Button size="sm" variant="outline" asChild>
+                                    <a
+                                      href={currentDocument.upload.links.download_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <Download className="w-4 h-4 mr-1" />
+                                      Download
+                                    </a>
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* PDF Viewer */}
+                            {currentDocument.upload?.links?.download_url && (
+                              <div className="border rounded-lg overflow-hidden">
+                                <iframe
+                                  src={currentDocument.upload.links.download_url}
+                                  className="w-full h-[600px] border-0"
+                                  title={`Document: ${currentDocument.title}`}
+                                  onError={(e) => {
+                                    console.error('PDF viewer error:', e);
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
-                    }
+                    })()}
+                  </CardContent>
+                </Card>
 
-                    return (
-                      <div className="space-y-6">
-                        {/* Documents Navigation */}
-                        {documents.length > 1 && (
-                          <div className="flex items-center justify-between bg-muted p-4 rounded-lg">
-                            <div className="flex items-center gap-4">
-                              <span className="text-sm font-medium">
-                                Document {currentDocumentIndex + 1} of {documents.length}
-                              </span>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setCurrentDocumentIndex(Math.max(0, currentDocumentIndex - 1))}
-                                  disabled={currentDocumentIndex === 0}
-                                >
-                                  <ChevronLeft className="w-4 h-4" />
-                                  Previous
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setCurrentDocumentIndex(Math.min(documents.length - 1, currentDocumentIndex + 1))}
-                                  disabled={currentDocumentIndex === documents.length - 1}
-                                >
-                                  Next
-                                  <ChevronRight className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
+                {/* Attachments Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Attachments</CardTitle>
+                    <CardDescription>Additional files and attachments for this job</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const attachments = job.raw_data?.misc_attachments || job.misc_attachments || [];
+
+                      // Filter out attempt photos and affidavits
+                      const filteredAttachments = attachments.filter((attachment: any) =>
+                        !attachment.affidavit &&
+                        attachment.type !== 'attempt_photo'
+                      );
+
+                      if (filteredAttachments.length === 0) {
+                        return (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <FileText className="w-12 h-12 mx-auto mb-4" />
+                            <p>No additional attachments</p>
                           </div>
-                        )}
+                        );
+                      }
 
-                        {/* Current Document Display */}
-                        {documents.length > 0 && (
-                          <div className="space-y-4">
-                            <div className="p-4 border rounded-lg">
-                              <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center space-x-3">
-                                  <FileText className="w-8 h-8 text-blue-500" />
-                                  <div>
-                                    <p className="font-medium">{documents[currentDocumentIndex].name}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {documents[currentDocumentIndex].type}
-                                      {documents[currentDocumentIndex].size && ` • ${formatFileSize(documents[currentDocumentIndex].size)}`}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
+                      return (
+                        <div className="space-y-3">
+                          {filteredAttachments.map((attachment: any, index: number) => (
+                            <div key={attachment.id || index} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div className="flex items-center space-x-3">
+                                <FileText className="w-6 h-6 text-blue-500" />
+                                <div>
+                                  <p className="font-medium">{attachment.title}</p>
                                   <p className="text-sm text-muted-foreground">
-                                    {documents[currentDocumentIndex].uploadedAt && formatDate(documents[currentDocumentIndex].uploadedAt)}
+                                    {attachment.upload?.content_type}
+                                    {attachment.upload?.file_size && ` • ${formatFileSize(attachment.upload.file_size)}`}
                                   </p>
-                                  {documents[currentDocumentIndex].url && (
-                                    <>
-                                      <Button size="sm" variant="outline" asChild>
-                                        <a
-                                          href={documents[currentDocumentIndex].url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                        >
-                                          <ExternalLink className="w-4 h-4 mr-1" />
-                                          View
-                                        </a>
-                                      </Button>
-                                      <Button size="sm" variant="outline" asChild>
-                                        <a
-                                          href={documents[currentDocumentIndex].url}
-                                          download={documents[currentDocumentIndex].name}
-                                        >
-                                          <Download className="w-4 h-4 mr-1" />
-                                          Download
-                                        </a>
-                                      </Button>
-                                    </>
-                                  )}
                                 </div>
                               </div>
-
-                              {/* Document Preview */}
-                              {documents[currentDocumentIndex].url && (
-                                <div className="border rounded-lg overflow-hidden">
-                                  <iframe
-                                    src={documents[currentDocumentIndex].url}
-                                    className="w-full h-[600px] border-0"
-                                    title={`Document: ${documents[currentDocumentIndex].name}`}
-                                  />
-                                </div>
-                              )}
+                              <div className="flex items-center gap-2">
+                                {attachment.upload?.links?.download_url && (
+                                  <>
+                                    <Button size="sm" variant="outline">
+                                      <Eye className="w-4 h-4 mr-1" />
+                                      Preview
+                                    </Button>
+                                    <Button size="sm" variant="outline" asChild>
+                                      <a
+                                        href={attachment.upload.links.download_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <Download className="w-4 h-4 mr-1" />
+                                        Download
+                                      </a>
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-
-                        {/* All Documents List */}
-                        {documents.length > 1 && (
-                          <div>
-                            <h4 className="font-medium text-sm text-muted-foreground mb-3">All Documents</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {documents.map((doc, index) => (
-                                <div
-                                  key={doc.id}
-                                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                                    index === currentDocumentIndex ? 'bg-blue-50 border-blue-200' : 'hover:bg-muted'
-                                  }`}
-                                  onClick={() => setCurrentDocumentIndex(index)}
-                                >
-                                  <div className="flex items-center space-x-2">
-                                    <FileText className="w-4 h-4 text-blue-500" />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium truncate">{doc.name}</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {doc.type}
-                                        {doc.size && ` • ${formatFileSize(doc.size)}`}
-                                      </p>
-                                    </div>
-                                    {index === currentDocumentIndex && (
-                                      <Eye className="w-4 h-4 text-blue-500" />
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </CardContent>
-              </Card>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="invoices">
