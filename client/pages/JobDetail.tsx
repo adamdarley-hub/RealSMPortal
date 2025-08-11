@@ -44,6 +44,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useRealTimeJob } from "@/hooks/use-real-time-job";
 import { Job } from "@shared/servemanager";
 
 // Helper function to safely extract string values
@@ -238,7 +239,7 @@ const getMethodDisplay = (attempt: any) => {
   return {
     name: isMobile ? "Mobile App" : "Manual Entry",
     color: isMobile ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-700 border-gray-200",
-    icon: isMobile ? "📱" : "���"
+    icon: isMobile ? "📱" : "�����"
   };
 };
 
