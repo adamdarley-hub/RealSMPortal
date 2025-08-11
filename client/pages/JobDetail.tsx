@@ -119,13 +119,12 @@ const getPreviewUrl = (documentId: string | number, jobId: string): string => {
   return `/api/jobs/${jobId}/documents/${documentId}/preview`;
 };
 
-// Helper function to get download URL with proper headers using generic proxy
-const getProxyDownloadUrl = (downloadUrl: string): string => {
-  if (!downloadUrl) return '';
+// Helper function to get download URL with fresh document fetch
+const getProxyDownloadUrl = (documentId: string | number, jobId: string): string => {
+  if (!documentId || !jobId) return '';
 
-  // Use generic proxy endpoint with preview=false for download
-  const encodedUrl = encodeURIComponent(downloadUrl);
-  return `/api/proxy?url=${encodedUrl}&preview=false`;
+  // Use fresh document endpoint that fetches current URLs from ServeManager
+  return `/api/jobs/${jobId}/documents/${documentId}/download`;
 };
 
 // Helper to get status color
