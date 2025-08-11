@@ -36,6 +36,30 @@ const safeString = (value: any, fallback: string = ''): string => {
   return fallback;
 };
 
+// Helper function to safely extract recipient name from ServeManager recipient object
+const getRecipientName = (job: Job): string => {
+  // Try direct recipient_name field first
+  if (job.recipient_name && typeof job.recipient_name === 'string') {
+    return job.recipient_name;
+  }
+
+  // Try defendant name fields
+  if (job.defendant_name && typeof job.defendant_name === 'string') {
+    return job.defendant_name;
+  }
+
+  // Try extracting from raw data recipient object
+  if (job.raw_data?.recipient && typeof job.raw_data.recipient === 'object') {
+    const recipient = job.raw_data.recipient;
+    if (recipient.name && typeof recipient.name === 'string') {
+      return recipient.name;
+    }
+  }
+
+  // Fallback
+  return 'Unknown Recipient';
+};
+
 // Helper function to format currency
 const formatCurrency = (amount: number | null | undefined) => {
   if (!amount) return "$0.00";
