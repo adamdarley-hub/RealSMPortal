@@ -154,8 +154,9 @@ export const getAttemptPhotoProxy: RequestHandler = async (req, res) => {
       return res.status(404).json({ error: 'Photo download URL not found' });
     }
 
-    // Fetch the photo
-    const photoResponse = await fetch(photo.upload.links.download_url);
+    // Fetch the photo using the found download URL
+    console.log('📸 Fetching photo from URL:', downloadUrl);
+    const photoResponse = await fetch(downloadUrl);
     
     if (!photoResponse.ok) {
       if (photoResponse.status === 403) {
