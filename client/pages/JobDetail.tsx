@@ -427,7 +427,7 @@ export default function JobDetail() {
         const realAttempts = extractServiceAttempts(jobData);
         setServiceAttempts(realAttempts);
 
-        console.log('📊 Job data loaded:', {
+        console.log('���� Job data loaded:', {
           jobId: jobData.id,
           attemptsFound: realAttempts.length,
           jobServiceStatus: jobData.service_status,
@@ -886,21 +886,10 @@ export default function JobDetail() {
               {(() => {
                 // Handle multiple possible data structures from cache vs fresh API
                 const documentsToBeServed =
-                  job.raw_data?.documents_to_be_served ||
-                  job.documents_to_be_served ||
-                  job.data?.documents_to_be_served ||
-                  job.data?.data?.documents_to_be_served ||
+                  job.raw_data?.documents_to_be_served ||  // Cached/mapped data
+                  job.documents_to_be_served ||            // Direct field
+                  job.data?.documents_to_be_served ||      // Fresh ServeManager API response
                   [];
-
-                console.log('📄 Documents debug:', {
-                  hasRawData: !!job.raw_data,
-                  hasDocumentsToBeServed: !!job.documents_to_be_served,
-                  hasDataDocuments: !!job.data?.documents_to_be_served,
-                  hasNestedDataDocuments: !!job.data?.data?.documents_to_be_served,
-                  totalFound: documentsToBeServed.length,
-                  jobKeys: Object.keys(job),
-                  dataKeys: job.data ? Object.keys(job.data) : 'no data key'
-                });
 
                 if (documentsToBeServed.length === 0) {
                   return (
