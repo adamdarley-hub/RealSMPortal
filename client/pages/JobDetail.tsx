@@ -454,6 +454,8 @@ export default function JobDetail() {
 
   // Load job data
   useEffect(() => {
+    let monitorInterval: NodeJS.Timeout | null = null;
+
     const loadJob = async () => {
       if (!id) {
         setError("No job ID provided");
