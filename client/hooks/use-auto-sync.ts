@@ -6,6 +6,7 @@ interface SyncStatus {
   nextSync: Date | null;
   isSyncing: boolean;
   error: string | null;
+  isOnline: boolean;
 }
 
 interface UseAutoSyncOptions {
