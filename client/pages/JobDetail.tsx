@@ -111,22 +111,28 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-// Helper function to get preview URL for inline viewing using generic proxy
-const getPreviewUrl = (downloadUrl: string): string => {
-  if (!downloadUrl) return '';
+// Helper function to get preview URL for inline viewing
+const getPreviewUrl = (downloadUrl: string, documentId: string, jobId: string, type = 'document'): string => {
+  if (!downloadUrl || !documentId || !jobId) return '';
 
-  // Use generic proxy endpoint to avoid S3 URL expiration issues
-  const encodedUrl = encodeURIComponent(downloadUrl);
-  return `/api/proxy?url=${encodedUrl}&preview=true`;
+  // Use proxy endpoint to avoid S3 URL expiration issues
+  return `/api/proxy/document/${jobId}/${documentId}/${type}`;
 };
 
-// Helper function to get download URL with proper headers using generic proxy
-const getProxyDownloadUrl = (downloadUrl: string): string => {
-  if (!downloadUrl) return '';
+// Helper function to get download URL with proper headers
+const getProxyDownloadUrl = (downloadUrl: string, documentId: string, jobId: string, type = 'document'): string => {
+  if (!downloadUrl || !documentId || !jobId) return '';
 
-  // Use generic proxy endpoint with preview=false for download
-  const encodedUrl = encodeURIComponent(downloadUrl);
-  return `/api/proxy?url=${encodedUrl}&preview=false`;
+  // Use proxy endpoint with download=true parameter
+  return `/api/proxy/document/${jobId}/${documentId}/${type}?download=true`;
+};
+
+// Helper function to get photo proxy URL
+const getPhotoProxyUrl = (photoId: string, attemptId: string, jobId: string, download = false): string => {
+  if (!photoId || !attemptId || !jobId) return '';
+
+  const downloadParam = download ? '?download=true' : '';
+  return `/api/proxy/photo/${jobId}/${attemptId}/${photoId}${downloadParam}`;
 };
 
 // Helper to get status color
@@ -401,7 +407,6 @@ export default function JobDetail() {
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isPrintMode, setIsPrintMode] = useState(false);
-  const [urlRefreshCount, setUrlRefreshCount] = useState(0);
 
   // Load job data
   useEffect(() => {
@@ -486,34 +491,6 @@ export default function JobDetail() {
       window.print();
       setIsPrintMode(false);
     }, 100);
-  };
-
-  const refreshJobData = async () => {
-    if (!id) return;
-
-    try {
-      console.log('🔄 Refreshing job data due to expired URLs...');
-      const response = await fetch(`/api/jobs/${id}?refresh=true`);
-
-      if (response.ok) {
-        const freshJobData = await response.json();
-        setJob(freshJobData);
-        setUrlRefreshCount(prev => prev + 1);
-        console.log('✅ Job data refreshed with fresh URLs');
-
-        toast({
-          title: "Updated",
-          description: "Document links have been refreshed",
-        });
-      }
-    } catch (error) {
-      console.error('❌ Failed to refresh job data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to refresh document links. Please refresh the page.",
-        variant: "destructive",
-      });
-    }
   };
 
   if (loading) {
@@ -871,32 +848,130 @@ export default function JobDetail() {
             </TabsContent>
 
             <TabsContent value="documents">
-              {(() => {
-                const documentsToBeServed = job.raw_data?.documents_to_be_served || job.documents_to_be_served || [];
+              <div className="space-y-4">
+                {/* Documents to be Served Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Documents to be Served</CardTitle>
+                    <CardDescription>Legal documents that need to be served to the recipient</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const documentsToBeServed = job.raw_data?.documents_to_be_served || job.documents_to_be_served || [];
 
-                if (documentsToBeServed.length === 0) {
-                  return (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <FileText className="w-12 h-12 mx-auto mb-4" />
-                      <p>No documents to be served</p>
-                    </div>
-                  );
-                }
+                      if (documentsToBeServed.length === 0) {
+                        return (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <FileText className="w-12 h-12 mx-auto mb-4" />
+                            <p>No documents to be served</p>
+                          </div>
+                        );
+                      }
 
-                const currentDocument = documentsToBeServed[currentDocumentIndex];
+                      const currentDocument = documentsToBeServed[currentDocumentIndex];
 
-                return (
-                  <div className="w-full h-full">
-                    {currentDocument.upload?.links?.download_url && (
-                      <iframe
-                        src={getPreviewUrl(currentDocument.upload.links.download_url)}
-                        className="w-full h-screen border-0"
-                        title={`Document: ${currentDocument.title}`}
-                      />
-                    )}
-                  </div>
-                );
-              })()}
+                      return (
+                        <div className="w-full">
+                          {/* Simple PDF Viewer */}
+                          {currentDocument.upload?.links?.download_url && (
+                            <iframe
+                              src={currentDocument.upload.links.download_url}
+                              className="w-full h-[800px] border rounded-lg"
+                              title={`Document: ${currentDocument.title}`}
+                            />
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+
+                {/* Attachments Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Attachments</CardTitle>
+                    <CardDescription>Additional files and attachments for this job</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      const attachments = job.raw_data?.misc_attachments || job.misc_attachments || [];
+
+                      // Filter out attempt photos and affidavits
+                      const filteredAttachments = attachments.filter((attachment: any) =>
+                        !attachment.affidavit &&
+                        attachment.type !== 'attempt_photo'
+                      );
+
+                      if (filteredAttachments.length === 0) {
+                        return (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <FileText className="w-12 h-12 mx-auto mb-4" />
+                            <p>No additional attachments</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-3">
+                          {filteredAttachments.map((attachment: any, index: number) => (
+                            <div key={attachment.id || index} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div className="flex items-center space-x-3">
+                                <FileText className="w-6 h-6 text-blue-500" />
+                                <div>
+                                  <p className="font-medium">{attachment.title}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {attachment.upload?.content_type}
+                                    {attachment.upload?.file_size && ` • ${formatFileSize(attachment.upload.file_size)}`}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {attachment.upload?.links?.download_url && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        // Open preview in new window using proxy
+                                        const previewUrl = getPreviewUrl(
+                                          attachment.upload.links.download_url,
+                                          attachment.id,
+                                          job.id,
+                                          'attachment'
+                                        );
+                                        window.open(previewUrl, '_blank');
+                                      }}
+                                    >
+                                      <Eye className="w-4 h-4 mr-1" />
+                                      Preview
+                                    </Button>
+                                    <Button size="sm" variant="outline" asChild>
+                                      <a
+                                        href={getProxyDownloadUrl(
+                                          attachment.upload.links.download_url,
+                                          attachment.id,
+                                          job.id,
+                                          'attachment'
+                                        )}
+                                        download={attachment.title}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <Download className="w-4 h-4 mr-1" />
+                                        Download
+                                      </a>
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="invoices">
