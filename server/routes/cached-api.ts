@@ -173,6 +173,14 @@ export const getCachedJob: RequestHandler = async (req, res) => {
         const { makeServeManagerRequest } = await import('./servemanager');
         const freshData = await makeServeManagerRequest(`/jobs/${id}`);
 
+        // Debug logging for job 20483264 fresh data
+        if (id === '20483264') {
+          console.log(`🔍 FRESH DEBUG Job 20483264 - Full structure:`, Object.keys(freshData));
+          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempts type:`, typeof freshData.attempts);
+          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempts:`, freshData.attempts);
+          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempt count:`, freshData.attempts?.length || 0);
+        }
+
         // Return fresh data with same structure as cached data
         const responseTime = Date.now() - startTime;
         console.log(`🔄 Served fresh job ${id} from ServeManager in ${responseTime}ms`);
