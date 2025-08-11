@@ -252,6 +252,40 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
     return () => stopPolling();
   }, [enabled, startPolling, stopPolling]);
 
+  // Handle online/offline events
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log('🌐 Back online - resuming auto-sync');
+      if (mountedRef.current) {
+        setStatus(prev => ({ ...prev, isOnline: true, error: null }));
+        // Trigger a sync when coming back online
+        if (enabled) {
+          setTimeout(() => triggerSync(false), 1000); // Small delay to ensure connection is stable
+        }
+      }
+    };
+
+    const handleOffline = () => {
+      console.log('🌐 Gone offline - pausing auto-sync');
+      if (mountedRef.current) {
+        setStatus(prev => ({
+          ...prev,
+          isOnline: false,
+          error: 'Offline - using cached data',
+          isSyncing: false
+        }));
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [enabled, triggerSync]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
