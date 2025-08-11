@@ -182,16 +182,17 @@ const getServiceAddressString = (job: Job) => {
 
 // Helper function to detect if attempt was via mobile app
 const isMobileAttempt = (attempt: any): boolean => {
-  // ServeManager uses these fields to indicate mobile vs web entry
+  // ServeManager API has a direct 'mobile' boolean field
+  if (attempt.mobile === true) return true;
+  if (attempt.mobile === false) return false;
+
+  // Fallback to checking other fields if mobile field is not present
   const source = (attempt.source || '').toLowerCase();
   const method = (attempt.method || '').toLowerCase();
   const createdVia = (attempt.created_via || '').toLowerCase();
   const deviceType = (attempt.device_type || '').toLowerCase();
-  const entryMethod = (attempt.entry_method || '').toLowerCase();
 
-  // Check for mobile indicators based on ServeManager API
-  return source === 'mobile' ||
-         source === 'mobile_app' ||
+  return source.includes('mobile') ||
          source.includes('app') ||
          method.includes('mobile') ||
          method.includes('app') ||
@@ -199,9 +200,7 @@ const isMobileAttempt = (attempt: any): boolean => {
          createdVia.includes('app') ||
          deviceType === 'mobile' ||
          deviceType === 'ios' ||
-         deviceType === 'android' ||
-         entryMethod === 'mobile' ||
-         entryMethod === 'app';
+         deviceType === 'android';
 };
 
 // Helper function to get method display name and color
@@ -210,6 +209,7 @@ const getMethodDisplay = (attempt: any) => {
 
   // Debug log to understand actual attempt data
   console.log('🔍 Attempt data for method detection:', {
+    mobile: attempt.mobile,  // ServeManager API field
     source: attempt.source,
     method: attempt.method,
     created_via: attempt.created_via,
@@ -219,11 +219,10 @@ const getMethodDisplay = (attempt: any) => {
     allFields: Object.keys(attempt)
   });
 
-  // For now, default to Mobile App since user said none were manual entries
   return {
-    name: isMobile ? "Mobile App" : "Mobile App", // Default to Mobile App per user feedback
-    color: "bg-blue-50 text-blue-700 border-blue-200",
-    icon: "📱"
+    name: isMobile ? "Mobile App" : "Manual Entry",
+    color: isMobile ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-700 border-gray-200",
+    icon: isMobile ? "📱" : "💻"
   };
 };
 
@@ -261,13 +260,15 @@ const extractServiceAttempts = (job: Job) => {
 
     // ServeManager attempt success detection based on API documentation
     let isSuccessful = (
+      attempt.success === true ||  // Primary field from API docs
+      attempt.service_status === 'Served' ||  // API docs show this as "Served"
+      attempt.served_at !== null && attempt.served_at !== undefined ||  // If served_at timestamp exists
+      // Fallback checks for other possible field names
       attempt.served === true ||
       attempt.status === 'served' ||
       attempt.status === 'Served' ||
       attempt.result === 'served' ||
-      attempt.result === 'Served' ||
-      attempt.service_status === 'served' ||
-      attempt.service_status === 'Served'
+      attempt.result === 'Served'
     );
 
     // If job is served but no attempt is marked successful, mark the last attempt as successful
