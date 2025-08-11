@@ -804,6 +804,14 @@ export default function JobDetail() {
                                 </div>
                               </div>
 
+                              {/* DEBUG: Show photo info */}
+                              <div className="bg-yellow-50 p-3 rounded text-xs">
+                                <p><strong>Photos Debug:</strong></p>
+                                <p>Photos found: {attempt.details.photos?.length || 0}</p>
+                                <p>Raw photos: {JSON.stringify(attempt.details.photos).slice(0, 200)}...</p>
+                                <p>All attempt keys: {Object.keys(attempt.details).join(', ')}</p>
+                              </div>
+
                               {/* Attempt Photos - only in expanded view */}
                               {attempt.details.photos && attempt.details.photos.length > 0 && (
                                 <div>
