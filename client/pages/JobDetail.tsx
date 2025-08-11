@@ -710,32 +710,128 @@ export default function JobDetail() {
                     }
 
                     return (
-                      <div className="space-y-4">
-                        {documents.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              <FileText className="w-8 h-8 text-blue-500" />
-                              <div>
-                                <p className="font-medium">{doc.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {doc.type} {doc.size && `• ${doc.size}`}
-                                </p>
+                      <div className="space-y-6">
+                        {/* Documents Navigation */}
+                        {documents.length > 1 && (
+                          <div className="flex items-center justify-between bg-muted p-4 rounded-lg">
+                            <div className="flex items-center gap-4">
+                              <span className="text-sm font-medium">
+                                Document {currentDocumentIndex + 1} of {documents.length}
+                              </span>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setCurrentDocumentIndex(Math.max(0, currentDocumentIndex - 1))}
+                                  disabled={currentDocumentIndex === 0}
+                                >
+                                  <ChevronLeft className="w-4 h-4" />
+                                  Previous
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setCurrentDocumentIndex(Math.min(documents.length - 1, currentDocumentIndex + 1))}
+                                  disabled={currentDocumentIndex === documents.length - 1}
+                                >
+                                  Next
+                                  <ChevronRight className="w-4 h-4" />
+                                </Button>
                               </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <p className="text-sm text-muted-foreground">
-                                {doc.uploadedAt && formatDate(doc.uploadedAt)}
-                              </p>
-                              {doc.url && (
-                                <Button size="sm" variant="outline" asChild>
-                                  <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                                    View
-                                  </a>
-                                </Button>
+                          </div>
+                        )}
+
+                        {/* Current Document Display */}
+                        {documents.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="p-4 border rounded-lg">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-3">
+                                  <FileText className="w-8 h-8 text-blue-500" />
+                                  <div>
+                                    <p className="font-medium">{documents[currentDocumentIndex].name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {documents[currentDocumentIndex].type}
+                                      {documents[currentDocumentIndex].size && ` • ${formatFileSize(documents[currentDocumentIndex].size)}`}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <p className="text-sm text-muted-foreground">
+                                    {documents[currentDocumentIndex].uploadedAt && formatDate(documents[currentDocumentIndex].uploadedAt)}
+                                  </p>
+                                  {documents[currentDocumentIndex].url && (
+                                    <>
+                                      <Button size="sm" variant="outline" asChild>
+                                        <a
+                                          href={documents[currentDocumentIndex].url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                        >
+                                          <ExternalLink className="w-4 h-4 mr-1" />
+                                          View
+                                        </a>
+                                      </Button>
+                                      <Button size="sm" variant="outline" asChild>
+                                        <a
+                                          href={documents[currentDocumentIndex].url}
+                                          download={documents[currentDocumentIndex].name}
+                                        >
+                                          <Download className="w-4 h-4 mr-1" />
+                                          Download
+                                        </a>
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Document Preview */}
+                              {documents[currentDocumentIndex].url && (
+                                <div className="border rounded-lg overflow-hidden">
+                                  <iframe
+                                    src={documents[currentDocumentIndex].url}
+                                    className="w-full h-[600px] border-0"
+                                    title={`Document: ${documents[currentDocumentIndex].name}`}
+                                  />
+                                </div>
                               )}
                             </div>
                           </div>
-                        ))}
+                        )}
+
+                        {/* All Documents List */}
+                        {documents.length > 1 && (
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-3">All Documents</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {documents.map((doc, index) => (
+                                <div
+                                  key={doc.id}
+                                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                                    index === currentDocumentIndex ? 'bg-blue-50 border-blue-200' : 'hover:bg-muted'
+                                  }`}
+                                  onClick={() => setCurrentDocumentIndex(index)}
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <FileText className="w-4 h-4 text-blue-500" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium truncate">{doc.name}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {doc.type}
+                                        {doc.size && ` • ${formatFileSize(doc.size)}`}
+                                      </p>
+                                    </div>
+                                    {index === currentDocumentIndex && (
+                                      <Eye className="w-4 h-4 text-blue-500" />
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
