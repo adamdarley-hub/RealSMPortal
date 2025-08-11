@@ -65,12 +65,10 @@ export const getDocumentPreview: RequestHandler = async (req, res) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // Stream the document content
-    if (documentResponse.body) {
-      (documentResponse.body as any).pipe(res);
-    } else {
-      throw new Error('No response body available');
-    }
+    // Get document content as buffer and send it
+    const documentBuffer = await documentResponse.arrayBuffer();
+    const buffer = Buffer.from(documentBuffer);
+    res.send(buffer);
 
   } catch (error) {
     console.error('❌ Document preview error:', error);
@@ -136,12 +134,10 @@ export const getDocumentDownload: RequestHandler = async (req, res) => {
       res.setHeader('Content-Length', contentLength);
     }
 
-    // Stream the document content
-    if (documentResponse.body) {
-      (documentResponse.body as any).pipe(res);
-    } else {
-      throw new Error('No response body available');
-    }
+    // Get document content as buffer and send it
+    const documentBuffer = await documentResponse.arrayBuffer();
+    const buffer = Buffer.from(documentBuffer);
+    res.send(buffer);
 
   } catch (error) {
     console.error('❌ Document download error:', error);
