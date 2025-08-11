@@ -394,10 +394,25 @@ export default function JobDetail() {
               <Badge className={getStatusColor(job.status || 'pending')}>
                 {(job.status || 'pending').replace('_', ' ')}
               </Badge>
-              <Button variant="outline" className="gap-2">
-                <FileText className="w-4 h-4" />
-                Print Job
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Share className="w-4 h-4" />
+                  Share
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={handlePrintJob}
+                  disabled={isPrintMode}
+                >
+                  <Printer className="w-4 h-4" />
+                  {isPrintMode ? 'Printing...' : 'Print Job'}
+                </Button>
+              </div>
             </div>
           </div>
 
