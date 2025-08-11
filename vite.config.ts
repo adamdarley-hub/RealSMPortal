@@ -41,13 +41,28 @@ function expressPlugin(): Plugin {
     apply: "serve", // Only apply during development (serve mode)
     configureServer(server) {
       // Start backend server with WebSocket support on port 3001
-      const { createServerWithWebSockets } = require("./server");
-      const backendServer = createServerWithWebSockets();
+      import("./server/index.js").then(({ createServerWithWebSockets }) => {
+        const backendServer = createServerWithWebSockets();
 
-      backendServer.listen(3001, () => {
-        console.log(`🚀 Backend server with WebSocket support running on port 3001`);
-        console.log(`🔧 API: http://localhost:3001/api`);
-        console.log(`📡 WebSocket: ws://localhost:3001`);
+        backendServer.listen(3001, () => {
+          console.log(`🚀 Backend server with WebSocket support running on port 3001`);
+          console.log(`🔧 API: http://localhost:3001/api`);
+          console.log(`📡 WebSocket: ws://localhost:3001`);
+        });
+      }).catch(async () => {
+        // Fallback to dynamic import if ES modules fail
+        try {
+          const serverModule = await import("./server");
+          const backendServer = serverModule.createServerWithWebSockets();
+
+          backendServer.listen(3001, () => {
+            console.log(`🚀 Backend server with WebSocket support running on port 3001`);
+            console.log(`🔧 API: http://localhost:3001/api`);
+            console.log(`📡 WebSocket: ws://localhost:3001`);
+          });
+        } catch (error) {
+          console.error("Failed to start backend server:", error);
+        }
       });
     },
   };
