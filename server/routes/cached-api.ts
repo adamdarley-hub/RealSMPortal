@@ -153,6 +153,7 @@ export const getSyncStatus: RequestHandler = async (req, res) => {
 export const getCachedJob: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
+    const { refresh } = req.query;
     const startTime = Date.now();
 
     console.log(`🔍 Looking up job ${id} from cache...`);
@@ -163,6 +164,19 @@ export const getCachedJob: RequestHandler = async (req, res) => {
         message: 'Please provide a valid job ID'
       });
       return;
+    }
+
+    // If refresh is requested, fetch fresh data from ServeManager
+    if (refresh === 'true') {
+      console.log(`🔄 Refresh requested for job ${id}, fetching fresh data...`);
+      try {
+        const { getJob } = await import('./servemanager');
+        const freshJob = await getJob(req, res);
+        return; // getJob will handle the response
+      } catch (error) {
+        console.error(`❌ Failed to refresh job ${id}:`, error);
+        // Fall back to cache if refresh fails
+      }
     }
 
     const job = await cacheService.getJobFromCache(id);
