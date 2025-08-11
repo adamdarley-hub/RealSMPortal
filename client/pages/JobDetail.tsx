@@ -989,13 +989,21 @@ export default function JobDetail() {
                               <div className="flex items-center gap-2">
                                 {attachment.upload?.links?.download_url && (
                                   <>
-                                    <Button size="sm" variant="outline">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        // Open preview in new window
+                                        window.open(getPreviewUrl(attachment.upload.links.download_url), '_blank');
+                                      }}
+                                    >
                                       <Eye className="w-4 h-4 mr-1" />
                                       Preview
                                     </Button>
                                     <Button size="sm" variant="outline" asChild>
                                       <a
-                                        href={attachment.upload.links.download_url}
+                                        href={getProxyDownloadUrl(attachment.upload.links.download_url)}
+                                        download={attachment.title}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                       >
