@@ -17,13 +17,23 @@ export const genericProxy: RequestHandler = async (req, res) => {
     
     // Fetch the content
     const response = await fetch(decodedUrl);
-    
+
     if (!response.ok) {
       if (response.status === 403) {
-        return res.status(410).json({ 
-          error: 'URL expired',
-          message: 'The requested resource URL has expired'
-        });
+        // Instead of returning JSON for expired URLs, return a proper error page
+        const errorHtml = `
+          <html>
+            <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+              <h2>Document Temporarily Unavailable</h2>
+              <p>The document URL has expired. Please refresh the page to reload the document.</p>
+              <button onclick="window.parent.location.reload()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Refresh Page
+              </button>
+            </body>
+          </html>
+        `;
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(410).send(errorHtml);
       }
       throw new Error(`Failed to fetch resource: ${response.status}`);
     }
