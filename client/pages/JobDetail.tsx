@@ -457,70 +457,7 @@ export default function JobDetail() {
   const [isPrintMode, setIsPrintMode] = useState(false);
   const [urlRefreshCount, setUrlRefreshCount] = useState(0);
 
-  // Simple manual refresh functionality
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleManualRefresh = async () => {
-    if (!id) return;
-
-    console.log('🔄 Manual refresh button clicked for job:', id);
-    setIsRefreshing(true);
-    try {
-      console.log('🔄 Fetching fresh data directly from ServeManager...');
-
-      // Get fresh data directly from ServeManager using refresh parameter
-      const response = await fetch(`/api/jobs/${id}?refresh=true`);
-      if (response.ok) {
-        const freshJob = await response.json();
-        const currentAttempts = extractServiceAttempts(job);
-        const freshAttempts = extractServiceAttempts(freshJob);
-
-        console.log(`🔍 Current attempts: ${currentAttempts.length}, Fresh attempts: ${freshAttempts.length}`);
-        console.log('🔍 Fresh job data:', freshJob);
-
-        // Check for new attempts
-        if (freshAttempts.length > currentAttempts.length) {
-          const newAttemptCount = freshAttempts.length - currentAttempts.length;
-          console.log(`🎉 Found ${newAttemptCount} new attempt(s)!`);
-
-          toast({
-            title: "New Service Attempt!",
-            description: `${newAttemptCount} new attempt(s) found`,
-          });
-
-          // Expand the newest attempt
-          if (freshAttempts.length > 0) {
-            const newestAttempt = freshAttempts[freshAttempts.length - 1];
-            setExpandedAttempts(new Set([String(newestAttempt.id)]));
-          }
-        } else {
-          toast({
-            title: "Refreshed",
-            description: "Job data is up to date",
-          });
-        }
-
-        setJob(freshJob);
-        setServiceAttempts(freshAttempts);
-        console.log('✅ Job data refreshed directly from ServeManager');
-
-        // Also trigger a background sync to update the cache so when we navigate back,
-        // we see the updated data instead of stale cache
-        fetch('/api/sync', { method: 'POST' }).catch(e => console.log('Background cache update failed:', e));
-      } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error('❌ Manual refresh failed:', error);
-      toast({
-        title: "Refresh Failed",
-        description: "Could not refresh job data",
-        variant: "destructive"
-      });
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+  // No refresh needed - data is always fresh from ServeManager
 
   // Load job data
   useEffect(() => {
