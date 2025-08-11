@@ -13,7 +13,7 @@ const genericProxy: RequestHandler = async (req, res) => {
 
     // Decode the URL
     const decodedUrl = decodeURIComponent(url);
-    console.log('🔗 Proxying URL:', decodedUrl.substring(0, 100) + '...');
+    console.log('�� Proxying URL:', decodedUrl.substring(0, 100) + '...');
 
     // Fetch the content from the original URL
     const response = await fetch(decodedUrl);
@@ -61,3 +61,6 @@ const genericProxy: RequestHandler = async (req, res) => {
     });
   }
 };
+
+// Export for Node.js
+module.exports = { genericProxy };
