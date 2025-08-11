@@ -207,8 +207,12 @@ export function createServer() {
 
   // Initialize real-time services after a delay to allow initial sync
   setTimeout(() => {
-    changeDetector.startMonitoring();
-    console.log('🚀 Real-time change detection started');
+    try {
+      changeDetector.startMonitoring();
+      console.log('🚀 Real-time change detection started');
+    } catch (error) {
+      console.warn('⚠️ Real-time change detection failed to start:', error.message);
+    }
   }, 10000); // Start after 10 seconds to allow initial data load
 
   return app;
