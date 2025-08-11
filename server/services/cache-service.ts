@@ -546,6 +546,21 @@ export class CacheService {
       
       console.log(`📥 Fetched ${allClients.length} clients, caching locally...`);
 
+      // Debug: Log the structure of the first client
+      if (allClients.length > 0) {
+        console.log('📊 First client structure:', {
+          rawKeys: Object.keys(allClients[0]._raw || {}),
+          mapped: {
+            id: allClients[0].id,
+            name: allClients[0].name,
+            company: allClients[0].company,
+            email: allClients[0].email,
+            phone: allClients[0].phone
+          },
+          rawSample: allClients[0]._raw
+        });
+      }
+
       // Process clients directly
       console.log(`Processing ${allClients.length} clients for database insertion...`);
       for (const client of allClients) {
