@@ -31,9 +31,15 @@ export function useRealTimeJob(options: UseRealTimeJobOptions) {
     try {
       // Create WebSocket connection
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}`;
-      
-      console.log(`🔌 Connecting to real-time updates for job ${jobId}...`);
+      const isDev = import.meta.env.DEV;
+
+      // In development, connect to the backend server port (3001)
+      // In production, use the same host as the frontend
+      const wsUrl = isDev
+        ? `${protocol}//localhost:3001`
+        : `${protocol}//${window.location.host}`;
+
+      console.log(`🔌 Connecting to real-time updates for job ${jobId} at ${wsUrl}...`);
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
