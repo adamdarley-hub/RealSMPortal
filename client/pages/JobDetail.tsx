@@ -884,7 +884,23 @@ export default function JobDetail() {
 
             <TabsContent value="documents">
               {(() => {
-                const documentsToBeServed = job.raw_data?.documents_to_be_served || job.documents_to_be_served || job.data?.documents_to_be_served || [];
+                // Handle multiple possible data structures from cache vs fresh API
+                const documentsToBeServed =
+                  job.raw_data?.documents_to_be_served ||
+                  job.documents_to_be_served ||
+                  job.data?.documents_to_be_served ||
+                  job.data?.data?.documents_to_be_served ||
+                  [];
+
+                console.log('📄 Documents debug:', {
+                  hasRawData: !!job.raw_data,
+                  hasDocumentsToBeServed: !!job.documents_to_be_served,
+                  hasDataDocuments: !!job.data?.documents_to_be_served,
+                  hasNestedDataDocuments: !!job.data?.data?.documents_to_be_served,
+                  totalFound: documentsToBeServed.length,
+                  jobKeys: Object.keys(job),
+                  dataKeys: job.data ? Object.keys(job.data) : 'no data key'
+                });
 
                 if (documentsToBeServed.length === 0) {
                   return (
