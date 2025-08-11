@@ -205,5 +205,22 @@ export function createServer() {
   app.get("/api/mock/servers", getMockServers);
   app.get("/api/mock/invoices", getMockInvoices);
 
+  // Initialize real-time services after a delay to allow initial sync
+  setTimeout(() => {
+    changeDetector.startMonitoring();
+    console.log('🚀 Real-time change detection started');
+  }, 10000); // Start after 10 seconds to allow initial data load
+
   return app;
+}
+
+// Enhanced server creation with WebSocket support
+export function createServerWithWebSockets() {
+  const app = createServer();
+  const server = require('http').createServer(app);
+
+  // Initialize WebSocket service
+  webSocketService.init(server);
+
+  return server;
 }
