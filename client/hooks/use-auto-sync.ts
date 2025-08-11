@@ -17,7 +17,7 @@ interface UseAutoSyncOptions {
 
 export function useAutoSync(options: UseAutoSyncOptions = {}) {
   const {
-    enabled = true,
+    enabled = false, // Temporarily disabled due to network issues
     interval = 30000, // 30 seconds default
     onDataUpdate
   } = options;
