@@ -901,34 +901,42 @@ export default function JobDetail() {
 
                       return (
                         <div className="w-full">
-                          {/* Simple PDF Viewer with Error Handling */}
+                          {/* Simple PDF Viewer with Auto-Refresh */}
                           {currentDocument.upload?.links?.download_url && (
-                            <div className="relative">
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold">{currentDocument.title}</h3>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={refreshJobData}
+                                    disabled={loading}
+                                  >
+                                    <Download className="w-4 h-4 mr-1" />
+                                    Refresh Links
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      window.open(currentDocument.upload.links.download_url, '_blank');
+                                    }}
+                                  >
+                                    <ExternalLink className="w-4 h-4 mr-1" />
+                                    Open in New Tab
+                                  </Button>
+                                </div>
+                              </div>
                               <iframe
+                                key={`${currentDocument.id}-${urlRefreshCount}`}
                                 src={currentDocument.upload.links.download_url}
                                 className="w-full h-[800px] border rounded-lg"
                                 title={`Document: ${currentDocument.title}`}
                                 onError={(e) => {
-                                  console.error('PDF loading failed - possibly expired URL');
-                                  // Try to refresh the page data when URL expires
-                                  if (confirm('Document link has expired. Refresh to get updated links?')) {
-                                    window.location.reload();
-                                  }
+                                  console.error('PDF loading failed - likely expired S3 URL');
                                 }}
                               />
-                              <div className="absolute top-2 right-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    // Try to open in new tab if iframe fails
-                                    window.open(currentDocument.upload.links.download_url, '_blank');
-                                  }}
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-1" />
-                                  Open in New Tab
-                                </Button>
-                              </div>
                             </div>
                           )}
                         </div>
