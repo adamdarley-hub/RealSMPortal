@@ -871,150 +871,32 @@ export default function JobDetail() {
             </TabsContent>
 
             <TabsContent value="documents">
-              <div className="space-y-4">
-                {/* Documents to be Served Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Documents to be Served</CardTitle>
-                    <CardDescription>Legal documents that need to be served to the recipient</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {(() => {
-                      const documentsToBeServed = job.raw_data?.documents_to_be_served || job.documents_to_be_served || [];
+              {(() => {
+                const documentsToBeServed = job.raw_data?.documents_to_be_served || job.documents_to_be_served || [];
 
-                      if (documentsToBeServed.length === 0) {
-                        return (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <FileText className="w-12 h-12 mx-auto mb-4" />
-                            <p>No documents to be served</p>
-                          </div>
-                        );
-                      }
+                if (documentsToBeServed.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="w-12 h-12 mx-auto mb-4" />
+                      <p>No documents to be served</p>
+                    </div>
+                  );
+                }
 
-                      const currentDocument = documentsToBeServed[currentDocumentIndex];
+                const currentDocument = documentsToBeServed[currentDocumentIndex];
 
-                      return (
-                        <div className="w-full">
-                          {/* Simple PDF Viewer with Auto-Refresh */}
-                          {currentDocument.upload?.links?.download_url && (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold">{currentDocument.title}</h3>
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={refreshJobData}
-                                    disabled={loading}
-                                  >
-                                    <Download className="w-4 h-4 mr-1" />
-                                    Refresh Links
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      window.open(getPreviewUrl(currentDocument.upload.links.download_url), '_blank');
-                                    }}
-                                  >
-                                    <ExternalLink className="w-4 h-4 mr-1" />
-                                    Open in New Tab
-                                  </Button>
-                                </div>
-                              </div>
-                              <iframe
-                                key={`${currentDocument.id}-${urlRefreshCount}`}
-                                src={getPreviewUrl(currentDocument.upload.links.download_url)}
-                                className="w-full h-[800px] border rounded-lg"
-                                title={`Document: ${currentDocument.title}`}
-                                onError={(e) => {
-                                  console.error('PDF loading failed - likely expired S3 URL');
-                                }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-
-                {/* Attachments Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Attachments</CardTitle>
-                    <CardDescription>Additional files and attachments for this job</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {(() => {
-                      const attachments = job.raw_data?.misc_attachments || job.misc_attachments || [];
-
-                      // Filter out attempt photos and affidavits
-                      const filteredAttachments = attachments.filter((attachment: any) =>
-                        !attachment.affidavit &&
-                        attachment.type !== 'attempt_photo'
-                      );
-
-                      if (filteredAttachments.length === 0) {
-                        return (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <FileText className="w-12 h-12 mx-auto mb-4" />
-                            <p>No additional attachments</p>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div className="space-y-3">
-                          {filteredAttachments.map((attachment: any, index: number) => (
-                            <div key={attachment.id || index} className="flex items-center justify-between p-3 border rounded-lg">
-                              <div className="flex items-center space-x-3">
-                                <FileText className="w-6 h-6 text-blue-500" />
-                                <div>
-                                  <p className="font-medium">{attachment.title}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {attachment.upload?.content_type}
-                                    {attachment.upload?.file_size && ` • ${formatFileSize(attachment.upload.file_size)}`}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {attachment.upload?.links?.download_url && (
-                                  <>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => {
-                                        // Open preview in new window using generic proxy
-                                        const previewUrl = getPreviewUrl(attachment.upload.links.download_url);
-                                        window.open(previewUrl, '_blank');
-                                      }}
-                                    >
-                                      <Eye className="w-4 h-4 mr-1" />
-                                      Preview
-                                    </Button>
-                                    <Button size="sm" variant="outline" asChild>
-                                      <a
-                                        href={getProxyDownloadUrl(attachment.upload.links.download_url)}
-                                        download={attachment.title}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                      >
-                                        <Download className="w-4 h-4 mr-1" />
-                                        Download
-                                      </a>
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-              </div>
+                return (
+                  <div className="w-full h-full">
+                    {currentDocument.upload?.links?.download_url && (
+                      <iframe
+                        src={getPreviewUrl(currentDocument.upload.links.download_url)}
+                        className="w-full h-screen border-0"
+                        title={`Document: ${currentDocument.title}`}
+                      />
+                    )}
+                  </div>
+                );
+              })()}
             </TabsContent>
 
             <TabsContent value="invoices">
