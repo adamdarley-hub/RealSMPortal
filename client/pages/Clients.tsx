@@ -305,9 +305,12 @@ export default function Clients() {
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-muted-foreground" />
                         <div className="text-sm">
-                          <p>{client.address.street}</p>
+                          <p>{client.address?.street || 'No street address'}</p>
                           <p className="text-muted-foreground">
-                            {client.address.city}, {client.address.state} {client.address.zip}
+                            {client.address
+                              ? `${client.address.city || ''}, ${client.address.state || ''} ${client.address.zip || ''}`.trim()
+                              : 'No address available'
+                            }
                           </p>
                         </div>
                       </div>
