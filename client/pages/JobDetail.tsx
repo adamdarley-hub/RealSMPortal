@@ -675,9 +675,6 @@ export default function JobDetail() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="text-sm text-gray-500 mb-2">
-                        DEBUG: Found {serviceAttempts.length} service attempts
-                      </div>
                       {serviceAttempts.map((attempt) => (
                         <div key={attempt.id} className="border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-3">
