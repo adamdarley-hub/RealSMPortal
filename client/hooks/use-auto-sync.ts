@@ -41,6 +41,27 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       return;
     }
 
+    // Check network connectivity first
+    if (!navigator.onLine) {
+      console.log('🌐 Offline - skipping sync, using cached data');
+      if (mountedRef.current) {
+        setStatus(prev => ({
+          ...prev,
+          isOnline: false,
+          error: 'Offline - using cached data'
+        }));
+      }
+      if (onDataUpdate) {
+        onDataUpdate(); // Still trigger data refresh with cached data
+      }
+      return;
+    }
+
+    // Update online status
+    if (mountedRef.current) {
+      setStatus(prev => ({ ...prev, isOnline: true }));
+    }
+
     // Temporarily pause polling during sync to prevent timeouts
     if (intervalRef.current && !showLoading) {
       console.log('⏸️ Temporarily pausing auto-sync during background sync');
