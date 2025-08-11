@@ -81,6 +81,50 @@ const getPriorityColor = (priority: string) => {
   }
 };
 
+// Helper function to extract documents from job data
+const extractDocuments = (job: Job) => {
+  const documents = [];
+
+  if (job.documents && Array.isArray(job.documents)) {
+    documents.push(...job.documents);
+  }
+
+  if (job.attachments && Array.isArray(job.attachments)) {
+    documents.push(...job.attachments);
+  }
+
+  return documents.map((doc: any, index: number) => ({
+    id: doc.id || index,
+    name: doc.name || doc.filename || doc.title || `Document ${index + 1}`,
+    type: doc.type || doc.file_type || 'Unknown',
+    url: doc.url || doc.download_url || doc.file_url,
+    size: doc.size || doc.file_size,
+    uploadedAt: doc.created_at || doc.uploaded_at
+  }));
+};
+
+// Helper function to get service address as formatted string
+const getServiceAddressString = (job: Job) => {
+  const address = job.service_address || job.address || job.defendant_address;
+
+  if (typeof address === 'string') return address;
+
+  if (typeof address === 'object' && address) {
+    const parts = [
+      address.street || address.address1 || address.street1,
+      address.street2 || address.address2
+    ].filter(Boolean);
+
+    const street = parts.join(' ');
+    const cityState = [address.city, address.state].filter(Boolean).join(', ');
+    const zip = address.zip || address.postal_code;
+
+    return [street, cityState, zip].filter(Boolean).join(', ');
+  }
+
+  return 'No address available';
+};
+
 // Helper function to extract service attempts from job data
 const extractServiceAttempts = (job: Job) => {
   if (!job.attempts || !Array.isArray(job.attempts)) {
@@ -166,7 +210,7 @@ export default function JobDetail() {
         const realAttempts = extractServiceAttempts(jobData);
         setServiceAttempts(realAttempts);
 
-        console.log('📊 Job data loaded:', {
+        console.log('���� Job data loaded:', {
           jobId: jobData.id,
           attemptsFound: realAttempts.length,
           rawAttempts: jobData.attempts,
