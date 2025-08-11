@@ -87,6 +87,20 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         throw new Error('Fetch API is not available');
       }
 
+      // Quick health check to see if server is reachable
+      try {
+        const healthCheck = await fetch('/api/jobs?limit=1', {
+          method: 'GET',
+          signal: controller.signal
+        });
+        if (!healthCheck.ok && healthCheck.status >= 500) {
+          throw new Error('Server unavailable');
+        }
+      } catch (healthError) {
+        console.warn('⚠️ Server health check failed, skipping sync:', healthError);
+        throw new Error('Server unavailable - using cached data');
+      }
+
       const response = await fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,7 +210,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
         const backoffDelay = isNetworkError ? Math.min(interval * 2, 120000) : interval; // Max 2 minutes
 
-        console.log(`🔄 Restarting auto-sync polling after sync error (delay: ${backoffDelay/1000}s)`);
+        console.log(`��� Restarting auto-sync polling after sync error (delay: ${backoffDelay/1000}s)`);
 
         intervalRef.current = setInterval(() => {
           if (mountedRef.current) {
