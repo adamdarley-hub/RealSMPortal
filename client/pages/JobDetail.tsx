@@ -415,7 +415,7 @@ export default function JobDetail() {
       try {
         setLoading(true);
         const response = await fetch(`/api/jobs/${id}`);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to load job: ${response.status}`);
         }
@@ -454,6 +454,19 @@ export default function JobDetail() {
 
     loadJob();
   }, [id, toast]);
+
+  // Listen for refresh messages from iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'REFRESH_JOB') {
+        console.log('🔄 Received refresh request from iframe');
+        refreshJobData();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const toggleAttemptExpansion = (attemptId: string | number) => {
     const id = String(attemptId);
