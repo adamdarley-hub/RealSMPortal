@@ -713,15 +713,6 @@ export default function JobDetail() {
                             </div>
                           </div>
 
-                          {/* Debug Info - Temporary */}
-                          <div className="mt-3 mb-3 border-t pt-3 bg-yellow-50 p-2 rounded">
-                            <p className="text-xs text-gray-600">
-                              DEBUG: Photos found: {attempt.details.photos.length} |
-                              Attempt keys: {Object.keys(attempt.details).join(', ')} |
-                              Raw attachments: {JSON.stringify(attempt.details.photos).slice(0, 100)}...
-                            </p>
-                          </div>
-
                           {/* Photo Preview Strip - Always visible */}
                           {attempt.details.photos.length > 0 && (
                             <div className="mt-3 mb-3 border-t pt-3">
