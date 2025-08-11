@@ -494,6 +494,34 @@ export default function JobDetail() {
     }, 100);
   };
 
+  const refreshJobData = async () => {
+    if (!id) return;
+
+    try {
+      console.log('🔄 Refreshing job data due to expired URLs...');
+      const response = await fetch(`/api/jobs/${id}?refresh=true`);
+
+      if (response.ok) {
+        const freshJobData = await response.json();
+        setJob(freshJobData);
+        setUrlRefreshCount(prev => prev + 1);
+        console.log('✅ Job data refreshed with fresh URLs');
+
+        toast({
+          title: "Updated",
+          description: "Document links have been refreshed",
+        });
+      }
+    } catch (error) {
+      console.error('❌ Failed to refresh job data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh document links. Please refresh the page.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
