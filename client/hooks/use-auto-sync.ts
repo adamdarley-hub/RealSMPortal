@@ -137,7 +137,17 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       console.log('🔄 Auto-sync completed:', result);
 
     } catch (error) {
-      console.error('❌ Auto-sync failed:', error);
+      // Don't log network errors as errors since they're expected
+      const isNetworkError = error instanceof Error &&
+        (error.message.includes('Network connection failed') ||
+         error.message.includes('Failed to fetch') ||
+         error.message.includes('Server unavailable'));
+
+      if (isNetworkError) {
+        console.log('🌐 Auto-sync network issue:', error.message);
+      } else {
+        console.error('❌ Auto-sync failed:', error);
+      }
 
       // Handle different types of errors gracefully
       let errorMessage = 'Sync failed';
