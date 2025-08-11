@@ -70,9 +70,11 @@ class ChangeDetector extends EventEmitter {
   private async detectChanges(jobIds: string[]) {
     try {
       const { makeServeManagerRequest } = await import('../routes/servemanager');
-      
-      // Check each monitored job for changes
-      for (const [jobId, snapshot] of this.jobSnapshots.entries()) {
+
+      // Only check a few jobs at a time to avoid overwhelming the API
+      const jobsToCheck = Array.from(this.jobSnapshots.entries()).slice(0, 5);
+
+      for (const [jobId, snapshot] of jobsToCheck) {
         try {
           const freshJob = await makeServeManagerRequest(`/jobs/${jobId}`);
           const currentState = {
