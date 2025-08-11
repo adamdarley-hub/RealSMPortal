@@ -329,29 +329,29 @@ const extractServiceAttempts = (job: Job) => {
         })(),
         description: attempt.notes || attempt.description || attempt.comments || "No additional details",
         photos: (() => {
-          const attachments = attempt.attachments || attempt.photos || attempt.misc_attachments || [];
+          // Use attempt.photos array as specified in the data structure
+          const photos = attempt.photos || [];
           console.log(`🖼️ Attempt ${index + 1} photo extraction:`, {
-            attachments: attachments.length,
-            rawAttachments: attachments,
+            photosCount: photos.length,
+            rawPhotos: photos,
             attemptKeys: Object.keys(attempt)
           });
 
-          return attachments
-            .filter((item: any) => {
-              const fileName = item.name || item.filename || '';
-              const mimeType = item.mime_type || item.type || '';
-              const isImage = mimeType.startsWith('image/') || fileName.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
-              console.log(`📷 Photo filter check:`, { fileName, mimeType, isImage, item });
-              return isImage;
+          return photos
+            .filter((photo: any) => {
+              // Ensure photo has required structure
+              const hasValidStructure = photo.id && photo.title && photo.upload?.links?.download_url;
+              console.log(`📷 Photo structure check:`, { photo, hasValidStructure });
+              return hasValidStructure;
             })
             .map((photo: any, photoIndex: number) => ({
-              id: photo.id || photoIndex,
-              name: photo.name || photo.filename || `Photo ${photoIndex + 1}`,
-              url: photo.url || photo.download_url || photo.file_url || photo.links?.download_url,
-              thumbnailUrl: photo.thumbnail_url || photo.links?.thumbnail_url,
-              type: photo.mime_type || photo.type || 'image/jpeg',
-              size: photo.size || photo.file_size,
-              uploadedAt: photo.created_at || photo.uploaded_at
+              id: photo.id,
+              name: photo.title,
+              url: photo.upload.links.download_url,
+              thumbnailUrl: photo.upload.links.thumbnail_url || photo.upload.links.download_url,
+              type: 'image/jpeg',
+              size: photo.upload.file_size,
+              uploadedAt: photo.created_at || photo.upload.created_at
             }));
         })(),
         gps: {
