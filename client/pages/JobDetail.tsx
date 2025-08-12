@@ -643,25 +643,49 @@ export default function JobDetail() {
     if (!id) return;
 
     try {
-      console.log('🔄 Refreshing job data due to expired URLs...');
-      const response = await fetch(`/api/jobs/${id}?refresh=true`);
+      console.log('🔄 Refreshing job data to get fresh document URLs...');
+
+      // Force fresh data from ServeManager
+      const response = await fetch(`/api/servemanager/jobs/${id}?refresh=true&t=${Date.now()}`);
 
       if (response.ok) {
-        const freshJobData = await response.json();
+        const rawJobData = await response.json();
+        const freshJobData = rawJobData.data || rawJobData;
         setJob(freshJobData);
+        setDataSource('servemanager-fresh');
         setUrlRefreshCount(prev => prev + 1);
-        console.log('✅ Job data refreshed with fresh URLs');
+        console.log('✅ Job data refreshed with fresh URLs from ServeManager');
+
+        // Re-extract service attempts
+        const freshAttempts = extractServiceAttempts(freshJobData);
+        setServiceAttempts(freshAttempts);
 
         toast({
           title: "Updated",
-          description: "Document links have been refreshed",
+          description: "Document links have been refreshed from ServeManager",
         });
+      } else {
+        // Fallback to forced cache refresh
+        console.log('🔄 ServeManager refresh failed, trying cache refresh...');
+        const cacheResponse = await fetch(`/api/jobs/${id}?refresh=true&t=${Date.now()}`);
+
+        if (cacheResponse.ok) {
+          const freshJobData = await cacheResponse.json();
+          setJob(freshJobData);
+          setDataSource('cache-refreshed');
+          setUrlRefreshCount(prev => prev + 1);
+
+          toast({
+            title: "Updated",
+            description: "Document links have been refreshed from cache",
+          });
+        }
       }
     } catch (error) {
       console.error('❌ Failed to refresh job data:', error);
       toast({
         title: "Error",
-        description: "Failed to refresh document links. Please refresh the page.",
+        description: "Failed to refresh document links. Please reload the page.",
         variant: "destructive",
       });
     }
