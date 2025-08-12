@@ -623,6 +623,13 @@ export default function Jobs() {
             <p className="text-muted-foreground">
               Manage all process service jobs and track their progress
             </p>
+            {/* Cache status indicator */}
+            {cacheRef.current.timestamp > 0 && (
+              <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                Cached data ({Math.round((Date.now() - cacheRef.current.timestamp) / 1000)}s old)
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             {/* Real-time sync status indicator */}
