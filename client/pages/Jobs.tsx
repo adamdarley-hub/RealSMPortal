@@ -214,14 +214,34 @@ export default function Jobs() {
   const loadClients = useCallback(async () => {
     try {
       console.log('Loading ALL clients...');
-      const response = await fetch('/api/clients'); // No limits
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch('/api/clients', {
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
       if (response.ok) {
         const data = await response.json();
         setClients(data.clients || []);
         console.log(`Loaded ${data.total} total clients`);
+      } else {
+        throw new Error(`Failed to load clients: ${response.status}`);
       }
     } catch (error) {
       console.error('Error loading clients:', error);
+      // Try mock clients as fallback
+      try {
+        const mockResponse = await fetch('/api/mock/clients');
+        if (mockResponse.ok) {
+          const mockData = await mockResponse.json();
+          setClients(mockData.clients || []);
+        }
+      } catch (mockError) {
+        console.error('Mock clients fallback failed:', mockError);
+      }
     }
   }, []);
 
