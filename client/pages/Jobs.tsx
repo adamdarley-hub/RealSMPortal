@@ -227,9 +227,17 @@ export default function Jobs() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const response = await fetch('/api/clients', {
+      // Try Supabase first, then legacy
+      let response = await fetch('/api/v2/clients', {
         signal: controller.signal
       });
+
+      if (!response.ok) {
+        console.log('Supabase clients failed, trying legacy...');
+        response = await fetch('/api/clients', {
+          signal: controller.signal
+        });
+      }
 
       clearTimeout(timeoutId);
 
