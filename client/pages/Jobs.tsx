@@ -329,7 +329,10 @@ export default function Jobs() {
     try {
       console.log('Loading ALL servers/employees...');
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => {
+        console.log('⏰ Servers request timeout after 10 seconds');
+        controller.abort();
+      }, 10000); // Increased to 10 seconds
 
       const response = await fetch('/api/servers', {
         signal: controller.signal
