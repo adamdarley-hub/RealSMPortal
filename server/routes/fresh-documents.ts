@@ -10,7 +10,7 @@ export const getDocumentPreview: RequestHandler = async (req, res) => {
 
     // Fetch fresh job data from ServeManager to get current document URLs
     const jobData = await makeServeManagerRequest(`/jobs/${jobId}`);
-
+    
     console.log('📄 Job data structure debug:', {
       hasJobData: !!jobData,
       hasData: !!jobData?.data,
@@ -26,17 +26,17 @@ export const getDocumentPreview: RequestHandler = async (req, res) => {
         'files': jobData?.data?.files
       }
     });
-
-    let documents = jobData?.data?.documents_to_be_served ||
+    
+    let documents = jobData?.data?.documents_to_be_served || 
                    jobData?.documents_to_be_served ||
                    jobData?.data?.documents ||
                    jobData?.data?.attachments ||
                    jobData?.data?.files ||
                    [];
-
+    
     if (!documents || documents.length === 0) {
       console.error('❌ No documents found in job data:', jobData);
-      return res.status(404).json({
+      return res.status(404).json({ 
         error: 'Job or documents not found',
         debug: {
           jobId,
@@ -47,9 +47,15 @@ export const getDocumentPreview: RequestHandler = async (req, res) => {
     }
 
     // Find the specific document
-    const document = jobData.data.documents_to_be_served.find(
+    const document = documents.find(
       (doc: any) => doc.id.toString() === documentId.toString()
     );
+    
+    console.log('📄 Document search result:', {
+      searchingForId: documentId,
+      availableDocuments: documents.map(d => ({ id: d.id, title: d.title || d.name })),
+      foundDocument: !!document
+    });
 
     if (!document) {
       return res.status(404).json({ error: 'Document not found' });
@@ -68,7 +74,7 @@ export const getDocumentPreview: RequestHandler = async (req, res) => {
     });
 
     // Try multiple possible URL locations
-    const downloadUrl =
+    const downloadUrl = 
       document.upload?.links?.download_url ||
       document.upload?.download_url ||
       document.download_url ||
@@ -78,7 +84,7 @@ export const getDocumentPreview: RequestHandler = async (req, res) => {
       document.links?.view ||
       document.links?.preview ||
       document.preview_url;
-
+    
     console.log('📄 URL detection result:', {
       foundUrl: downloadUrl,
       allPossibleUrls: {
@@ -93,10 +99,10 @@ export const getDocumentPreview: RequestHandler = async (req, res) => {
         'preview_url': document.preview_url
       }
     });
-
+    
     if (!downloadUrl) {
       console.error('❌ No valid URL found for document', document);
-      return res.status(404).json({
+      return res.status(404).json({ 
         error: 'Document URL not available',
         debug: {
           documentId: document.id,
@@ -164,12 +170,19 @@ export const getDocumentDownload: RequestHandler = async (req, res) => {
     // Fetch fresh job data from ServeManager
     const jobData = await makeServeManagerRequest(`/jobs/${jobId}`);
     
-    if (!jobData?.data?.documents_to_be_served) {
+    let documents = jobData?.data?.documents_to_be_served || 
+                   jobData?.documents_to_be_served ||
+                   jobData?.data?.documents ||
+                   jobData?.data?.attachments ||
+                   jobData?.data?.files ||
+                   [];
+    
+    if (!documents || documents.length === 0) {
       return res.status(404).json({ error: 'Job or documents not found' });
     }
 
     // Find the specific document
-    const document = jobData.data.documents_to_be_served.find(
+    const document = documents.find(
       (doc: any) => doc.id.toString() === documentId.toString()
     );
 
@@ -178,7 +191,7 @@ export const getDocumentDownload: RequestHandler = async (req, res) => {
     }
 
     // Get the fresh download URL with comprehensive detection
-    const downloadUrl =
+    const downloadUrl = 
       document.upload?.links?.download_url ||
       document.upload?.download_url ||
       document.download_url ||
@@ -188,16 +201,16 @@ export const getDocumentDownload: RequestHandler = async (req, res) => {
       document.links?.view ||
       document.links?.preview ||
       document.preview_url;
-
+    
     console.log('💾 Download URL detection:', {
       documentId: document.id,
       foundUrl: downloadUrl,
       documentStructure: Object.keys(document)
     });
-
+    
     if (!downloadUrl) {
       console.error('❌ No valid download URL found for document', document);
-      return res.status(404).json({
+      return res.status(404).json({ 
         error: 'Document URL not available',
         debug: {
           documentId: document.id,
