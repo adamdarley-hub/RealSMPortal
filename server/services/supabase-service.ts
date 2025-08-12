@@ -5,6 +5,10 @@ export class SupabaseService {
   
   // Jobs operations
   async getJobs(filters: JobFilters = {}, pagination: PaginationOptions = { page: 1, limit: 50 }): Promise<JobsResponse> {
+    if (!isSupabaseConfigured()) {
+      throw new Error('Supabase is not properly configured');
+    }
+
     try {
       const { page, limit, sort_by = 'created_at', sort_order = 'desc' } = pagination;
       const offset = (page - 1) * limit;
