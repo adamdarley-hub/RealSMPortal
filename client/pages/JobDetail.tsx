@@ -1352,26 +1352,43 @@ export default function JobDetail() {
                                 }
 
                                 if (!documentUrl) {
+                                  // Check if this is a document without a file (null upload URL)
+                                  const hasNullUpload = currentDocument?.upload?.links?.download_url === null;
+
                                   return (
                                     <div className="flex items-center justify-center h-full text-muted-foreground">
                                       <div className="text-center space-y-4">
                                         <FileText className="w-12 h-12 mx-auto mb-4" />
-                                        <p>Document preview not available</p>
-                                        <p className="text-xs text-gray-500">Document: {currentDocument?.title || 'Unknown'}</p>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={async () => {
-                                            console.log('🔄 Force refreshing job data for fresh URLs...');
-                                            await refreshJobData();
-                                            // Force a short delay then reload
-                                            setTimeout(() => window.location.reload(), 1000);
-                                          }}
-                                          className="gap-2"
-                                        >
-                                          <Download className="w-4 h-4" />
-                                          Get Fresh URLs
-                                        </Button>
+                                        {hasNullUpload ? (
+                                          <>
+                                            <p>No file attached to this document</p>
+                                            <p className="text-xs text-gray-500">
+                                              Document: {currentDocument?.title || 'Unknown'}
+                                            </p>
+                                            <p className="text-xs text-gray-400">
+                                              This document exists in ServeManager but has no file content
+                                            </p>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <p>Document preview not available</p>
+                                            <p className="text-xs text-gray-500">Document: {currentDocument?.title || 'Unknown'}</p>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={async () => {
+                                                console.log('🔄 Force refreshing job data for fresh URLs...');
+                                                await refreshJobData();
+                                                // Force a short delay then reload
+                                                setTimeout(() => window.location.reload(), 1000);
+                                              }}
+                                              className="gap-2"
+                                            >
+                                              <Download className="w-4 h-4" />
+                                              Get Fresh URLs
+                                            </Button>
+                                          </>
+                                        )}
                                       </div>
                                     </div>
                                   );
