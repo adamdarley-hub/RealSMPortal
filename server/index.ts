@@ -224,15 +224,26 @@ export function createServer() {
   app.get("/api/mock/servers", getMockServers);
   app.get("/api/mock/invoices", getMockInvoices);
 
-  // Initialize real-time services after initial sync completes
-  setTimeout(() => {
+  // Initialize Supabase sync on startup
+  setTimeout(async () => {
+    try {
+      console.log('🚀 Starting Supabase initialization...');
+      await supabaseSyncService.startInitialSync();
+      supabaseSyncService.startBackgroundSync();
+      console.log('✅ Supabase sync services started');
+    } catch (error) {
+      console.warn('⚠️ Supabase sync failed to start:', error.message);
+      console.log('📝 Falling back to SQLite cache system');
+    }
+
+    // Start legacy change detection as fallback
     try {
       changeDetector.startMonitoring();
-      console.log('🚀 Real-time change detection started');
+      console.log('🚀 Legacy change detection started');
     } catch (error) {
-      console.warn('⚠️ Real-time change detection failed to start:', error.message);
+      console.warn('⚠️ Legacy change detection failed to start:', error.message);
     }
-  }, 15000); // Start after 15 seconds to allow initial data load
+  }, 5000); // Start after 5 seconds
 
   return app;
 }
