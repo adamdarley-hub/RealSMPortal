@@ -10,9 +10,40 @@ export const getDocumentPreview: RequestHandler = async (req, res) => {
 
     // Fetch fresh job data from ServeManager to get current document URLs
     const jobData = await makeServeManagerRequest(`/jobs/${jobId}`);
-    
-    if (!jobData?.data?.documents_to_be_served) {
-      return res.status(404).json({ error: 'Job or documents not found' });
+
+    console.log('📄 Job data structure debug:', {
+      hasJobData: !!jobData,
+      hasData: !!jobData?.data,
+      hasDocumentsToBeServed: !!jobData?.data?.documents_to_be_served,
+      jobDataKeys: jobData ? Object.keys(jobData) : [],
+      dataKeys: jobData?.data ? Object.keys(jobData.data) : [],
+      documentsCount: jobData?.data?.documents_to_be_served?.length || 0,
+      allPossibleDocumentFields: {
+        'data.documents_to_be_served': jobData?.data?.documents_to_be_served,
+        'documents_to_be_served': jobData?.documents_to_be_served,
+        'documents': jobData?.data?.documents,
+        'attachments': jobData?.data?.attachments,
+        'files': jobData?.data?.files
+      }
+    });
+
+    let documents = jobData?.data?.documents_to_be_served ||
+                   jobData?.documents_to_be_served ||
+                   jobData?.data?.documents ||
+                   jobData?.data?.attachments ||
+                   jobData?.data?.files ||
+                   [];
+
+    if (!documents || documents.length === 0) {
+      console.error('❌ No documents found in job data:', jobData);
+      return res.status(404).json({
+        error: 'Job or documents not found',
+        debug: {
+          jobId,
+          hasJobData: !!jobData,
+          jobStructure: jobData ? Object.keys(jobData) : 'No job data'
+        }
+      });
     }
 
     // Find the specific document
