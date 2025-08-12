@@ -1190,34 +1190,56 @@ export default function JobDetail() {
                                         Viewing
                                       </Badge>
                                     )}
-                                    {document.id && (
-                                      <>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => setCurrentDocumentIndex(index)}
-                                          className="gap-2"
-                                        >
-                                          <Eye className="w-4 h-4" />
-                                          View
-                                        </Button>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          asChild
-                                          className="gap-2"
-                                        >
-                                          <a
-                                            href={getProxyDownloadUrl(document.id, job.id)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                    {document.id && (() => {
+                                      // Check if document has a valid URL before showing view/download buttons
+                                      const hasValidUrl = !!(
+                                        document.upload?.links?.download_url ||
+                                        document.upload?.download_url ||
+                                        document.download_url ||
+                                        document.links?.download_url ||
+                                        document.url ||
+                                        document.file_url
+                                      );
+
+                                      if (!hasValidUrl) {
+                                        return (
+                                          <div className="flex items-center gap-2">
+                                            <Badge variant="secondary" className="bg-gray-50 text-gray-600">
+                                              No File Attached
+                                            </Badge>
+                                          </div>
+                                        );
+                                      }
+
+                                      return (
+                                        <>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentDocumentIndex(index)}
+                                            className="gap-2"
                                           >
-                                            <Download className="w-4 h-4" />
-                                            Download
-                                          </a>
-                                        </Button>
-                                      </>
-                                    )}
+                                            <Eye className="w-4 h-4" />
+                                            View
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            asChild
+                                            className="gap-2"
+                                          >
+                                            <a
+                                              href={getProxyDownloadUrl(document.id, job.id)}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                            >
+                                              <Download className="w-4 h-4" />
+                                              Download
+                                            </a>
+                                          </Button>
+                                        </>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
                               </div>
