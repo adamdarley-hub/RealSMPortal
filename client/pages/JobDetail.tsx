@@ -1235,22 +1235,75 @@ export default function JobDetail() {
                               {(() => {
                                 const currentDocument = documentsToBeServed[currentDocumentIndex];
 
-                                // Try multiple possible URL paths
+                                // Comprehensive document URL detection for ServeManager API
                                 const documentUrl =
                                   currentDocument?.upload?.links?.download_url ||
                                   currentDocument?.upload?.download_url ||
                                   currentDocument?.download_url ||
                                   currentDocument?.links?.download_url ||
-                                  currentDocument?.file_url;
+                                  currentDocument?.url ||
+                                  currentDocument?.file_url ||
+                                  currentDocument?.links?.view ||
+                                  currentDocument?.links?.preview ||
+                                  currentDocument?.preview_url;
 
-                                console.log('📄 Document URL debug:', {
+                                console.log('📄 COMPREHENSIVE Document URL debug:', {
                                   documentTitle: currentDocument?.title,
+                                  documentId: currentDocument?.id,
+                                  documentUrl: documentUrl,
                                   hasUpload: !!currentDocument?.upload,
                                   hasUploadLinks: !!currentDocument?.upload?.links,
-                                  documentUrl: documentUrl,
+                                  hasLinks: !!currentDocument?.links,
                                   documentKeys: currentDocument ? Object.keys(currentDocument) : [],
-                                  uploadKeys: currentDocument?.upload ? Object.keys(currentDocument.upload) : []
+                                  uploadKeys: currentDocument?.upload ? Object.keys(currentDocument.upload) : [],
+                                  linksKeys: currentDocument?.links ? Object.keys(currentDocument.links) : [],
+                                  fullDocument: currentDocument,
+                                  dataSource: dataSource,
+                                  allPossibleUrls: {
+                                    'upload.links.download_url': currentDocument?.upload?.links?.download_url,
+                                    'upload.download_url': currentDocument?.upload?.download_url,
+                                    'download_url': currentDocument?.download_url,
+                                    'links.download_url': currentDocument?.links?.download_url,
+                                    'url': currentDocument?.url,
+                                    'file_url': currentDocument?.file_url,
+                                    'links.view': currentDocument?.links?.view,
+                                    'links.preview': currentDocument?.links?.preview,
+                                    'preview_url': currentDocument?.preview_url
+                                  }
                                 });
+
+                                // If no URL found but we have a document ID, try using the proxy
+                                if (!documentUrl && currentDocument?.id) {
+                                  console.log('📄 No direct URL found, trying proxy approach...');
+                                  return (
+                                    <div className="relative w-full h-full">
+                                      <iframe
+                                        src={getPreviewUrl(currentDocument.id, job.id)}
+                                        className="w-full h-full border-0"
+                                        title={`Document: ${currentDocument.title}`}
+                                        key={`${currentDocument.id}-${urlRefreshCount}`}
+                                        onError={() => {
+                                          console.error('📄 Iframe failed to load, trying alternative...');
+                                        }}
+                                      />
+                                      <div className="absolute top-2 right-2">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            setUrlRefreshCount(prev => prev + 1);
+                                            console.log('🔄 Refreshing document viewer...');
+                                          }}
+                                          className="gap-2 bg-white/90 backdrop-blur"
+                                          title="Refresh document viewer"
+                                        >
+                                          <Download className="w-3 h-3" />
+                                          Refresh
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  );
+                                }
 
                                 if (!documentUrl) {
                                   return (
