@@ -493,13 +493,37 @@ export default function JobDetail() {
         setLoading(true);
         console.log(`🔍 Loading job ${id}...`);
 
-        const response = await fetch(`/api/servemanager/jobs/${id}`);
+        let response;
+        let rawJobData;
+        let dataSource = 'unknown';
 
-        if (!response.ok) {
-          throw new Error(`Failed to load job: ${response.status}`);
+        // Try fresh ServeManager API first
+        try {
+          console.log('🔄 Attempting to fetch fresh data from ServeManager...');
+          response = await fetch(`/api/servemanager/jobs/${id}`);
+
+          if (response.ok) {
+            rawJobData = await response.json();
+            dataSource = 'servemanager-fresh';
+            console.log('✅ Successfully loaded fresh data from ServeManager');
+          } else {
+            throw new Error(`ServeManager API failed: ${response.status}`);
+          }
+        } catch (serveManagerError) {
+          console.warn('⚠️ ServeManager API failed, falling back to cached data:', serveManagerError);
+
+          // Fallback to cached data
+          console.log('🔄 Falling back to cached data...');
+          response = await fetch(`/api/jobs/${id}`);
+
+          if (!response.ok) {
+            throw new Error(`Both ServeManager API and cache failed. ServeManager: ${serveManagerError.message}, Cache: ${response.status}`);
+          }
+
+          rawJobData = await response.json();
+          dataSource = 'cache-fallback';
+          console.log('✅ Successfully loaded data from cache fallback');
         }
-
-        const rawJobData = await response.json();
         // Handle both direct job data and wrapped responses
         const jobData = rawJobData.data || rawJobData;
 
