@@ -261,9 +261,21 @@ export default function Jobs() {
         const data = await response.json();
         setServers(data.servers || []);
         console.log(`Loaded ${data.total} total servers from endpoint: ${data.endpoint_used || 'unknown'}`);
+      } else {
+        throw new Error(`Failed to load servers: ${response.status}`);
       }
     } catch (error) {
       console.error('Error loading servers:', error);
+      // Try mock servers as fallback
+      try {
+        const mockResponse = await fetch('/api/mock/servers');
+        if (mockResponse.ok) {
+          const mockData = await mockResponse.json();
+          setServers(mockData.servers || []);
+        }
+      } catch (mockError) {
+        console.error('Mock servers fallback failed:', mockError);
+      }
     }
   };
 
