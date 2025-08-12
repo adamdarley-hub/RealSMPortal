@@ -167,7 +167,8 @@ export default function Jobs() {
       if (retryCount < maxRetries && (
         error instanceof TypeError || // Network errors
         error.name === 'AbortError' || // Timeout errors
-        error.message.includes('Failed to fetch')
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('Supabase is not properly configured')
       )) {
         console.log(`Retrying in ${retryDelay}ms...`);
         setTimeout(() => {
