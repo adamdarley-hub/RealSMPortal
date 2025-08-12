@@ -726,8 +726,8 @@ export default function JobDetail() {
               <Badge className={getStatusColor(job.status || 'pending')}>
                 {(job.status || 'pending').replace('_', ' ')}
               </Badge>
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                🔄 Always Fresh
+              <Badge variant="outline" className={dataSource === 'servemanager-fresh' ? "bg-green-50 text-green-700 border-green-200" : "bg-yellow-50 text-yellow-700 border-yellow-200"}>
+                {dataSource === 'servemanager-fresh' ? '🔄 Always Fresh' : '📊 Cache Fallback'}
               </Badge>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" className="gap-2">
