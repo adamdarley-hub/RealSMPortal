@@ -110,8 +110,8 @@ export default function Jobs() {
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       try {
-        // Fetch ALL jobs without any backend filtering
-        const response = await fetch('/api/jobs', {
+        // Try Supabase API first for instant performance
+        const response = await fetch('/api/v2/jobs?limit=50&page=1', {
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
