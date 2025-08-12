@@ -94,6 +94,22 @@ export default function Jobs() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { toast } = useToast();
 
+  // Cache management
+  const cacheRef = useRef<{
+    jobs: Job[];
+    clients: Client[];
+    servers: Server[];
+    timestamp: number;
+    totalJobs: number;
+  }>({
+    jobs: [],
+    clients: [],
+    servers: [],
+    timestamp: 0,
+    totalJobs: 0
+  });
+  const CACHE_DURATION = 30000; // 30 seconds
+
   // Declare load functions first before using them in callbacks
   const loadJobs = useCallback(async (retryCount = 0) => {
     setLoading(true);
