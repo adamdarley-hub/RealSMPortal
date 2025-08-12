@@ -8,16 +8,18 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
   try {
     const startTime = Date.now();
     console.log('📋 Serving jobs from local cache...');
-    
-    const { 
-      status, 
-      priority, 
-      client_id, 
-      server_id, 
-      date_from, 
-      date_to 
+
+    const {
+      status,
+      priority,
+      client_id,
+      server_id,
+      date_from,
+      date_to,
+      limit,
+      page
     } = req.query;
-    
+
     // Build filters
     const filters: any = {};
     if (status && status !== 'all') filters.status = status;
@@ -26,16 +28,35 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
     if (server_id && server_id !== 'all') filters.server_id = server_id;
     if (date_from) filters.date_from = date_from;
     if (date_to) filters.date_to = date_to;
-    
-    const jobs = await cacheService.getJobsFromCache(filters);
+
+    let allJobs = await cacheService.getJobsFromCache(filters);
+
+    // Apply pagination for performance
+    const limitNum = parseInt(limit as string) || 50;
+    const pageNum = parseInt(page as string) || 1;
+    const offset = (pageNum - 1) * limitNum;
+
+    let jobs = allJobs;
+    let isPaginated = false;
+
+    if (limitNum && limitNum < allJobs.length) {
+      jobs = allJobs.slice(offset, offset + limitNum);
+      isPaginated = true;
+    }
+
     const responseTime = Date.now() - startTime;
-    
-    console.log(`⚡ Served ${jobs.length} jobs from cache in ${responseTime}ms`);
-    
+
+    console.log(`⚡ Served ${jobs.length}${isPaginated ? ` of ${allJobs.length}` : ''} jobs from cache in ${responseTime}ms`);
+
     res.json({
       jobs,
-      total: jobs.length,
+      total: allJobs.length,
+      page: pageNum,
+      limit: limitNum,
+      showing: jobs.length,
+      has_more: offset + limitNum < allJobs.length,
       cached: true,
+      paginated: isPaginated,
       response_time_ms: responseTime,
       last_synced: jobs[0]?._last_synced || null
     });
