@@ -1,4 +1,4 @@
-import { supabase, SupabaseJob, SupabaseClient, SupabaseServer, SupabaseAttempt, JobFilters, PaginationOptions, JobsResponse } from '../../shared/supabase';
+import { supabase, SupabaseJob, SupabaseClient, SupabaseServer, SupabaseAttempt, JobFilters, PaginationOptions, JobsResponse, isSupabaseConfigured } from '../../shared/supabase';
 import { Job, Client, Server } from '../../shared/servemanager';
 
 export class SupabaseService {
