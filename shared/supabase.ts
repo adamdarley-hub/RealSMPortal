@@ -1,11 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase configuration
-export const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
-export const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
+// Supabase configuration with safe defaults
+export const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
+export const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'placeholder-key';
 
-// Create Supabase client
+// Create Supabase client with error handling
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Helper to check if Supabase is properly configured
+export const isSupabaseConfigured = () => {
+  return supabaseUrl !== 'https://placeholder.supabase.co' &&
+         supabaseAnonKey !== 'placeholder-key' &&
+         supabaseUrl.includes('supabase.co');
+};
 
 // Database table definitions (matching ServeManager structure)
 export interface SupabaseJob {
