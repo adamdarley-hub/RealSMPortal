@@ -670,12 +670,22 @@ export default function Jobs() {
               onClick={async () => {
                 console.log('🔄 Force refreshing all data...');
                 try {
+                  // Clear client-side cache
+                  cacheRef.current = {
+                    jobs: [],
+                    clients: [],
+                    servers: [],
+                    timestamp: 0,
+                    totalJobs: 0
+                  };
+
                   const response = await fetch('/api/force-refresh', { method: 'POST' });
                   const result = await response.json();
                   console.log('✅ Force refresh result:', result);
                   // Reload data after force refresh
-                  loadJobs();
-                  loadClients();
+                  loadJobs(0, true);
+                  loadClients(true);
+                  loadServers(true);
                 } catch (error) {
                   console.error('❌ Force refresh failed:', error);
                 }
