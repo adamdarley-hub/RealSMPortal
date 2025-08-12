@@ -309,7 +309,17 @@ export default function Jobs() {
     }
   }, []);
 
-  const loadServers = async () => {
+  const loadServers = async (forceRefresh = false) => {
+    // Check cache first
+    const now = Date.now();
+    const cache = cacheRef.current;
+
+    if (!forceRefresh && cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.servers.length > 0) {
+      console.log('⚡ Using cached servers data');
+      setServers(cache.servers);
+      return;
+    }
+
     try {
       console.log('Loading ALL servers/employees...');
       const controller = new AbortController();
@@ -324,7 +334,11 @@ export default function Jobs() {
       if (response.ok) {
         const data = await response.json();
         setServers(data.servers || []);
-        console.log(`Loaded ${data.total} total servers from endpoint: ${data.endpoint_used || 'unknown'}`);
+
+        // Cache the results
+        cacheRef.current.servers = data.servers || [];
+
+        console.log(`Loaded ${data.total} total servers (cached for 30s)`);
       } else {
         throw new Error(`Failed to load servers: ${response.status}`);
       }
@@ -336,6 +350,7 @@ export default function Jobs() {
         if (mockResponse.ok) {
           const mockData = await mockResponse.json();
           setServers(mockData.servers || []);
+          cacheRef.current.servers = mockData.servers || [];
         }
       } catch (mockError) {
         console.error('Mock servers fallback failed:', mockError);
