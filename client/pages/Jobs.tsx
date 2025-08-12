@@ -358,6 +358,12 @@ export default function Jobs() {
         throw new Error(`Failed to load servers: ${response.status}`);
       }
     } catch (error) {
+      // Handle AbortError gracefully
+      if (error.name === 'AbortError') {
+        console.log('⚠️ Servers request was aborted (likely due to timeout or navigation)');
+        return; // Don't try fallbacks for abort errors
+      }
+
       console.error('Error loading servers:', error);
       // Try mock servers as fallback
       try {
