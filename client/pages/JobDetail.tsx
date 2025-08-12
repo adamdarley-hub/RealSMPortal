@@ -528,6 +528,7 @@ export default function JobDetail() {
         const jobData = rawJobData.data || rawJobData;
 
         console.log('📄 Raw job data received:', {
+          dataSource,
           id: jobData.id,
           jobNumber: jobData.job_number || jobData.generated_job_id,
           clientName: jobData.client_company || jobData.client_name,
