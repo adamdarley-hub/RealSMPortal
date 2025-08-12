@@ -300,6 +300,12 @@ export default function Jobs() {
         throw new Error(`Failed to load clients: ${response.status}`);
       }
     } catch (error) {
+      // Handle AbortError gracefully
+      if (error.name === 'AbortError') {
+        console.log('⚠️ Clients request was aborted (likely due to timeout or navigation)');
+        return; // Don't try fallbacks for abort errors
+      }
+
       console.error('Error loading clients:', error);
       // Try mock clients as fallback
       try {
