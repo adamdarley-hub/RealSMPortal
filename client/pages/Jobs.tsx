@@ -204,10 +204,16 @@ export default function Jobs() {
     } catch (error) {
       console.error(`Error loading jobs (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
 
+      // Handle AbortError gracefully without retrying
+      if (error.name === 'AbortError') {
+        console.log('⚠️ Jobs request was aborted (likely due to timeout or navigation)');
+        setLoading(false);
+        return;
+      }
+
       // If we haven't exhausted retries and it's a network error, try again
       if (retryCount < maxRetries && (
         error instanceof TypeError || // Network errors
-        error.name === 'AbortError' || // Timeout errors
         error.message.includes('Failed to fetch') ||
         error.message.includes('Supabase is not properly configured')
       )) {
