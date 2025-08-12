@@ -170,6 +170,15 @@ export default function Jobs() {
         setTotalJobs(data.total || data.jobs.length);
         setUsingMockData(!!data.mock);
 
+        // Cache the results
+        cacheRef.current = {
+          jobs: data.jobs,
+          clients: cacheRef.current.clients,
+          servers: cacheRef.current.servers,
+          timestamp: now,
+          totalJobs: data.total || data.jobs.length
+        };
+
         if (data.mock) {
           console.log('Using mock data due to API error:', data.error);
           toast({
@@ -178,7 +187,7 @@ export default function Jobs() {
             variant: "default",
           });
         } else {
-          console.log(`Loaded ${data.total} total jobs across ${data.pages_fetched || 1} pages`);
+          console.log(`Loaded ${data.total} total jobs in ${data.response_time_ms || 'unknown'}ms (cached for 30s)`);
         }
 
         // Clear any previous errors on success
