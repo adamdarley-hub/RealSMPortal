@@ -110,8 +110,8 @@ export default function Jobs() {
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       try {
-        // Try Supabase API first for instant performance
-        const response = await fetch('/api/v2/jobs?limit=50&page=1', {
+        // Use fast SQLite API with pagination
+        const response = await fetch('/api/jobs?limit=50', {
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
