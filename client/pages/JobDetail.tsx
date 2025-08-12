@@ -542,6 +542,7 @@ export default function JobDetail() {
         });
 
         setJob(jobData);
+        setDataSource(dataSource);
 
         // Extract real service attempts from job data
         const realAttempts = extractServiceAttempts(jobData);
