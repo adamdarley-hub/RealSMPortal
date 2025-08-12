@@ -24,11 +24,55 @@ export const getDocumentPreview: RequestHandler = async (req, res) => {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Get the fresh download URL
-    const downloadUrl = document.upload?.links?.download_url;
-    
+    // Comprehensive document URL detection with debugging
+    console.log('📄 Document structure debug:', {
+      documentId: document.id,
+      documentTitle: document.title,
+      documentKeys: Object.keys(document),
+      hasUpload: !!document.upload,
+      uploadKeys: document.upload ? Object.keys(document.upload) : [],
+      hasUploadLinks: !!document.upload?.links,
+      uploadLinksKeys: document.upload?.links ? Object.keys(document.upload.links) : [],
+      fullDocument: document
+    });
+
+    // Try multiple possible URL locations
+    const downloadUrl =
+      document.upload?.links?.download_url ||
+      document.upload?.download_url ||
+      document.download_url ||
+      document.links?.download_url ||
+      document.url ||
+      document.file_url ||
+      document.links?.view ||
+      document.links?.preview ||
+      document.preview_url;
+
+    console.log('📄 URL detection result:', {
+      foundUrl: downloadUrl,
+      allPossibleUrls: {
+        'upload.links.download_url': document.upload?.links?.download_url,
+        'upload.download_url': document.upload?.download_url,
+        'download_url': document.download_url,
+        'links.download_url': document.links?.download_url,
+        'url': document.url,
+        'file_url': document.file_url,
+        'links.view': document.links?.view,
+        'links.preview': document.links?.preview,
+        'preview_url': document.preview_url
+      }
+    });
+
     if (!downloadUrl) {
-      return res.status(404).json({ error: 'Document URL not available' });
+      console.error('❌ No valid URL found for document', document);
+      return res.status(404).json({
+        error: 'Document URL not available',
+        debug: {
+          documentId: document.id,
+          availableFields: Object.keys(document),
+          uploadStructure: document.upload || 'No upload field'
+        }
+      });
     }
 
     console.log(`📄 Found fresh URL for document ${documentId}, fetching content...`);
@@ -102,11 +146,33 @@ export const getDocumentDownload: RequestHandler = async (req, res) => {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Get the fresh download URL
-    const downloadUrl = document.upload?.links?.download_url;
-    
+    // Get the fresh download URL with comprehensive detection
+    const downloadUrl =
+      document.upload?.links?.download_url ||
+      document.upload?.download_url ||
+      document.download_url ||
+      document.links?.download_url ||
+      document.url ||
+      document.file_url ||
+      document.links?.view ||
+      document.links?.preview ||
+      document.preview_url;
+
+    console.log('💾 Download URL detection:', {
+      documentId: document.id,
+      foundUrl: downloadUrl,
+      documentStructure: Object.keys(document)
+    });
+
     if (!downloadUrl) {
-      return res.status(404).json({ error: 'Document URL not available' });
+      console.error('❌ No valid download URL found for document', document);
+      return res.status(404).json({
+        error: 'Document URL not available',
+        debug: {
+          documentId: document.id,
+          availableFields: Object.keys(document)
+        }
+      });
     }
 
     // Fetch the document content
