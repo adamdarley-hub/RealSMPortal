@@ -349,12 +349,17 @@ export class SupabaseService {
 
   // Health check
   async healthCheck(): Promise<boolean> {
+    if (!isSupabaseConfigured()) {
+      console.log('❌ Supabase not configured');
+      return false;
+    }
+
     try {
       const { error } = await supabase
         .from('jobs')
         .select('id')
         .limit(1);
-      
+
       return !error;
     } catch (error) {
       console.error('Supabase health check failed:', error);
