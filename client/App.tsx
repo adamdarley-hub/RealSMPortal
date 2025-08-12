@@ -15,6 +15,7 @@ import Clients from "./pages/Clients";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import ApiConfig from "./pages/ApiConfig";
+import SupabaseMigration from "./pages/SupabaseMigration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
