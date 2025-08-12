@@ -1045,18 +1045,65 @@ export default function JobDetail() {
                 </CardHeader>
                 <CardContent>
                   {(() => {
+                    // Debug: Log all possible document fields to understand the fresh API structure
+                    console.log('📄 Document extraction debug:', {
+                      jobId: job.id,
+                      jobKeys: Object.keys(job),
+                      raw_data: job.raw_data,
+                      hasRawData: !!job.raw_data,
+                      documents_to_be_served: job.documents_to_be_served,
+                      attachments: (job as any).attachments,
+                      documents: (job as any).documents,
+                      files: (job as any).files,
+                      uploads: (job as any).uploads,
+                      paperwork: (job as any).paperwork,
+                      job_documents: (job as any).job_documents
+                    });
+
                     // Handle multiple possible data structures from cache vs fresh API
-                    const documentsToBeServed =
+                    let documentsToBeServed =
                       job.raw_data?.documents_to_be_served ||  // Cached/mapped data
                       job.documents_to_be_served ||            // Direct field
                       job.data?.documents_to_be_served ||      // Fresh ServeManager API response
+                      (job as any).attachments ||              // Alternative field name
+                      (job as any).documents ||                // Alternative field name
+                      (job as any).files ||                    // Alternative field name
+                      (job as any).uploads ||                  // Alternative field name
+                      (job as any).paperwork ||                // Alternative field name
+                      (job as any).job_documents ||            // Alternative field name
                       [];
+
+                    // Ensure it's an array
+                    if (!Array.isArray(documentsToBeServed)) {
+                      console.log('📄 Documents field is not an array:', documentsToBeServed);
+                      documentsToBeServed = [];
+                    }
+
+                    console.log('📄 Final documents to be served:', {
+                      count: documentsToBeServed.length,
+                      documents: documentsToBeServed,
+                      firstDocument: documentsToBeServed[0] || null
+                    });
 
                     if (documentsToBeServed.length === 0) {
                       return (
                         <div className="text-center py-8 text-muted-foreground">
                           <FileText className="w-12 h-12 mx-auto mb-4" />
                           <p>No documents to be served</p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Job ID: {job.id}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              console.log('📄 Full job object for debugging:', job);
+                            }}
+                            className="gap-2 mt-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Debug Job Data
+                          </Button>
                         </div>
                       );
                     }
