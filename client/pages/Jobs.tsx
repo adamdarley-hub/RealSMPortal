@@ -186,24 +186,34 @@ export default function Jobs() {
         variant: "destructive",
       });
 
-      // Try to load mock data as final fallback
+      // Try legacy SQLite API as fallback
       try {
-        console.log('Attempting to load mock data as fallback...');
-        const mockResponse = await fetch('/api/mock/jobs');
-        if (mockResponse.ok) {
-          const mockData = await mockResponse.json();
-          setJobs(mockData.jobs || []);
-          setTotalJobs(mockData.total || 0);
-          setUsingMockData(true);
+        console.log('Supabase failed, trying legacy SQLite API...');
+        const legacyResponse = await fetch('/api/jobs');
+        if (legacyResponse.ok) {
+          const legacyData = await legacyResponse.json();
+          setJobs(legacyData.jobs || []);
+          setTotalJobs(legacyData.total || 0);
+          setUsingMockData(!!legacyData.mock);
           setError(null);
           toast({
-            title: "Fallback Mode",
-            description: "Showing sample data while connection issues are resolved",
+            title: "Using Legacy Database",
+            description: "Supabase unavailable, using slower SQLite fallback",
             variant: "default",
           });
+        } else {
+          // Final fallback to mock data
+          const mockResponse = await fetch('/api/mock/jobs');
+          if (mockResponse.ok) {
+            const mockData = await mockResponse.json();
+            setJobs(mockData.jobs || []);
+            setTotalJobs(mockData.total || 0);
+            setUsingMockData(true);
+            setError(null);
+          }
         }
-      } catch (mockError) {
-        console.error('Mock data fallback also failed:', mockError);
+      } catch (fallbackError) {
+        console.error('All fallbacks failed:', fallbackError);
       }
 
     } finally {
