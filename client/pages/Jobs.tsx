@@ -260,7 +260,17 @@ export default function Jobs() {
     }
   }, [toast]);
 
-  const loadClients = useCallback(async () => {
+  const loadClients = useCallback(async (forceRefresh = false) => {
+    // Check cache first
+    const now = Date.now();
+    const cache = cacheRef.current;
+
+    if (!forceRefresh && cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.clients.length > 0) {
+      console.log('⚡ Using cached clients data');
+      setClients(cache.clients);
+      return;
+    }
+
     try {
       console.log('Loading ALL clients...');
       const controller = new AbortController();
@@ -275,7 +285,11 @@ export default function Jobs() {
       if (response.ok) {
         const data = await response.json();
         setClients(data.clients || []);
-        console.log(`Loaded ${data.total} total clients`);
+
+        // Cache the results
+        cacheRef.current.clients = data.clients || [];
+
+        console.log(`Loaded ${data.total} total clients (cached for 30s)`);
       } else {
         throw new Error(`Failed to load clients: ${response.status}`);
       }
@@ -287,6 +301,7 @@ export default function Jobs() {
         if (mockResponse.ok) {
           const mockData = await mockResponse.json();
           setClients(mockData.clients || []);
+          cacheRef.current.clients = mockData.clients || [];
         }
       } catch (mockError) {
         console.error('Mock clients fallback failed:', mockError);
