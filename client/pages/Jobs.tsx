@@ -95,39 +95,117 @@ export default function Jobs() {
   const { toast } = useToast();
 
   // Declare load functions first before using them in callbacks
-  const loadJobs = useCallback(async () => {
+  const loadJobs = useCallback(async (retryCount = 0) => {
     setLoading(true);
     setError(null);
+
+    const maxRetries = 3;
+    const retryDelay = 1000 * (retryCount + 1); // 1s, 2s, 3s delays
+
     try {
       console.log('Loading ALL jobs (no backend filters - using frontend filtering)...');
 
-      // Fetch ALL jobs without any backend filtering
-      const response = await fetch('/api/jobs');
+      // Add timeout protection
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to load jobs');
+      try {
+        // Fetch ALL jobs without any backend filtering
+        const response = await fetch('/api/jobs', {
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          let errorMessage = 'Failed to load jobs';
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch {
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
+          throw new Error(errorMessage);
+        }
+
+        const data: JobsResponse & { mock?: boolean; error?: string; pages_fetched?: number } = await response.json();
+
+        if (!data || !Array.isArray(data.jobs)) {
+          throw new Error('Invalid response format from server');
+        }
+
+        setJobs(data.jobs);
+        setTotalJobs(data.total || data.jobs.length);
+        setUsingMockData(!!data.mock);
+
+        if (data.mock) {
+          console.log('Using mock data due to API error:', data.error);
+          toast({
+            title: "Using Mock Data",
+            description: "Could not connect to ServeManager, showing sample data",
+            variant: "default",
+          });
+        } else {
+          console.log(`Loaded ${data.total} total jobs across ${data.pages_fetched || 1} pages`);
+        }
+
+        // Clear any previous errors on success
+        setError(null);
+
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        throw fetchError;
       }
 
-      const data: JobsResponse & { mock?: boolean; error?: string; pages_fetched?: number } = await response.json();
-      setJobs(data.jobs);
-      setTotalJobs(data.total);
-      setUsingMockData(!!data.mock);
-
-      if (data.mock) {
-        console.log('Using mock data due to API error:', data.error);
-      } else {
-        console.log(`Loaded ${data.total} total jobs across ${data.pages_fetched || 1} pages`);
-      }
     } catch (error) {
+      console.error(`Error loading jobs (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
+
+      // If we haven't exhausted retries and it's a network error, try again
+      if (retryCount < maxRetries && (
+        error instanceof TypeError || // Network errors
+        error.name === 'AbortError' || // Timeout errors
+        error.message.includes('Failed to fetch')
+      )) {
+        console.log(`Retrying in ${retryDelay}ms...`);
+        setTimeout(() => {
+          loadJobs(retryCount + 1);
+        }, retryDelay);
+        return; // Don't set loading to false or show error yet
+      }
+
+      // Final failure - show error
       const errorMessage = error instanceof Error ? error.message : 'Failed to load jobs';
       setError(errorMessage);
-      console.error('Error loading jobs:', error);
+
       toast({
-        title: "Error",
-        description: errorMessage,
+        title: "Connection Error",
+        description: `${errorMessage}. Please check your connection and try refreshing.`,
         variant: "destructive",
       });
+
+      // Try to load mock data as final fallback
+      try {
+        console.log('Attempting to load mock data as fallback...');
+        const mockResponse = await fetch('/api/mock/jobs');
+        if (mockResponse.ok) {
+          const mockData = await mockResponse.json();
+          setJobs(mockData.jobs || []);
+          setTotalJobs(mockData.total || 0);
+          setUsingMockData(true);
+          setError(null);
+          toast({
+            title: "Fallback Mode",
+            description: "Showing sample data while connection issues are resolved",
+            variant: "default",
+          });
+        }
+      } catch (mockError) {
+        console.error('Mock data fallback also failed:', mockError);
+      }
+
     } finally {
       setLoading(false);
     }
