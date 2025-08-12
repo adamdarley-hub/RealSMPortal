@@ -468,6 +468,7 @@ export default function JobDetail() {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<string>('unknown');
   const [serviceAttempts, setServiceAttempts] = useState<any[]>([]);
   const [activeJobTab, setActiveJobTab] = useState("job-info");
   const [activeMainTab, setActiveMainTab] = useState("overview");
