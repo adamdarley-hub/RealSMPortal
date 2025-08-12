@@ -111,7 +111,20 @@ export default function Jobs() {
   const CACHE_DURATION = 30000; // 30 seconds
 
   // Declare load functions first before using them in callbacks
-  const loadJobs = useCallback(async (retryCount = 0) => {
+  const loadJobs = useCallback(async (retryCount = 0, forceRefresh = false) => {
+    // Check cache first (unless force refresh)
+    const now = Date.now();
+    const cache = cacheRef.current;
+
+    if (!forceRefresh && cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.jobs.length > 0) {
+      console.log(`⚡ Using cached jobs data (${Math.round((now - cache.timestamp) / 1000)}s old)`);
+      setJobs(cache.jobs);
+      setTotalJobs(cache.totalJobs);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
