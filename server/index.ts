@@ -29,12 +29,22 @@ import "./services/startup-sync"; // Auto-trigger initial sync
 import "./services/background-sync"; // Auto-trigger background sync
 import { changeDetector } from "./services/change-detector";
 import { webSocketService } from "./services/websocket-service";
+import { supabaseSyncService } from "./services/supabase-sync";
 import {
   getMockJobs,
   getMockClients,
   getMockServers,
   getMockInvoices
 } from "./routes/mock-data";
+import {
+  getSupabaseJobs,
+  getSupabaseJob,
+  getSupabaseClients,
+  getSupabaseServers,
+  triggerSupabaseSync,
+  getSupabaseSyncStatus,
+  syncSupabaseJob
+} from "./routes/supabase-api";
 
 export function createServer() {
   const app = express();
