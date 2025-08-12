@@ -174,7 +174,16 @@ export function createServer() {
     }
   });
 
-  // CACHED API ROUTES (Instant Response from Local Database)
+  // SUPABASE API ROUTES (Ultra-fast with PostgreSQL)
+  app.get("/api/v2/jobs", getSupabaseJobs);          // ⚡ ULTRA-FAST - Paginated jobs from Supabase
+  app.get("/api/v2/jobs/:id", getSupabaseJob);       // ⚡ ULTRA-FAST - Single job from Supabase
+  app.get("/api/v2/clients", getSupabaseClients);    // ⚡ ULTRA-FAST - Clients from Supabase
+  app.get("/api/v2/servers", getSupabaseServers);    // ⚡ ULTRA-FAST - Servers from Supabase
+  app.post("/api/v2/sync", triggerSupabaseSync);     // 🔄 Trigger manual sync to Supabase
+  app.get("/api/v2/sync/status", getSupabaseSyncStatus); // 📊 Get Supabase sync status
+  app.post("/api/v2/jobs/:id/sync", syncSupabaseJob); // 🔄 Sync single job to Supabase
+
+  // CACHED API ROUTES (Legacy - SQLite)
   app.get("/api/jobs", getCachedJobs);        // ⚡ INSTANT - Serve from local cache
   app.get("/api/clients", getCachedClients);  // ⚡ INSTANT - Serve from local cache
   app.get("/api/servers", getCachedServers);  // ⚡ INSTANT - Serve from local cache
