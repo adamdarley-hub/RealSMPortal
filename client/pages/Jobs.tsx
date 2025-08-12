@@ -394,11 +394,28 @@ export default function Jobs() {
     onDataUpdate
   });
 
-  // Load data on component mount
+  // Load data on component mount with cleanup
   useEffect(() => {
-    loadJobs();
-    loadClients();
-    loadServers();
+    let isMounted = true;
+
+    const loadData = async () => {
+      if (!isMounted) return;
+
+      await loadJobs();
+      if (!isMounted) return;
+
+      await loadClients();
+      if (!isMounted) return;
+
+      await loadServers();
+    };
+
+    loadData();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, [loadJobs, loadClients]);
 
   const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
