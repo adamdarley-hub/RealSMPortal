@@ -248,7 +248,15 @@ export default function Jobs() {
   const loadServers = async () => {
     try {
       console.log('Loading ALL servers/employees...');
-      const response = await fetch('/api/servers'); // No limits
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch('/api/servers', {
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
       if (response.ok) {
         const data = await response.json();
         setServers(data.servers || []);
