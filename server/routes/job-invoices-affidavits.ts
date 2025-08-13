@@ -96,6 +96,8 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
     });
 
     console.log(`🧾 Found ${jobInvoices.length} invoices for job ${jobId}`);
+    console.log('🧾 All invoices summary:', allInvoices.map(inv => ({ id: inv.id, status: inv.status, job_id: inv.job_id })));
+    console.log('🧾 Filtered job invoices:', jobInvoices.map(inv => ({ id: inv.id, status: inv.status, job_id: inv.job_id })));
 
     res.json({
       invoices: jobInvoices,
