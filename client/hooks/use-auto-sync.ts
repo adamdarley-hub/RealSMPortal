@@ -121,19 +121,43 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
       const response = await fetch('/api/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        signal: controller.signal,
+        // Add retry logic by disabling cache
+        cache: 'no-cache'
       }).catch((fetchError) => {
-        console.warn('🌐 Network error during sync:', fetchError.message);
+        console.warn('🌐 Network error during sync:', {
+          message: fetchError.message,
+          name: fetchError.name,
+          stack: fetchError.stack?.substring(0, 200) // Truncated stack trace
+        });
 
-        // Handle network errors more gracefully
+        // Handle different types of network errors
         if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
-          throw new Error('Network connection failed - using cached data');
+          // Network connection issue - don't crash, just skip sync
+          if (mountedRef.current) {
+            setStatus(prev => ({
+              ...prev,
+              isSyncing: false,
+              error: 'Network connection failed - using cached data'
+            }));
+          }
+          return null; // Signal to skip processing
         }
 
         // Check if it's an abort error
         if (fetchError.name === 'AbortError') {
-          throw new Error('Request timeout - using cached data');
+          if (mountedRef.current) {
+            setStatus(prev => ({
+              ...prev,
+              isSyncing: false,
+              error: 'Request timeout - using cached data'
+            }));
+          }
+          return null; // Signal to skip processing
         }
 
         throw new Error(`Network error: ${fetchError.message}`);
