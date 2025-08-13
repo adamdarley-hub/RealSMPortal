@@ -158,57 +158,68 @@ export const getJobAffidavits: RequestHandler = async (req, res) => {
     }
 
     console.log(`📜 Job ${jobId} affidavit data:`, {
-      hasAffidavit: !!jobData.affidavit,
       affidavitCount: jobData.affidavit_count,
-      affidavitData: jobData.affidavit
+      hasDocuments: !!jobData.documents,
+      documentsCount: jobData.documents?.length || 0,
+      hasMiscAttachments: !!jobData.misc_attachments,
+      miscAttachmentsCount: jobData.misc_attachments?.length || 0,
+      documentTypes: jobData.documents?.map((d: any) => ({ id: d.id, type: d.upload_type, title: d.title })) || []
     });
 
     const jobAffidavits: any[] = [];
 
-    // Check if job has affidavit data and if it's signed
-    if (jobData.affidavit && jobData.affidavit_count > 0) {
-      // ServeManager stores affidavit data directly in the job
-      const affidavit = {
-        id: jobData.affidavit.id || `aff_${jobId}`,
-        job_id: jobId,
-        signed_at: jobData.affidavit.signed_at,
-        created_at: jobData.affidavit.created_at,
-        status: jobData.affidavit.signed ? 'signed' : 'unsigned',
-        signer: jobData.affidavit.signer || jobData.employee_process_server?.first_name + ' ' + jobData.employee_process_server?.last_name,
-        pdf_url: jobData.affidavit.pdf_url || jobData.affidavit.download_url,
-        notarized: jobData.affidavit.notarized,
-        notary_signature: jobData.affidavit.notary_signature
-      };
-
-      // Only include signed affidavits
-      if (affidavit.status === 'signed') {
-        jobAffidavits.push(affidavit);
-      }
-    }
-
-    // Alternative: Check if there are affidavit attachments
-    if (jobData.misc_attachments && Array.isArray(jobData.misc_attachments)) {
-      const affidavitAttachments = jobData.misc_attachments.filter((attachment: any) =>
-        attachment.upload_type === 'affidavit' && attachment.signed === true
+    // Check documents array for affidavits (ServeManager stores affidavits as documents)
+    if (jobData.documents && Array.isArray(jobData.documents)) {
+      const affidavitDocs = jobData.documents.filter((doc: any) =>
+        doc.upload_type === 'affidavit' ||
+        doc.type === 'affidavit' ||
+        doc.title?.toLowerCase().includes('affidavit')
       );
 
-      affidavitAttachments.forEach((attachment: any) => {
+      affidavitDocs.forEach((doc: any) => {
         const affidavit = {
-          id: attachment.id,
+          id: doc.id,
           job_id: jobId,
-          signed_at: attachment.updated_at,
-          created_at: attachment.created_at,
-          status: 'signed',
-          signer: 'Process Server',
-          pdf_url: attachment.upload?.links?.download_url || attachment.download_url,
-          title: attachment.title || 'Affidavit of Service'
+          signed_at: doc.updated_at || doc.created_at,
+          created_at: doc.created_at,
+          status: 'signed', // If it's in documents, assume it's signed
+          signer: jobData.employee_process_server?.first_name + ' ' + jobData.employee_process_server?.last_name || 'Process Server',
+          pdf_url: doc.upload?.links?.download_url || doc.download_url,
+          title: doc.title || 'Affidavit of Service'
         };
 
         jobAffidavits.push(affidavit);
       });
     }
 
+    // Also check misc_attachments for affidavit documents
+    if (jobData.misc_attachments && Array.isArray(jobData.misc_attachments)) {
+      const affidavitAttachments = jobData.misc_attachments.filter((attachment: any) =>
+        (attachment.upload_type === 'affidavit' || attachment.type === 'affidavit') &&
+        attachment.signed === true
+      );
+
+      affidavitAttachments.forEach((attachment: any) => {
+        // Avoid duplicates
+        if (!jobAffidavits.find(a => a.id === attachment.id)) {
+          const affidavit = {
+            id: attachment.id,
+            job_id: jobId,
+            signed_at: attachment.updated_at,
+            created_at: attachment.created_at,
+            status: 'signed',
+            signer: jobData.employee_process_server?.first_name + ' ' + jobData.employee_process_server?.last_name || 'Process Server',
+            pdf_url: attachment.upload?.links?.download_url || attachment.download_url,
+            title: attachment.title || 'Affidavit of Service'
+          };
+
+          jobAffidavits.push(affidavit);
+        }
+      });
+    }
+
     console.log(`📜 Found ${jobAffidavits.length} signed affidavits for job ${jobId}`);
+    console.log(`📜 Affidavits summary:`, jobAffidavits.map(a => ({ id: a.id, title: a.title, hasPdfUrl: !!a.pdf_url })));
 
     res.json({
       affidavits: jobAffidavits,
@@ -235,28 +246,50 @@ export const downloadJobInvoice: RequestHandler = async (req, res) => {
     const { jobId, invoiceId } = req.params;
     console.log(`📥 Downloading invoice ${invoiceId} for job ${jobId}...`);
 
-    // Use the ServeManager download URL directly
-    const pdfUrl = `https://www.servemanager.com/api/v2/invoices/${invoiceId}/download`;
+    // Get fresh job data from ServeManager to find the invoice PDF URL
+    const jobResponse = await makeServeManagerRequest(`/jobs/${jobId}`);
+    const jobData = jobResponse.data || jobResponse;
 
-    console.log(`📥 Attempting to download invoice PDF from: ${pdfUrl}`);
+    if (!jobData) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
 
-    // Try to fetch the PDF directly
-    const response = await fetch(pdfUrl);
+    // Check if this job has the requested invoice
+    if (!jobData.invoice || jobData.invoice.id.toString() !== invoiceId.toString()) {
+      return res.status(404).json({ error: 'Invoice not associated with this job' });
+    }
 
-    if (!response.ok) {
-      console.error(`❌ Failed to download invoice PDF: ${response.status} ${response.statusText}`);
+    const pdfUrl = jobData.invoice.pdf_download_url;
+    if (!pdfUrl) {
+      return res.status(404).json({ error: 'Invoice PDF not available' });
+    }
+
+    console.log(`📥 Downloading invoice PDF from: ${pdfUrl}`);
+
+    // Fetch the PDF using the invoice's download URL
+    const pdfResponse = await fetch(pdfUrl);
+
+    if (!pdfResponse.ok) {
+      console.error(`❌ Failed to download invoice PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
       return res.status(404).json({
-        error: `Invoice PDF not available (${response.status} ${response.statusText})`
+        error: `Invoice PDF not available (${pdfResponse.status} ${pdfResponse.statusText})`
       });
     }
 
     // Set appropriate headers for download
-    res.setHeader('Content-Type', 'application/pdf');
+    const contentType = pdfResponse.headers.get('content-type') || 'application/pdf';
+    const contentLength = pdfResponse.headers.get('content-length');
+
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoiceId}.pdf"`);
-    res.setHeader('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+    res.setHeader('Cache-Control', 'public, max-age=300');
+
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
 
     // Stream the PDF
-    response.body?.pipe(res);
+    pdfResponse.body?.pipe(res);
 
   } catch (error) {
     console.error(`Error downloading invoice ${req.params.invoiceId}:`, error);
@@ -270,27 +303,81 @@ export const previewJobInvoice: RequestHandler = async (req, res) => {
     const { jobId, invoiceId } = req.params;
     console.log(`👁️ Previewing invoice ${invoiceId} for job ${jobId}...`);
 
-    // Use the ServeManager download URL directly
-    const pdfUrl = `https://www.servemanager.com/api/v2/invoices/${invoiceId}/download`;
+    // Get fresh job data from ServeManager to find the invoice PDF URL
+    const jobResponse = await makeServeManagerRequest(`/jobs/${jobId}`);
+    const jobData = jobResponse.data || jobResponse;
 
-    console.log(`📄 Attempting to fetch invoice PDF from: ${pdfUrl}`);
-
-    // Try to fetch the PDF directly
-    const response = await fetch(pdfUrl);
-
-    if (!response.ok) {
-      console.error(`❌ Failed to fetch invoice PDF: ${response.status} ${response.statusText}`);
-
-      // Return a simple HTML error page instead of JSON for iframe display
+    if (!jobData) {
       const errorHtml = `
         <!DOCTYPE html>
         <html>
         <head><title>Invoice Preview Error</title></head>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-          <h2>Invoice Preview Not Available</h2>
-          <p>Invoice #${invoiceId} preview could not be loaded.</p>
-          <p>Status: ${response.status} ${response.statusText}</p>
-          <p>This may be because the invoice PDF is not yet generated or access is restricted.</p>
+          <h2>Job Not Found</h2>
+          <p>Job #${jobId} could not be found.</p>
+        </body>
+        </html>
+      `;
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(404).send(errorHtml);
+    }
+
+    console.log(`📄 Job invoice data:`, {
+      hasInvoice: !!jobData.invoice,
+      invoiceId: jobData.invoice?.id,
+      invoiceStatus: jobData.invoice?.status,
+      hasPdfUrl: !!jobData.invoice?.pdf_download_url
+    });
+
+    // Check if this job has the requested invoice
+    if (!jobData.invoice || jobData.invoice.id.toString() !== invoiceId.toString()) {
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Invoice Preview Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h2>Invoice Not Found</h2>
+          <p>Invoice #${invoiceId} is not associated with this job.</p>
+        </body>
+        </html>
+      `;
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(404).send(errorHtml);
+    }
+
+    const pdfUrl = jobData.invoice.pdf_download_url;
+    if (!pdfUrl) {
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Invoice Preview Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h2>Invoice PDF Not Available</h2>
+          <p>Invoice #${invoiceId} PDF is not yet generated.</p>
+          <p>Status: ${jobData.invoice.status}</p>
+        </body>
+        </html>
+      `;
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(404).send(errorHtml);
+    }
+
+    console.log(`📄 Fetching invoice PDF from: ${pdfUrl}`);
+
+    // Fetch the PDF using the invoice's download URL
+    const pdfResponse = await fetch(pdfUrl);
+
+    if (!pdfResponse.ok) {
+      console.error(`❌ Failed to fetch invoice PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
+
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Invoice Preview Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h2>Invoice Preview Error</h2>
+          <p>Invoice #${invoiceId} could not be loaded.</p>
+          <p>Status: ${pdfResponse.status} ${pdfResponse.statusText}</p>
         </body>
         </html>
       `;
@@ -300,17 +387,23 @@ export const previewJobInvoice: RequestHandler = async (req, res) => {
     }
 
     // Set appropriate headers for inline viewing
-    res.setHeader('Content-Type', 'application/pdf');
+    const contentType = pdfResponse.headers.get('content-type') || 'application/pdf';
+    const contentLength = pdfResponse.headers.get('content-length');
+
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', 'inline');
-    res.setHeader('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+    res.setHeader('Cache-Control', 'public, max-age=300');
+
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
 
     // Stream the PDF
-    response.body?.pipe(res);
+    pdfResponse.body?.pipe(res);
 
   } catch (error) {
     console.error(`Error previewing invoice ${req.params.invoiceId}:`, error);
 
-    // Return HTML error for iframe display
     const errorHtml = `
       <!DOCTYPE html>
       <html>
@@ -388,25 +481,62 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
     const { jobId, affidavitId } = req.params;
     console.log(`👁️ Previewing affidavit ${affidavitId} for job ${jobId}...`);
 
-    // Get the job to find affidavit details
+    // Get fresh job data from ServeManager to find affidavit details
     const jobResponse = await makeServeManagerRequest(`/jobs/${jobId}`);
     const jobData = jobResponse.data || jobResponse;
 
-    let affidavitUrl = null;
+    if (!jobData) {
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Affidavit Preview Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h2>Job Not Found</h2>
+          <p>Job #${jobId} could not be found.</p>
+        </body>
+        </html>
+      `;
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(404).send(errorHtml);
+    }
 
-    // Check if it's the main job affidavit
-    if (jobData.affidavit && (jobData.affidavit.id === affidavitId || `aff_${jobId}` === affidavitId)) {
-      affidavitUrl = jobData.affidavit.pdf_url || jobData.affidavit.download_url;
+    console.log(`📜 Job affidavit data:`, {
+      affidavitCount: jobData.affidavit_count,
+      hasDocuments: !!jobData.documents,
+      documentsCount: jobData.documents?.length || 0,
+      hasMiscAttachments: !!jobData.misc_attachments,
+      miscAttachmentsCount: jobData.misc_attachments?.length || 0
+    });
+
+    let affidavitUrl = null;
+    let affidavitTitle = 'Affidavit of Service';
+
+    // Check documents array for affidavit (ServeManager stores affidavits as documents)
+    if (jobData.documents && Array.isArray(jobData.documents)) {
+      const affidavitDoc = jobData.documents.find((doc: any) =>
+        doc.id === parseInt(affidavitId) &&
+        (doc.upload_type === 'affidavit' || doc.type === 'affidavit' || doc.title?.toLowerCase().includes('affidavit'))
+      );
+
+      if (affidavitDoc) {
+        affidavitUrl = affidavitDoc.upload?.links?.download_url || affidavitDoc.download_url;
+        affidavitTitle = affidavitDoc.title || 'Affidavit of Service';
+        console.log(`📜 Found affidavit in documents:`, { id: affidavitDoc.id, title: affidavitDoc.title, hasUrl: !!affidavitUrl });
+      }
     }
 
     // Check misc_attachments for affidavit documents
-    if (!affidavitUrl && jobData.misc_attachments) {
+    if (!affidavitUrl && jobData.misc_attachments && Array.isArray(jobData.misc_attachments)) {
       const affidavitAttachment = jobData.misc_attachments.find((att: any) =>
-        att.id === parseInt(affidavitId) && att.upload_type === 'affidavit' && att.signed
+        att.id === parseInt(affidavitId) &&
+        (att.upload_type === 'affidavit' || att.type === 'affidavit') &&
+        att.signed === true
       );
 
       if (affidavitAttachment) {
         affidavitUrl = affidavitAttachment.upload?.links?.download_url || affidavitAttachment.download_url;
+        affidavitTitle = affidavitAttachment.title || 'Affidavit of Service';
+        console.log(`📜 Found affidavit in misc_attachments:`, { id: affidavitAttachment.id, title: affidavitAttachment.title, hasUrl: !!affidavitUrl });
       }
     }
 
@@ -419,6 +549,7 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
           <h2>Affidavit Preview Not Available</h2>
           <p>Affidavit #${affidavitId} preview could not be loaded.</p>
           <p>This may be because the affidavit is not yet signed or PDF is not available.</p>
+          <p>Affidavit count: ${jobData.affidavit_count || 0}</p>
         </body>
         </html>
       `;
@@ -427,11 +558,11 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
       return res.status(404).send(errorHtml);
     }
 
-    console.log(`👁️ Previewing affidavit from: ${affidavitUrl}`);
+    console.log(`👁️ Fetching affidavit PDF from: ${affidavitUrl}`);
 
-    // Proxy the PDF for preview
-    const response = await fetch(affidavitUrl);
-    if (!response.ok) {
+    // Fetch the PDF using the affidavit's download URL
+    const pdfResponse = await fetch(affidavitUrl);
+    if (!pdfResponse.ok) {
       const errorHtml = `
         <!DOCTYPE html>
         <html>
@@ -439,7 +570,7 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
           <h2>Affidavit Preview Error</h2>
           <p>Unable to load affidavit #${affidavitId}.</p>
-          <p>Status: ${response.status} ${response.statusText}</p>
+          <p>Status: ${pdfResponse.status} ${pdfResponse.statusText}</p>
         </body>
         </html>
       `;
@@ -449,12 +580,19 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
     }
 
     // Set appropriate headers for inline viewing
-    res.setHeader('Content-Type', 'application/pdf');
+    const contentType = pdfResponse.headers.get('content-type') || 'application/pdf';
+    const contentLength = pdfResponse.headers.get('content-length');
+
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', 'inline');
     res.setHeader('Cache-Control', 'public, max-age=300');
 
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
+
     // Stream the PDF
-    response.body?.pipe(res);
+    pdfResponse.body?.pipe(res);
 
   } catch (error) {
     console.error(`Error previewing affidavit ${req.params.affidavitId}:`, error);
