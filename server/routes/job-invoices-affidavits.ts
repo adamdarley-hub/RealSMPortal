@@ -135,7 +135,7 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
 export const getJobAffidavits: RequestHandler = async (req, res) => {
   try {
     const { jobId } = req.params;
-    console.log(`📜 Fetching affidavits for job ${jobId}...`);
+    console.log(`🚨 DEBUG: getJobAffidavits called for job ${jobId}`);
 
     // Get the specific job to check for affidavits
     const jobResponse = await makeServeManagerRequest(`/jobs/${jobId}`);
