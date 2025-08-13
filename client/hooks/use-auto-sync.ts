@@ -91,14 +91,32 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       try {
         const healthCheck = await fetch('/api/jobs?limit=1', {
           method: 'GET',
-          signal: controller.signal
+          signal: controller.signal,
+          // Add cache-busting to prevent cached responses from hiding real issues
+          cache: 'no-cache'
         });
         if (!healthCheck.ok && healthCheck.status >= 500) {
+          console.warn('⚠️ Server returned error status:', healthCheck.status);
           throw new Error('Server unavailable');
         }
       } catch (healthError) {
-        console.warn('⚠️ Server health check failed, skipping sync:', healthError);
-        throw new Error('Server unavailable - using cached data');
+        console.warn('⚠️ Server health check failed, skipping sync:', {
+          error: healthError.message,
+          name: healthError.name,
+          cause: healthError.cause
+        });
+
+        // Don't throw, just skip sync and continue with cached data
+        if (mountedRef.current) {
+          setStatus(prev => ({
+            ...prev,
+            isSyncing: false,
+            error: 'Server unavailable - using cached data',
+            lastSync: prev.lastSync || new Date().toISOString()
+          }));
+        }
+        clearTimeout(timeoutId);
+        return { success: false, error: 'Health check failed' };
       }
 
       const response = await fetch('/api/sync', {
