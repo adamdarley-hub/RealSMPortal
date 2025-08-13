@@ -14,9 +14,40 @@ export const genericProxy: RequestHandler = async (req, res) => {
 
     // Decode the URL
     const decodedUrl = decodeURIComponent(url);
-    
-    // Fetch the content
-    const response = await fetch(decodedUrl);
+
+    // Check if this is a ServeManager API URL that needs authentication
+    const isServeManagerUrl = decodedUrl.includes('servemanager.com/api');
+    let headers: Record<string, string> = {};
+
+    if (isServeManagerUrl) {
+      console.log('🔐 ServeManager URL detected, adding authentication...');
+
+      try {
+        // Get ServeManager configuration
+        const { getServeManagerConfig } = await import('./servemanager');
+        const config = await getServeManagerConfig();
+
+        // Use Basic Auth with API key as username, empty password (same pattern as other endpoints)
+        const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+        headers = {
+          'Authorization': `Basic ${credentials}`,
+          'Content-Type': 'application/json',
+        };
+
+        console.log('🔐 Added authentication headers for ServeManager URL');
+      } catch (authError) {
+        console.error('❌ Failed to get ServeManager authentication config:', authError);
+        return res.status(400).json({
+          error: 'ServeManager API key not configured or accessible'
+        });
+      }
+    }
+
+    // Fetch the content with appropriate headers
+    const response = await fetch(decodedUrl, {
+      method: 'GET',
+      headers: headers,
+    });
 
     if (!response.ok) {
       console.log(`❌ Proxy fetch failed: ${response.status} ${response.statusText}`);
