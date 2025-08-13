@@ -717,9 +717,9 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
     const { jobId, affidavitId } = req.params;
     console.log(`👁️ Previewing affidavit ${affidavitId} for job ${jobId}...`);
 
-    // Get fresh job data from ServeManager to find affidavit details
-    const jobResponse = await makeServeManagerRequest(`/jobs/${jobId}`);
-    const jobData = jobResponse.data || jobResponse;
+    // Redirect to generic proxy for simpler handling
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(`https://www.servemanager.com/api/documents/${affidavitId}/download`)}&preview=true`;
+    return res.redirect(proxyUrl);
 
     if (!jobData) {
       const errorHtml = `
