@@ -197,7 +197,7 @@ export const getJobAffidavits: RequestHandler = async (req, res) => {
     }
 
     // FALLBACK: Check documents array for affidavits (if signedAffidavits is empty)
-    if (jobData.documents && Array.isArray(jobData.documents)) {
+    if (jobAffidavits.length === 0 && jobData.documents && Array.isArray(jobData.documents)) {
       console.log(`📜 Checking ${jobData.documents.length} documents for affidavits:`);
       jobData.documents.forEach((doc: any, index: number) => {
         console.log(`📜 Document ${index + 1}:`, {
