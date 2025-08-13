@@ -117,11 +117,13 @@ export default function Jobs() {
     const cache = cacheRef.current;
 
     if (!forceRefresh && cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.jobs.length > 0) {
-      console.log(`⚡ Using cached jobs data (${Math.round((now - cache.timestamp) / 1000)}s old)`);
+      const ageSeconds = Math.round((now - cache.timestamp) / 1000);
+      console.log(`⚡ Using cached jobs data (${ageSeconds}s old) - INSTANT LOAD`);
       setJobs(cache.jobs);
       setTotalJobs(cache.totalJobs);
       setLoading(false);
       setError(null);
+      setUsingMockData(false); // Reset mock state when using cache
       return;
     }
 
