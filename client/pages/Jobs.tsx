@@ -28,16 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAutoSync } from "@/hooks/use-auto-sync";
 import { Job, JobsResponse, Client, Server, JobFilters } from "@shared/servemanager";
 
-// Helper function to safely extract string values from potentially nested objects
-const safeString = (value: any, fallback: string = ''): string => {
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number') return value.toString();
-  if (typeof value === 'object' && value) {
-    // Try common string properties
-    return value.name || value.title || value.value || value.text || String(value);
-  }
-  return fallback;
-};
+// Performance optimization: Move complex functions to dedicated components
 
 // Helper function to format time ago
 const formatTimeAgo = (date: Date): string => {
