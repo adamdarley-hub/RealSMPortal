@@ -216,7 +216,7 @@ export default function Jobs() {
 
       // Handle AbortError gracefully without retrying
       if (error.name === 'AbortError') {
-        console.log('⚠️ Jobs request was aborted (likely due to timeout or navigation)');
+        console.log('���️ Jobs request was aborted (likely due to timeout or navigation)');
         setLoading(false);
         return;
       }
@@ -1330,10 +1330,17 @@ export default function Jobs() {
                 <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Jobs Found</h3>
                 <p className="text-muted-foreground">
-                  {searchTerm || Object.values(filters).some(v => v) 
-                    ? "No jobs match your current filters" 
+                  {searchTerm || Object.values(filters).some(v => v)
+                    ? "No jobs match your current filters"
                     : "No jobs available"}
                 </p>
+              </div>
+            )}
+
+            {/* Bottom Pagination Controls */}
+            {totalJobs > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <PaginationControls />
               </div>
             )}
           </CardContent>
