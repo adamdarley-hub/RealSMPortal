@@ -136,7 +136,7 @@ export default function Jobs() {
       cache.lastOffset === filters.offset &&
       cache.lastLimit === filters.limit;
 
-    console.log(`🔍 Cache check: forceRefresh=${forceRefresh}, hasTimestamp=${!!cache.timestamp}, age=${cache.timestamp ? now - cache.timestamp : 'N/A'}ms, lastOffset=${cache.lastOffset}, currentOffset=${filters.offset}, cacheValid=${cacheValid}`);
+    console.log(`🔍 Cache check: forceRefresh=${forceRefresh}, hasTimestamp=${!!cache.timestamp}, age=${cache.timestamp ? now - cache.timestamp : 'N/A'}ms, lastOffset=${cache.lastOffset}, currentOffset=${filters.offset}, lastLimit=${cache.lastLimit}, currentLimit=${filters.limit}, cacheValid=${cacheValid}`);
 
     if (cacheValid) {
       const ageSeconds = Math.round((now - cache.timestamp) / 1000);
@@ -147,6 +147,8 @@ export default function Jobs() {
       setError(null);
       setUsingMockData(false); // Reset mock state when using cache
       return;
+    } else {
+      console.log(`🌐 Cache miss - will make API call`);
     }
 
     setLoading(true);
