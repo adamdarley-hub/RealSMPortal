@@ -59,35 +59,44 @@ const safeString = (value: any, fallback: string = ''): string => {
 
 // Helper function to safely extract recipient name from ServeManager recipient object
 const getRecipientName = (job: Job): string => {
-  // ServeManager API uses nested recipient.name structure as primary field
-  if (job.raw_data?.recipient?.name && typeof job.raw_data.recipient.name === 'string') {
-    return job.raw_data.recipient.name;
+  // First priority: direct recipient_name field
+  if (job.recipient_name && typeof job.recipient_name === 'string' && job.recipient_name.trim()) {
+    return job.recipient_name.trim();
   }
 
-  // Try direct recipient_name field
-  if (job.recipient_name && typeof job.recipient_name === 'string') {
-    return job.recipient_name;
+  // Second priority: ServeManager API nested recipient.name structure
+  if (job.raw_data?.recipient?.name && typeof job.raw_data.recipient.name === 'string' && job.raw_data.recipient.name.trim()) {
+    return job.raw_data.recipient.name.trim();
   }
 
-  // Try defendant name fields
-  if (job.defendant_name && typeof job.defendant_name === 'string') {
-    return job.defendant_name;
+  // Third priority: defendant name fields
+  if (job.defendant_name && typeof job.defendant_name === 'string' && job.defendant_name.trim()) {
+    return job.defendant_name.trim();
   }
 
-  // Try service_to field (ServeManager alternative)
-  if ((job as any).service_to && typeof (job as any).service_to === 'string') {
-    return (job as any).service_to;
+  // Fourth priority: service_to field (ServeManager alternative)
+  if ((job as any).service_to && typeof (job as any).service_to === 'string' && (job as any).service_to.trim()) {
+    return (job as any).service_to.trim();
   }
 
-  // Try combining first and last names
+  // Fifth priority: combining first and last names
   const firstName = (job as any).defendant_first_name || '';
   const lastName = (job as any).defendant_last_name || '';
-  if (firstName && lastName) {
-    return `${firstName} ${lastName}`.trim();
+  const fullName = `${firstName} ${lastName}`.trim();
+  if (fullName) {
+    return fullName;
   }
 
-  // Fallback to try getting from job list data if available
-  return job.recipient_name || 'Unknown Recipient';
+  // Debug log when no recipient name found
+  console.log('⚠️ No recipient name found for job:', {
+    jobId: job.id,
+    recipient_name: job.recipient_name,
+    raw_data_recipient: job.raw_data?.recipient,
+    defendant_name: job.defendant_name,
+    availableFields: Object.keys(job)
+  });
+
+  return 'Unknown Recipient';
 };
 
 // Helper function to get recipient info only showing fields with values
