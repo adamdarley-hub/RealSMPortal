@@ -168,6 +168,35 @@ const getRecipientInfo = (job: Job) => {
   return info;
 };
 
+// Helper function to format court case as "Plaintiff vs. Defendant"
+const getCourtCaseString = (job: Job): string => {
+  const plaintiff = safeString(job.plaintiff || (job as any).plaintiff_name || '').trim();
+  const defendant = getRecipientName(job);
+
+  // If we have both plaintiff and defendant, show "Plaintiff vs. Defendant"
+  if (plaintiff && defendant && defendant !== 'Unknown Recipient') {
+    return `${plaintiff} vs. ${defendant}`;
+  }
+
+  // If we only have plaintiff, show just plaintiff
+  if (plaintiff) {
+    return plaintiff;
+  }
+
+  // If we only have defendant, show just defendant
+  if (defendant && defendant !== 'Unknown Recipient') {
+    return defendant;
+  }
+
+  // Fallback to case number or docket number
+  const caseNumber = safeString(job.case_number || job.docket_number, '').trim();
+  if (caseNumber) {
+    return caseNumber;
+  }
+
+  return 'N/A';
+};
+
 // Helper function to format currency
 const formatCurrency = (amount: number | null | undefined) => {
   if (!amount) return "$0.00";
