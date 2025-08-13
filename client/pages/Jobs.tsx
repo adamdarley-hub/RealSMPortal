@@ -136,6 +136,8 @@ export default function Jobs() {
       cache.lastOffset === filters.offset &&
       cache.lastLimit === filters.limit;
 
+    console.log(`🔍 Cache check: forceRefresh=${forceRefresh}, hasTimestamp=${!!cache.timestamp}, age=${cache.timestamp ? now - cache.timestamp : 'N/A'}ms, lastOffset=${cache.lastOffset}, currentOffset=${filters.offset}, cacheValid=${cacheValid}`);
+
     if (cacheValid) {
       const ageSeconds = Math.round((now - cache.timestamp) / 1000);
       console.log(`⚡ Using cached jobs data (${ageSeconds}s old) - Page ${currentPage} - INSTANT LOAD`);
