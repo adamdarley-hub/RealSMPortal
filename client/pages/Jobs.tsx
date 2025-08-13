@@ -483,13 +483,13 @@ export default function Jobs() {
     setSearchTerm("");
   };
 
-  const refreshJobs = async () => {
+  // Optimized refresh function
+  const refreshJobs = useCallback(async () => {
     console.log('🔄 Refreshing jobs...');
     setLoading(true);
     try {
-      // Trigger manual sync and reload with force refresh
       manualSync();
-      await loadJobs(0, true); // Force refresh jobs
+      await loadJobs(0, true);
       toast({
         title: "Refreshed",
         description: "Job data has been refreshed successfully",
@@ -503,56 +503,7 @@ export default function Jobs() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "served": return "bg-success text-success-foreground";
-      case "in_progress": return "bg-info text-info-foreground";
-      case "assigned": return "bg-warning text-warning-foreground";
-      case "pending": return "bg-muted text-muted-foreground";
-      case "not_served": return "bg-destructive text-destructive-foreground";
-      case "cancelled": return "bg-secondary text-secondary-foreground";
-      case "completed": return "bg-success text-success-foreground";
-      case "Client Hold": return "bg-orange-500 text-white";
-      case "unassigned": return "bg-blue-500 text-white"; // New/Unassigned jobs
-      case "": return "bg-blue-500 text-white"; // Handle actual empty status from API
-      default: return "bg-muted text-muted-foreground";
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "rush": return "bg-destructive text-destructive-foreground border-destructive";
-      case "routine": return "bg-muted text-muted-foreground border-muted";
-      case "high": return "bg-warning text-warning-foreground border-warning";
-      case "medium": return "bg-info text-info-foreground border-info";
-      case "low": return "bg-success text-success-foreground border-success";
-      default: return "bg-muted text-muted-foreground";
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "No due date";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatReceivedDate = (dateString: string | null) => {
-    if (!dateString) return "Unknown";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+  }, [manualSync, loadJobs, toast]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
