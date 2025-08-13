@@ -571,7 +571,7 @@ export default function JobDetail() {
         // Real-time updates are now handled by the useRealTimeJob hook
         console.log('🔌 Real-time monitoring enabled for instant updates');
 
-        console.log('����� Job data loaded:', {
+        console.log('������� Job data loaded:', {
           jobId: jobData.id,
           attemptsFound: realAttempts.length,
           jobServiceStatus: jobData.service_status,
@@ -808,7 +808,7 @@ export default function JobDetail() {
                 {(job.status || 'pending').replace('_', ' ')}
               </Badge>
               <Badge variant="outline" className={dataSource === 'servemanager-fresh' ? "bg-green-50 text-green-700 border-green-200" : "bg-yellow-50 text-yellow-700 border-yellow-200"}>
-                {dataSource === 'servemanager-fresh' ? '🔄 Always Fresh' : '📊 Cache Fallback'}
+                {dataSource === 'servemanager-fresh' ? '🔄 Always Fresh' : '�� Cache Fallback'}
               </Badge>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" className="gap-2">
@@ -1348,7 +1348,7 @@ export default function JobDetail() {
                                   currentDocument?.links?.preview ||
                                   currentDocument?.preview_url;
 
-                                console.log('📄 COMPREHENSIVE Document URL debug:', {
+                                console.log('��� COMPREHENSIVE Document URL debug:', {
                                   documentTitle: currentDocument?.title,
                                   documentId: currentDocument?.id,
                                   documentUrl: documentUrl,
@@ -1655,20 +1655,6 @@ export default function JobDetail() {
                       <CardTitle>Affidavits</CardTitle>
                       <CardDescription>Signed affidavits of service for this job</CardDescription>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => id && loadJobAffidavits(id)}
-                      disabled={affidavitsLoading}
-                      className="gap-2"
-                    >
-                      {affidavitsLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4" />
-                      )}
-                      Refresh
-                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
