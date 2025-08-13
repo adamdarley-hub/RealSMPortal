@@ -1686,14 +1686,7 @@ export default function JobDetail() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {affidavitsLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Loading affidavits...</span>
-                      </div>
-                    </div>
-                  ) : jobAffidavits.length === 0 ? (
+                  {jobAffidavits.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <FileText className="w-12 h-12 mx-auto mb-4" />
                       <p>No signed affidavits for this job</p>
