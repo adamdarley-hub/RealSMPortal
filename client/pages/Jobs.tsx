@@ -109,12 +109,16 @@ export default function Jobs() {
     servers: Server[];
     timestamp: number;
     totalJobs: number;
+    lastOffset: number;
+    lastLimit: number;
   }>({
     jobs: [],
     clients: [],
     servers: [],
     timestamp: 0,
-    totalJobs: 0
+    totalJobs: 0,
+    lastOffset: 0,
+    lastLimit: 50
   });
   const CACHE_DURATION = 30000; // 30 seconds
 
