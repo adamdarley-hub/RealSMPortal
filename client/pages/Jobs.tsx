@@ -467,48 +467,33 @@ export default function Jobs() {
     onDataUpdate
   });
 
-  // Load data on component mount with cleanup
+  // Load initial data (clients and servers only once)
   useEffect(() => {
     let isMounted = true;
 
-    const loadData = async () => {
+    const loadInitialData = async () => {
       if (!isMounted) return;
 
-      // Only use cache for the very first load (offset 0)
-      if (filters.offset === 0) {
-        const now = Date.now();
-        const cache = cacheRef.current;
-        const hasValidCache = cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.jobs.length > 0 && cache.lastOffset === 0;
-
-        if (hasValidCache) {
-          console.log('⚡ Initial load from cache - no network requests needed');
-          setJobs(cache.jobs);
-          setClients(cache.clients);
-          setServers(cache.servers);
-          setTotalJobs(cache.totalJobs);
-          setLoading(false);
-          setError(null);
-          return; // Skip all network requests
-        }
-      }
-
-      // Load from network
-      await loadJobs(0, true); // Always force refresh for pagination
-      if (!isMounted) return;
-
+      console.log('🚀 Loading initial clients and servers...');
       await loadClients();
       if (!isMounted) return;
 
       await loadServers();
     };
 
-    loadData();
+    loadInitialData();
 
     // Cleanup function
     return () => {
       isMounted = false;
     };
-  }, [filters.offset, filters.limit, loadJobs, loadClients]);
+  }, [loadClients]);
+
+  // Load jobs whenever pagination changes
+  useEffect(() => {
+    console.log(`📄 Pagination/filter changed - offset: ${filters.offset}, limit: ${filters.limit}, forcing job reload...`);
+    loadJobs(0, true); // Always force refresh for any pagination change
+  }, [filters.offset, filters.limit, loadJobs]);
 
   const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
     const newValue = value === 'all' ? undefined : value;
