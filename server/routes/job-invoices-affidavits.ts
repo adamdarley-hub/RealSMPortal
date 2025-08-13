@@ -399,8 +399,9 @@ export const downloadJobInvoice: RequestHandler = async (req, res) => {
       res.setHeader('Content-Length', contentLength);
     }
 
-    // Stream the PDF
-    pdfResponse.body?.pipe(res);
+    // Stream the PDF - convert to buffer first
+    const pdfBuffer = await pdfResponse.arrayBuffer();
+    res.send(Buffer.from(pdfBuffer));
 
   } catch (error) {
     console.error(`Error downloading invoice ${req.params.invoiceId}:`, error);
@@ -700,8 +701,9 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
       res.setHeader('Content-Length', contentLength);
     }
 
-    // Stream the PDF
-    pdfResponse.body?.pipe(res);
+    // Stream the PDF - convert to buffer first
+    const pdfBuffer = await pdfResponse.arrayBuffer();
+    res.send(Buffer.from(pdfBuffer));
 
   } catch (error) {
     console.error(`Error downloading affidavit ${req.params.affidavitId}:`, error);
@@ -861,8 +863,9 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
       res.setHeader('Content-Length', contentLength);
     }
 
-    // Stream the PDF
-    pdfResponse.body?.pipe(res);
+    // Stream the PDF - convert to buffer first
+    const pdfBuffer = await pdfResponse.arrayBuffer();
+    res.send(Buffer.from(pdfBuffer));
 
   } catch (error) {
     console.error(`Error previewing affidavit ${req.params.affidavitId}:`, error);
