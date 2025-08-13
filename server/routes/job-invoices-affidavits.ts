@@ -7,16 +7,8 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
     const { jobId } = req.params;
     console.log(`🧾 Fetching invoices for job ${jobId}...`);
 
-    // Filter for issued, paid, or draft invoices (temporarily include draft for testing)
+    // Get all invoices first (no status filtering for testing)
     const filterParams = new URLSearchParams();
-    filterParams.append('filter[invoice_status][]', 'issued');
-    filterParams.append('filter[invoice_status][]', 'paid');
-    filterParams.append('filter[invoice_status][]', 'Issued');
-    filterParams.append('filter[invoice_status][]', 'Paid');
-    filterParams.append('filter[invoice_status][]', 'sent');
-    filterParams.append('filter[invoice_status][]', 'Sent');
-    filterParams.append('filter[invoice_status][]', 'draft');
-    filterParams.append('filter[invoice_status][]', 'Draft');
     filterParams.append('per_page', '100');
 
     // Fetch all invoices with pagination
