@@ -492,8 +492,38 @@ export default function Jobs() {
   // Load jobs whenever pagination changes
   useEffect(() => {
     console.log(`📄 Pagination/filter changed - offset: ${filters.offset}, limit: ${filters.limit}, forcing job reload...`);
-    loadJobs(0, true); // Always force refresh for any pagination change
-  }, [filters.offset, filters.limit, loadJobs]);
+
+    const loadJobsForPagination = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const currentPageNum = Math.floor(filters.offset / filters.limit) + 1;
+        console.log(`🌐 Direct API call to /api/jobs?limit=${filters.limit}&page=${currentPageNum}`);
+        const response = await fetch(`/api/jobs?limit=${filters.limit}&page=${currentPageNum}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log(`📥 Received ${data.jobs.length} jobs from API. First job ID: ${data.jobs[0]?.id}, Total: ${data.total}`);
+
+        setJobs(data.jobs);
+        setTotalJobs(data.total || data.jobs.length);
+        setUsingMockData(!!data.mock);
+
+        console.log(`✅ Updated state with ${data.jobs.length} jobs for page ${currentPageNum}`);
+      } catch (error) {
+        console.error('❌ Pagination API call failed:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load jobs');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadJobsForPagination();
+  }, [filters.offset, filters.limit]);
 
   const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
     const newValue = value === 'all' ? undefined : value;
