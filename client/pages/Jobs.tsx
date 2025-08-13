@@ -805,9 +805,20 @@ export default function Jobs() {
                 Debug API
               </Button>
             )}
-            <Button onClick={refreshJobs} variant="outline" className="gap-2" disabled={syncStatus.isSyncing}>
+            <Button
+              onClick={refreshJobs}
+              variant={(() => {
+                const ageSeconds = Math.round((Date.now() - cacheRef.current.timestamp) / 1000);
+                return ageSeconds > 60 ? "default" : "outline"; // Prominent when stale
+              })()}
+              className="gap-2"
+              disabled={syncStatus.isSyncing}
+            >
               <RefreshCw className={`w-4 h-4 ${syncStatus.isSyncing ? 'animate-spin' : ''}`} />
-              Refresh
+              Refresh{(() => {
+                const ageSeconds = Math.round((Date.now() - cacheRef.current.timestamp) / 1000);
+                return ageSeconds > 60 ? ' (Recommended)' : '';
+              })()}
             </Button>
             <Button
               onClick={async () => {
