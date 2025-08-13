@@ -738,33 +738,39 @@ export default function Jobs() {
             </Button>
             <Button
               onClick={async () => {
-                console.log('🔄 Force refreshing all data...');
+                console.log('🔄 Force refreshing data...');
+                setLoading(true);
                 try {
-                  // Clear client-side cache
-                  cacheRef.current = {
-                    jobs: [],
-                    clients: [],
-                    servers: [],
-                    timestamp: 0,
-                    totalJobs: 0
-                  };
+                  // Only invalidate cache timestamp to force network request
+                  cacheRef.current.timestamp = 0;
 
                   const response = await fetch('/api/force-refresh', { method: 'POST' });
                   const result = await response.json();
                   console.log('✅ Force refresh result:', result);
-                  // Reload data after force refresh
-                  loadJobs(0, true);
-                  loadClients(true);
-                  loadServers(true);
+
+                  // Reload only jobs data (keep clients/servers cached)
+                  await loadJobs(0, true);
+
+                  toast({
+                    title: "Force Refresh Complete",
+                    description: "Data has been refreshed from ServeManager",
+                  });
                 } catch (error) {
                   console.error('❌ Force refresh failed:', error);
+                  toast({
+                    title: "Force Refresh Failed",
+                    description: "Could not refresh data from ServeManager",
+                    variant: "destructive"
+                  });
+                } finally {
+                  setLoading(false);
                 }
               }}
               variant="destructive"
               className="gap-2"
-              disabled={syncStatus.isSyncing}
+              disabled={syncStatus.isSyncing || loading}
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Force Refresh
             </Button>
             <Dialog>
