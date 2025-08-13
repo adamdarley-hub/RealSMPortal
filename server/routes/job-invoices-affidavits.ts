@@ -570,8 +570,9 @@ export const previewJobInvoice: RequestHandler = async (req, res) => {
       res.setHeader('Content-Length', contentLength);
     }
 
-    // Stream the PDF
-    pdfResponse.body?.pipe(res);
+    // Stream the PDF - convert to buffer first
+    const pdfBuffer = await pdfResponse.arrayBuffer();
+    res.send(Buffer.from(pdfBuffer));
 
   } catch (error) {
     console.error(`Error previewing invoice ${req.params.invoiceId}:`, error);
