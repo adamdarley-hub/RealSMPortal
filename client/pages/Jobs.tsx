@@ -1163,9 +1163,6 @@ export default function Jobs() {
                   Jobs List
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 </CardTitle>
-                <CardDescription>
-                  Showing {filteredAndSortedJobs.length} of {totalJobs} jobs
-                </CardDescription>
               </div>
             </div>
             {/* Top Pagination Controls */}
