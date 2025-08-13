@@ -66,12 +66,18 @@ export default function Invoices() {
       // No limit - fetch everything
 
       const response = await fetch(`/api/invoices?${params.toString()}`);
-      
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to load invoices');
+        let errorMessage = 'Failed to load invoices';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
-      
+
       const data: InvoicesResponse = await response.json();
       setInvoices(data.invoices);
       setTotalInvoices(data.total);
