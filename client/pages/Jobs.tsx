@@ -214,7 +214,7 @@ export default function Jobs() {
             variant: "default",
           });
         } else {
-          console.log(`Loaded ${data.total} total jobs in ${data.response_time_ms || 'unknown'}ms (cached for 30s)`);
+          console.log(`✅ Loaded page ${currentPage} (${data.jobs.length} jobs) of ${data.total} total jobs in ${data.response_time_ms || 'unknown'}ms (cached for 30s)`);
         }
 
         // Clear any previous errors on success
