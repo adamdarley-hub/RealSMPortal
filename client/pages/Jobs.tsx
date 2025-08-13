@@ -407,6 +407,23 @@ export default function Jobs() {
     const loadData = async () => {
       if (!isMounted) return;
 
+      // Check if we have valid cache - if so, load instantly
+      const now = Date.now();
+      const cache = cacheRef.current;
+      const hasValidCache = cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.jobs.length > 0;
+
+      if (hasValidCache) {
+        console.log('⚡ Instant load from cache - no network requests needed');
+        setJobs(cache.jobs);
+        setClients(cache.clients);
+        setServers(cache.servers);
+        setTotalJobs(cache.totalJobs);
+        setLoading(false);
+        setError(null);
+        return; // Skip all network requests
+      }
+
+      // Only load from network if cache is invalid
       await loadJobs();
       if (!isMounted) return;
 
