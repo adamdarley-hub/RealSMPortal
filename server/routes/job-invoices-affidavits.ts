@@ -159,16 +159,44 @@ export const getJobAffidavits: RequestHandler = async (req, res) => {
 
     console.log(`📜 Job ${jobId} affidavit data:`, {
       affidavitCount: jobData.affidavit_count,
+      hasSignedAffidavits: !!jobData.signedAffidavits,
+      signedAffidavitsLength: jobData.signedAffidavits?.length || 0,
       hasDocuments: !!jobData.documents,
       documentsCount: jobData.documents?.length || 0,
       hasMiscAttachments: !!jobData.misc_attachments,
       miscAttachmentsCount: jobData.misc_attachments?.length || 0,
-      documentTypes: jobData.documents?.map((d: any) => ({ id: d.id, type: d.upload_type, title: d.title })) || []
+      allJobKeys: Object.keys(jobData).filter(key => key.toLowerCase().includes('affidavit') || key.toLowerCase().includes('sign'))
     });
 
     const jobAffidavits: any[] = [];
 
-    // Check documents array for affidavits (ServeManager stores affidavits as documents)
+    // PRIMARY: Check signedAffidavits array (this is where ServeManager stores signed affidavits)
+    if (jobData.signedAffidavits && Array.isArray(jobData.signedAffidavits)) {
+      console.log(`📜 Found signedAffidavits array with ${jobData.signedAffidavits.length} items`);
+
+      jobData.signedAffidavits.forEach((affidavit: any, index: number) => {
+        const processedAffidavit = {
+          id: affidavit.id,
+          job_id: jobId,
+          signed_at: affidavit.signed_at || affidavit.updated_at || affidavit.created_at,
+          created_at: affidavit.created_at,
+          status: 'signed',
+          signer: jobData.employee_process_server?.first_name + ' ' + jobData.employee_process_server?.last_name || 'Process Server',
+          pdf_url: affidavit.download_url || affidavit.pdf_url,
+          title: affidavit.title || 'Affidavit of Service'
+        };
+
+        console.log(`📜 Adding signed affidavit ${index + 1}:`, {
+          id: processedAffidavit.id,
+          title: processedAffidavit.title,
+          hasPdfUrl: !!processedAffidavit.pdf_url
+        });
+
+        jobAffidavits.push(processedAffidavit);
+      });
+    }
+
+    // FALLBACK: Check documents array for affidavits (if signedAffidavits is empty)
     if (jobData.documents && Array.isArray(jobData.documents)) {
       console.log(`📜 Checking ${jobData.documents.length} documents for affidavits:`);
       jobData.documents.forEach((doc: any, index: number) => {
