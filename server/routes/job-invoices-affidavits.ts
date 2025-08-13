@@ -518,8 +518,30 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
     console.log(`📥 Downloading affidavit from: ${affidavitUrl}`);
     console.log(`📥 PDF URL structure: ${affidavitUrl.substring(0, 100)}...`);
 
-    // Try fetching the PDF URL directly first (might already include auth tokens)
-    const pdfResponse = await fetch(affidavitUrl);
+    // Check if this is a ServeManager API URL that needs authentication
+    const isServeManagerUrl = affidavitUrl.includes('servemanager.com/api');
+    let headers: Record<string, string> = {};
+
+    if (isServeManagerUrl) {
+      console.log('🔐 ServeManager URL detected, adding authentication...');
+
+      const { getServeManagerConfig } = await import('./servemanager');
+      const config = await getServeManagerConfig();
+
+      // Use Basic Auth with API key as username, empty password
+      const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+      headers = {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/json',
+      };
+
+      console.log('🔐 Added authentication headers for ServeManager URL');
+    }
+
+    const pdfResponse = await fetch(affidavitUrl, {
+      method: 'GET',
+      headers: headers,
+    });
     if (!pdfResponse.ok) {
       throw new Error(`Failed to fetch affidavit PDF: ${pdfResponse.status}`);
     }
@@ -632,8 +654,30 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
     console.log(`👁️ Fetching affidavit PDF from: ${affidavitUrl}`);
     console.log(`👁️ PDF URL structure: ${affidavitUrl.substring(0, 100)}...`);
 
-    // Try fetching the PDF URL directly first (might already include auth tokens)
-    const pdfResponse = await fetch(affidavitUrl);
+    // Check if this is a ServeManager API URL that needs authentication
+    const isServeManagerUrl = affidavitUrl.includes('servemanager.com/api');
+    let headers: Record<string, string> = {};
+
+    if (isServeManagerUrl) {
+      console.log('🔐 ServeManager URL detected, adding authentication...');
+
+      const { getServeManagerConfig } = await import('./servemanager');
+      const config = await getServeManagerConfig();
+
+      // Use Basic Auth with API key as username, empty password
+      const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+      headers = {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/json',
+      };
+
+      console.log('🔐 Added authentication headers for ServeManager URL');
+    }
+
+    const pdfResponse = await fetch(affidavitUrl, {
+      method: 'GET',
+      headers: headers,
+    });
     if (!pdfResponse.ok) {
       const errorHtml = `
         <!DOCTYPE html>
