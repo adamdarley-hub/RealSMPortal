@@ -1,25 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useRef, useMemo, Suspense } from "react";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -30,20 +12,18 @@ import {
 } from "@/components/ui/dialog";
 import {
   FileText,
-  Search,
   Filter,
   Plus,
-  Calendar,
-  MapPin,
-  User,
   Loader2,
   RefreshCw,
   AlertCircle,
   Wifi,
   WifiOff,
-  ChevronUp,
-  ChevronDown,
 } from "lucide-react";
+
+// Lazy load heavy components
+const JobsTable = React.lazy(() => import("./Jobs/JobsTable").then(m => ({ default: m.JobsTable })));
+const JobsFilters = React.lazy(() => import("./Jobs/JobsFilters").then(m => ({ default: m.JobsFilters })));
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSync } from "@/hooks/use-auto-sync";
 import { Job, JobsResponse, Client, Server, JobFilters } from "@shared/servemanager";
