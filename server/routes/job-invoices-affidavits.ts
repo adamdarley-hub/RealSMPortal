@@ -238,7 +238,7 @@ export const getJobAffidavits: RequestHandler = async (req, res) => {
           created_at: doc.created_at,
           status: 'signed', // If it's in documents with PDF, assume signed
           signer: jobData.employee_process_server?.first_name + ' ' + jobData.employee_process_server?.last_name || 'Process Server',
-          pdf_url: doc.upload?.links?.download_url || doc.download_url,
+          pdf_url: doc.upload?.links?.download_url || doc.download_url || `https://www.servemanager.com/api/documents/${doc.id}/download`,
           title: doc.title || 'Affidavit of Service'
         };
 
