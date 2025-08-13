@@ -599,55 +599,37 @@ export default function JobDetail() {
     loadJob();
   }, [id, toast]);
 
-  // Load job-specific invoices
-  const loadJobInvoices = async (jobId: string) => {
+  // Optimized: Load invoices and affidavits in parallel without blocking UI
+  const loadJobInvoicesAndAffidavits = async (jobId: string) => {
     try {
-      setInvoicesLoading(true);
-      console.log(`🧾 Loading invoices for job ${jobId}...`);
+      // Load both in parallel for instant tab switching
+      const [invoicesResponse, affidavitsResponse] = await Promise.allSettled([
+        fetch(`/api/jobs/${jobId}/invoices`),
+        fetch(`/api/jobs/${jobId}/affidavits`)
+      ]);
 
-      // Fetch invoices with job filter - only issued and paid
-      const response = await fetch(`/api/jobs/${jobId}/invoices`);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('📋 Received invoices:', data);
-        setJobInvoices(data.invoices || []);
+      // Process invoices
+      if (invoicesResponse.status === 'fulfilled' && invoicesResponse.value.ok) {
+        const invoicesData = await invoicesResponse.value.json();
+        setJobInvoices(invoicesData.invoices || []);
         setCurrentInvoiceIndex(0);
       } else {
-        console.error('Failed to load invoices:', response.status);
         setJobInvoices([]);
       }
-    } catch (error) {
-      console.error('Error loading job invoices:', error);
-      setJobInvoices([]);
-    } finally {
-      setInvoicesLoading(false);
-    }
-  };
 
-  // Load job-specific affidavits
-  const loadJobAffidavits = async (jobId: string) => {
-    try {
-      setAffidavitsLoading(true);
-      console.log(`📜 Loading affidavits for job ${jobId}...`);
-
-      // Fetch affidavits - only signed ones
-      const response = await fetch(`/api/jobs/${jobId}/affidavits`);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('📜 Received affidavits:', data);
-        setJobAffidavits(data.affidavits || []);
+      // Process affidavits
+      if (affidavitsResponse.status === 'fulfilled' && affidavitsResponse.value.ok) {
+        const affidavitsData = await affidavitsResponse.value.json();
+        setJobAffidavits(affidavitsData.affidavits || []);
         setCurrentAffidavitIndex(0);
       } else {
-        console.error('Failed to load affidavits:', response.status);
         setJobAffidavits([]);
       }
+
     } catch (error) {
-      console.error('Error loading job affidavits:', error);
+      console.error('Error loading job invoices/affidavits:', error);
+      setJobInvoices([]);
       setJobAffidavits([]);
-    } finally {
-      setAffidavitsLoading(false);
     }
   };
 
