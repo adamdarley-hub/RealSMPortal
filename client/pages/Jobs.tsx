@@ -201,7 +201,9 @@ export default function Jobs() {
           clients: cacheRef.current.clients,
           servers: cacheRef.current.servers,
           timestamp: now,
-          totalJobs: data.total || data.jobs.length
+          totalJobs: data.total || data.jobs.length,
+          lastOffset: filters.offset,
+          lastLimit: filters.limit
         };
 
         if (data.mock) {
