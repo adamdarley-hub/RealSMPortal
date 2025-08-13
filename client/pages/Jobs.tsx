@@ -505,117 +505,15 @@ export default function Jobs() {
     }
   }, [manualSync, loadJobs, toast]);
 
-  const handleSort = (field: SortField) => {
+  // Optimized sort handler
+  const handleSort = useCallback((field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
       setSortDirection('asc');
     }
-  };
-
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return null;
-    return sortDirection === 'asc' ?
-      <ChevronUp className="w-4 h-4" /> :
-      <ChevronDown className="w-4 h-4" />;
-  };
-
-  const getSortableValue = (job: Job, field: SortField): string => {
-    switch (field) {
-      case 'recipient':
-        return (job.recipient_name || job.defendant_name || job.recipient?.name || 'Unknown Recipient').toLowerCase();
-      case 'client':
-        const clientCompany = typeof job.client_company === 'string' ? job.client_company :
-                             typeof job.client?.company === 'string' ? job.client.company :
-                             job.client?.name?.company || job.client?.name;
-        const clientName = typeof job.client_name === 'string' ? job.client_name :
-                         typeof job.client?.name === 'string' ? job.client.name :
-                         job.client?.name?.name;
-        return (clientCompany || clientName || 'Unknown Client').toLowerCase();
-      case 'status':
-        return (job.status || 'pending').toLowerCase();
-      case 'priority':
-        return (job.priority || 'medium').toLowerCase();
-      case 'server':
-        const serverName = typeof job.server_name === 'string' ? job.server_name :
-                         typeof job.assigned_server === 'string' ? job.assigned_server :
-                         typeof job.server?.name === 'string' ? job.server.name :
-                         job.server?.name?.name;
-        return (serverName || 'unassigned').toLowerCase();
-      case 'received_date':
-        return job.created_at || job.received_date || '';
-      default:
-        return '';
-    }
-  };
-
-  // Filter and sort jobs
-  const filteredAndSortedJobs = (jobs || []).filter(job => {
-    // Search filter
-    const matchesSearch = !searchTerm || (
-      safeString(job.job_number || job.generated_job_id || job.reference).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      safeString(job.client?.name || job.client_name || job.client_company).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      safeString(job.recipient?.name || job.recipient_name || job.defendant_name).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      safeString(job.description || job.notes).toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // Status filter
-    const matchesStatus = !filters.status || filters.status === 'all' ||
-      (filters.status === 'unassigned' && (job.status === '' || !job.status)) ||
-      job.status === filters.status;
-
-    // Priority filter
-    const matchesPriority = !filters.priority || filters.priority === 'all' || job.priority === filters.priority;
-
-    // Client filter
-    const matchesClient = !filters.client_id || filters.client_id === 'all' || job.client_id === filters.client_id;
-
-    // Server filter
-    const matchesServer = !filters.server_id || filters.server_id === 'all' ||
-      (filters.server_id === 'unassigned' && (!job.server_id || job.server_id === '')) ||
-      job.server_id === filters.server_id;
-
-    const result = matchesSearch && matchesStatus && matchesPriority && matchesClient && matchesServer;
-
-    // Debug first job that gets filtered
-    if (job === jobs[0] && (filters.status || filters.priority || filters.client_id || filters.server_id || searchTerm)) {
-      console.log(`Filter debug for job ${job.id}:`, {
-        job: {
-          status: job.status,
-          priority: job.priority,
-          client_id: job.client_id,
-          server_id: job.server_id
-        },
-        filters,
-        searchTerm,
-        matches: {
-          search: matchesSearch,
-          status: matchesStatus,
-          priority: matchesPriority,
-          client: matchesClient,
-          server: matchesServer,
-          result
-        }
-      });
-    }
-
-    return result;
-  }).sort((a, b) => {
-    const aValue = getSortableValue(a, sortField);
-    const bValue = getSortableValue(b, sortField);
-
-    if (sortField === 'received_date') {
-      // For dates, convert to timestamps for proper sorting
-      const aDate = new Date(aValue).getTime() || 0;
-      const bDate = new Date(bValue).getTime() || 0;
-      return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
-    }
-
-    // For strings, use localeCompare
-    const comparison = aValue.localeCompare(bValue);
-    return sortDirection === 'asc' ? comparison : -comparison;
-  });
+  }, [sortField, sortDirection]);
 
   if (error) {
     return (
