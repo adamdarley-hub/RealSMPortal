@@ -21,9 +21,9 @@ import {
   WifiOff,
 } from "lucide-react";
 
-// Import components directly to avoid dynamic import issues
-import { JobsTable } from "@/components/JobsTable";
-import { JobsFilters } from "@/components/JobsFilters";
+// Temporarily remove custom components to debug white page
+// import { JobsTable } from "@/components/JobsTable";
+// import { JobsFilters } from "@/components/JobsFilters";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSync } from "@/hooks/use-auto-sync";
 import { Job, JobsResponse, Client, Server, JobFilters } from "@shared/servemanager";
