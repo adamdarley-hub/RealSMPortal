@@ -55,26 +55,35 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
 
     // Filter invoices that contain the specific job
     const jobInvoices = allInvoices.filter(invoice => {
-      // Check if this invoice contains the job
+      console.log(`🔍 Checking invoice ${invoice.id} for job ${jobId}:`, {
+        invoiceJobId: invoice.job_id,
+        invoiceJobIdType: typeof invoice.job_id,
+        jobIdParam: jobId,
+        jobIdParamType: typeof jobId,
+        jobIdParamInt: parseInt(jobId),
+        match: invoice.job_id === parseInt(jobId) || String(invoice.job_id) === String(jobId)
+      });
+
+      // ServeManager invoice structure - check job_id directly
+      if (invoice.job_id) {
+        return invoice.job_id === parseInt(jobId) ||
+               String(invoice.job_id) === String(jobId);
+      }
+
+      // Check if this invoice contains the job in a jobs array
       if (invoice.jobs && Array.isArray(invoice.jobs)) {
-        return invoice.jobs.some((job: any) => 
-          job.id === jobId || 
-          job.job_id === jobId || 
+        return invoice.jobs.some((job: any) =>
+          job.id === parseInt(jobId) ||
+          job.job_id === parseInt(jobId) ||
           job.job_number === jobId ||
           String(job.id) === String(jobId)
         );
       }
-      
+
       // Alternative structure - job_ids array
       if (invoice.job_ids && Array.isArray(invoice.job_ids)) {
-        return invoice.job_ids.includes(jobId) || 
-               invoice.job_ids.includes(parseInt(jobId));
-      }
-
-      // Direct job_id field
-      if (invoice.job_id) {
-        return invoice.job_id === jobId || 
-               String(invoice.job_id) === String(jobId);
+        return invoice.job_ids.includes(parseInt(jobId)) ||
+               invoice.job_ids.includes(jobId);
       }
 
       return false;
