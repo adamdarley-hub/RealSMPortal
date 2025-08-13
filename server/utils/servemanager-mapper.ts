@@ -115,6 +115,7 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
     job_number: safeString(rawJob.servemanager_job_number || rawJob.job_number || rawJob.generated_job_id || rawJob.reference || rawJob.number),
     generated_job_id: safeString(rawJob.generated_job_id || rawJob.job_number),
     reference: safeString(rawJob.reference || rawJob.ref),
+    client_job_number: safeString(rawJob.client_job_number || rawJob.client_reference || rawJob.ref || rawJob.reference),
 
     // Status - ServeManager uses service_status, job_status is often empty
     status: safeString(rawJob.service_status || rawJob.job_status || rawJob.status || 'pending'),
