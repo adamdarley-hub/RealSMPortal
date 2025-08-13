@@ -395,10 +395,10 @@ export default function Jobs() {
     // Note: Removed toast notification as requested - auto-sync should be silent
   }, [loadJobs, loadClients]);
 
-  // Auto-sync setup with 30-second intervals
+  // Auto-sync setup with 60-second intervals (reduced frequency)
   const { status: syncStatus, manualSync } = useAutoSync({
     enabled: true,
-    interval: 30000, // 30 seconds
+    interval: 60000, // 60 seconds (reduced from 30s)
     onDataUpdate
   });
 
