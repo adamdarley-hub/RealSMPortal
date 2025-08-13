@@ -630,33 +630,61 @@ export default function JobDetail() {
 
   // Optimized: Load invoices and affidavits in parallel without blocking UI
   const loadJobInvoicesAndAffidavits = async (jobId: string) => {
+    if (!jobId) {
+      console.log('📋 No jobId provided for invoices/affidavits');
+      return;
+    }
+
     try {
+      console.log('📋 Loading invoices and affidavits for job:', jobId);
+
       // Load both in parallel for instant tab switching
       const [invoicesResponse, affidavitsResponse] = await Promise.allSettled([
-        fetch(`/api/jobs/${jobId}/invoices`),
-        fetch(`/api/jobs/${jobId}/affidavits`)
+        fetch(`/api/jobs/${jobId}/invoices`).catch(err => {
+          console.warn('🧾 Invoices fetch failed:', err);
+          return { ok: false, status: 'network_error', error: err };
+        }),
+        fetch(`/api/jobs/${jobId}/affidavits`).catch(err => {
+          console.warn('📜 Affidavits fetch failed:', err);
+          return { ok: false, status: 'network_error', error: err };
+        })
       ]);
 
-      // Process invoices
+      // Process invoices with enhanced error handling
       if (invoicesResponse.status === 'fulfilled' && invoicesResponse.value.ok) {
-        const invoicesData = await invoicesResponse.value.json();
-        setJobInvoices(invoicesData.invoices || []);
-        setCurrentInvoiceIndex(0);
+        try {
+          const invoicesData = await invoicesResponse.value.json();
+          setJobInvoices(invoicesData.invoices || []);
+          setCurrentInvoiceIndex(0);
+          console.log('✅ Invoices loaded:', invoicesData.invoices?.length || 0);
+        } catch (jsonError) {
+          console.warn('⚠️ Failed to parse invoices JSON:', jsonError);
+          setJobInvoices([]);
+        }
       } else {
+        console.log('❌ Invoices request failed:', invoicesResponse);
         setJobInvoices([]);
       }
 
-      // Process affidavits
+      // Process affidavits with enhanced error handling
       if (affidavitsResponse.status === 'fulfilled' && affidavitsResponse.value.ok) {
-        const affidavitsData = await affidavitsResponse.value.json();
-        setJobAffidavits(affidavitsData.affidavits || []);
-        setCurrentAffidavitIndex(0);
+        try {
+          const affidavitsData = await affidavitsResponse.value.json();
+          setJobAffidavits(affidavitsData.affidavits || []);
+          setCurrentAffidavitIndex(0);
+          console.log('✅ Affidavits loaded:', affidavitsData.affidavits?.length || 0);
+        } catch (jsonError) {
+          console.warn('⚠️ Failed to parse affidavits JSON:', jsonError);
+          setJobAffidavits([]);
+        }
       } else {
+        console.log('❌ Affidavits request failed:', affidavitsResponse);
         setJobAffidavits([]);
       }
 
     } catch (error) {
-      console.error('Error loading job invoices/affidavits:', error);
+      console.error('❌ Critical error loading job invoices/affidavits:', error);
+      // Ensure states are reset even on critical errors
       setJobInvoices([]);
       setJobAffidavits([]);
     }
