@@ -334,8 +334,47 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
     const { jobId, affidavitId } = req.params;
     console.log(`📥 Downloading affidavit ${affidavitId} for job ${jobId}...`);
 
-    // Mock response for now - in real implementation, would fetch from ServeManager
-    res.status(404).json({ error: 'Affidavit download not implemented yet' });
+    // Get the job to find affidavit details
+    const jobResponse = await makeServeManagerRequest(`/jobs/${jobId}`);
+    const jobData = jobResponse.data || jobResponse;
+
+    let affidavitUrl = null;
+
+    // Check if it's the main job affidavit
+    if (jobData.affidavit && (jobData.affidavit.id === affidavitId || `aff_${jobId}` === affidavitId)) {
+      affidavitUrl = jobData.affidavit.pdf_url || jobData.affidavit.download_url;
+    }
+
+    // Check misc_attachments for affidavit documents
+    if (!affidavitUrl && jobData.misc_attachments) {
+      const affidavitAttachment = jobData.misc_attachments.find((att: any) =>
+        att.id === parseInt(affidavitId) && att.upload_type === 'affidavit' && att.signed
+      );
+
+      if (affidavitAttachment) {
+        affidavitUrl = affidavitAttachment.upload?.links?.download_url || affidavitAttachment.download_url;
+      }
+    }
+
+    if (!affidavitUrl) {
+      return res.status(404).json({ error: 'Affidavit PDF not found' });
+    }
+
+    console.log(`📥 Downloading affidavit from: ${affidavitUrl}`);
+
+    // Proxy the PDF download
+    const response = await fetch(affidavitUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch affidavit PDF: ${response.status}`);
+    }
+
+    // Set appropriate headers for download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="affidavit-${affidavitId}.pdf"`);
+    res.setHeader('Cache-Control', 'public, max-age=300');
+
+    // Stream the PDF
+    response.body?.pipe(res);
 
   } catch (error) {
     console.error(`Error downloading affidavit ${req.params.affidavitId}:`, error);
@@ -349,11 +388,90 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
     const { jobId, affidavitId } = req.params;
     console.log(`👁️ Previewing affidavit ${affidavitId} for job ${jobId}...`);
 
-    // Mock response for now - in real implementation, would fetch from ServeManager
-    res.status(404).json({ error: 'Affidavit preview not implemented yet' });
+    // Get the job to find affidavit details
+    const jobResponse = await makeServeManagerRequest(`/jobs/${jobId}`);
+    const jobData = jobResponse.data || jobResponse;
+
+    let affidavitUrl = null;
+
+    // Check if it's the main job affidavit
+    if (jobData.affidavit && (jobData.affidavit.id === affidavitId || `aff_${jobId}` === affidavitId)) {
+      affidavitUrl = jobData.affidavit.pdf_url || jobData.affidavit.download_url;
+    }
+
+    // Check misc_attachments for affidavit documents
+    if (!affidavitUrl && jobData.misc_attachments) {
+      const affidavitAttachment = jobData.misc_attachments.find((att: any) =>
+        att.id === parseInt(affidavitId) && att.upload_type === 'affidavit' && att.signed
+      );
+
+      if (affidavitAttachment) {
+        affidavitUrl = affidavitAttachment.upload?.links?.download_url || affidavitAttachment.download_url;
+      }
+    }
+
+    if (!affidavitUrl) {
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Affidavit Preview Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h2>Affidavit Preview Not Available</h2>
+          <p>Affidavit #${affidavitId} preview could not be loaded.</p>
+          <p>This may be because the affidavit is not yet signed or PDF is not available.</p>
+        </body>
+        </html>
+      `;
+
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(404).send(errorHtml);
+    }
+
+    console.log(`👁️ Previewing affidavit from: ${affidavitUrl}`);
+
+    // Proxy the PDF for preview
+    const response = await fetch(affidavitUrl);
+    if (!response.ok) {
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Affidavit Preview Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h2>Affidavit Preview Error</h2>
+          <p>Unable to load affidavit #${affidavitId}.</p>
+          <p>Status: ${response.status} ${response.statusText}</p>
+        </body>
+        </html>
+      `;
+
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(404).send(errorHtml);
+    }
+
+    // Set appropriate headers for inline viewing
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('Cache-Control', 'public, max-age=300');
+
+    // Stream the PDF
+    response.body?.pipe(res);
 
   } catch (error) {
     console.error(`Error previewing affidavit ${req.params.affidavitId}:`, error);
-    res.status(500).json({ error: 'Failed to preview affidavit' });
+
+    const errorHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head><title>Affidavit Preview Error</title></head>
+      <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+        <h2>Affidavit Preview Error</h2>
+        <p>Unable to load affidavit #${req.params.affidavitId}.</p>
+        <p>Please try again or download the affidavit directly.</p>
+      </body>
+      </html>
+    `;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.status(500).send(errorHtml);
   }
 };
