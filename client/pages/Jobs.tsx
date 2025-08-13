@@ -759,40 +759,36 @@ export default function Jobs() {
             </Button>
             <Button
               onClick={async () => {
-                console.log('🔄 Force refreshing data...');
+                console.log('🔄 Quick refresh - invalidating cache...');
                 setLoading(true);
                 try {
-                  // Only invalidate cache timestamp to force network request
+                  // Simply clear cache and reload - no expensive backend operations
                   cacheRef.current.timestamp = 0;
 
-                  const response = await fetch('/api/force-refresh', { method: 'POST' });
-                  const result = await response.json();
-                  console.log('✅ Force refresh result:', result);
-
-                  // Reload only jobs data (keep clients/servers cached)
+                  // Quick reload from cached API
                   await loadJobs(0, true);
 
                   toast({
-                    title: "Force Refresh Complete",
-                    description: "Data has been refreshed from ServeManager",
+                    title: "Cache Cleared",
+                    description: "Data reloaded from cache",
                   });
                 } catch (error) {
-                  console.error('❌ Force refresh failed:', error);
+                  console.error('❌ Refresh failed:', error);
                   toast({
-                    title: "Force Refresh Failed",
-                    description: "Could not refresh data from ServeManager",
+                    title: "Refresh Failed",
+                    description: "Could not reload data",
                     variant: "destructive"
                   });
                 } finally {
                   setLoading(false);
                 }
               }}
-              variant="destructive"
+              variant="outline"
               className="gap-2"
               disabled={syncStatus.isSyncing || loading}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Force Refresh
+              Clear Cache
             </Button>
             <Dialog>
               <DialogTrigger asChild>
