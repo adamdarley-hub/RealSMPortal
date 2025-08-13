@@ -1131,6 +1131,12 @@ export default function Jobs() {
                 </CardDescription>
               </div>
             </div>
+            {/* Top Pagination Controls */}
+            {totalJobs > 0 && (
+              <div className="mt-4">
+                <PaginationControls />
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <Table>
