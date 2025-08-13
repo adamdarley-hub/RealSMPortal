@@ -381,16 +381,24 @@ export default function Jobs() {
       }
 
       console.error('Error loading servers:', error);
-      // Try mock servers as fallback
+      // Try legacy API as fallback
       try {
-        const mockResponse = await fetch('/api/mock/servers');
-        if (mockResponse.ok) {
-          const mockData = await mockResponse.json();
-          setServers(mockData.servers || []);
-          cacheRef.current.servers = mockData.servers || [];
+        const legacyResponse = await fetch('/api/servers');
+        if (legacyResponse.ok) {
+          const legacyData = await legacyResponse.json();
+          setServers(legacyData.servers || []);
+          cacheRef.current.servers = legacyData.servers || [];
+        } else {
+          // Try mock servers as final fallback
+          const mockResponse = await fetch('/api/mock/servers');
+          if (mockResponse.ok) {
+            const mockData = await mockResponse.json();
+            setServers(mockData.servers || []);
+            cacheRef.current.servers = mockData.servers || [];
+          }
         }
       } catch (mockError) {
-        console.error('Mock servers fallback failed:', mockError);
+        console.error('All server fallbacks failed:', mockError);
       }
     }
   };
