@@ -96,6 +96,12 @@ export default function Jobs() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { toast } = useToast();
 
+  // Pagination helpers
+  const currentPage = Math.floor(filters.offset / filters.limit) + 1;
+  const totalPages = Math.ceil(totalJobs / filters.limit);
+  const hasNextPage = currentPage < totalPages;
+  const hasPrevPage = currentPage > 1;
+
   // Cache management
   const cacheRef = useRef<{
     jobs: Job[];
