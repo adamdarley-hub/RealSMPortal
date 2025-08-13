@@ -520,6 +520,39 @@ export default function Jobs() {
     setSearchTerm("");
   };
 
+  // Pagination functions
+  const goToNextPage = () => {
+    if (hasNextPage) {
+      setFilters(prev => ({
+        ...prev,
+        offset: prev.offset + prev.limit
+      }));
+    }
+  };
+
+  const goToPrevPage = () => {
+    if (hasPrevPage) {
+      setFilters(prev => ({
+        ...prev,
+        offset: Math.max(0, prev.offset - prev.limit)
+      }));
+    }
+  };
+
+  const goToFirstPage = () => {
+    setFilters(prev => ({
+      ...prev,
+      offset: 0
+    }));
+  };
+
+  const goToLastPage = () => {
+    setFilters(prev => ({
+      ...prev,
+      offset: (totalPages - 1) * prev.limit
+    }));
+  };
+
   const refreshJobs = async () => {
     console.log('🔄 Refreshing jobs...');
     setLoading(true);
