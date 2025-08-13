@@ -708,12 +708,8 @@ export default function JobDetail() {
         const freshAttempts = extractServiceAttempts(freshJobData);
         setServiceAttempts(freshAttempts);
 
-        // Also refresh invoices and affidavits if we're on those tabs
-        if (activeMainTab === 'invoices') {
-          loadJobInvoices(id);
-        } else if (activeMainTab === 'affidavit') {
-          loadJobAffidavits(id);
-        }
+        // Always refresh invoices and affidavits for consistency
+        loadJobInvoicesAndAffidavits(id);
 
         toast({
           title: "Updated",
