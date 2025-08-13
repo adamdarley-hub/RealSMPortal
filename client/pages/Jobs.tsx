@@ -519,8 +519,9 @@ export default function Jobs() {
 
   // Reload jobs when pagination changes
   useEffect(() => {
+    console.log(`📄 Pagination changed to offset ${filters.offset}, page ${currentPage}, forcing reload...`);
     loadJobs(0, true); // Force refresh when pagination changes
-  }, [filters.offset, loadJobs]);
+  }, [filters.offset, loadJobs, currentPage]);
 
   const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
     const newValue = value === 'all' ? undefined : value;
