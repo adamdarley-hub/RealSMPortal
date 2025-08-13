@@ -1675,21 +1675,6 @@ export default function JobDetail() {
                                           console.error('📄 Iframe failed to load, trying alternative...');
                                         }}
                                       />
-                                      <div className="absolute top-2 right-2">
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => {
-                                            setUrlRefreshCount(prev => prev + 1);
-                                            console.log('🔄 Refreshing document viewer...');
-                                          }}
-                                          className="gap-2 bg-white/90 backdrop-blur"
-                                          title="Refresh document viewer"
-                                        >
-                                          <Download className="w-3 h-3" />
-                                          Refresh
-                                        </Button>
-                                      </div>
                                     </div>
                                   );
                                 }
