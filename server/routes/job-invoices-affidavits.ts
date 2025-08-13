@@ -284,38 +284,61 @@ export const previewJobInvoice: RequestHandler = async (req, res) => {
     const { jobId, invoiceId } = req.params;
     console.log(`👁️ Previewing invoice ${invoiceId} for job ${jobId}...`);
 
-    // First get the invoice to find the PDF URL
-    const invoiceResponse = await makeServeManagerRequest(`/invoices/${invoiceId}`);
-    
-    let pdfUrl = null;
-    if (invoiceResponse.pdf_url) {
-      pdfUrl = invoiceResponse.pdf_url;
-    } else if (invoiceResponse.data?.pdf_url) {
-      pdfUrl = invoiceResponse.data.pdf_url;
-    } else if (invoiceResponse.links?.pdf) {
-      pdfUrl = invoiceResponse.links.pdf;
-    }
+    // Use the ServeManager download URL directly
+    const pdfUrl = `https://www.servemanager.com/api/v2/invoices/${invoiceId}/download`;
 
-    if (!pdfUrl) {
-      return res.status(404).json({ error: 'Invoice PDF not found' });
-    }
+    console.log(`📄 Attempting to fetch invoice PDF from: ${pdfUrl}`);
 
-    // Proxy the PDF for preview
+    // Try to fetch the PDF directly
     const response = await fetch(pdfUrl);
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch PDF: ${response.status}`);
+      console.error(`❌ Failed to fetch invoice PDF: ${response.status} ${response.statusText}`);
+
+      // Return a simple HTML error page instead of JSON for iframe display
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Invoice Preview Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h2>Invoice Preview Not Available</h2>
+          <p>Invoice #${invoiceId} preview could not be loaded.</p>
+          <p>Status: ${response.status} ${response.statusText}</p>
+          <p>This may be because the invoice PDF is not yet generated or access is restricted.</p>
+        </body>
+        </html>
+      `;
+
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(404).send(errorHtml);
     }
 
     // Set appropriate headers for inline viewing
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'inline');
-    
+    res.setHeader('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+
     // Stream the PDF
     response.body?.pipe(res);
 
   } catch (error) {
     console.error(`Error previewing invoice ${req.params.invoiceId}:`, error);
-    res.status(500).json({ error: 'Failed to preview invoice' });
+
+    // Return HTML error for iframe display
+    const errorHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head><title>Invoice Preview Error</title></head>
+      <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+        <h2>Invoice Preview Error</h2>
+        <p>Unable to load invoice #${req.params.invoiceId}.</p>
+        <p>Please try again or download the invoice directly.</p>
+      </body>
+      </html>
+    `;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.status(500).send(errorHtml);
   }
 };
 
