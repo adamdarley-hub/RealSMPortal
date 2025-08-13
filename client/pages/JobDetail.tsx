@@ -119,22 +119,51 @@ const getRecipientName = (job: Job): string => {
 
 // Helper function to get recipient info only showing fields with values
 const getRecipientInfo = (job: Job) => {
-  const recipient = job.raw_data?.recipient || {};
+  // Try multiple sources for recipient data
+  const recipient = job.raw_data?.recipient || (job as any).recipient || {};
   const info: { [key: string]: string } = {};
 
-  if (recipient.name) info['Name'] = recipient.name;
-  if (recipient.description) info['Description'] = recipient.description;
-  if (recipient.age) info['Age'] = recipient.age.toString();
-  if (recipient.ethnicity) info['Ethnicity'] = recipient.ethnicity;
-  if (recipient.gender) info['Gender'] = recipient.gender;
-  if (recipient.weight) info['Weight'] = recipient.weight;
+  // Add all fields that have non-null, non-empty values
+  if (recipient.name && recipient.name.trim()) {
+    info['Recipient Name'] = recipient.name.trim();
+  }
+  if (recipient.description && recipient.description.trim()) {
+    info['Description'] = recipient.description.trim();
+  }
+  if (recipient.age && recipient.age.toString().trim()) {
+    info['Age'] = recipient.age.toString();
+  }
+  if (recipient.ethnicity && recipient.ethnicity.trim()) {
+    info['Ethnicity'] = recipient.ethnicity.trim();
+  }
+  if (recipient.gender && recipient.gender.trim()) {
+    info['Gender'] = recipient.gender.trim();
+  }
+  if (recipient.weight && recipient.weight.toString().trim()) {
+    info['Weight'] = recipient.weight.toString();
+  }
   if (recipient.height1 || recipient.height2) {
     const height = [recipient.height1, recipient.height2].filter(Boolean).join("'") + '"';
     info['Height'] = height;
   }
-  if (recipient.hair) info['Hair'] = recipient.hair;
-  if (recipient.eyes) info['Eyes'] = recipient.eyes;
-  if (recipient.relationship) info['Relationship'] = recipient.relationship;
+  if (recipient.hair && recipient.hair.trim()) {
+    info['Hair'] = recipient.hair.trim();
+  }
+  if (recipient.eyes && recipient.eyes.trim()) {
+    info['Eyes'] = recipient.eyes.trim();
+  }
+  if (recipient.relationship && recipient.relationship.trim()) {
+    info['Relationship'] = recipient.relationship.trim();
+  }
+
+  // Debug log to see what recipient data is available
+  console.log('🔍 Recipient info extraction:', {
+    jobId: job.id,
+    raw_data_recipient: job.raw_data?.recipient,
+    recipient_direct: (job as any).recipient,
+    extractedInfo: info,
+    foundFields: Object.keys(info)
+  });
 
   return info;
 };
@@ -948,19 +977,30 @@ export default function JobDetail() {
                 
                 <TabsContent value="recipient" className="space-y-4 mt-6">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Recipient Name</label>
-                      <p className="text-sm text-slate-900">{getRecipientName(job)}</p>
-                    </div>
+                    {/* Service Address - always show */}
                     <div>
                       <label className="text-sm font-medium text-slate-700">Service Address</label>
                       <div className="text-sm text-slate-900">
                         {getServiceAddressString(job)}
                       </div>
                     </div>
+
+                    {/* Dynamic recipient fields - show all fields with values */}
                     {(() => {
                       const recipientInfo = getRecipientInfo(job);
-                      return Object.entries(recipientInfo).slice(1).map(([key, value]) => (
+
+                      // If no recipient info found, show at least the name
+                      if (Object.keys(recipientInfo).length === 0) {
+                        return (
+                          <div>
+                            <label className="text-sm font-medium text-slate-700">Recipient Name</label>
+                            <p className="text-sm text-slate-900">{getRecipientName(job)}</p>
+                          </div>
+                        );
+                      }
+
+                      // Show all available recipient fields
+                      return Object.entries(recipientInfo).map(([key, value]) => (
                         <div key={key}>
                           <label className="text-sm font-medium text-slate-700">{key}</label>
                           <p className="text-sm text-slate-900">{value}</p>
