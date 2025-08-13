@@ -403,22 +403,48 @@ export default function Jobs() {
     }
   };
 
-  // Memoize the onDataUpdate callback to prevent infinite re-renders
-  const onDataUpdate = useCallback(() => {
-    // Only reload if cache is stale or empty
+  // Memoize the onDataUpdate callback - smart background refresh
+  const onDataUpdate = useCallback(async () => {
     const now = Date.now();
     const cache = cacheRef.current;
-    const isStale = !cache.timestamp || (now - cache.timestamp) > CACHE_DURATION;
 
-    if (isStale || cache.jobs.length === 0) {
-      console.log('🔄 Cache is stale, reloading from sync...');
-      loadJobs();
-      loadClients();
-    } else {
-      console.log('⚡ Cache is fresh, skipping reload from sync');
+    // Always do a silent background check for new data
+    try {
+      console.log('🔄 Silent background check for updates...');
+      const response = await fetch('/api/jobs?limit=50');
+      if (response.ok) {
+        const data = await response.json();
+        const newJobCount = data.total || 0;
+        const cachedJobCount = cache.totalJobs;
+
+        // If job count changed, update cache silently
+        if (newJobCount !== cachedJobCount) {
+          console.log(`📊 Job count changed: ${cachedJobCount} → ${newJobCount}. Updating cache silently.`);
+          cacheRef.current = {
+            jobs: data.jobs || [],
+            clients: cache.clients,
+            servers: cache.servers,
+            timestamp: now,
+            totalJobs: newJobCount
+          };
+          setJobs(data.jobs || []);
+          setTotalJobs(newJobCount);
+
+          // Show subtle notification
+          toast({
+            title: "Data Updated",
+            description: `${newJobCount - cachedJobCount > 0 ? 'New' : 'Updated'} jobs detected`,
+            duration: 2000, // Short duration
+          });
+        } else {
+          console.log('📊 No changes detected in background check');
+        }
+      }
+    } catch (error) {
+      console.log('⚠️ Background check failed (non-blocking):', error.message);
     }
-    // Note: Removed toast notification as requested - auto-sync should be silent
-  }, [loadJobs, loadClients]);
+    // Note: This is silent and non-blocking - doesn't affect UI performance
+  }, [toast]);
 
   // Smart auto-sync: enabled but non-blocking
   const { status: syncStatus, manualSync } = useAutoSync({
