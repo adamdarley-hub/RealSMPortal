@@ -532,10 +532,13 @@ export default function Jobs() {
   const goToNextPage = () => {
     if (hasNextPage) {
       console.log(`🔄 Going to next page: ${currentPage} → ${currentPage + 1}`);
+      console.log(`📊 Current offset: ${filters.offset}, new offset: ${filters.offset + filters.limit}`);
       setFilters(prev => ({
         ...prev,
         offset: prev.offset + prev.limit
       }));
+    } else {
+      console.log(`❌ Cannot go to next page - already at last page ${currentPage}/${totalPages}`);
     }
   };
 
@@ -817,7 +820,7 @@ export default function Jobs() {
                     To get started:
                   </p>
                   <ol className="text-sm text-muted-foreground text-left space-y-1 max-w-md mx-auto">
-                    <li>1. Go to Settings �� API Configuration</li>
+                    <li>1. Go to Settings → API Configuration</li>
                     <li>2. Enable ServeManager integration</li>
                     <li>3. Enter your API credentials</li>
                     <li>4. Test the connection</li>
