@@ -478,6 +478,12 @@ export default function JobDetail() {
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isPrintMode, setIsPrintMode] = useState(false);
   const [urlRefreshCount, setUrlRefreshCount] = useState(0);
+  const [jobInvoices, setJobInvoices] = useState<any[]>([]);
+  const [jobAffidavits, setJobAffidavits] = useState<any[]>([]);
+  const [currentInvoiceIndex, setCurrentInvoiceIndex] = useState(0);
+  const [currentAffidavitIndex, setCurrentAffidavitIndex] = useState(0);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [affidavitsLoading, setAffidavitsLoading] = useState(false);
 
   // No refresh needed - data is always fresh from ServeManager
 
@@ -593,6 +599,69 @@ export default function JobDetail() {
     loadJob();
   }, [id, toast]);
 
+  // Load job-specific invoices
+  const loadJobInvoices = async (jobId: string) => {
+    try {
+      setInvoicesLoading(true);
+      console.log(`🧾 Loading invoices for job ${jobId}...`);
+
+      // Fetch invoices with job filter - only issued and paid
+      const response = await fetch(`/api/jobs/${jobId}/invoices`);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📋 Received invoices:', data);
+        setJobInvoices(data.invoices || []);
+        setCurrentInvoiceIndex(0);
+      } else {
+        console.error('Failed to load invoices:', response.status);
+        setJobInvoices([]);
+      }
+    } catch (error) {
+      console.error('Error loading job invoices:', error);
+      setJobInvoices([]);
+    } finally {
+      setInvoicesLoading(false);
+    }
+  };
+
+  // Load job-specific affidavits
+  const loadJobAffidavits = async (jobId: string) => {
+    try {
+      setAffidavitsLoading(true);
+      console.log(`📜 Loading affidavits for job ${jobId}...`);
+
+      // Fetch affidavits - only signed ones
+      const response = await fetch(`/api/jobs/${jobId}/affidavits`);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📜 Received affidavits:', data);
+        setJobAffidavits(data.affidavits || []);
+        setCurrentAffidavitIndex(0);
+      } else {
+        console.error('Failed to load affidavits:', response.status);
+        setJobAffidavits([]);
+      }
+    } catch (error) {
+      console.error('Error loading job affidavits:', error);
+      setJobAffidavits([]);
+    } finally {
+      setAffidavitsLoading(false);
+    }
+  };
+
+  // Load invoices and affidavits when switching tabs
+  useEffect(() => {
+    if (!id) return;
+
+    if (activeMainTab === 'invoices') {
+      loadJobInvoices(id);
+    } else if (activeMainTab === 'affidavit') {
+      loadJobAffidavits(id);
+    }
+  }, [activeMainTab, id]);
+
   // Listen for refresh messages from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -659,6 +728,13 @@ export default function JobDetail() {
         // Re-extract service attempts
         const freshAttempts = extractServiceAttempts(freshJobData);
         setServiceAttempts(freshAttempts);
+
+        // Also refresh invoices and affidavits if we're on those tabs
+        if (activeMainTab === 'invoices') {
+          loadJobInvoices(id);
+        } else if (activeMainTab === 'affidavit') {
+          loadJobAffidavits(id);
+        }
 
         toast({
           title: "Updated",
@@ -1433,54 +1509,180 @@ export default function JobDetail() {
             <TabsContent value="invoices">
               <Card>
                 <CardHeader>
-                  <CardTitle>Invoices</CardTitle>
-                  <CardDescription>Billing information for this job</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Invoices</CardTitle>
+                      <CardDescription>Issued or paid invoices related to this job</CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => id && loadJobInvoices(id)}
+                      disabled={invoicesLoading}
+                      className="gap-2"
+                    >
+                      {invoicesLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                      Refresh
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  {job.raw_data?.invoice ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
-                        <div>
-                          <label className="text-sm font-medium text-slate-700">Invoice ID</label>
-                          <p className="text-sm text-slate-900">{job.raw_data.invoice.id}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-700">Status</label>
-                          <Badge variant="outline">{job.raw_data.invoice.status}</Badge>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-700">Subtotal</label>
-                          <p className="text-sm text-slate-900">{formatCurrency(parseFloat(job.raw_data.invoice.subtotal))}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-700">Total</label>
-                          <p className="text-sm text-slate-900 font-semibold">{formatCurrency(parseFloat(job.raw_data.invoice.total))}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-700">Balance Due</label>
-                          <p className="text-sm text-slate-900">{formatCurrency(parseFloat(job.raw_data.invoice.balance_due))}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-slate-700">Created</label>
-                          <p className="text-sm text-slate-900">{formatDate(job.raw_data.invoice.created_at)}</p>
+                  {invoicesLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Loading invoices...</span>
+                      </div>
+                    </div>
+                  ) : jobInvoices.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <DollarSign className="w-12 h-12 mx-auto mb-4" />
+                      <p>No issued or paid invoices for this job</p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Only invoices with status 'issued' or 'paid' are displayed
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Invoice List */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4">Invoice Documents</h3>
+                        <div className="space-y-4">
+                          {jobInvoices.map((invoice, index) => (
+                            <div key={invoice.id || index} className="border rounded-lg p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                  <h4 className="font-medium text-lg">
+                                    Invoice #{invoice.invoice_number || invoice.id}
+                                  </h4>
+                                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                                    <Badge variant="outline" className={invoice.status === 'paid' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}>
+                                      {invoice.status || 'issued'}
+                                    </Badge>
+                                    <span>Total: {formatCurrency(invoice.total || 0)}</span>
+                                    {invoice.created_at && (
+                                      <span>Created: {formatDate(invoice.created_at)}</span>
+                                    )}
+                                    {invoice.paid_at && (
+                                      <span>Paid: {formatDate(invoice.paid_at)}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  {currentInvoiceIndex === index && (
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                      Viewing
+                                    </Badge>
+                                  )}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentInvoiceIndex(index)}
+                                    className="gap-2"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    View
+                                  </Button>
+                                  {invoice.pdf_url && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      asChild
+                                      className="gap-2"
+                                    >
+                                      <a
+                                        href={`/api/jobs/${job.id}/invoices/${invoice.id}/download`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <Download className="w-4 h-4" />
+                                        Download
+                                      </a>
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
 
-                      {job.raw_data.invoice.pdf_download_url && (
-                        <div className="flex justify-center">
-                          <Button asChild className="gap-2">
-                            <a href={job.raw_data.invoice.pdf_download_url} target="_blank" rel="noopener noreferrer">
-                              <FileText className="w-4 h-4" />
-                              Download Invoice PDF
-                            </a>
-                          </Button>
+                      {/* Invoice Viewer */}
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold">Invoice Viewer</h3>
+                          {jobInvoices.length > 1 && (
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentInvoiceIndex(Math.max(0, currentInvoiceIndex - 1))}
+                                disabled={currentInvoiceIndex === 0}
+                              >
+                                <ChevronLeft className="w-4 h-4" />
+                              </Button>
+                              <span className="text-sm text-muted-foreground">
+                                {currentInvoiceIndex + 1} of {jobInvoices.length}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentInvoiceIndex(Math.min(jobInvoices.length - 1, currentInvoiceIndex + 1))}
+                                disabled={currentInvoiceIndex === jobInvoices.length - 1}
+                              >
+                                <ChevronRight className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <DollarSign className="w-12 h-12 mx-auto mb-4" />
-                      <p>No invoices available for this job</p>
+
+                        <div className="border rounded-lg overflow-hidden" style={{ height: '600px' }}>
+                          {(() => {
+                            const currentInvoice = jobInvoices[currentInvoiceIndex];
+
+                            if (!currentInvoice?.pdf_url && !currentInvoice?.id) {
+                              return (
+                                <div className="flex items-center justify-center h-full text-muted-foreground">
+                                  <div className="text-center space-y-4">
+                                    <FileText className="w-12 h-12 mx-auto mb-4" />
+                                    <p>Invoice preview not available</p>
+                                    <p className="text-xs text-gray-500">
+                                      Invoice: {currentInvoice?.invoice_number || 'Unknown'}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="relative w-full h-full">
+                                <iframe
+                                  src={`/api/jobs/${job.id}/invoices/${currentInvoice.id}/preview`}
+                                  className="w-full h-full border-0"
+                                  title={`Invoice: ${currentInvoice.invoice_number || currentInvoice.id}`}
+                                  key={`${currentInvoice.id}-${urlRefreshCount}`}
+                                />
+                                <div className="absolute top-2 right-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setUrlRefreshCount(prev => prev + 1)}
+                                    className="gap-2 bg-white/90 backdrop-blur"
+                                    title="Refresh invoice viewer"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                    Refresh
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -1490,14 +1692,179 @@ export default function JobDetail() {
             <TabsContent value="affidavit">
               <Card>
                 <CardHeader>
-                  <CardTitle>Affidavit</CardTitle>
-                  <CardDescription>Affidavit of service for this job</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Affidavits</CardTitle>
+                      <CardDescription>Signed affidavits of service for this job</CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => id && loadJobAffidavits(id)}
+                      disabled={affidavitsLoading}
+                      className="gap-2"
+                    >
+                      {affidavitsLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                      Refresh
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="w-12 h-12 mx-auto mb-4" />
-                    <p>No affidavit available for this job</p>
-                  </div>
+                  {affidavitsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Loading affidavits...</span>
+                      </div>
+                    </div>
+                  ) : jobAffidavits.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="w-12 h-12 mx-auto mb-4" />
+                      <p>No signed affidavits for this job</p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Only signed affidavits are displayed
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Affidavit List */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4">Affidavit Documents</h3>
+                        <div className="space-y-4">
+                          {jobAffidavits.map((affidavit, index) => (
+                            <div key={affidavit.id || index} className="border rounded-lg p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                  <h4 className="font-medium text-lg">
+                                    Affidavit of Service
+                                  </h4>
+                                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                                    <Badge variant="outline" className="bg-green-50 text-green-700">
+                                      Signed
+                                    </Badge>
+                                    {affidavit.signed_at && (
+                                      <span>Signed: {formatDate(affidavit.signed_at)}</span>
+                                    )}
+                                    {affidavit.created_at && (
+                                      <span>Created: {formatDate(affidavit.created_at)}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  {currentAffidavitIndex === index && (
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                      Viewing
+                                    </Badge>
+                                  )}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentAffidavitIndex(index)}
+                                    className="gap-2"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    View
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    asChild
+                                    className="gap-2"
+                                  >
+                                    <a
+                                      href={`/api/jobs/${job.id}/affidavits/${affidavit.id}/download`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <Download className="w-4 h-4" />
+                                      Download
+                                    </a>
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Affidavit Viewer */}
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold">Affidavit Viewer</h3>
+                          {jobAffidavits.length > 1 && (
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentAffidavitIndex(Math.max(0, currentAffidavitIndex - 1))}
+                                disabled={currentAffidavitIndex === 0}
+                              >
+                                <ChevronLeft className="w-4 h-4" />
+                              </Button>
+                              <span className="text-sm text-muted-foreground">
+                                {currentAffidavitIndex + 1} of {jobAffidavits.length}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentAffidavitIndex(Math.min(jobAffidavits.length - 1, currentAffidavitIndex + 1))}
+                                disabled={currentAffidavitIndex === jobAffidavits.length - 1}
+                              >
+                                <ChevronRight className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="border rounded-lg overflow-hidden" style={{ height: '600px' }}>
+                          {(() => {
+                            const currentAffidavit = jobAffidavits[currentAffidavitIndex];
+
+                            if (!currentAffidavit?.pdf_url && !currentAffidavit?.id) {
+                              return (
+                                <div className="flex items-center justify-center h-full text-muted-foreground">
+                                  <div className="text-center space-y-4">
+                                    <FileText className="w-12 h-12 mx-auto mb-4" />
+                                    <p>Affidavit preview not available</p>
+                                    <p className="text-xs text-gray-500">
+                                      Affidavit ID: {currentAffidavit?.id || 'Unknown'}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="relative w-full h-full">
+                                <iframe
+                                  src={`/api/jobs/${job.id}/affidavits/${currentAffidavit.id}/preview`}
+                                  className="w-full h-full border-0"
+                                  title={`Affidavit: ${currentAffidavit.id}`}
+                                  key={`${currentAffidavit.id}-${urlRefreshCount}`}
+                                />
+                                <div className="absolute top-2 right-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setUrlRefreshCount(prev => prev + 1)}
+                                    className="gap-2 bg-white/90 backdrop-blur"
+                                    title="Refresh affidavit viewer"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                    Refresh
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
