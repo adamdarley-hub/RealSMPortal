@@ -95,7 +95,7 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
 
     console.log(`🧾 Found ${jobInvoices.length} invoices for job ${jobId}`);
     console.log('🧾 All invoices summary:', allInvoices.map(inv => ({ id: inv.id, status: inv.status, job_id: inv.job_id })));
-    console.log('�� Filtered job invoices:', jobInvoices.map(inv => ({ id: inv.id, status: inv.status, job_id: inv.job_id })));
+    console.log('🧾 Filtered job invoices:', jobInvoices.map(inv => ({ id: inv.id, status: inv.status, job_id: inv.job_id })));
 
     res.json({
       invoices: jobInvoices,
@@ -390,43 +390,30 @@ export const previewJobInvoice: RequestHandler = async (req, res) => {
     console.log(`📄 Fetching invoice PDF from: ${pdfUrl}`);
     console.log(`📄 PDF URL structure: ${pdfUrl.substring(0, 100)}...`);
 
-    let pdfResponse;
+    // Check if this is a ServeManager API URL that needs authentication
+    const isServeManagerUrl = pdfUrl.includes('servemanager.com/api');
+    let headers: Record<string, string> = {};
 
-    // First try fetching the PDF URL directly (might already include auth tokens)
-    try {
-      pdfResponse = await fetch(pdfUrl);
+    if (isServeManagerUrl) {
+      console.log('🔐 ServeManager URL detected, adding authentication...');
 
-      // If we get 401, try with authentication
-      if (pdfResponse.status === 401) {
-        console.log('📄 Direct fetch failed with 401, trying with authentication...');
+      const { getServeManagerConfig } = await import('./servemanager');
+      const config = await getServeManagerConfig();
 
-        const { getServeManagerConfig } = await import('./servemanager');
-        const config = await getServeManagerConfig();
-        const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+      // Use Basic Auth with API key as username, empty password
+      const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+      headers = {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/json',
+      };
 
-        pdfResponse = await fetch(pdfUrl, {
-          headers: {
-            'Authorization': `Basic ${credentials}`,
-          },
-        });
-      }
-    } catch (fetchError) {
-      console.error('📄 Error fetching invoice PDF:', fetchError);
-      const errorHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head><title>Invoice Preview Error</title></head>
-        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-          <h2>Invoice Preview Error</h2>
-          <p>Unable to fetch invoice #${invoiceId}.</p>
-          <p>Error: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}</p>
-        </body>
-        </html>
-      `;
-
-      res.setHeader('Content-Type', 'text/html');
-      return res.status(500).send(errorHtml);
+      console.log('🔐 Added authentication headers for ServeManager URL');
     }
+
+    const pdfResponse = await fetch(pdfUrl, {
+      method: 'GET',
+      headers: headers,
+    });
 
     if (!pdfResponse.ok) {
       console.error(`❌ Failed to fetch invoice PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
