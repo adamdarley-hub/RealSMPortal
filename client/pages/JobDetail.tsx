@@ -802,36 +802,14 @@ export default function JobDetail() {
               <div>
                 <h1 className="text-2xl font-bold text-slate-900">Job Details</h1>
                 <p className="text-slate-600">
-                  {safeString(job.job_number || job.generated_job_id, 'No Job Number')} - {safeString(job.client_company || job.client_name, 'Unknown Client')}
+                  {safeString((job as any).servemanager_job_number || job.job_number || job.generated_job_id, 'No Job Number')} - {safeString(job.client_company || job.client_name, 'Unknown Client')}
                 </p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <Badge className={getStatusColor(job.status || 'pending')}>
-                {(job.status || 'pending').replace('_', ' ')}
+              <Badge className={getStatusColor(job.service_status || job.status || 'pending')}>
+                {(job.service_status || job.status || 'pending').replace('_', ' ')}
               </Badge>
-              <Badge variant="outline" className={dataSource === 'servemanager-fresh' ? "bg-green-50 text-green-700 border-green-200" : "bg-yellow-50 text-yellow-700 border-yellow-200"}>
-                {dataSource === 'servemanager-fresh' ? '🔄 Always Fresh' : '�� Cache Fallback'}
-              </Badge>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Share className="w-4 h-4" />
-                  Share
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Edit className="w-4 h-4" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={handlePrintJob}
-                  disabled={isPrintMode}
-                >
-                  <Printer className="w-4 h-4" />
-                  {isPrintMode ? 'Printing...' : 'Print Job'}
-                </Button>
-              </div>
             </div>
           </div>
 
