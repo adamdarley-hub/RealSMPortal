@@ -217,6 +217,14 @@ export function createServer() {
   app.get("/api/jobs/:jobId/documents/:documentId/preview", getDocumentPreview);   // 📄 Fresh document preview
   app.get("/api/jobs/:jobId/documents/:documentId/download", getDocumentDownload); // 💾 Fresh document download
 
+  // Job-specific invoices and affidavits endpoints
+  app.get("/api/jobs/:jobId/invoices", getJobInvoices);                           // 🧾 Get invoices for job (issued/paid only)
+  app.get("/api/jobs/:jobId/invoices/:invoiceId/preview", previewJobInvoice);     // 👁️ Preview invoice PDF
+  app.get("/api/jobs/:jobId/invoices/:invoiceId/download", downloadJobInvoice);   // 💾 Download invoice PDF
+  app.get("/api/jobs/:jobId/affidavits", getJobAffidavits);                      // 📜 Get affidavits for job (signed only)
+  app.get("/api/jobs/:jobId/affidavits/:affidavitId/preview", previewJobAffidavit);  // 👁️ Preview affidavit PDF
+  app.get("/api/jobs/:jobId/affidavits/:affidavitId/download", downloadJobAffidavit); // 💾 Download affidavit PDF
+
   // Direct ServeManager routes (for admin/debugging)
   app.get("/api/servemanager/jobs", getJobs);
   app.get("/api/servemanager/jobs/:id", getJob);
