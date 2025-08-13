@@ -14,6 +14,14 @@ import {
   updateJob
 } from "./routes/servemanager";
 import {
+  getJobInvoices,
+  getJobAffidavits,
+  downloadJobInvoice,
+  previewJobInvoice,
+  downloadJobAffidavit,
+  previewJobAffidavit
+} from "./routes/job-invoices-affidavits";
+import {
   getCachedJobs,
   getCachedClients,
   getCachedServers,
