@@ -739,6 +739,7 @@ export default function Jobs() {
   };
 
   // Filter and sort jobs
+  console.log(`🔍 Processing ${jobs.length} jobs. First job ID: ${jobs[0]?.id}, search: "${searchTerm}", filters:`, filters);
   const filteredAndSortedJobs = (jobs || []).filter(job => {
     // Search filter
     const matchesSearch = !searchTerm || (
