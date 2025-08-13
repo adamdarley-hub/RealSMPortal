@@ -164,10 +164,27 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       });
 
       clearTimeout(timeoutId);
+
+      // Handle case where fetch was caught and returned null
+      if (!response) {
+        console.log('⚠️ Sync skipped due to network error');
+        return { success: false, error: 'Network error - using cached data' };
+      }
+
       console.log('📡 Sync response status:', response.status);
 
       if (!response.ok) {
-        throw new Error(`Sync failed: ${response.status} ${response.statusText}`);
+        const errorMessage = `Sync failed: ${response.status} ${response.statusText}`;
+        console.warn('❌ Sync request failed:', errorMessage);
+
+        if (mountedRef.current) {
+          setStatus(prev => ({
+            ...prev,
+            isSyncing: false,
+            error: errorMessage
+          }));
+        }
+        return { success: false, error: errorMessage };
       }
 
       const result = await response.json();
