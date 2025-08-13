@@ -1093,22 +1093,76 @@ export default function JobDetail() {
                 
                 <TabsContent value="court-timeline" className="space-y-4 mt-6">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Due Date</label>
-                      <p className="text-sm text-slate-900">{formatDate(job.due_date)}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Created Date</label>
-                      <p className="text-sm text-slate-900">{formatDate(job.created_at)}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Last Updated</label>
-                      <p className="text-sm text-slate-900">{formatDate(job.updated_at)}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Court Case</label>
-                      <p className="text-sm text-slate-900">{getCourtCaseString(job)}</p>
-                    </div>
+                    {(() => {
+                      // Get court case data from ServeManager structure
+                      const courtCase = (job.raw_data as any)?.court_case || (job as any).court_case;
+                      const fields: Array<{label: string, value: string}> = [];
+
+                      // Court Case info
+                      fields.push({
+                        label: 'Court Case',
+                        value: getCourtCaseString(job)
+                      });
+
+                      // Case Number
+                      const caseNumber = safeString(courtCase?.number || job.case_number || job.docket_number, '').trim();
+                      if (caseNumber) {
+                        fields.push({
+                          label: 'Case Number',
+                          value: caseNumber
+                        });
+                      }
+
+                      // Court
+                      const court = safeString(courtCase?.court || job.court, '').trim();
+                      if (court) {
+                        fields.push({
+                          label: 'Court',
+                          value: court
+                        });
+                      }
+
+                      // Filed Date
+                      const filedDate = courtCase?.filed_date;
+                      if (filedDate) {
+                        fields.push({
+                          label: 'Filed Date',
+                          value: formatDate(filedDate)
+                        });
+                      }
+
+                      // Court Date
+                      const courtDate = courtCase?.court_date;
+                      if (courtDate) {
+                        fields.push({
+                          label: 'Court Date',
+                          value: formatDate(courtDate)
+                        });
+                      }
+
+                      // Job Timeline info
+                      fields.push(
+                        {
+                          label: 'Due Date',
+                          value: formatDate(job.due_date)
+                        },
+                        {
+                          label: 'Created Date',
+                          value: formatDate(job.created_at)
+                        },
+                        {
+                          label: 'Last Updated',
+                          value: formatDate(job.updated_at)
+                        }
+                      );
+
+                      return fields.map(({label, value}) => (
+                        <div key={label}>
+                          <label className="text-sm font-medium text-slate-700">{label}</label>
+                          <p className="text-sm text-slate-900">{value}</p>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </TabsContent>
               </Tabs>
