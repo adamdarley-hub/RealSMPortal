@@ -766,23 +766,15 @@ export default function Jobs() {
             </div>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="animate-pulse bg-muted h-12 rounded"></div>
-                ))}
-              </div>
-            }>
-              <JobsTable
-                jobs={jobs}
-                clients={clients}
-                servers={servers}
-                searchTerm={searchTerm}
-                sortField={sortField}
-                sortDirection={sortDirection}
-                onSort={handleSort}
-              />
-            </Suspense>
+            <JobsTable
+              jobs={jobs}
+              clients={clients}
+              servers={servers}
+              searchTerm={searchTerm}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onSort={handleSort}
+            />
 
             {jobs.length === 0 && !loading && (
               <div className="text-center py-8">
