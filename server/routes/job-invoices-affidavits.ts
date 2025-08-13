@@ -354,11 +354,28 @@ export const previewJobInvoice: RequestHandler = async (req, res) => {
       return res.status(404).send(errorHtml);
     }
 
-    // Instead of using the PDF URL directly, use the ServeManager API endpoint
-    console.log(`📄 Fetching invoice PDF via ServeManager API for invoice ${invoiceId}`);
+    const pdfUrl = jobData.invoice.pdf_download_url;
+    if (!pdfUrl) {
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Invoice Preview Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h2>Invoice PDF Not Available</h2>
+          <p>Invoice #${invoiceId} PDF is not yet generated.</p>
+          <p>Status: ${jobData.invoice.status}</p>
+        </body>
+        </html>
+      `;
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(404).send(errorHtml);
+    }
 
-    // Use the ServeManager API to fetch the invoice PDF
-    const pdfResponse = await makeServeManagerRequest(`/invoices/${invoiceId}/download`);
+    console.log(`📄 Fetching invoice PDF from: ${pdfUrl}`);
+    console.log(`📄 PDF URL structure: ${pdfUrl.substring(0, 100)}...`);
+
+    // Try fetching the PDF URL directly first (might already include auth tokens)
+    const pdfResponse = await fetch(pdfUrl);
 
     if (!pdfResponse.ok) {
       console.error(`❌ Failed to fetch invoice PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
