@@ -481,44 +481,39 @@ export default function Jobs() {
     onDataUpdate
   });
 
-  // Track if this is the initial load or pagination change
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-
   // Load data on component mount with cleanup
   useEffect(() => {
-    if (!isInitialLoad) return; // Skip if not initial load
-
     let isMounted = true;
 
     const loadData = async () => {
       if (!isMounted) return;
 
-      // Check if we have valid cache - if so, load instantly
-      const now = Date.now();
-      const cache = cacheRef.current;
-      const hasValidCache = cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.jobs.length > 0 && filters.offset === 0;
+      // Only use cache for the very first load (offset 0)
+      if (filters.offset === 0) {
+        const now = Date.now();
+        const cache = cacheRef.current;
+        const hasValidCache = cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.jobs.length > 0 && cache.lastOffset === 0;
 
-      if (hasValidCache) {
-        console.log('⚡ Initial load from cache - no network requests needed');
-        setJobs(cache.jobs);
-        setClients(cache.clients);
-        setServers(cache.servers);
-        setTotalJobs(cache.totalJobs);
-        setLoading(false);
-        setError(null);
-        setIsInitialLoad(false);
-        return; // Skip all network requests
+        if (hasValidCache) {
+          console.log('⚡ Initial load from cache - no network requests needed');
+          setJobs(cache.jobs);
+          setClients(cache.clients);
+          setServers(cache.servers);
+          setTotalJobs(cache.totalJobs);
+          setLoading(false);
+          setError(null);
+          return; // Skip all network requests
+        }
       }
 
-      // Only load from network if cache is invalid
-      await loadJobs();
+      // Load from network
+      await loadJobs(0, true); // Always force refresh for pagination
       if (!isMounted) return;
 
       await loadClients();
       if (!isMounted) return;
 
       await loadServers();
-      setIsInitialLoad(false);
     };
 
     loadData();
@@ -527,14 +522,7 @@ export default function Jobs() {
     return () => {
       isMounted = false;
     };
-  }, [isInitialLoad, loadJobs, loadClients, filters.offset]);
-
-  // Reload jobs when pagination changes (but not on initial load)
-  useEffect(() => {
-    if (isInitialLoad) return; // Skip initial load
-    console.log(`📄 Pagination changed to offset ${filters.offset}, page ${currentPage}, forcing reload...`);
-    loadJobs(0, true); // Force refresh when pagination changes
-  }, [filters.offset, loadJobs, currentPage, isInitialLoad]);
+  }, [filters.offset, filters.limit, loadJobs, loadClients]);
 
   const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
     const newValue = value === 'all' ? undefined : value;
