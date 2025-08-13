@@ -170,8 +170,21 @@ const getRecipientInfo = (job: Job) => {
 
 // Helper function to format court case as "Plaintiff vs. Defendant"
 const getCourtCaseString = (job: Job): string => {
-  const plaintiff = safeString(job.plaintiff || (job as any).plaintiff_name || '').trim();
-  const defendant = getRecipientName(job);
+  // Get court case data from the proper ServeManager court_case structure
+  const courtCase = (job.raw_data as any)?.court_case || (job as any).court_case;
+
+  const plaintiff = safeString(
+    courtCase?.plaintiff ||
+    job.plaintiff ||
+    (job as any).plaintiff_name ||
+    ''
+  ).trim();
+
+  const defendant = safeString(
+    courtCase?.defendant ||
+    getRecipientName(job) ||
+    ''
+  ).trim();
 
   // If we have both plaintiff and defendant, show "Plaintiff vs. Defendant"
   if (plaintiff && defendant && defendant !== 'Unknown Recipient') {
@@ -183,15 +196,16 @@ const getCourtCaseString = (job: Job): string => {
     return plaintiff;
   }
 
-  // First try case number or docket number before showing just defendant
-  const caseNumber = safeString(job.case_number || job.docket_number, '').trim();
+  // Try case number from court case structure first
+  const caseNumber = safeString(
+    courtCase?.number ||
+    job.case_number ||
+    job.docket_number ||
+    ''
+  ).trim();
+
   if (caseNumber) {
     return caseNumber;
-  }
-
-  // Only show defendant alone if there's no case number available
-  if (defendant && defendant !== 'Unknown Recipient') {
-    return defendant;
   }
 
   return 'N/A';
