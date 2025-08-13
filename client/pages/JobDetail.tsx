@@ -801,7 +801,7 @@ export default function JobDetail() {
           setJobAffidavits([]);
         }
       } else {
-        console.log('❌ Affidavits request failed:', affidavitsResponse);
+        console.log('�� Affidavits request failed:', affidavitsResponse);
         setJobAffidavits([]);
       }
 
@@ -1093,7 +1093,7 @@ export default function JobDetail() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700">Court Case</label>
-                      <p className="text-sm text-slate-900">{safeString(job.case_number || job.docket_number, 'N/A')}</p>
+                      <p className="text-sm text-slate-900">{getCourtCaseString(job)}</p>
                     </div>
                   </div>
                 </TabsContent>
