@@ -758,15 +758,9 @@ export default function Jobs() {
             </div>
           </CardHeader>
           <CardContent>
-            <JobsTable
-              jobs={jobs}
-              clients={clients}
-              servers={servers}
-              searchTerm={searchTerm}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              onSort={handleSort}
-            />
+            <p>Jobs table will go here. Found {jobs.length} jobs.</p>
+            {loading && <p>Loading...</p>}
+            {error && <p>Error: {error}</p>}
 
             {jobs.length === 0 && !loading && (
               <div className="text-center py-8">
