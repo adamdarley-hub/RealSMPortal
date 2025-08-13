@@ -815,7 +815,7 @@ export default function JobDetail() {
           const affidavitsData = await affidavitsResponse.value.json();
           setJobAffidavits(affidavitsData.affidavits || []);
           setCurrentAffidavitIndex(0);
-          console.log('✅ Affidavits loaded:', affidavitsData.affidavits?.length || 0);
+          console.log('�� Affidavits loaded:', affidavitsData.affidavits?.length || 0);
         } catch (jsonError) {
           console.warn('⚠️ Failed to parse affidavits JSON:', jsonError);
           setJobAffidavits([]);
@@ -1882,18 +1882,6 @@ export default function JobDetail() {
                                   title={`Invoice: ${currentInvoice.invoice_number || currentInvoice.id}`}
                                   key={`${currentInvoice.id}-${urlRefreshCount}`}
                                 />
-                                <div className="absolute top-2 right-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setUrlRefreshCount(prev => prev + 1)}
-                                    className="gap-2 bg-white/90 backdrop-blur"
-                                    title="Refresh invoice viewer"
-                                  >
-                                    <Download className="w-3 h-3" />
-                                    Refresh
-                                  </Button>
-                                </div>
                               </div>
                             );
                           })()}
@@ -2041,18 +2029,6 @@ export default function JobDetail() {
                                   title={`Affidavit: ${currentAffidavit.id}`}
                                   key={`${currentAffidavit.id}-${urlRefreshCount}`}
                                 />
-                                <div className="absolute top-2 right-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setUrlRefreshCount(prev => prev + 1)}
-                                    className="gap-2 bg-white/90 backdrop-blur"
-                                    title="Refresh affidavit viewer"
-                                  >
-                                    <Download className="w-3 h-3" />
-                                    Refresh
-                                  </Button>
-                                </div>
                               </div>
                             );
                           })()}
