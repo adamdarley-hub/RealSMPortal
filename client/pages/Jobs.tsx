@@ -749,11 +749,21 @@ export default function Jobs() {
             <p className="text-muted-foreground">
               Manage all process service jobs and track their progress
             </p>
-            {/* Cache status indicator */}
+            {/* Cache status indicator with staleness awareness */}
             {cacheRef.current.timestamp > 0 && (
-              <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                ⚡ Instant Load - Cached data ({Math.round((Date.now() - cacheRef.current.timestamp) / 1000)}s old)
+              <div className="text-xs flex items-center gap-1 mt-1">
+                {(() => {
+                  const ageSeconds = Math.round((Date.now() - cacheRef.current.timestamp) / 1000);
+                  const isStale = ageSeconds > 60; // Consider stale after 1 minute
+                  return (
+                    <>
+                      <span className={`w-2 h-2 rounded-full ${isStale ? 'bg-orange-500' : 'bg-green-500'} ${!isStale ? 'animate-pulse' : ''}`}></span>
+                      <span className={isStale ? 'text-orange-600' : 'text-green-600'}>
+                        {isStale ? '🔄 Data may be stale' : '⚡ Instant Load'} - Cached data ({ageSeconds}s old)
+                      </span>
+                    </>
+                  );
+                })()}
               </div>
             )}
           </div>
