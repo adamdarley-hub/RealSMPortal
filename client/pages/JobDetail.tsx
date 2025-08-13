@@ -168,8 +168,8 @@ const getRecipientInfo = (job: Job) => {
   return info;
 };
 
-// Helper function to format court case as "Plaintiff vs. Defendant"
-const getCourtCaseString = (job: Job): string => {
+// Helper function to format court case with line breaks
+const getCourtCaseDisplay = (job: Job) => {
   // Get court case data from the proper ServeManager court_case structure
   const courtCase = (job.raw_data as any)?.court_case || (job as any).court_case;
 
@@ -186,14 +186,20 @@ const getCourtCaseString = (job: Job): string => {
     ''
   ).trim();
 
-  // If we have both plaintiff and defendant, show "Plaintiff vs. Defendant"
+  // If we have both plaintiff and defendant, show with line breaks
   if (plaintiff && defendant && defendant !== 'Unknown Recipient') {
-    return `${plaintiff} vs. ${defendant}`;
+    return (
+      <div className="text-sm text-slate-900">
+        <div>{plaintiff}</div>
+        <div>vs.</div>
+        <div>{defendant}</div>
+      </div>
+    );
   }
 
   // If we only have plaintiff, show just plaintiff
   if (plaintiff) {
-    return plaintiff;
+    return <div className="text-sm text-slate-900">{plaintiff}</div>;
   }
 
   // Try case number from court case structure first
@@ -205,10 +211,10 @@ const getCourtCaseString = (job: Job): string => {
   ).trim();
 
   if (caseNumber) {
-    return caseNumber;
+    return <div className="text-sm text-slate-900">{caseNumber}</div>;
   }
 
-  return 'N/A';
+  return <div className="text-sm text-slate-900">N/A</div>;
 };
 
 // Helper function to format currency
