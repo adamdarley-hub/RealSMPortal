@@ -479,8 +479,13 @@ export default function Jobs() {
     onDataUpdate
   });
 
+  // Track if this is the initial load or pagination change
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   // Load data on component mount with cleanup
   useEffect(() => {
+    if (!isInitialLoad) return; // Skip if not initial load
+
     let isMounted = true;
 
     const loadData = async () => {
@@ -489,16 +494,17 @@ export default function Jobs() {
       // Check if we have valid cache - if so, load instantly
       const now = Date.now();
       const cache = cacheRef.current;
-      const hasValidCache = cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.jobs.length > 0;
+      const hasValidCache = cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.jobs.length > 0 && filters.offset === 0;
 
       if (hasValidCache) {
-        console.log('⚡ Instant load from cache - no network requests needed');
+        console.log('⚡ Initial load from cache - no network requests needed');
         setJobs(cache.jobs);
         setClients(cache.clients);
         setServers(cache.servers);
         setTotalJobs(cache.totalJobs);
         setLoading(false);
         setError(null);
+        setIsInitialLoad(false);
         return; // Skip all network requests
       }
 
@@ -510,6 +516,7 @@ export default function Jobs() {
       if (!isMounted) return;
 
       await loadServers();
+      setIsInitialLoad(false);
     };
 
     loadData();
@@ -518,13 +525,14 @@ export default function Jobs() {
     return () => {
       isMounted = false;
     };
-  }, [loadJobs, loadClients]);
+  }, [isInitialLoad, loadJobs, loadClients, filters.offset]);
 
-  // Reload jobs when pagination changes
+  // Reload jobs when pagination changes (but not on initial load)
   useEffect(() => {
+    if (isInitialLoad) return; // Skip initial load
     console.log(`📄 Pagination changed to offset ${filters.offset}, page ${currentPage}, forcing reload...`);
     loadJobs(0, true); // Force refresh when pagination changes
-  }, [filters.offset, loadJobs, currentPage]);
+  }, [filters.offset, loadJobs, currentPage, isInitialLoad]);
 
   const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
     const newValue = value === 'all' ? undefined : value;
@@ -574,7 +582,7 @@ export default function Jobs() {
   };
 
   const goToLastPage = () => {
-    console.log(`🔄 Going to last page: ${currentPage} → ${totalPages}`);
+    console.log(`🔄 Going to last page: ${currentPage} ��� ${totalPages}`);
     setFilters(prev => ({
       ...prev,
       offset: (totalPages - 1) * prev.limit
