@@ -236,9 +236,9 @@ export default function Jobs() {
         variant: "destructive",
       });
 
-      // Try full SQLite API as fallback
+      // Try legacy SQLite API as fallback
       try {
-        console.log('Paginated request failed, trying full dataset...');
+        console.log('Supabase failed, trying legacy SQLite...');
         const legacyResponse = await fetch('/api/jobs');
         if (legacyResponse.ok) {
           const legacyData = await legacyResponse.json();
