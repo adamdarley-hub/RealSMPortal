@@ -619,7 +619,7 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
       );
 
       if (signedAffidavit) {
-        affidavitUrl = signedAffidavit.download_url || signedAffidavit.pdf_url;
+        affidavitUrl = signedAffidavit.download_url || signedAffidavit.pdf_url || `https://www.servemanager.com/api/documents/${signedAffidavit.id}/download`;
         affidavitTitle = signedAffidavit.title || 'Affidavit of Service';
         console.log(`📥 Found affidavit in signedAffidavits:`, { id: signedAffidavit.id, title: affidavitTitle, hasUrl: !!affidavitUrl });
       }
@@ -633,7 +633,7 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
       );
 
       if (affidavitDoc) {
-        affidavitUrl = affidavitDoc.upload?.links?.download_url || affidavitDoc.download_url;
+        affidavitUrl = affidavitDoc.upload?.links?.download_url || affidavitDoc.download_url || `https://www.servemanager.com/api/documents/${affidavitDoc.id}/download`;
         affidavitTitle = affidavitDoc.title || 'affidavit';
         console.log(`📥 Found affidavit in documents:`, { id: affidavitDoc.id, title: affidavitTitle, hasUrl: !!affidavitUrl });
       }
@@ -754,7 +754,7 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
       );
 
       if (signedAffidavit) {
-        affidavitUrl = signedAffidavit.download_url || signedAffidavit.pdf_url;
+        affidavitUrl = signedAffidavit.download_url || signedAffidavit.pdf_url || `https://www.servemanager.com/api/documents/${signedAffidavit.id}/download`;
         affidavitTitle = signedAffidavit.title || 'Affidavit of Service';
         console.log(`📜 Found affidavit in signedAffidavits:`, { id: signedAffidavit.id, title: affidavitTitle, hasUrl: !!affidavitUrl });
       }
@@ -768,7 +768,7 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
       );
 
       if (affidavitDoc) {
-        affidavitUrl = affidavitDoc.upload?.links?.download_url || affidavitDoc.download_url;
+        affidavitUrl = affidavitDoc.upload?.links?.download_url || affidavitDoc.download_url || `https://www.servemanager.com/api/documents/${affidavitDoc.id}/download`;
         affidavitTitle = affidavitDoc.title || 'Affidavit of Service';
         console.log(`📜 Found affidavit in documents:`, { id: affidavitDoc.id, title: affidavitTitle, hasUrl: !!affidavitUrl });
       }
