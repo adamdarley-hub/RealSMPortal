@@ -59,23 +59,40 @@ const safeString = (value: any, fallback: string = ''): string => {
 
 // Helper function to safely extract recipient name from ServeManager recipient object
 const getRecipientName = (job: Job): string => {
+  // Enhanced debug logging to see ALL available data
+  console.log('🔍 FULL getRecipientName debug for job:', {
+    jobId: job.id,
+    allJobKeys: Object.keys(job),
+    recipient_name: job.recipient_name,
+    recipient_name_type: typeof job.recipient_name,
+    raw_data: job.raw_data,
+    raw_data_keys: job.raw_data ? Object.keys(job.raw_data) : null,
+    raw_data_recipient: job.raw_data?.recipient,
+    defendant_name: job.defendant_name,
+    fullJobObject: job
+  });
+
   // First priority: direct recipient_name field
   if (job.recipient_name && typeof job.recipient_name === 'string' && job.recipient_name.trim()) {
+    console.log('✅ Found recipient_name:', job.recipient_name);
     return job.recipient_name.trim();
   }
 
   // Second priority: ServeManager API nested recipient.name structure
   if (job.raw_data?.recipient?.name && typeof job.raw_data.recipient.name === 'string' && job.raw_data.recipient.name.trim()) {
+    console.log('✅ Found raw_data.recipient.name:', job.raw_data.recipient.name);
     return job.raw_data.recipient.name.trim();
   }
 
   // Third priority: defendant name fields
   if (job.defendant_name && typeof job.defendant_name === 'string' && job.defendant_name.trim()) {
+    console.log('✅ Found defendant_name:', job.defendant_name);
     return job.defendant_name.trim();
   }
 
   // Fourth priority: service_to field (ServeManager alternative)
   if ((job as any).service_to && typeof (job as any).service_to === 'string' && (job as any).service_to.trim()) {
+    console.log('✅ Found service_to:', (job as any).service_to);
     return (job as any).service_to.trim();
   }
 
@@ -84,18 +101,11 @@ const getRecipientName = (job: Job): string => {
   const lastName = (job as any).defendant_last_name || '';
   const fullName = `${firstName} ${lastName}`.trim();
   if (fullName) {
+    console.log('✅ Found combined names:', fullName);
     return fullName;
   }
 
-  // Debug log when no recipient name found
-  console.log('⚠️ No recipient name found for job:', {
-    jobId: job.id,
-    recipient_name: job.recipient_name,
-    raw_data_recipient: job.raw_data?.recipient,
-    defendant_name: job.defendant_name,
-    availableFields: Object.keys(job)
-  });
-
+  console.error('❌ NO RECIPIENT NAME FOUND - returning Unknown Recipient');
   return 'Unknown Recipient';
 };
 
