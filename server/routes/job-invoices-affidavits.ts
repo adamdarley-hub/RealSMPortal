@@ -415,9 +415,9 @@ export const previewJobInvoice: RequestHandler = async (req, res) => {
     const { jobId, invoiceId } = req.params;
     console.log(`👁️ Previewing invoice ${invoiceId} for job ${jobId}...`);
 
-    // Get fresh job data from ServeManager to find the invoice PDF URL
-    const jobResponse = await makeServeManagerRequest(`/jobs/${jobId}`);
-    const jobData = jobResponse.data || jobResponse;
+    // Redirect to generic proxy for simpler handling
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(`https://www.servemanager.com/api/v2/invoices/${invoiceId}/download`)}&preview=true`;
+    return res.redirect(proxyUrl);
 
     if (!jobData) {
       const errorHtml = `
