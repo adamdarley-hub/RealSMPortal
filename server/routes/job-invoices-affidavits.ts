@@ -7,8 +7,14 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
     const { jobId } = req.params;
     console.log(`🧾 Fetching invoices for job ${jobId}...`);
 
-    // Get all invoices first (no status filtering for testing)
+    // Filter for issued or paid invoices only (as requested)
     const filterParams = new URLSearchParams();
+    filterParams.append('filter[invoice_status][]', 'issued');
+    filterParams.append('filter[invoice_status][]', 'paid');
+    filterParams.append('filter[invoice_status][]', 'Issued');
+    filterParams.append('filter[invoice_status][]', 'Paid');
+    filterParams.append('filter[invoice_status][]', 'sent');
+    filterParams.append('filter[invoice_status][]', 'Sent');
     filterParams.append('per_page', '100');
 
     // Fetch all invoices with pagination
@@ -53,7 +59,7 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
 
     // Filter invoices that contain the specific job
     const jobInvoices = allInvoices.filter(invoice => {
-      console.log(`🔍 Checking invoice ${invoice.id} for job ${jobId}:`, {
+      console.log(`��� Checking invoice ${invoice.id} for job ${jobId}:`, {
         invoiceJobId: invoice.job_id,
         invoiceJobIdType: typeof invoice.job_id,
         jobIdParam: jobId,
@@ -87,7 +93,7 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
       return false;
     });
 
-    console.log(`�� Found ${jobInvoices.length} invoices for job ${jobId}`);
+    console.log(`🧾 Found ${jobInvoices.length} invoices for job ${jobId}`);
     console.log('🧾 All invoices summary:', allInvoices.map(inv => ({ id: inv.id, status: inv.status, job_id: inv.job_id })));
     console.log('🧾 Filtered job invoices:', jobInvoices.map(inv => ({ id: inv.id, status: inv.status, job_id: inv.job_id })));
 
@@ -355,7 +361,7 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
 export const previewJobAffidavit: RequestHandler = async (req, res) => {
   try {
     const { jobId, affidavitId } = req.params;
-    console.log(`👁�� Previewing affidavit ${affidavitId} for job ${jobId}...`);
+    console.log(`👁️ Previewing affidavit ${affidavitId} for job ${jobId}...`);
 
     // Mock response for now - in real implementation, would fetch from ServeManager
     res.status(404).json({ error: 'Affidavit preview not implemented yet' });
