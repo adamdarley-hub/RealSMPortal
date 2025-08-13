@@ -571,7 +571,7 @@ export default function JobDetail() {
         // Real-time updates are now handled by the useRealTimeJob hook
         console.log('🔌 Real-time monitoring enabled for instant updates');
 
-        console.log('���� Job data loaded:', {
+        console.log('����� Job data loaded:', {
           jobId: jobData.id,
           attemptsFound: realAttempts.length,
           jobServiceStatus: jobData.service_status,
@@ -633,16 +633,13 @@ export default function JobDetail() {
     }
   };
 
-  // Load invoices and affidavits when switching tabs
+  // Load invoices and affidavits immediately when job loads (no waiting for tab clicks)
   useEffect(() => {
     if (!id) return;
 
-    if (activeMainTab === 'invoices') {
-      loadJobInvoices(id);
-    } else if (activeMainTab === 'affidavit') {
-      loadJobAffidavits(id);
-    }
-  }, [activeMainTab, id]);
+    // Load invoices and affidavits in parallel with job data for instant tab switching
+    loadJobInvoicesAndAffidavits(id);
+  }, [id]);
 
   // Listen for refresh messages from iframe
   useEffect(() => {
