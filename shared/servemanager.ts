@@ -114,6 +114,7 @@ export interface Job {
 
   // Raw data preservation
   _raw?: any;
+  raw_data?: any;
 }
 
 export interface ServiceAttempt {
