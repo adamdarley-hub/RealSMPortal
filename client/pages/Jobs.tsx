@@ -128,28 +128,12 @@ export default function Jobs() {
     const now = Date.now();
     const cache = cacheRef.current;
 
-    // Cache is valid only if offset and limit match the current request
-    const cacheValid = !forceRefresh &&
-      cache.timestamp &&
-      (now - cache.timestamp) < CACHE_DURATION &&
-      cache.jobs.length > 0 &&
-      cache.lastOffset === filters.offset &&
-      cache.lastLimit === filters.limit;
+    // Temporarily disable cache to debug pagination - always make API calls
+    const cacheValid = false; // DISABLED FOR DEBUGGING
 
-    console.log(`🔍 Cache check: forceRefresh=${forceRefresh}, hasTimestamp=${!!cache.timestamp}, age=${cache.timestamp ? now - cache.timestamp : 'N/A'}ms, lastOffset=${cache.lastOffset}, currentOffset=${filters.offset}, lastLimit=${cache.lastLimit}, currentLimit=${filters.limit}, cacheValid=${cacheValid}`);
+    console.log(`🔍 Cache DISABLED for debugging - will always make API call for offset=${filters.offset}, page=${currentPage}`);
 
-    if (cacheValid) {
-      const ageSeconds = Math.round((now - cache.timestamp) / 1000);
-      console.log(`⚡ Using cached jobs data (${ageSeconds}s old) - Page ${currentPage} - INSTANT LOAD`);
-      setJobs(cache.jobs);
-      setTotalJobs(cache.totalJobs);
-      setLoading(false);
-      setError(null);
-      setUsingMockData(false); // Reset mock state when using cache
-      return;
-    } else {
-      console.log(`🌐 Cache miss - will make API call`);
-    }
+    // Cache disabled - always make API call
 
     setLoading(true);
     setError(null);
