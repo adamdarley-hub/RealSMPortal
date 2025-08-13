@@ -315,16 +315,24 @@ export default function Jobs() {
       }
 
       console.error('Error loading clients:', error);
-      // Try mock clients as fallback
+      // Try legacy API as fallback
       try {
-        const mockResponse = await fetch('/api/mock/clients');
-        if (mockResponse.ok) {
-          const mockData = await mockResponse.json();
-          setClients(mockData.clients || []);
-          cacheRef.current.clients = mockData.clients || [];
+        const legacyResponse = await fetch('/api/clients');
+        if (legacyResponse.ok) {
+          const legacyData = await legacyResponse.json();
+          setClients(legacyData.clients || []);
+          cacheRef.current.clients = legacyData.clients || [];
+        } else {
+          // Try mock clients as final fallback
+          const mockResponse = await fetch('/api/mock/clients');
+          if (mockResponse.ok) {
+            const mockData = await mockResponse.json();
+            setClients(mockData.clients || []);
+            cacheRef.current.clients = mockData.clients || [];
+          }
         }
       } catch (mockError) {
-        console.error('Mock clients fallback failed:', mockError);
+        console.error('All client fallbacks failed:', mockError);
       }
     }
   }, []);
