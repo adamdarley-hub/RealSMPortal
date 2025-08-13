@@ -690,13 +690,15 @@ export default function JobDetail() {
     }
   };
 
-  // Load invoices and affidavits immediately when job loads (no waiting for tab clicks)
+  // Load invoices and affidavits when the tab becomes active to prevent startup crashes
   useEffect(() => {
     if (!id) return;
 
-    // Load invoices and affidavits in parallel with job data for instant tab switching
-    loadJobInvoicesAndAffidavits(id);
-  }, [id]);
+    // Only load when invoices or affidavit tabs are active to prevent network errors on page load
+    if (activeMainTab === 'invoices' || activeMainTab === 'affidavit') {
+      loadJobInvoicesAndAffidavits(id);
+    }
+  }, [id, activeMainTab]);
 
   // Listen for refresh messages from iframe
   useEffect(() => {
