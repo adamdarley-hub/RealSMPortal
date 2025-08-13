@@ -690,52 +690,58 @@ export default function Jobs() {
   };
 
   // Pagination controls component
-  const PaginationControls = () => (
-    <div className="flex items-center justify-between">
-      <div className="text-sm text-muted-foreground">
-        Showing {Math.min(filters.offset + 1, totalJobs)} to {Math.min(filters.offset + filters.limit, totalJobs)} of {totalJobs} jobs
-      </div>
-      <div className="flex items-center space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={goToFirstPage}
-          disabled={!hasPrevPage || loading}
-        >
-          First
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={goToPrevPage}
-          disabled={!hasPrevPage || loading}
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Previous
-        </Button>
+  const PaginationControls = () => {
+    // Safety check for division by zero
+    const safeTotalPages = Math.max(1, Math.ceil(totalJobs / Math.max(1, filters.limit)));
+    const safeCurrentPage = Math.max(1, Math.floor(filters.offset / Math.max(1, filters.limit)) + 1);
+
+    return (
+      <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          Page {currentPage} of {totalPages}
+          Showing {Math.min(filters.offset + 1, totalJobs)} to {Math.min(filters.offset + filters.limit, totalJobs)} of {totalJobs} jobs
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={goToNextPage}
-          disabled={!hasNextPage || loading}
-        >
-          Next
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={goToLastPage}
-          disabled={!hasNextPage || loading}
-        >
-          Last
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToFirstPage}
+            disabled={!hasPrevPage || loading}
+          >
+            First
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToPrevPage}
+            disabled={!hasPrevPage || loading}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+          <div className="text-sm text-muted-foreground">
+            Page {safeCurrentPage} of {safeTotalPages}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToNextPage}
+            disabled={!hasNextPage || loading}
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToLastPage}
+            disabled={!hasNextPage || loading}
+          >
+            Last
+          </Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Filter and sort jobs
   const filteredAndSortedJobs = (jobs || []).filter(job => {
