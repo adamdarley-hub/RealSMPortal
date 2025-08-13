@@ -59,7 +59,7 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
 
     // Filter invoices that contain the specific job
     const jobInvoices = allInvoices.filter(invoice => {
-      console.log(`��� Checking invoice ${invoice.id} for job ${jobId}:`, {
+      console.log(`🔍 Checking invoice ${invoice.id} for job ${jobId}:`, {
         invoiceJobId: invoice.job_id,
         invoiceJobIdType: typeof invoice.job_id,
         jobIdParam: jobId,
@@ -137,78 +137,76 @@ export const getJobAffidavits: RequestHandler = async (req, res) => {
     const { jobId } = req.params;
     console.log(`📜 Fetching affidavits for job ${jobId}...`);
 
-    // Filter for signed affidavits only using the affidavit_status filter
-    const filterParams = new URLSearchParams();
-    filterParams.append('filter[affidavit_status][]', 'signed');
-    filterParams.append('per_page', '100');
+    // Get the specific job to check for affidavits
+    const jobResponse = await makeServeManagerRequest(`/jobs/${jobId}`);
 
-    // Fetch all invoices with signed affidavits (ServeManager API approach)
-    let allInvoices: any[] = [];
-    let page = 1;
-    let hasMorePages = true;
-    const maxPages = 10;
+    let jobData = null;
+    if (jobResponse.data) {
+      jobData = jobResponse.data;
+    } else if (jobResponse.id) {
+      jobData = jobResponse;
+    }
 
-    while (hasMorePages && page <= maxPages) {
-      const params = new URLSearchParams(filterParams);
-      params.append('page', page.toString());
+    if (!jobData) {
+      console.log(`❌ Job ${jobId} not found`);
+      return res.json({
+        affidavits: [],
+        total: 0,
+        job_id: jobId,
+        error: 'Job not found'
+      });
+    }
 
-      const endpoint = `/invoices?${params.toString()}`;
-      console.log(`Fetching invoices with affidavits page ${page} for job ${jobId}`);
+    console.log(`📜 Job ${jobId} affidavit data:`, {
+      hasAffidavit: !!jobData.affidavit,
+      affidavitCount: jobData.affidavit_count,
+      affidavitData: jobData.affidavit
+    });
 
-      try {
-        const pageData = await makeServeManagerRequest(endpoint);
+    const jobAffidavits: any[] = [];
 
-        let pageInvoices: any[] = [];
-        if (pageData.data && Array.isArray(pageData.data)) {
-          pageInvoices = pageData.data;
-        } else if (pageData.invoices && Array.isArray(pageData.invoices)) {
-          pageInvoices = pageData.invoices;
-        } else if (Array.isArray(pageData)) {
-          pageInvoices = pageData;
-        }
+    // Check if job has affidavit data and if it's signed
+    if (jobData.affidavit && jobData.affidavit_count > 0) {
+      // ServeManager stores affidavit data directly in the job
+      const affidavit = {
+        id: jobData.affidavit.id || `aff_${jobId}`,
+        job_id: jobId,
+        signed_at: jobData.affidavit.signed_at,
+        created_at: jobData.affidavit.created_at,
+        status: jobData.affidavit.signed ? 'signed' : 'unsigned',
+        signer: jobData.affidavit.signer || jobData.employee_process_server?.first_name + ' ' + jobData.employee_process_server?.last_name,
+        pdf_url: jobData.affidavit.pdf_url || jobData.affidavit.download_url,
+        notarized: jobData.affidavit.notarized,
+        notary_signature: jobData.affidavit.notary_signature
+      };
 
-        if (pageInvoices.length > 0) {
-          allInvoices.push(...pageInvoices);
-          hasMorePages = pageInvoices.length === 100;
-          page++;
-        } else {
-          hasMorePages = false;
-        }
-      } catch (pageError) {
-        console.error(`Error fetching affidavits page ${page}:`, pageError);
-        hasMorePages = false;
+      // Only include signed affidavits
+      if (affidavit.status === 'signed') {
+        jobAffidavits.push(affidavit);
       }
     }
 
-    // Extract affidavits from invoices that contain the specific job
-    const jobAffidavits: any[] = [];
-    
-    allInvoices.forEach(invoice => {
-      // Check if this invoice contains the job
-      const containsJob = invoice.jobs && Array.isArray(invoice.jobs) && 
-        invoice.jobs.some((job: any) => 
-          job.id === jobId || 
-          job.job_id === jobId || 
-          job.job_number === jobId ||
-          String(job.id) === String(jobId)
-        );
+    // Alternative: Check if there are affidavit attachments
+    if (jobData.misc_attachments && Array.isArray(jobData.misc_attachments)) {
+      const affidavitAttachments = jobData.misc_attachments.filter((attachment: any) =>
+        attachment.upload_type === 'affidavit' && attachment.signed === true
+      );
 
-      if (containsJob && invoice.affidavit) {
-        // Extract affidavit information
+      affidavitAttachments.forEach((attachment: any) => {
         const affidavit = {
-          id: invoice.affidavit.id || `aff_${invoice.id}`,
+          id: attachment.id,
           job_id: jobId,
-          invoice_id: invoice.id,
-          signed_at: invoice.affidavit.signed_at || invoice.affidavit.created_at,
-          created_at: invoice.affidavit.created_at,
-          pdf_url: invoice.affidavit.pdf_url || invoice.affidavit.download_url,
+          signed_at: attachment.updated_at,
+          created_at: attachment.created_at,
           status: 'signed',
-          signer: invoice.affidavit.signer || invoice.affidavit.server_name
+          signer: 'Process Server',
+          pdf_url: attachment.upload?.links?.download_url || attachment.download_url,
+          title: attachment.title || 'Affidavit of Service'
         };
-        
+
         jobAffidavits.push(affidavit);
-      }
-    });
+      });
+    }
 
     console.log(`📜 Found ${jobAffidavits.length} signed affidavits for job ${jobId}`);
 
@@ -220,25 +218,13 @@ export const getJobAffidavits: RequestHandler = async (req, res) => {
 
   } catch (error) {
     console.error(`Error fetching affidavits for job ${req.params.jobId}:`, error);
-    
-    // Return mock data
-    const mockAffidavits = [
-      {
-        id: "aff001",
-        job_id: req.params.jobId,
-        signed_at: "2024-01-20T00:00:00Z",
-        created_at: "2024-01-20T00:00:00Z",
-        status: "signed",
-        signer: "John Smith",
-        pdf_url: "https://example.com/affidavit.pdf"
-      }
-    ];
 
+    // Return empty array for failed requests
     res.json({
-      affidavits: mockAffidavits,
-      total: mockAffidavits.length,
+      affidavits: [],
+      total: 0,
       job_id: req.params.jobId,
-      mock: true
+      error: 'Failed to fetch affidavits'
     });
   }
 };
