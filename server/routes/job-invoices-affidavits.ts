@@ -168,6 +168,14 @@ export const getJobAffidavits: RequestHandler = async (req, res) => {
       allJobKeys: Object.keys(jobData).filter(key => key.toLowerCase().includes('affidavit') || key.toLowerCase().includes('sign'))
     });
 
+    // Debug: Log complete job structure to find where signedAffidavits is
+    console.log(`🔍 All job keys:`, Object.keys(jobData));
+    if (jobData.signedAffidavits) {
+      console.log(`🔍 SignedAffidavits found:`, JSON.stringify(jobData.signedAffidavits, null, 2));
+    } else {
+      console.log(`🔍 No signedAffidavits found, checking alternatives...`);
+    }
+
     const jobAffidavits: any[] = [];
 
     // PRIMARY: Check signedAffidavits array (this is where ServeManager stores signed affidavits)
