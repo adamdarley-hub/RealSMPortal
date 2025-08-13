@@ -59,53 +59,61 @@ const safeString = (value: any, fallback: string = ''): string => {
 
 // Helper function to safely extract recipient name from ServeManager recipient object
 const getRecipientName = (job: Job): string => {
-  // Enhanced debug logging to see ALL available data
-  console.log('🔍 FULL getRecipientName debug for job:', {
+  // Check ALL possible places where recipient name could be stored
+  const possibleFields = [
+    job.recipient_name,
+    job.defendant_name,
+    (job as any).recipient?.name,
+    job.raw_data?.recipient?.name,
+    (job as any).service_to,
+    (job as any).party_to_serve,
+    (job as any).serve_to,
+    // Try combining first and last names
+    ((job as any).defendant_first_name && (job as any).defendant_last_name) ?
+      `${(job as any).defendant_first_name} ${(job as any).defendant_last_name}`.trim() : null,
+    ((job as any).first_name && (job as any).last_name) ?
+      `${(job as any).first_name} ${(job as any).last_name}`.trim() : null
+  ];
+
+  // Return the first non-empty string found
+  for (const field of possibleFields) {
+    if (field && typeof field === 'string' && field.trim()) {
+      console.log('✅ Found recipient name in field:', field.trim());
+      return field.trim();
+    }
+  }
+
+  // If still nothing found, check if this is a mapped job from cache vs fresh data
+  if (job._raw || job.raw_data) {
+    const rawData = job._raw || job.raw_data;
+
+    // Try ServeManager API raw fields
+    const rawFields = [
+      rawData?.recipient?.name,
+      rawData?.recipient_name,
+      rawData?.defendant_name,
+      rawData?.service_to
+    ];
+
+    for (const field of rawFields) {
+      if (field && typeof field === 'string' && field.trim()) {
+        console.log('✅ Found recipient name in raw data:', field.trim());
+        return field.trim();
+      }
+    }
+  }
+
+  // Debug log when no recipient name found
+  console.error('❌ NO RECIPIENT NAME FOUND in any field for job:', {
     jobId: job.id,
-    allJobKeys: Object.keys(job),
-    recipient_name: job.recipient_name,
-    recipient_name_type: typeof job.recipient_name,
-    raw_data: job.raw_data,
-    raw_data_keys: job.raw_data ? Object.keys(job.raw_data) : null,
-    raw_data_recipient: job.raw_data?.recipient,
-    defendant_name: job.defendant_name,
-    fullJobObject: job
+    checkedFields: {
+      recipient_name: job.recipient_name,
+      defendant_name: job.defendant_name,
+      raw_recipient_name: job.raw_data?.recipient?.name,
+      all_keys: Object.keys(job)
+    }
   });
 
-  // First priority: direct recipient_name field
-  if (job.recipient_name && typeof job.recipient_name === 'string' && job.recipient_name.trim()) {
-    console.log('✅ Found recipient_name:', job.recipient_name);
-    return job.recipient_name.trim();
-  }
-
-  // Second priority: ServeManager API nested recipient.name structure
-  if (job.raw_data?.recipient?.name && typeof job.raw_data.recipient.name === 'string' && job.raw_data.recipient.name.trim()) {
-    console.log('✅ Found raw_data.recipient.name:', job.raw_data.recipient.name);
-    return job.raw_data.recipient.name.trim();
-  }
-
-  // Third priority: defendant name fields
-  if (job.defendant_name && typeof job.defendant_name === 'string' && job.defendant_name.trim()) {
-    console.log('✅ Found defendant_name:', job.defendant_name);
-    return job.defendant_name.trim();
-  }
-
-  // Fourth priority: service_to field (ServeManager alternative)
-  if ((job as any).service_to && typeof (job as any).service_to === 'string' && (job as any).service_to.trim()) {
-    console.log('✅ Found service_to:', (job as any).service_to);
-    return (job as any).service_to.trim();
-  }
-
-  // Fifth priority: combining first and last names
-  const firstName = (job as any).defendant_first_name || '';
-  const lastName = (job as any).defendant_last_name || '';
-  const fullName = `${firstName} ${lastName}`.trim();
-  if (fullName) {
-    console.log('✅ Found combined names:', fullName);
-    return fullName;
-  }
-
-  console.error('❌ NO RECIPIENT NAME FOUND - returning Unknown Recipient');
   return 'Unknown Recipient';
 };
 
