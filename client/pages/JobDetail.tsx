@@ -1510,14 +1510,7 @@ export default function JobDetail() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {invoicesLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Loading invoices...</span>
-                      </div>
-                    </div>
-                  ) : jobInvoices.length === 0 ? (
+                  {jobInvoices.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <DollarSign className="w-12 h-12 mx-auto mb-4" />
                       <p>No issued or paid invoices for this job</p>
