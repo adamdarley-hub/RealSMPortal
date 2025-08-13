@@ -482,8 +482,6 @@ export default function JobDetail() {
   const [jobAffidavits, setJobAffidavits] = useState<any[]>([]);
   const [currentInvoiceIndex, setCurrentInvoiceIndex] = useState(0);
   const [currentAffidavitIndex, setCurrentAffidavitIndex] = useState(0);
-  const [invoicesLoading, setInvoicesLoading] = useState(false);
-  const [affidavitsLoading, setAffidavitsLoading] = useState(false);
 
   // No refresh needed - data is always fresh from ServeManager
 
