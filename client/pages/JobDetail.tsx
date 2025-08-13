@@ -263,22 +263,60 @@ const extractDocuments = (job: Job) => {
 
 // Helper function to get service address as formatted string
 const getServiceAddressString = (job: Job) => {
-  const address = job.service_address || job.address || job.defendant_address;
+  // Check all possible address sources in priority order
+  const possibleAddresses = [
+    job.service_address,
+    job.address,
+    job.defendant_address,
+    // Check raw data sources that ServeManager uses
+    job.raw_data?.addresses?.[0],
+    (job as any).addresses?.[0],
+    // Check nested raw data
+    job.raw_data?.service_address,
+    job.raw_data?.defendant_address,
+    job.raw_data?.address
+  ];
 
-  if (typeof address === 'string') return address;
+  for (const address of possibleAddresses) {
+    if (!address) continue;
 
-  if (typeof address === 'object' && address) {
-    const parts = [
-      address.street || address.address1 || address.street1,
-      address.street2 || address.address2
-    ].filter(Boolean);
+    // If address is a string, return it directly
+    if (typeof address === 'string' && address.trim()) {
+      return address.trim();
+    }
 
-    const street = parts.join(' ');
-    const cityState = [address.city, address.state].filter(Boolean).join(', ');
-    const zip = address.zip || address.postal_code;
+    // If address is an object, format it
+    if (typeof address === 'object' && address) {
+      const parts = [
+        address.street || address.address1 || address.street1,
+        address.street2 || address.address2
+      ].filter(Boolean);
 
-    return [street, cityState, zip].filter(Boolean).join(', ');
+      const street = parts.join(' ');
+      const cityState = [address.city, address.state].filter(Boolean).join(', ');
+      const zip = address.zip || address.postal_code;
+
+      const formattedAddress = [street, cityState, zip].filter(Boolean).join(', ');
+
+      if (formattedAddress.trim()) {
+        console.log('✅ Found service address:', formattedAddress);
+        return formattedAddress;
+      }
+    }
   }
+
+  // Debug log when no address found
+  console.log('⚠️ No service address found for job:', {
+    jobId: job.id,
+    checkedFields: {
+      service_address: job.service_address,
+      address: job.address,
+      defendant_address: job.defendant_address,
+      raw_addresses: job.raw_data?.addresses,
+      raw_service_address: job.raw_data?.service_address,
+      all_keys: Object.keys(job)
+    }
+  });
 
   return 'No address available';
 };
