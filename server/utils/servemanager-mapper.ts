@@ -18,6 +18,7 @@ export interface ServeManagerJob {
   id?: string;
   uuid?: string;
   job_number?: string;
+  servemanager_job_number?: string;
   generated_job_id?: string;
   reference?: string;
   client_job_number?: string;
