@@ -602,8 +602,21 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
     let affidavitUrl = null;
     let affidavitTitle = 'affidavit';
 
-    // Check documents array for affidavit
-    if (jobData.documents && Array.isArray(jobData.documents)) {
+    // First check signedAffidavits array
+    if (jobData.signedAffidavits && Array.isArray(jobData.signedAffidavits)) {
+      const signedAffidavit = jobData.signedAffidavits.find((aff: any) =>
+        aff.id === parseInt(affidavitId)
+      );
+
+      if (signedAffidavit) {
+        affidavitUrl = signedAffidavit.download_url || signedAffidavit.pdf_url;
+        affidavitTitle = signedAffidavit.title || 'Affidavit of Service';
+        console.log(`📥 Found affidavit in signedAffidavits:`, { id: signedAffidavit.id, title: affidavitTitle, hasUrl: !!affidavitUrl });
+      }
+    }
+
+    // Fallback: Check documents array for affidavits
+    if (!affidavitUrl && jobData.documents && Array.isArray(jobData.documents)) {
       const affidavitDoc = jobData.documents.find((doc: any) =>
         doc.id === parseInt(affidavitId) &&
         (doc.upload_type === 'affidavit' || doc.type === 'affidavit' || doc.title?.toLowerCase().includes('affidavit'))
@@ -612,6 +625,7 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
       if (affidavitDoc) {
         affidavitUrl = affidavitDoc.upload?.links?.download_url || affidavitDoc.download_url;
         affidavitTitle = affidavitDoc.title || 'affidavit';
+        console.log(`📥 Found affidavit in documents:`, { id: affidavitDoc.id, title: affidavitTitle, hasUrl: !!affidavitUrl });
       }
     }
 
