@@ -502,6 +502,11 @@ export default function Jobs() {
     };
   }, [loadJobs, loadClients]);
 
+  // Reload jobs when pagination changes
+  useEffect(() => {
+    loadJobs(0, true); // Force refresh when pagination changes
+  }, [filters.offset, loadJobs]);
+
   const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
     const newValue = value === 'all' ? undefined : value;
     console.log(`Filter changed: ${key} = ${newValue}`);
