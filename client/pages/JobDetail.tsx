@@ -59,7 +59,12 @@ const safeString = (value: any, fallback: string = ''): string => {
 
 // Helper function to safely extract recipient name from ServeManager recipient object
 const getRecipientName = (job: Job): string => {
-  // Try direct recipient_name field first
+  // ServeManager API uses nested recipient.name structure as primary field
+  if (job.raw_data?.recipient?.name && typeof job.raw_data.recipient.name === 'string') {
+    return job.raw_data.recipient.name;
+  }
+
+  // Try direct recipient_name field
   if (job.recipient_name && typeof job.recipient_name === 'string') {
     return job.recipient_name;
   }
@@ -69,12 +74,16 @@ const getRecipientName = (job: Job): string => {
     return job.defendant_name;
   }
 
-  // Try extracting from raw data recipient object
-  if (job.raw_data?.recipient && typeof job.raw_data.recipient === 'object') {
-    const recipient = job.raw_data.recipient;
-    if (recipient.name && typeof recipient.name === 'string') {
-      return recipient.name;
-    }
+  // Try service_to field (ServeManager alternative)
+  if ((job as any).service_to && typeof (job as any).service_to === 'string') {
+    return (job as any).service_to;
+  }
+
+  // Try combining first and last names
+  const firstName = (job as any).defendant_first_name || '';
+  const lastName = (job as any).defendant_last_name || '';
+  if (firstName && lastName) {
+    return `${firstName} ${lastName}`.trim();
   }
 
   // Fallback
@@ -832,7 +841,7 @@ export default function JobDetail() {
                 <div>
                   <CardTitle className="text-2xl flex items-center gap-2">
                     <FileText className="w-5 h-5" />
-                    {safeString(job.client_company || job.client_name, 'Unknown Client')}
+                    {getRecipientName(job)}
                   </CardTitle>
                   <CardDescription>{safeString(job.service_type || job.type, 'Service')}</CardDescription>
                 </div>
