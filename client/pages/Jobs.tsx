@@ -710,8 +710,8 @@ export default function Jobs() {
             {/* Cache status indicator */}
             {cacheRef.current.timestamp > 0 && (
               <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                Cached data ({Math.round((Date.now() - cacheRef.current.timestamp) / 1000)}s old)
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                ⚡ Instant Load - Cached data ({Math.round((Date.now() - cacheRef.current.timestamp) / 1000)}s old)
               </div>
             )}
           </div>
