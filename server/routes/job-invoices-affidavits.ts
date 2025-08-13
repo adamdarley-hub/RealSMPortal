@@ -366,8 +366,43 @@ export const previewJobInvoice: RequestHandler = async (req, res) => {
     console.log(`📄 Fetching invoice PDF from: ${pdfUrl}`);
     console.log(`📄 PDF URL structure: ${pdfUrl.substring(0, 100)}...`);
 
-    // Try fetching the PDF URL directly first (might already include auth tokens)
-    const pdfResponse = await fetch(pdfUrl);
+    let pdfResponse;
+
+    // First try fetching the PDF URL directly (might already include auth tokens)
+    try {
+      pdfResponse = await fetch(pdfUrl);
+
+      // If we get 401, try with authentication
+      if (pdfResponse.status === 401) {
+        console.log('📄 Direct fetch failed with 401, trying with authentication...');
+
+        const { getServeManagerConfig } = await import('./servemanager');
+        const config = await getServeManagerConfig();
+        const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+
+        pdfResponse = await fetch(pdfUrl, {
+          headers: {
+            'Authorization': `Basic ${credentials}`,
+          },
+        });
+      }
+    } catch (fetchError) {
+      console.error('📄 Error fetching invoice PDF:', fetchError);
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head><title>Invoice Preview Error</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h2>Invoice Preview Error</h2>
+          <p>Unable to fetch invoice #${invoiceId}.</p>
+          <p>Error: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}</p>
+        </body>
+        </html>
+      `;
+
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(500).send(errorHtml);
+    }
 
     if (!pdfResponse.ok) {
       console.error(`❌ Failed to fetch invoice PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
