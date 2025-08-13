@@ -472,18 +472,10 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
     }
 
     console.log(`📥 Downloading affidavit from: ${affidavitUrl}`);
+    console.log(`📥 PDF URL structure: ${affidavitUrl.substring(0, 100)}...`);
 
-    // Fetch the PDF using authenticated request (same as makeServeManagerRequest)
-    const { getServeManagerConfig } = await import('./servemanager');
-    const config = await getServeManagerConfig();
-    const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
-
-    const pdfResponse = await fetch(affidavitUrl, {
-      headers: {
-        'Authorization': `Basic ${credentials}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    // Try fetching the PDF URL directly first (might already include auth tokens)
+    const pdfResponse = await fetch(affidavitUrl);
     if (!pdfResponse.ok) {
       throw new Error(`Failed to fetch affidavit PDF: ${pdfResponse.status}`);
     }
@@ -594,18 +586,10 @@ export const previewJobAffidavit: RequestHandler = async (req, res) => {
     }
 
     console.log(`👁️ Fetching affidavit PDF from: ${affidavitUrl}`);
+    console.log(`👁️ PDF URL structure: ${affidavitUrl.substring(0, 100)}...`);
 
-    // Fetch the PDF using authenticated request (same as makeServeManagerRequest)
-    const { getServeManagerConfig } = await import('./servemanager');
-    const config = await getServeManagerConfig();
-    const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
-
-    const pdfResponse = await fetch(affidavitUrl, {
-      headers: {
-        'Authorization': `Basic ${credentials}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    // Try fetching the PDF URL directly first (might already include auth tokens)
+    const pdfResponse = await fetch(affidavitUrl);
     if (!pdfResponse.ok) {
       const errorHtml = `
         <!DOCTYPE html>
