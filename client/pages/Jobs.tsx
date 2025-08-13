@@ -1,9 +1,25 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -14,23 +30,34 @@ import {
 } from "@/components/ui/dialog";
 import {
   FileText,
+  Search,
   Filter,
   Plus,
+  Calendar,
+  MapPin,
+  User,
   Loader2,
   RefreshCw,
   AlertCircle,
   Wifi,
   WifiOff,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
-
-// Temporarily remove custom components to debug white page
-// import { JobsTable } from "@/components/JobsTable";
-// import { JobsFilters } from "@/components/JobsFilters";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSync } from "@/hooks/use-auto-sync";
 import { Job, JobsResponse, Client, Server, JobFilters } from "@shared/servemanager";
 
-// Performance optimization: Move complex functions to dedicated components
+// Helper function to safely extract string values from potentially nested objects
+const safeString = (value: any, fallback: string = ''): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return value.toString();
+  if (typeof value === 'object' && value) {
+    // Try common string properties
+    return value.name || value.title || value.value || value.text || String(value);
+  }
+  return fallback;
+};
 
 // Helper function to format time ago
 const formatTimeAgo = (date: Date): string => {
@@ -383,7 +410,7 @@ export default function Jobs() {
 
     // Always do a silent background check for new data
     try {
-      console.log('�� Silent background check for updates...');
+      console.log('🔄 Silent background check for updates...');
       const response = await fetch('/api/jobs?limit=50');
       if (response.ok) {
         const data = await response.json();
@@ -485,13 +512,13 @@ export default function Jobs() {
     setSearchTerm("");
   };
 
-  // Optimized refresh function
-  const refreshJobs = useCallback(async () => {
+  const refreshJobs = async () => {
     console.log('🔄 Refreshing jobs...');
     setLoading(true);
     try {
+      // Trigger manual sync and reload with force refresh
       manualSync();
-      await loadJobs(0, true);
+      await loadJobs(0, true); // Force refresh jobs
       toast({
         title: "Refreshed",
         description: "Job data has been refreshed successfully",
@@ -505,17 +532,168 @@ export default function Jobs() {
     } finally {
       setLoading(false);
     }
-  }, [manualSync, loadJobs, toast]);
+  };
 
-  // Optimized sort handler
-  const handleSort = useCallback((field: SortField) => {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "served": return "bg-success text-success-foreground";
+      case "in_progress": return "bg-info text-info-foreground";
+      case "assigned": return "bg-warning text-warning-foreground";
+      case "pending": return "bg-muted text-muted-foreground";
+      case "not_served": return "bg-destructive text-destructive-foreground";
+      case "cancelled": return "bg-secondary text-secondary-foreground";
+      case "completed": return "bg-success text-success-foreground";
+      case "Client Hold": return "bg-orange-500 text-white";
+      case "unassigned": return "bg-blue-500 text-white"; // New/Unassigned jobs
+      case "": return "bg-blue-500 text-white"; // Handle actual empty status from API
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "rush": return "bg-destructive text-destructive-foreground border-destructive";
+      case "routine": return "bg-muted text-muted-foreground border-muted";
+      case "high": return "bg-warning text-warning-foreground border-warning";
+      case "medium": return "bg-info text-info-foreground border-info";
+      case "low": return "bg-success text-success-foreground border-success";
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "No due date";
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const formatReceivedDate = (dateString: string | null) => {
+    if (!dateString) return "Unknown";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
       setSortDirection('asc');
     }
-  }, [sortField, sortDirection]);
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' ?
+      <ChevronUp className="w-4 h-4" /> :
+      <ChevronDown className="w-4 h-4" />;
+  };
+
+  const getSortableValue = (job: Job, field: SortField): string => {
+    switch (field) {
+      case 'recipient':
+        return (job.recipient_name || job.defendant_name || job.recipient?.name || 'Unknown Recipient').toLowerCase();
+      case 'client':
+        const clientCompany = typeof job.client_company === 'string' ? job.client_company :
+                             typeof job.client?.company === 'string' ? job.client.company :
+                             job.client?.name?.company || job.client?.name;
+        const clientName = typeof job.client_name === 'string' ? job.client_name :
+                         typeof job.client?.name === 'string' ? job.client.name :
+                         job.client?.name?.name;
+        return (clientCompany || clientName || 'Unknown Client').toLowerCase();
+      case 'status':
+        return (job.status || 'pending').toLowerCase();
+      case 'priority':
+        return (job.priority || 'medium').toLowerCase();
+      case 'server':
+        const serverName = typeof job.server_name === 'string' ? job.server_name :
+                         typeof job.assigned_server === 'string' ? job.assigned_server :
+                         typeof job.server?.name === 'string' ? job.server.name :
+                         job.server?.name?.name;
+        return (serverName || 'unassigned').toLowerCase();
+      case 'received_date':
+        return job.created_at || job.received_date || '';
+      default:
+        return '';
+    }
+  };
+
+  // Filter and sort jobs
+  const filteredAndSortedJobs = (jobs || []).filter(job => {
+    // Search filter
+    const matchesSearch = !searchTerm || (
+      safeString(job.job_number || job.generated_job_id || job.reference).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeString(job.client?.name || job.client_name || job.client_company).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeString(job.recipient?.name || job.recipient_name || job.defendant_name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      safeString(job.description || job.notes).toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Status filter
+    const matchesStatus = !filters.status || filters.status === 'all' ||
+      (filters.status === 'unassigned' && (job.status === '' || !job.status)) ||
+      job.status === filters.status;
+
+    // Priority filter
+    const matchesPriority = !filters.priority || filters.priority === 'all' || job.priority === filters.priority;
+
+    // Client filter
+    const matchesClient = !filters.client_id || filters.client_id === 'all' || job.client_id === filters.client_id;
+
+    // Server filter
+    const matchesServer = !filters.server_id || filters.server_id === 'all' ||
+      (filters.server_id === 'unassigned' && (!job.server_id || job.server_id === '')) ||
+      job.server_id === filters.server_id;
+
+    const result = matchesSearch && matchesStatus && matchesPriority && matchesClient && matchesServer;
+
+    // Debug first job that gets filtered
+    if (job === jobs[0] && (filters.status || filters.priority || filters.client_id || filters.server_id || searchTerm)) {
+      console.log(`Filter debug for job ${job.id}:`, {
+        job: {
+          status: job.status,
+          priority: job.priority,
+          client_id: job.client_id,
+          server_id: job.server_id
+        },
+        filters,
+        searchTerm,
+        matches: {
+          search: matchesSearch,
+          status: matchesStatus,
+          priority: matchesPriority,
+          client: matchesClient,
+          server: matchesServer,
+          result
+        }
+      });
+    }
+
+    return result;
+  }).sort((a, b) => {
+    const aValue = getSortableValue(a, sortField);
+    const bValue = getSortableValue(b, sortField);
+
+    if (sortField === 'received_date') {
+      // For dates, convert to timestamps for proper sorting
+      const aDate = new Date(aValue).getTime() || 0;
+      const bDate = new Date(bValue).getTime() || 0;
+      return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
+    }
+
+    // For strings, use localeCompare
+    const comparison = aValue.localeCompare(bValue);
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
 
   if (error) {
     return (
@@ -731,7 +909,7 @@ export default function Jobs() {
           </Card>
         )}
 
-        {/* Filters and Search - Lazy Loaded */}
+        {/* Filters and Search */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -740,7 +918,108 @@ export default function Jobs() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Filters will go here</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search jobs..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
+                <Select
+                  value={filters.status || "all"}
+                  onValueChange={(value) => handleFilterChange('status', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="unassigned">New/Unassigned</SelectItem>
+                    <SelectItem value="Client Hold">Client Hold</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="assigned">Assigned</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="served">Served</SelectItem>
+                    <SelectItem value="not_served">Not Served</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Priority</label>
+                <Select
+                  value={filters.priority || "all"}
+                  onValueChange={(value) => handleFilterChange('priority', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priority</SelectItem>
+                    <SelectItem value="rush">Rush</SelectItem>
+                    <SelectItem value="routine">Routine</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Client</label>
+                <Select
+                  value={filters.client_id || "all"}
+                  onValueChange={(value) => handleFilterChange('client_id', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Clients" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Clients</SelectItem>
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.company || client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Server</label>
+                <Select
+                  value={filters.server_id || "all"}
+                  onValueChange={(value) => handleFilterChange('server_id', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Servers" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Servers</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {servers.map((server) => (
+                      <SelectItem key={server.id} value={server.id}>
+                        {server.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-end">
+                <Button variant="outline" onClick={clearFilters} className="w-full">
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -760,17 +1039,199 @@ export default function Jobs() {
             </div>
           </CardHeader>
           <CardContent>
-            <p>Jobs table will go here. Found {jobs.length} jobs.</p>
-            {loading && <p>Loading...</p>}
-            {error && <p>Error: {error}</p>}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('recipient')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Recipient
+                      {getSortIcon('recipient')}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('client')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Client
+                      {getSortIcon('client')}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Status
+                      {getSortIcon('status')}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('priority')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Priority
+                      {getSortIcon('priority')}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('server')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Server
+                      {getSortIcon('server')}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('received_date')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Received Date
+                      {getSortIcon('received_date')}
+                    </div>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAndSortedJobs.map((job) => (
+                  <TableRow
+                    key={job.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => navigate(`/jobs/${job.id}`)}
+                  >
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">
+                          {(() => {
+                            // Safely extract recipient name from various formats
+                            const recipientName = typeof job.recipient_name === 'string' ? job.recipient_name :
+                                                 typeof job.defendant_name === 'string' ? job.defendant_name :
+                                                 typeof job.recipient?.name === 'string' ? job.recipient.name :
+                                                 job.recipient?.name?.name ||
+                                                 `${job.defendant_first_name || ''} ${job.defendant_last_name || ''}`.trim();
 
-            {jobs.length === 0 && !loading && (
+                            return recipientName || 'Unknown Recipient';
+                          })()}
+                        </p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {(() => {
+                            // Safely extract address from ServeManager format
+                            const getAddressString = (addr: any) => {
+                              if (typeof addr === 'string') return addr;
+                              if (typeof addr === 'object' && addr) {
+                                // ServeManager format: { street1, street2, city, state, zip }
+                                const parts = [
+                                  addr.street1,
+                                  addr.street2,
+                                  addr.street,
+                                  addr.address
+                                ].filter(Boolean);
+
+                                const street = parts.join(' ');
+                                const cityState = [addr.city, addr.state].filter(Boolean).join(', ');
+                                const zip = addr.zip || addr.postal_code;
+
+                                const fullAddr = [street, cityState, zip].filter(Boolean).join(', ');
+
+                                // Fallback to other formats
+                                return fullAddr || addr.full_address || addr.formatted_address ||
+                                       `${addr.street || ''} ${addr.city || ''} ${addr.state || ''} ${addr.zip || ''}`.trim();
+                              }
+                              return '';
+                            };
+
+                            const address = getAddressString(job.service_address) ||
+                                          getAddressString(job.defendant_address) ||
+                                          getAddressString(job.address) ||
+                                          getAddressString(job.recipient?.address);
+
+                            return address || 'Address not available';
+                          })()}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">
+                          {(() => {
+                            // Handle client data safely - extract string values from objects
+                            const clientCompany = typeof job.client_company === 'string' ? job.client_company :
+                                                 typeof job.client?.company === 'string' ? job.client.company :
+                                                 job.client?.name?.company || job.client?.name;
+                            const clientName = typeof job.client_name === 'string' ? job.client_name :
+                                             typeof job.client?.name === 'string' ? job.client.name :
+                                             job.client?.name?.name;
+
+                            return clientCompany || clientName || 'Unknown Client';
+                          })()}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {(() => {
+                            // Extract contact name from various formats
+                            const contactName = typeof job.client_name === 'string' ? job.client_name :
+                                              job.client_contact ?
+                                                `${job.client_contact.first_name || ''} ${job.client_contact.last_name || ''}`.trim() :
+                                              typeof job.client?.name === 'string' ? job.client.name :
+                                              job.client?.contact_name;
+
+                            return contactName || 'No contact name';
+                          })()}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(job.status || 'pending')}>
+                        {(job.status || 'pending').replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={getPriorityColor(job.priority || 'medium')}>
+                        {job.priority || 'medium'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        // Safely extract server name from various formats
+                        const serverName = typeof job.server_name === 'string' ? job.server_name :
+                                         typeof job.assigned_server === 'string' ? job.assigned_server :
+                                         typeof job.server?.name === 'string' ? job.server.name :
+                                         job.server?.name?.name;
+
+                        return serverName ? (
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            {serverName}
+                          </div>
+                        ) : (
+                          <Badge variant="secondary">Unassigned</Badge>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        {formatReceivedDate(job.created_at || job.received_date)}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {filteredAndSortedJobs.length === 0 && !loading && (
               <div className="text-center py-8">
                 <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Jobs Found</h3>
                 <p className="text-muted-foreground">
-                  {searchTerm || Object.values(filters).some(v => v)
-                    ? "No jobs match your current filters"
+                  {searchTerm || Object.values(filters).some(v => v) 
+                    ? "No jobs match your current filters" 
                     : "No jobs available"}
                 </p>
               </div>
