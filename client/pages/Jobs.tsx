@@ -128,9 +128,17 @@ export default function Jobs() {
     const now = Date.now();
     const cache = cacheRef.current;
 
-    if (!forceRefresh && cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.jobs.length > 0) {
+    // Cache is valid only if offset and limit match the current request
+    const cacheValid = !forceRefresh &&
+      cache.timestamp &&
+      (now - cache.timestamp) < CACHE_DURATION &&
+      cache.jobs.length > 0 &&
+      cache.lastOffset === filters.offset &&
+      cache.lastLimit === filters.limit;
+
+    if (cacheValid) {
       const ageSeconds = Math.round((now - cache.timestamp) / 1000);
-      console.log(`⚡ Using cached jobs data (${ageSeconds}s old) - INSTANT LOAD`);
+      console.log(`⚡ Using cached jobs data (${ageSeconds}s old) - Page ${currentPage} - INSTANT LOAD`);
       setJobs(cache.jobs);
       setTotalJobs(cache.totalJobs);
       setLoading(false);
