@@ -20,6 +20,7 @@ export interface ServeManagerJob {
   job_number?: string;
   generated_job_id?: string;
   reference?: string;
+  client_job_number?: string;
   
   // Status and priority
   status?: string;
