@@ -427,25 +427,41 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
     const { jobId, affidavitId } = req.params;
     console.log(`📥 Downloading affidavit ${affidavitId} for job ${jobId}...`);
 
-    // Get the job to find affidavit details
+    // Get fresh job data from ServeManager to find affidavit details
     const jobResponse = await makeServeManagerRequest(`/jobs/${jobId}`);
     const jobData = jobResponse.data || jobResponse;
 
-    let affidavitUrl = null;
+    if (!jobData) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
 
-    // Check if it's the main job affidavit
-    if (jobData.affidavit && (jobData.affidavit.id === affidavitId || `aff_${jobId}` === affidavitId)) {
-      affidavitUrl = jobData.affidavit.pdf_url || jobData.affidavit.download_url;
+    let affidavitUrl = null;
+    let affidavitTitle = 'affidavit';
+
+    // Check documents array for affidavit
+    if (jobData.documents && Array.isArray(jobData.documents)) {
+      const affidavitDoc = jobData.documents.find((doc: any) =>
+        doc.id === parseInt(affidavitId) &&
+        (doc.upload_type === 'affidavit' || doc.type === 'affidavit' || doc.title?.toLowerCase().includes('affidavit'))
+      );
+
+      if (affidavitDoc) {
+        affidavitUrl = affidavitDoc.upload?.links?.download_url || affidavitDoc.download_url;
+        affidavitTitle = affidavitDoc.title || 'affidavit';
+      }
     }
 
     // Check misc_attachments for affidavit documents
-    if (!affidavitUrl && jobData.misc_attachments) {
+    if (!affidavitUrl && jobData.misc_attachments && Array.isArray(jobData.misc_attachments)) {
       const affidavitAttachment = jobData.misc_attachments.find((att: any) =>
-        att.id === parseInt(affidavitId) && att.upload_type === 'affidavit' && att.signed
+        att.id === parseInt(affidavitId) &&
+        (att.upload_type === 'affidavit' || att.type === 'affidavit') &&
+        att.signed === true
       );
 
       if (affidavitAttachment) {
         affidavitUrl = affidavitAttachment.upload?.links?.download_url || affidavitAttachment.download_url;
+        affidavitTitle = affidavitAttachment.title || 'affidavit';
       }
     }
 
@@ -455,19 +471,27 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
 
     console.log(`📥 Downloading affidavit from: ${affidavitUrl}`);
 
-    // Proxy the PDF download
-    const response = await fetch(affidavitUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch affidavit PDF: ${response.status}`);
+    // Fetch the PDF using the affidavit's download URL
+    const pdfResponse = await fetch(affidavitUrl);
+    if (!pdfResponse.ok) {
+      throw new Error(`Failed to fetch affidavit PDF: ${pdfResponse.status}`);
     }
 
     // Set appropriate headers for download
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="affidavit-${affidavitId}.pdf"`);
+    const contentType = pdfResponse.headers.get('content-type') || 'application/pdf';
+    const contentLength = pdfResponse.headers.get('content-length');
+    const filename = `${affidavitTitle.replace(/[^a-zA-Z0-9]/g, '_')}-${affidavitId}.pdf`;
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Cache-Control', 'public, max-age=300');
 
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
+
     // Stream the PDF
-    response.body?.pipe(res);
+    pdfResponse.body?.pipe(res);
 
   } catch (error) {
     console.error(`Error downloading affidavit ${req.params.affidavitId}:`, error);
