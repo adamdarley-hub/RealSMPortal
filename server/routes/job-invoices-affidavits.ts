@@ -266,8 +266,17 @@ export const downloadJobInvoice: RequestHandler = async (req, res) => {
 
     console.log(`📥 Downloading invoice PDF from: ${pdfUrl}`);
 
-    // Fetch the PDF using the invoice's download URL
-    const pdfResponse = await fetch(pdfUrl);
+    // Fetch the PDF using authenticated request (same as makeServeManagerRequest)
+    const { getServeManagerConfig } = await import('./servemanager');
+    const config = await getServeManagerConfig();
+    const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+
+    const pdfResponse = await fetch(pdfUrl, {
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!pdfResponse.ok) {
       console.error(`❌ Failed to download invoice PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
