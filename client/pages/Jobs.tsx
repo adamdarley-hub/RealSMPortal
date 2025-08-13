@@ -738,15 +738,7 @@ export default function Jobs() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <JobsFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={clearFilters}
-              clients={clients}
-              servers={servers}
-            />
+            <p>Filters will go here</p>
           </CardContent>
         </Card>
 
