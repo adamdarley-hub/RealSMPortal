@@ -462,13 +462,25 @@ export default function Jobs() {
   };
 
   const refreshJobs = async () => {
-    // Trigger manual sync and reload
-    manualSync();
-    await loadJobs();
-    toast({
-      title: "Refreshed",
-      description: "Job data has been refreshed successfully",
-    });
+    console.log('🔄 Refreshing jobs...');
+    setLoading(true);
+    try {
+      // Trigger manual sync and reload with force refresh
+      manualSync();
+      await loadJobs(0, true); // Force refresh jobs
+      toast({
+        title: "Refreshed",
+        description: "Job data has been refreshed successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh Failed",
+        description: "Could not refresh job data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
