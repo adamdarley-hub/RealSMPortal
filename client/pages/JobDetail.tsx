@@ -701,7 +701,7 @@ export default function JobDetail() {
 
           rawJobData = await response.json();
           dataSource = 'cache-fallback';
-          console.log('✅ Successfully loaded data from cache fallback');
+          console.log('�� Successfully loaded data from cache fallback');
         }
         // Handle both direct job data and wrapped responses
         const jobData = rawJobData.data || rawJobData;
@@ -1156,27 +1156,40 @@ export default function JobDetail() {
                         );
                       }
 
-                      // Branch Name
+                      // Branch Name - debug what's available
                       const branchName = safeString((job as any).branch_name || job.raw_data?.branch_name || '', '').trim();
-                      if (branchName) {
-                        elements.push(
-                          <div key="branch-name">
-                            <label className="text-sm font-medium text-slate-700">Branch Name</label>
-                            <p className="text-sm text-slate-900">{branchName}</p>
-                          </div>
-                        );
-                      }
+                      console.log('🔍 Branch Name debug:', {
+                        branch_name: (job as any).branch_name,
+                        raw_branch_name: job.raw_data?.branch_name,
+                        final_value: branchName,
+                        job_keys: Object.keys(job),
+                        raw_data_keys: job.raw_data ? Object.keys(job.raw_data) : null
+                      });
 
-                      // Count
+                      // Always show for debugging
+                      elements.push(
+                        <div key="branch-name">
+                          <label className="text-sm font-medium text-slate-700">Branch Name</label>
+                          <p className="text-sm text-slate-900">{branchName || 'N/A'}</p>
+                        </div>
+                      );
+
+                      // Count - debug what's available
                       const count = (job as any).count || job.raw_data?.count;
-                      if (count !== null && count !== undefined && count !== '') {
-                        elements.push(
-                          <div key="count">
-                            <label className="text-sm font-medium text-slate-700">Count</label>
-                            <p className="text-sm text-slate-900">{count.toString()}</p>
-                          </div>
-                        );
-                      }
+                      console.log('🔍 Count debug:', {
+                        count: (job as any).count,
+                        raw_count: job.raw_data?.count,
+                        final_value: count,
+                        type: typeof count
+                      });
+
+                      // Always show for debugging
+                      elements.push(
+                        <div key="count">
+                          <label className="text-sm font-medium text-slate-700">Count</label>
+                          <p className="text-sm text-slate-900">{count !== null && count !== undefined ? count.toString() : 'N/A'}</p>
+                        </div>
+                      );
 
                       return elements;
                     })()}
