@@ -86,8 +86,30 @@ const getRecipientName = (job: Job): string => {
     return `${firstName} ${lastName}`.trim();
   }
 
-  // Fallback
-  return 'Unknown Recipient';
+  // Fallback to try getting from job list data if available
+  return job.recipient_name || 'Unknown Recipient';
+};
+
+// Helper function to get recipient info only showing fields with values
+const getRecipientInfo = (job: Job) => {
+  const recipient = job.raw_data?.recipient || {};
+  const info: { [key: string]: string } = {};
+
+  if (recipient.name) info['Name'] = recipient.name;
+  if (recipient.description) info['Description'] = recipient.description;
+  if (recipient.age) info['Age'] = recipient.age.toString();
+  if (recipient.ethnicity) info['Ethnicity'] = recipient.ethnicity;
+  if (recipient.gender) info['Gender'] = recipient.gender;
+  if (recipient.weight) info['Weight'] = recipient.weight;
+  if (recipient.height1 || recipient.height2) {
+    const height = [recipient.height1, recipient.height2].filter(Boolean).join("'") + '"';
+    info['Height'] = height;
+  }
+  if (recipient.hair) info['Hair'] = recipient.hair;
+  if (recipient.eyes) info['Eyes'] = recipient.eyes;
+  if (recipient.relationship) info['Relationship'] = recipient.relationship;
+
+  return info;
 };
 
 // Helper function to format currency
@@ -821,7 +843,7 @@ export default function JobDetail() {
                     <FileText className="w-5 h-5" />
                     {getRecipientName(job)}
                   </CardTitle>
-                  <CardDescription>{safeString(job.service_type || job.type, 'Service')}</CardDescription>
+                  <CardDescription>{safeString(job.service_status || job.status, 'Service')}</CardDescription>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold">{formatCurrency(job.amount || job.total || job.fee)}</p>
@@ -842,21 +864,19 @@ export default function JobDetail() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-slate-700">Job ID</label>
-                      <p className="text-sm text-slate-900">{safeString(job.job_number || job.generated_job_id || job.id, 'N/A')}</p>
+                      <p className="text-sm text-slate-900">{safeString((job as any).servemanager_job_number || job.job_number, 'N/A')}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700">Client Job #</label>
-                      <p className="text-sm text-slate-900">{safeString((job as any).client_job_number || job.reference, 'N/A')}</p>
+                      <p className="text-sm text-slate-900">{safeString((job as any).client_job_number || job.reference || job.case_number || job.docket_number, 'N/A')}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700">Service Type</label>
-                      <p className="text-sm text-slate-900">{safeString(job.service_type || job.type, 'Service')}</p>
+                      <p className="text-sm text-slate-900">{safeString(job.service_status || job.status, 'Service')}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700">Priority</label>
-                      <Badge variant="outline" className={getPriorityColor(job.priority || 'routine')}>
-                        {job.priority || 'routine'}
-                      </Badge>
+                      <p className="text-sm text-slate-900">{(job.priority || 'routine').charAt(0).toUpperCase() + (job.priority || 'routine').slice(1).toLowerCase()}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700">Attempts</label>
@@ -881,14 +901,15 @@ export default function JobDetail() {
                         {getServiceAddressString(job)}
                       </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Contact Phone</label>
-                      <p className="text-sm text-slate-900">{safeString(job.client_phone, 'N/A')}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Contact Email</label>
-                      <p className="text-sm text-slate-900">{safeString(job.client_email, 'N/A')}</p>
-                    </div>
+                    {(() => {
+                      const recipientInfo = getRecipientInfo(job);
+                      return Object.entries(recipientInfo).slice(1).map(([key, value]) => (
+                        <div key={key}>
+                          <label className="text-sm font-medium text-slate-700">{key}</label>
+                          <p className="text-sm text-slate-900">{value}</p>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </TabsContent>
                 
