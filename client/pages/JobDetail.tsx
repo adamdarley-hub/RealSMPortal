@@ -183,15 +183,15 @@ const getCourtCaseString = (job: Job): string => {
     return plaintiff;
   }
 
-  // If we only have defendant, show just defendant
-  if (defendant && defendant !== 'Unknown Recipient') {
-    return defendant;
-  }
-
-  // Fallback to case number or docket number
+  // First try case number or docket number before showing just defendant
   const caseNumber = safeString(job.case_number || job.docket_number, '').trim();
   if (caseNumber) {
     return caseNumber;
+  }
+
+  // Only show defendant alone if there's no case number available
+  if (defendant && defendant !== 'Unknown Recipient') {
+    return defendant;
   }
 
   return 'N/A';
@@ -801,7 +801,7 @@ export default function JobDetail() {
           setJobAffidavits([]);
         }
       } else {
-        console.log('�� Affidavits request failed:', affidavitsResponse);
+        console.log('❌ Affidavits request failed:', affidavitsResponse);
         setJobAffidavits([]);
       }
 
