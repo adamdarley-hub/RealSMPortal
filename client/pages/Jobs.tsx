@@ -356,7 +356,7 @@ export default function Jobs() {
         controller.abort();
       }, 10000); // Increased to 10 seconds
 
-      const response = await fetch('/api/v2/servers', {
+      const response = await fetch('/api/servers', {
         signal: controller.signal
       });
 
