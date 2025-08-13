@@ -188,6 +188,7 @@ export function createServer() {
   app.get("/api/clients", getCachedClients);  // ⚡ INSTANT - Serve from local cache
   app.get("/api/servers", getCachedServers);  // ⚡ INSTANT - Serve from local cache
   app.get("/api/jobs/:id", getCachedJob);     // ⚡ INSTANT - Single job from cache
+  app.get("/api/invoices", getMockInvoices);  // 📄 INVOICES - Use mock data for now
 
   // Cache management routes
   app.post("/api/sync", triggerManualSync);        // 🔄 Trigger manual sync with better response
