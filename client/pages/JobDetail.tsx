@@ -1156,6 +1156,28 @@ export default function JobDetail() {
                         );
                       }
 
+                      // Branch Name
+                      const branchName = safeString((job as any).branch_name || job.raw_data?.branch_name || '', '').trim();
+                      if (branchName) {
+                        elements.push(
+                          <div key="branch-name">
+                            <label className="text-sm font-medium text-slate-700">Branch Name</label>
+                            <p className="text-sm text-slate-900">{branchName}</p>
+                          </div>
+                        );
+                      }
+
+                      // Count
+                      const count = (job as any).count || job.raw_data?.count;
+                      if (count !== null && count !== undefined && count !== '') {
+                        elements.push(
+                          <div key="count">
+                            <label className="text-sm font-medium text-slate-700">Count</label>
+                            <p className="text-sm text-slate-900">{count.toString()}</p>
+                          </div>
+                        );
+                      }
+
                       return elements;
                     })()}
                   </div>
