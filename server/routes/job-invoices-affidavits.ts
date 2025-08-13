@@ -170,23 +170,47 @@ export const getJobAffidavits: RequestHandler = async (req, res) => {
 
     // Check documents array for affidavits (ServeManager stores affidavits as documents)
     if (jobData.documents && Array.isArray(jobData.documents)) {
-      const affidavitDocs = jobData.documents.filter((doc: any) =>
-        doc.upload_type === 'affidavit' ||
-        doc.type === 'affidavit' ||
-        doc.title?.toLowerCase().includes('affidavit')
-      );
+      console.log(`📜 Checking ${jobData.documents.length} documents for affidavits:`);
+      jobData.documents.forEach((doc: any, index: number) => {
+        console.log(`📜 Document ${index + 1}:`, {
+          id: doc.id,
+          title: doc.title,
+          upload_type: doc.upload_type,
+          type: doc.type,
+          signed: doc.signed,
+          hasUpload: !!doc.upload,
+          uploadLinks: doc.upload?.links,
+          downloadUrl: doc.download_url
+        });
+      });
+
+      const affidavitDocs = jobData.documents.filter((doc: any) => {
+        const isAffidavit = doc.upload_type === 'affidavit' ||
+                           doc.type === 'affidavit' ||
+                           doc.title?.toLowerCase().includes('affidavit') ||
+                           doc.title?.toLowerCase().includes('service');
+        console.log(`📜 Document ${doc.id} is affidavit: ${isAffidavit}`);
+        return isAffidavit;
+      });
 
       affidavitDocs.forEach((doc: any) => {
+        // For ServeManager, if it's in documents and has a PDF, it's likely signed
         const affidavit = {
           id: doc.id,
           job_id: jobId,
           signed_at: doc.updated_at || doc.created_at,
           created_at: doc.created_at,
-          status: 'signed', // If it's in documents, assume it's signed
+          status: 'signed', // If it's in documents with PDF, assume signed
           signer: jobData.employee_process_server?.first_name + ' ' + jobData.employee_process_server?.last_name || 'Process Server',
           pdf_url: doc.upload?.links?.download_url || doc.download_url,
           title: doc.title || 'Affidavit of Service'
         };
+
+        console.log(`📜 Adding affidavit:`, {
+          id: affidavit.id,
+          title: affidavit.title,
+          hasPdfUrl: !!affidavit.pdf_url
+        });
 
         jobAffidavits.push(affidavit);
       });
@@ -254,12 +278,40 @@ export const downloadJobInvoice: RequestHandler = async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Check if this job has the requested invoice
-    if (!jobData.invoice || jobData.invoice.id.toString() !== invoiceId.toString()) {
-      return res.status(404).json({ error: 'Invoice not associated with this job' });
+    // Find the invoice - ServeManager might store it differently
+    let targetInvoice = null;
+    let pdfUrl = null;
+
+    // Check if job has direct invoice property
+    if (jobData.invoice && jobData.invoice.id.toString() === invoiceId.toString()) {
+      targetInvoice = jobData.invoice;
+      pdfUrl = jobData.invoice.pdf_download_url;
+    }
+    // Check if job has invoices array
+    else if (jobData.invoices && Array.isArray(jobData.invoices)) {
+      targetInvoice = jobData.invoices.find(inv => inv.id.toString() === invoiceId.toString());
+      if (targetInvoice) {
+        pdfUrl = targetInvoice.pdf_download_url || targetInvoice.pdf_url;
+      }
+    }
+    // If no direct association, get invoice directly from ServeManager
+    else {
+      try {
+        const invoiceResponse = await makeServeManagerRequest(`/invoices/${invoiceId}`);
+        const invoiceData = invoiceResponse.data || invoiceResponse;
+
+        if (invoiceData && invoiceData.id.toString() === invoiceId.toString()) {
+          targetInvoice = invoiceData;
+          pdfUrl = invoiceData.pdf_download_url || invoiceData.pdf_url;
+        }
+      } catch (directFetchError) {
+        console.error(`❌ Failed to fetch invoice ${invoiceId} directly:`, directFetchError);
+      }
     }
 
-    const pdfUrl = jobData.invoice.pdf_download_url;
+    if (!targetInvoice) {
+      return res.status(404).json({ error: `Invoice ${invoiceId} not found or not accessible` });
+    }
     if (!pdfUrl) {
       return res.status(404).json({ error: 'Invoice PDF not available' });
     }
@@ -345,30 +397,68 @@ export const previewJobInvoice: RequestHandler = async (req, res) => {
       return res.status(404).send(errorHtml);
     }
 
-    console.log(`📄 Job invoice data:`, {
+    console.log(`📄 Job invoice debugging:`, {
       hasInvoice: !!jobData.invoice,
       invoiceId: jobData.invoice?.id,
       invoiceStatus: jobData.invoice?.status,
-      hasPdfUrl: !!jobData.invoice?.pdf_download_url
+      hasPdfUrl: !!jobData.invoice?.pdf_download_url,
+      hasInvoices: !!jobData.invoices,
+      invoicesLength: jobData.invoices?.length,
+      requestedInvoiceId: invoiceId,
+      allJobKeys: Object.keys(jobData)
     });
 
-    // Check if this job has the requested invoice
-    if (!jobData.invoice || jobData.invoice.id.toString() !== invoiceId.toString()) {
+    // Find the invoice - ServeManager might store it differently
+    let targetInvoice = null;
+    let pdfUrl = null;
+
+    // Check if job has direct invoice property
+    if (jobData.invoice && jobData.invoice.id.toString() === invoiceId.toString()) {
+      targetInvoice = jobData.invoice;
+      pdfUrl = jobData.invoice.pdf_download_url;
+    }
+    // Check if job has invoices array
+    else if (jobData.invoices && Array.isArray(jobData.invoices)) {
+      targetInvoice = jobData.invoices.find(inv => inv.id.toString() === invoiceId.toString());
+      if (targetInvoice) {
+        pdfUrl = targetInvoice.pdf_download_url || targetInvoice.pdf_url;
+      }
+    }
+    // If no direct association, get invoice directly from ServeManager
+    else {
+      try {
+        console.log(`📄 Fetching invoice ${invoiceId} directly from ServeManager...`);
+        const invoiceResponse = await makeServeManagerRequest(`/invoices/${invoiceId}`);
+        const invoiceData = invoiceResponse.data || invoiceResponse;
+
+        if (invoiceData && invoiceData.id.toString() === invoiceId.toString()) {
+          targetInvoice = invoiceData;
+          pdfUrl = invoiceData.pdf_download_url || invoiceData.pdf_url;
+          console.log(`📄 Found invoice ${invoiceId} directly:`, {
+            status: invoiceData.status,
+            hasPdfUrl: !!pdfUrl
+          });
+        }
+      } catch (directFetchError) {
+        console.error(`❌ Failed to fetch invoice ${invoiceId} directly:`, directFetchError);
+      }
+    }
+
+    if (!targetInvoice) {
       const errorHtml = `
         <!DOCTYPE html>
         <html>
         <head><title>Invoice Preview Error</title></head>
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
           <h2>Invoice Not Found</h2>
-          <p>Invoice #${invoiceId} is not associated with this job.</p>
+          <p>Invoice #${invoiceId} could not be found or is not accessible.</p>
+          <p>Job: ${jobId}</p>
         </body>
         </html>
       `;
       res.setHeader('Content-Type', 'text/html');
       return res.status(404).send(errorHtml);
     }
-
-    const pdfUrl = jobData.invoice.pdf_download_url;
     if (!pdfUrl) {
       const errorHtml = `
         <!DOCTYPE html>
@@ -377,7 +467,7 @@ export const previewJobInvoice: RequestHandler = async (req, res) => {
         <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
           <h2>Invoice PDF Not Available</h2>
           <p>Invoice #${invoiceId} PDF is not yet generated.</p>
-          <p>Status: ${jobData.invoice.status}</p>
+          <p>Status: ${targetInvoice.status}</p>
         </body>
         </html>
       `;
