@@ -1157,11 +1157,11 @@ export default function JobDetail() {
                       }
 
                       // Court information from ServeManager courts API structure
-                      const court = (job.raw_data as any)?.court || (job as any).court || {};
+                      const courtInfo = (job.raw_data as any)?.court || (job as any).court || {};
 
                       // Branch Name
                       const branchName = safeString(
-                        court?.branch_name ||
+                        courtInfo?.branch_name ||
                         (job as any).branch_name ||
                         job.raw_data?.branch_name ||
                         '', ''
@@ -1177,7 +1177,7 @@ export default function JobDetail() {
 
                       // County
                       const county = safeString(
-                        court?.county ||
+                        courtInfo?.county ||
                         (job as any).county ||
                         job.raw_data?.county ||
                         '', ''
@@ -1192,7 +1192,7 @@ export default function JobDetail() {
                       }
 
                       // Court Address
-                      const courtAddress = court?.address || (job as any).court_address;
+                      const courtAddress = courtInfo?.address || (job as any).court_address;
                       if (courtAddress && typeof courtAddress === 'object') {
                         const addressParts = [
                           courtAddress.address1,
