@@ -738,19 +738,15 @@ export default function Jobs() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={
-              <div className="animate-pulse bg-muted h-20 rounded"></div>
-            }>
-              <JobsFilters
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onClearFilters={clearFilters}
-                clients={clients}
-                servers={servers}
-              />
-            </Suspense>
+            <JobsFilters
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={clearFilters}
+              clients={clients}
+              servers={servers}
+            />
           </CardContent>
         </Card>
 
