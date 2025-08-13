@@ -21,9 +21,9 @@ import {
   WifiOff,
 } from "lucide-react";
 
-// Lazy load heavy components
-const JobsTable = React.lazy(() => import("./Jobs/JobsTable").then(m => ({ default: m.JobsTable })));
-const JobsFilters = React.lazy(() => import("./Jobs/JobsFilters").then(m => ({ default: m.JobsFilters })));
+// Import components directly to avoid dynamic import issues
+import { JobsTable } from "@/components/JobsTable";
+import { JobsFilters } from "@/components/JobsFilters";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSync } from "@/hooks/use-auto-sync";
 import { Job, JobsResponse, Client, Server, JobFilters } from "@shared/servemanager";
