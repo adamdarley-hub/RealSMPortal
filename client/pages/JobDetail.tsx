@@ -1493,20 +1493,6 @@ export default function JobDetail() {
                       <CardTitle>Invoices</CardTitle>
                       <CardDescription>Issued or paid invoices related to this job</CardDescription>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => id && loadJobInvoices(id)}
-                      disabled={invoicesLoading}
-                      className="gap-2"
-                    >
-                      {invoicesLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4" />
-                      )}
-                      Refresh
-                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
