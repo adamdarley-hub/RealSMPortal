@@ -1102,72 +1102,61 @@ export default function JobDetail() {
                     {(() => {
                       // Get court case data from ServeManager structure
                       const courtCase = (job.raw_data as any)?.court_case || (job as any).court_case;
-                      const fields: Array<{label: string, value: string}> = [];
+                      const elements = [];
 
-                      // Court Case info
-                      fields.push({
-                        label: 'Court Case',
-                        value: getCourtCaseString(job)
-                      });
+                      // Court Case info with custom formatting
+                      elements.push(
+                        <div key="court-case">
+                          <label className="text-sm font-medium text-slate-700">Court Case</label>
+                          {getCourtCaseDisplay(job)}
+                        </div>
+                      );
 
                       // Case Number
                       const caseNumber = safeString(courtCase?.number || job.case_number || job.docket_number, '').trim();
                       if (caseNumber) {
-                        fields.push({
-                          label: 'Case Number',
-                          value: caseNumber
-                        });
+                        elements.push(
+                          <div key="case-number">
+                            <label className="text-sm font-medium text-slate-700">Case Number</label>
+                            <p className="text-sm text-slate-900">{caseNumber}</p>
+                          </div>
+                        );
                       }
 
                       // Court
                       const court = safeString(courtCase?.court || job.court, '').trim();
                       if (court) {
-                        fields.push({
-                          label: 'Court',
-                          value: court
-                        });
+                        elements.push(
+                          <div key="court">
+                            <label className="text-sm font-medium text-slate-700">Court</label>
+                            <p className="text-sm text-slate-900">{court}</p>
+                          </div>
+                        );
                       }
 
                       // Filed Date
                       const filedDate = courtCase?.filed_date;
                       if (filedDate) {
-                        fields.push({
-                          label: 'Filed Date',
-                          value: formatDate(filedDate)
-                        });
+                        elements.push(
+                          <div key="filed-date">
+                            <label className="text-sm font-medium text-slate-700">Filed Date</label>
+                            <p className="text-sm text-slate-900">{formatDate(filedDate)}</p>
+                          </div>
+                        );
                       }
 
                       // Court Date
                       const courtDate = courtCase?.court_date;
                       if (courtDate) {
-                        fields.push({
-                          label: 'Court Date',
-                          value: formatDate(courtDate)
-                        });
+                        elements.push(
+                          <div key="court-date">
+                            <label className="text-sm font-medium text-slate-700">Court Date</label>
+                            <p className="text-sm text-slate-900">{formatDate(courtDate)}</p>
+                          </div>
+                        );
                       }
 
-                      // Job Timeline info
-                      fields.push(
-                        {
-                          label: 'Due Date',
-                          value: formatDate(job.due_date)
-                        },
-                        {
-                          label: 'Created Date',
-                          value: formatDate(job.created_at)
-                        },
-                        {
-                          label: 'Last Updated',
-                          value: formatDate(job.updated_at)
-                        }
-                      );
-
-                      return fields.map(({label, value}) => (
-                        <div key={label}>
-                          <label className="text-sm font-medium text-slate-700">{label}</label>
-                          <p className="text-sm text-slate-900">{value}</p>
-                        </div>
-                      ));
+                      return elements;
                     })()}
                   </div>
                 </TabsContent>
