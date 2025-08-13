@@ -165,7 +165,8 @@ export default function Jobs() {
 
       try {
         // Use fast SQLite API with pagination
-        const response = await fetch(`/api/jobs?limit=${filters.limit}&offset=${filters.offset}`, {
+        const currentPageNum = Math.floor(filters.offset / filters.limit) + 1;
+        const response = await fetch(`/api/jobs?limit=${filters.limit}&page=${currentPageNum}`, {
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
