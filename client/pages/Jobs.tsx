@@ -381,7 +381,7 @@ export default function Jobs() {
 
     // Always do a silent background check for new data
     try {
-      console.log('🔄 Silent background check for updates...');
+      console.log('�� Silent background check for updates...');
       const response = await fetch('/api/jobs?limit=50');
       if (response.ok) {
         const data = await response.json();
@@ -770,199 +770,31 @@ export default function Jobs() {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead
-                    className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('recipient')}
-                  >
-                    <div className="flex items-center gap-2">
-                      Recipient
-                      {getSortIcon('recipient')}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('client')}
-                  >
-                    <div className="flex items-center gap-2">
-                      Client
-                      {getSortIcon('client')}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('status')}
-                  >
-                    <div className="flex items-center gap-2">
-                      Status
-                      {getSortIcon('status')}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('priority')}
-                  >
-                    <div className="flex items-center gap-2">
-                      Priority
-                      {getSortIcon('priority')}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('server')}
-                  >
-                    <div className="flex items-center gap-2">
-                      Server
-                      {getSortIcon('server')}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('received_date')}
-                  >
-                    <div className="flex items-center gap-2">
-                      Received Date
-                      {getSortIcon('received_date')}
-                    </div>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAndSortedJobs.map((job) => (
-                  <TableRow
-                    key={job.id}
-                    className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() => navigate(`/jobs/${job.id}`)}
-                  >
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {(() => {
-                            // Safely extract recipient name from various formats
-                            const recipientName = typeof job.recipient_name === 'string' ? job.recipient_name :
-                                                 typeof job.defendant_name === 'string' ? job.defendant_name :
-                                                 typeof job.recipient?.name === 'string' ? job.recipient.name :
-                                                 job.recipient?.name?.name ||
-                                                 `${job.defendant_first_name || ''} ${job.defendant_last_name || ''}`.trim();
-
-                            return recipientName || 'Unknown Recipient';
-                          })()}
-                        </p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {(() => {
-                            // Safely extract address from ServeManager format
-                            const getAddressString = (addr: any) => {
-                              if (typeof addr === 'string') return addr;
-                              if (typeof addr === 'object' && addr) {
-                                // ServeManager format: { street1, street2, city, state, zip }
-                                const parts = [
-                                  addr.street1,
-                                  addr.street2,
-                                  addr.street,
-                                  addr.address
-                                ].filter(Boolean);
-
-                                const street = parts.join(' ');
-                                const cityState = [addr.city, addr.state].filter(Boolean).join(', ');
-                                const zip = addr.zip || addr.postal_code;
-
-                                const fullAddr = [street, cityState, zip].filter(Boolean).join(', ');
-
-                                // Fallback to other formats
-                                return fullAddr || addr.full_address || addr.formatted_address ||
-                                       `${addr.street || ''} ${addr.city || ''} ${addr.state || ''} ${addr.zip || ''}`.trim();
-                              }
-                              return '';
-                            };
-
-                            const address = getAddressString(job.service_address) ||
-                                          getAddressString(job.defendant_address) ||
-                                          getAddressString(job.address) ||
-                                          getAddressString(job.recipient?.address);
-
-                            return address || 'Address not available';
-                          })()}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {(() => {
-                            // Handle client data safely - extract string values from objects
-                            const clientCompany = typeof job.client_company === 'string' ? job.client_company :
-                                                 typeof job.client?.company === 'string' ? job.client.company :
-                                                 job.client?.name?.company || job.client?.name;
-                            const clientName = typeof job.client_name === 'string' ? job.client_name :
-                                             typeof job.client?.name === 'string' ? job.client.name :
-                                             job.client?.name?.name;
-
-                            return clientCompany || clientName || 'Unknown Client';
-                          })()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {(() => {
-                            // Extract contact name from various formats
-                            const contactName = typeof job.client_name === 'string' ? job.client_name :
-                                              job.client_contact ?
-                                                `${job.client_contact.first_name || ''} ${job.client_contact.last_name || ''}`.trim() :
-                                              typeof job.client?.name === 'string' ? job.client.name :
-                                              job.client?.contact_name;
-
-                            return contactName || 'No contact name';
-                          })()}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(job.status || 'pending')}>
-                        {(job.status || 'pending').replace('_', ' ')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getPriorityColor(job.priority || 'medium')}>
-                        {job.priority || 'medium'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {(() => {
-                        // Safely extract server name from various formats
-                        const serverName = typeof job.server_name === 'string' ? job.server_name :
-                                         typeof job.assigned_server === 'string' ? job.assigned_server :
-                                         typeof job.server?.name === 'string' ? job.server.name :
-                                         job.server?.name?.name;
-
-                        return serverName ? (
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-muted-foreground" />
-                            {serverName}
-                          </div>
-                        ) : (
-                          <Badge variant="secondary">Unassigned</Badge>
-                        );
-                      })()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        {formatReceivedDate(job.created_at || job.received_date)}
-                      </div>
-                    </TableCell>
-                  </TableRow>
+            <Suspense fallback={
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="animate-pulse bg-muted h-12 rounded"></div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            }>
+              <JobsTable
+                jobs={jobs}
+                clients={clients}
+                servers={servers}
+                searchTerm={searchTerm}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
+            </Suspense>
 
-            {filteredAndSortedJobs.length === 0 && !loading && (
+            {jobs.length === 0 && !loading && (
               <div className="text-center py-8">
                 <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Jobs Found</h3>
                 <p className="text-muted-foreground">
-                  {searchTerm || Object.values(filters).some(v => v) 
-                    ? "No jobs match your current filters" 
+                  {searchTerm || Object.values(filters).some(v => v)
+                    ? "No jobs match your current filters"
                     : "No jobs available"}
                 </p>
               </div>
