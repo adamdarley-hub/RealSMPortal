@@ -389,9 +389,18 @@ export default function Jobs() {
 
   // Memoize the onDataUpdate callback to prevent infinite re-renders
   const onDataUpdate = useCallback(() => {
-    // Reload data when sync completes (silent reload - no toast notifications)
-    loadJobs();
-    loadClients();
+    // Only reload if cache is stale or empty
+    const now = Date.now();
+    const cache = cacheRef.current;
+    const isStale = !cache.timestamp || (now - cache.timestamp) > CACHE_DURATION;
+
+    if (isStale || cache.jobs.length === 0) {
+      console.log('🔄 Cache is stale, reloading from sync...');
+      loadJobs();
+      loadClients();
+    } else {
+      console.log('⚡ Cache is fresh, skipping reload from sync');
+    }
     // Note: Removed toast notification as requested - auto-sync should be silent
   }, [loadJobs, loadClients]);
 
