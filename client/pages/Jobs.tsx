@@ -181,9 +181,11 @@ export default function Jobs() {
           throw new Error('Invalid response format from server');
         }
 
+        console.log(`📥 Received ${data.jobs.length} jobs from API. First job ID: ${data.jobs[0]?.id}, Total: ${data.total}`);
         setJobs(data.jobs);
         setTotalJobs(data.total || data.jobs.length);
         setUsingMockData(!!data.mock);
+        console.log(`✅ Updated state with ${data.jobs.length} jobs`);
 
         // Cache the results
         cacheRef.current = {
@@ -815,7 +817,7 @@ export default function Jobs() {
                     To get started:
                   </p>
                   <ol className="text-sm text-muted-foreground text-left space-y-1 max-w-md mx-auto">
-                    <li>1. Go to Settings → API Configuration</li>
+                    <li>1. Go to Settings �� API Configuration</li>
                     <li>2. Enable ServeManager integration</li>
                     <li>3. Enter your API credentials</li>
                     <li>4. Test the connection</li>
