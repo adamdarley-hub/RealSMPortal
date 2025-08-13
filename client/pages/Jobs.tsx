@@ -543,6 +543,7 @@ export default function Jobs() {
   // Pagination functions
   const goToNextPage = () => {
     if (hasNextPage) {
+      console.log(`🔄 Going to next page: ${currentPage} → ${currentPage + 1}`);
       setFilters(prev => ({
         ...prev,
         offset: prev.offset + prev.limit
@@ -552,6 +553,7 @@ export default function Jobs() {
 
   const goToPrevPage = () => {
     if (hasPrevPage) {
+      console.log(`🔄 Going to previous page: ${currentPage} → ${currentPage - 1}`);
       setFilters(prev => ({
         ...prev,
         offset: Math.max(0, prev.offset - prev.limit)
@@ -560,6 +562,7 @@ export default function Jobs() {
   };
 
   const goToFirstPage = () => {
+    console.log(`🔄 Going to first page: ${currentPage} → 1`);
     setFilters(prev => ({
       ...prev,
       offset: 0
@@ -567,6 +570,7 @@ export default function Jobs() {
   };
 
   const goToLastPage = () => {
+    console.log(`🔄 Going to last page: ${currentPage} → ${totalPages}`);
     setFilters(prev => ({
       ...prev,
       offset: (totalPages - 1) * prev.limit
