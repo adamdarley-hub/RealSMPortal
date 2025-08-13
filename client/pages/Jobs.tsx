@@ -729,7 +729,7 @@ export default function Jobs() {
           </Card>
         )}
 
-        {/* Filters and Search */}
+        {/* Filters and Search - Lazy Loaded */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -738,108 +738,19 @@ export default function Jobs() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search jobs..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select
-                  value={filters.status || "all"}
-                  onValueChange={(value) => handleFilterChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="unassigned">New/Unassigned</SelectItem>
-                    <SelectItem value="Client Hold">Client Hold</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="assigned">Assigned</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="served">Served</SelectItem>
-                    <SelectItem value="not_served">Not Served</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Priority</label>
-                <Select
-                  value={filters.priority || "all"}
-                  onValueChange={(value) => handleFilterChange('priority', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Priority</SelectItem>
-                    <SelectItem value="rush">Rush</SelectItem>
-                    <SelectItem value="routine">Routine</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Client</label>
-                <Select
-                  value={filters.client_id || "all"}
-                  onValueChange={(value) => handleFilterChange('client_id', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Clients" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Clients</SelectItem>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.company || client.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Server</label>
-                <Select
-                  value={filters.server_id || "all"}
-                  onValueChange={(value) => handleFilterChange('server_id', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Servers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Servers</SelectItem>
-                    <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {servers.map((server) => (
-                      <SelectItem key={server.id} value={server.id}>
-                        {server.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-end">
-                <Button variant="outline" onClick={clearFilters} className="w-full">
-                  Clear Filters
-                </Button>
-              </div>
-            </div>
+            <Suspense fallback={
+              <div className="animate-pulse bg-muted h-20 rounded"></div>
+            }>
+              <JobsFilters
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onClearFilters={clearFilters}
+                clients={clients}
+                servers={servers}
+              />
+            </Suspense>
           </CardContent>
         </Card>
 
