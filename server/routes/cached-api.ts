@@ -46,7 +46,7 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
 
     const responseTime = Date.now() - startTime;
 
-    console.log(`⚡ Served ${jobs.length}${isPaginated ? ` of ${allJobs.length}` : ''} jobs from cache in ${responseTime}ms`);
+    console.log(`⚡ Served ${jobs.length}${isPaginated ? ` of ${allJobs.length}` : ''} jobs from cache (page ${pageNum}) in ${responseTime}ms`);
 
     res.json({
       jobs,
