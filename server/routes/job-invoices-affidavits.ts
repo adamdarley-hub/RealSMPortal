@@ -87,7 +87,7 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
       return false;
     });
 
-    console.log(`🧾 Found ${jobInvoices.length} invoices for job ${jobId}`);
+    console.log(`�� Found ${jobInvoices.length} invoices for job ${jobId}`);
     console.log('🧾 All invoices summary:', allInvoices.map(inv => ({ id: inv.id, status: inv.status, job_id: inv.job_id })));
     console.log('🧾 Filtered job invoices:', jobInvoices.map(inv => ({ id: inv.id, status: inv.status, job_id: inv.job_id })));
 
@@ -243,32 +243,26 @@ export const downloadJobInvoice: RequestHandler = async (req, res) => {
     const { jobId, invoiceId } = req.params;
     console.log(`📥 Downloading invoice ${invoiceId} for job ${jobId}...`);
 
-    // First get the invoice to find the PDF URL
-    const invoiceResponse = await makeServeManagerRequest(`/invoices/${invoiceId}`);
-    
-    let pdfUrl = null;
-    if (invoiceResponse.pdf_url) {
-      pdfUrl = invoiceResponse.pdf_url;
-    } else if (invoiceResponse.data?.pdf_url) {
-      pdfUrl = invoiceResponse.data.pdf_url;
-    } else if (invoiceResponse.links?.pdf) {
-      pdfUrl = invoiceResponse.links.pdf;
-    }
+    // Use the ServeManager download URL directly
+    const pdfUrl = `https://www.servemanager.com/api/v2/invoices/${invoiceId}/download`;
 
-    if (!pdfUrl) {
-      return res.status(404).json({ error: 'Invoice PDF not found' });
-    }
+    console.log(`📥 Attempting to download invoice PDF from: ${pdfUrl}`);
 
-    // Proxy the PDF download
+    // Try to fetch the PDF directly
     const response = await fetch(pdfUrl);
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch PDF: ${response.status}`);
+      console.error(`❌ Failed to download invoice PDF: ${response.status} ${response.statusText}`);
+      return res.status(404).json({
+        error: `Invoice PDF not available (${response.status} ${response.statusText})`
+      });
     }
 
-    // Set appropriate headers
+    // Set appropriate headers for download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoiceId}.pdf"`);
-    
+    res.setHeader('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+
     // Stream the PDF
     response.body?.pipe(res);
 
@@ -361,7 +355,7 @@ export const downloadJobAffidavit: RequestHandler = async (req, res) => {
 export const previewJobAffidavit: RequestHandler = async (req, res) => {
   try {
     const { jobId, affidavitId } = req.params;
-    console.log(`👁️ Previewing affidavit ${affidavitId} for job ${jobId}...`);
+    console.log(`👁�� Previewing affidavit ${affidavitId} for job ${jobId}...`);
 
     // Mock response for now - in real implementation, would fetch from ServeManager
     res.status(404).json({ error: 'Affidavit preview not implemented yet' });
