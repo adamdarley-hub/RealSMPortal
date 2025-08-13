@@ -868,7 +868,7 @@ export default function JobDetail() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700">Client Job #</label>
-                      <p className="text-sm text-slate-900">{safeString((job as any).client_job_number || job.reference || (job.raw_data as any)?.reference, 'N/A')}</p>
+                      <p className="text-sm text-slate-900">{safeString((job as any).client_job_number || job.reference, 'N/A')}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-slate-700">Service Type</label>
