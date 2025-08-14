@@ -496,6 +496,11 @@ export const getInvoices: RequestHandler = async (req, res) => {
 
         console.log(`Invoices page ${page}: Found ${pageInvoices.length} invoices`);
 
+        // Debug: Log first invoice structure to understand ServeManager fields
+        if (pageInvoices.length > 0 && page === 1) {
+          console.log('🔍 SAMPLE INVOICE STRUCTURE:', JSON.stringify(pageInvoices[0], null, 2));
+        }
+
         if (pageInvoices.length > 0) {
           allInvoices.push(...pageInvoices);
           hasMorePages = pageInvoices.length === 100;
