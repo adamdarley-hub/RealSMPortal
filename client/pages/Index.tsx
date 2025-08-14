@@ -160,10 +160,11 @@ export default function Dashboard() {
       }
 
       // Fetch all real data
-      const [jobsResponse, clientsResponse, serversResponse] = await Promise.all([
+      const [jobsResponse, clientsResponse, serversResponse, courtCasesResponse] = await Promise.all([
         fetch(`/api/jobs?${params.toString()}`),
         fetch(`/api/clients?${params.toString()}`),
-        fetch(`/api/servers?${params.toString()}`)
+        fetch(`/api/servers?${params.toString()}`),
+        fetch(`/api/court_cases?${params.toString()}`)
       ]);
 
       if (!jobsResponse.ok) {
