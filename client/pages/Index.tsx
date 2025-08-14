@@ -318,8 +318,8 @@ export default function Dashboard() {
     return `${Math.floor(diffDays / 30)} months ago`;
   };
 
-  // Calculate success rate from real data
-  const successRate = kpis ? Math.round((kpis.completedJobs / Math.max(kpis.totalJobs, 1)) * 100) : 0;
+  // Calculate successful serve rate from real data
+  const successfulServeRate = kpis ? Math.round((kpis.servedJobs / Math.max(kpis.totalJobs, 1)) * 100) : 0;
 
   // Loading skeleton
   if (loading) {
