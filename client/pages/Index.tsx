@@ -245,59 +245,12 @@ export default function Dashboard() {
         defendant: job.defendant || job.court_case?.defendant,
       }));
 
-      // Extract real court cases from job data
-      const caseMap = new Map<string, CourtCase>();
-      
-      jobs.forEach((job: any) => {
-        const caseNumber = job.case_number || job.court_case?.number;
-        if (caseNumber) {
-          if (!caseMap.has(caseNumber)) {
-            caseMap.set(caseNumber, {
-              case_number: caseNumber,
-              plaintiff: job.plaintiff || job.court_case?.plaintiff || '',
-              defendant: job.defendant || job.court_case?.defendant || '',
-              court_name: job.court_case?.court?.name || '',
-              jobs: [],
-              totalJobs: 0,
-              servedJobs: 0,
-              lastActivity: ''
-            });
-          }
-          
-          const courtCase = caseMap.get(caseNumber)!;
-          courtCase.jobs.push({
-            id: job.id,
-            job_number: job.job_number || job.servemanager_job_number || job.id,
-            client_company: job.client_company || job.client?.company || '',
-            recipient_name: job.recipient_name || job.defendant_name || '',
-            service_address: '',
-            city: job.service_address?.city || job.address?.city || '',
-            state: job.service_address?.state || job.address?.state || '',
-            county: '',
-            status: job.status || 'unknown',
-            priority: job.priority || 'medium',
-            due_date: job.due_date || '',
-            created_at: job.created_at || '',
-            amount: job.amount || 0
-          });
-          
-          courtCase.totalJobs++;
-          if (['served', 'completed'].includes(job.status?.toLowerCase())) {
-            courtCase.servedJobs++;
-          }
-          
-          // Update last activity
-          const jobDate = new Date(job.updated_at || job.created_at || '');
-          const currentLastActivity = new Date(courtCase.lastActivity || '1970-01-01');
-          if (jobDate > currentLastActivity) {
-            courtCase.lastActivity = job.updated_at || job.created_at || '';
-          }
-        }
-      });
+      // Use real court cases from API
+      const realCourtCases: CourtCase[] = courtCasesData.court_cases || [];
 
       setKpis(kpisData);
       setRecentJobs(processedJobs);
-      setCourtCases(Array.from(caseMap.values()));
+      setCourtCases(realCourtCases);
       setClients(clientsData.clients);
       setServers(serversData.servers);
 
