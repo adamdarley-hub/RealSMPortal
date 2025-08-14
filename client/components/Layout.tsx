@@ -120,9 +120,9 @@ export default function Layout({ children }: LayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start gap-3 p-3 h-auto">
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={currentUser.avatar} />
+                    <AvatarImage src="" />
                     <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                      {currentUser.name.split(' ').map(n => n[0]).join('')}
+                      {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
