@@ -326,57 +326,62 @@ export default function Invoices() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInvoices.map((invoice) => (
-                  <TableRow key={invoice.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      <div>
-                        <p className="font-mono">{invoice.invoice_number}</p>
-                        <p className="text-xs text-muted-foreground">{invoice.id}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Building className="w-4 h-4 text-muted-foreground" />
+                {filteredInvoices.map((invoice) => {
+                  // Find the first job to navigate to when clicked
+                  const firstJobId = invoice.jobs && invoice.jobs.length > 0 ? invoice.jobs[0].id : null;
+
+                  return (
+                    <TableRow
+                      key={invoice.id}
+                      className="hover:bg-muted/50 cursor-pointer"
+                      onClick={() => {
+                        if (firstJobId) {
+                          window.location.href = `/jobs/${firstJobId}`;
+                        }
+                      }}
+                    >
+                      <TableCell className="font-medium">
                         <div>
-                          <p className="font-medium">{invoice.client.company}</p>
-                          <p className="text-sm text-muted-foreground">{invoice.client.name}</p>
+                          <p className="font-mono">{invoice.invoice_number}</p>
+                          <p className="text-xs text-muted-foreground">{invoice.id}</p>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(invoice.status)}>
-                        {invoice.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-muted-foreground" />
-                        {invoice.jobs.length} jobs
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {formatCurrency(invoice.subtotal)}
-                    </TableCell>
-                    <TableCell>
-                      {formatCurrency(invoice.tax)}
-                    </TableCell>
-                    <TableCell className="font-bold">
-                      {formatCurrency(invoice.total)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        {formatDate(invoice.created_date)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        {formatDate(invoice.due_date)}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Building className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">
+                              {invoice.client?.company || invoice._raw?.client?.company || 'Unknown Company'}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {invoice.client?.name || invoice._raw?.client?.name || 'Unknown Contact'}
+                            </p>
+                            {/* Debug: Show raw client data if available */}
+                            {invoice._raw && (
+                              <p className="text-xs text-muted-foreground opacity-50">
+                                Raw: {JSON.stringify(invoice._raw.client || {}, null, 1).substring(0, 50)}...
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(invoice.status)}>
+                          {invoice.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        {formatCurrency(invoice.total || invoice._raw?.total || 0)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          {invoice.created_date ? formatDate(invoice.created_date) : 'No date'}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
 
