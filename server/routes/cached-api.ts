@@ -121,7 +121,7 @@ export const getCachedServers: RequestHandler = async (req, res) => {
     const servers = await cacheService.getServersFromCache();
     const responseTime = Date.now() - startTime;
 
-    console.log(`�� Served ${servers.length} servers from cache in ${responseTime}ms`);
+    console.log(`⚡ Served ${servers.length} servers from cache in ${responseTime}ms`);
 
     // Add production caching headers
     res.set({
@@ -198,7 +198,7 @@ export const getCachedJob: RequestHandler = async (req, res) => {
     const { refresh } = req.query;
     const startTime = Date.now();
 
-    console.log(`🔍 Looking up job ${id} from cache...`);
+    // Look up job from cache
 
     if (!id) {
       res.status(400).json({
