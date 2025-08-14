@@ -40,7 +40,11 @@ export class CacheService {
       }
       
       if (conditions.length > 0) {
-        query = query.where(sql`${conditions.join(' AND ')}`);
+        if (conditions.length === 1) {
+          query = query.where(conditions[0]);
+        } else {
+          query = query.where(and(...conditions));
+        }
       }
       
       const cachedJobs = await query.orderBy(desc(jobs.created_at));
