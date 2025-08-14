@@ -636,18 +636,18 @@ export default function Dashboard() {
                       <TableHead>Case Number</TableHead>
                       <TableHead>Case Name</TableHead>
                       <TableHead>Court</TableHead>
-                      <TableHead>Service Progress</TableHead>
-                      <TableHead>Total Jobs</TableHead>
-                      <TableHead>Last Activity</TableHead>
+                      <TableHead>Filed Date</TableHead>
+                      <TableHead>Court Date</TableHead>
+                      <TableHead>Last Updated</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredCases.map((case_) => (
-                      <TableRow 
-                        key={case_.case_number} 
+                      <TableRow
+                        key={case_.id}
                         className="hover:bg-muted/50"
                       >
-                        <TableCell className="font-medium">{case_.case_number}</TableCell>
+                        <TableCell className="font-medium">{case_.number}</TableCell>
                         <TableCell>
                           <div>
                             <p className="font-medium">{case_.plaintiff || 'Unknown Plaintiff'}</p>
@@ -656,25 +656,30 @@ export default function Dashboard() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{case_.court_name || 'Court not specified'}</p>
+                            <p className="font-medium">{case_.court?.name || 'Court not specified'}</p>
+                            {case_.court?.county && case_.court?.state && (
+                              <p className="text-sm text-muted-foreground">{case_.court.county}, {case_.court.state}</p>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-sm">
-                              <span>{case_.servedJobs}/{case_.totalJobs} served</span>
-                              <span>{Math.round((case_.servedJobs / Math.max(case_.totalJobs, 1)) * 100)}%</span>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            {case_.filed_date ? new Date(case_.filed_date).toLocaleDateString() : 'Not specified'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {case_.court_date ? (
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-muted-foreground" />
+                              {new Date(case_.court_date).toLocaleDateString()}
                             </div>
-                            <Progress value={(case_.servedJobs / Math.max(case_.totalJobs, 1)) * 100} className="h-2" />
-                          </div>
+                          ) : (
+                            <span className="text-muted-foreground">Not scheduled</span>
+                          )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">
-                            {case_.totalJobs} jobs
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {formatRelativeTime(case_.lastActivity)}
+                          {formatRelativeTime(case_.updated_at)}
                         </TableCell>
                       </TableRow>
                     ))}
