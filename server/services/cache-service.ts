@@ -470,7 +470,7 @@ export class CacheService {
             service_date: null,
             completed_date: null,
             received_date: job.created_at,
-            client_id: null,
+            client_id: job.client?.id || null,
             client_name: job.client_name,
             client_company: job.client_company,
             client_email: null,
