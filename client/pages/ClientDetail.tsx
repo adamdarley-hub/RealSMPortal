@@ -707,7 +707,7 @@ export default function ClientDetail() {
           </TabsContent>
 
           <TabsContent value="raw-data" className="space-y-4">
-            {renderRawDataSection(client)}
+            {renderRawDataSection(client.raw_data || client._raw)}
           </TabsContent>
         </Tabs>
       </div>
