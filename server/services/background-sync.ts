@@ -69,11 +69,11 @@ class BackgroundSyncService {
 // Create singleton instance
 export const backgroundSync = new BackgroundSyncService();
 
-// Auto-start background sync (can be configured via environment)
-const BACKGROUND_SYNC_INTERVAL = parseInt(process.env.BACKGROUND_SYNC_MINUTES || '5');
+// Auto-start background sync optimized for production
+const BACKGROUND_SYNC_INTERVAL = parseInt(process.env.BACKGROUND_SYNC_MINUTES || '15'); // Default 15 minutes for production
 if (process.env.NODE_ENV !== 'test') {
-  // Start background sync automatically
+  // Start background sync automatically after server is ready
   setTimeout(() => {
     backgroundSync.start(BACKGROUND_SYNC_INTERVAL);
-  }, 10000); // Wait 10 seconds after server starts
+  }, 30000); // Wait 30 seconds for server to stabilize
 }
