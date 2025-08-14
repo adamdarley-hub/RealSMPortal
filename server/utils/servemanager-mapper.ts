@@ -363,27 +363,31 @@ export function mapServerFromServeManager(rawServer: any): any {
   };
 }
 
-export function mapInvoiceFromServeManager(rawInvoice: any): any {
+export function mapInvoiceFromServeManager(rawInvoice: any, clientsCache?: any[]): any {
   if (!rawInvoice) return { _raw: rawInvoice };
-
-  // Debug: Log first few invoices to understand structure
-  if (Math.random() < 0.1) { // Log 10% of invoices to avoid spam
-    console.log('🔍 RAW INVOICE STRUCTURE:', JSON.stringify(rawInvoice, null, 2));
-  }
 
   // Extract client information
   const extractClient = () => {
-    // ServeManager invoice structure includes client info from job
-    const clientCompany = rawInvoice.client_company || {};
-    const clientContact = rawInvoice.client_contact || {};
-    const client = rawInvoice.client || rawInvoice.account || {};
+    const clientId = String(rawInvoice.client_id || 'unknown');
 
+    // Try to find client in cache first
+    if (clientsCache && rawInvoice.client_id) {
+      const cachedClient = clientsCache.find(c => String(c.id) === clientId);
+      if (cachedClient) {
+        return {
+          id: clientId,
+          name: cachedClient.name || 'Unknown Contact',
+          company: cachedClient.company || 'Unknown Company'
+        };
+      }
+    }
+
+    // Fallback - use any embedded client data or defaults
+    const client = rawInvoice.client || {};
     return {
-      id: String(rawInvoice.client_id || clientCompany.id || client.id || 'unknown'),
-      name: clientContact.first_name && clientContact.last_name
-        ? `${clientContact.first_name} ${clientContact.last_name}`.trim()
-        : client.name || client.contact_name || 'Unknown Contact',
-      company: clientCompany.name || client.company || client.company_name || 'Unknown Company'
+      id: clientId,
+      name: client.name || 'Unknown Contact',
+      company: client.company || 'Unknown Company'
     };
   };
 
