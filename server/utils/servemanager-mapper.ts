@@ -366,6 +366,10 @@ export function mapServerFromServeManager(rawServer: any): any {
 export function mapInvoiceFromServeManager(rawInvoice: any): any {
   if (!rawInvoice) return { _raw: rawInvoice };
 
+  // Debug: Log first few invoices to understand structure
+  if (Math.random() < 0.1) { // Log 10% of invoices to avoid spam
+    console.log('🔍 RAW INVOICE STRUCTURE:', JSON.stringify(rawInvoice, null, 2));
+  }
 
   // Extract client information
   const extractClient = () => {
