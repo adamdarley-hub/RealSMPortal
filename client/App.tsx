@@ -29,27 +29,78 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Route protection components
+function ProtectedRoute({ children, role }: { children: React.ReactNode; role?: 'admin' | 'client' }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role && user.role !== role) {
+    return <Navigate to={user.role === 'admin' ? '/' : '/client'} replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (user) {
+    return <Navigate to={user.role === 'admin' ? '/' : '/client'} replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+
+      {/* Admin routes */}
+      <Route path="/" element={<ProtectedRoute role="admin"><Index /></ProtectedRoute>} />
+      <Route path="/jobs" element={<ProtectedRoute role="admin"><Jobs /></ProtectedRoute>} />
+      <Route path="/jobs/:id" element={<ProtectedRoute role="admin"><JobDetail /></ProtectedRoute>} />
+      <Route path="/documents" element={<ProtectedRoute role="admin"><Documents /></ProtectedRoute>} />
+      <Route path="/invoices" element={<ProtectedRoute role="admin"><Invoices /></ProtectedRoute>} />
+      <Route path="/clients" element={<ProtectedRoute role="admin"><Clients /></ProtectedRoute>} />
+      <Route path="/clients/:id" element={<ProtectedRoute role="admin"><ClientDetail /></ProtectedRoute>} />
+      <Route path="/analytics" element={<ProtectedRoute role="admin"><Analytics /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute role="admin"><Settings /></ProtectedRoute>} />
+      <Route path="/api-config" element={<ProtectedRoute role="admin"><ApiConfig /></ProtectedRoute>} />
+      <Route path="/supabase-migration" element={<ProtectedRoute role="admin"><SupabaseMigration /></ProtectedRoute>} />
+
+      {/* Client routes */}
+      <Route path="/client" element={<ProtectedRoute role="client"><ClientDashboard /></ProtectedRoute>} />
+      <Route path="/client/invoices" element={<ProtectedRoute role="client"><ClientInvoices /></ProtectedRoute>} />
+      <Route path="/client/jobs/:id" element={<ProtectedRoute role="client"><JobDetail /></ProtectedRoute>} />
+
+      {/* Catch-all */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/jobs/:id" element={<JobDetail />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/invoices" element={<Invoices />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/clients/:id" element={<ClientDetail />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/api-config" element={<ApiConfig />} />
-          <Route path="/supabase-migration" element={<SupabaseMigration />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
