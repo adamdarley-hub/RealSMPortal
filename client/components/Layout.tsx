@@ -30,14 +30,7 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-// Mock user data - in real app this would come from authentication
-const currentUser = {
-  name: "Sarah Johnson",
-  email: "sarah@processservice.com",
-  role: "admin", // or "client"
-  avatar: "",
-  company: "ServePortal Admin"
-};
+// This component is now for admin users only - client users use ClientLayout
 
 const clientNavItems = [
   { href: "/", icon: Home, label: "Dashboard" },
