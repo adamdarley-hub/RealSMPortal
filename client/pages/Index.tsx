@@ -184,6 +184,11 @@ export default function Dashboard() {
         serversData = await serversResponse.json();
       }
 
+      let courtCasesData = { court_cases: [] };
+      if (courtCasesResponse.ok) {
+        courtCasesData = await courtCasesResponse.json();
+      }
+
       // Calculate real KPIs from job data
       const now = new Date();
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
