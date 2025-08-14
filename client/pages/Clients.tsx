@@ -351,7 +351,7 @@ export default function Clients() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredClients.map((client) => (
+                {filteredAndSortedClients.map((client) => (
                   <TableRow
                     key={client.id}
                     className="hover:bg-muted/50 cursor-pointer"
