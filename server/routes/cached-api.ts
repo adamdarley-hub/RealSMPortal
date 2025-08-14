@@ -219,13 +219,7 @@ export const getCachedJob: RequestHandler = async (req, res) => {
         const actualJobData = freshData.data || freshData;
 
         // Debug logging for job 20483264 fresh data
-        if (id === '20483264') {
-          console.log(`🔍 FRESH DEBUG Job 20483264 - Raw structure:`, Object.keys(freshData));
-          console.log(`🔍 FRESH DEBUG Job 20483264 - Unwrapped structure:`, Object.keys(actualJobData));
-          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempts type:`, typeof actualJobData.attempts);
-          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempts:`, actualJobData.attempts);
-          console.log(`🔍 FRESH DEBUG Job 20483264 - Attempt count:`, actualJobData.attempts?.length || 0);
-        }
+        // Process job data
 
         // Return fresh data with same structure as cached data
         const responseTime = Date.now() - startTime;
