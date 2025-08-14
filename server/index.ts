@@ -35,7 +35,7 @@ import {
   triggerManualSync
 } from "./routes/sync-status";
 import "./services/startup-sync"; // Auto-trigger initial sync
-// import "./services/background-sync"; // Temporarily disabled - causing UI blocking
+import "./services/background-sync"; // Background sync enabled for production
 import { changeDetector } from "./services/change-detector";
 import { webSocketService } from "./services/websocket-service";
 import { supabaseSyncService } from "./services/supabase-sync";
