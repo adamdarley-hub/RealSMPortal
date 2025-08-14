@@ -159,17 +159,8 @@ export default function ClientDetail() {
       // Note: ServeManager doesn't have a separate contacts API endpoint
       // All contacts are embedded within client data, so we only use embedded contacts
 
-      // Remove duplicates based on email or name
-      const uniqueContacts = allContacts.filter((contact, index, self) => {
-        return index === self.findIndex(c =>
-          (contact.email && c.email && contact.email === c.email) ||
-          (contact.name && c.name && contact.name === c.name) ||
-          contact.id === c.id
-        );
-      });
-
-      console.log(`Total unique contacts found for ${client.company}: ${uniqueContacts.length}`);
-      setContacts(uniqueContacts);
+      console.log(`Total contacts found for ${client.company}: ${allContacts.length}`);
+      setContacts(allContacts);
     } catch (error) {
       console.error('Error loading contacts:', error);
       toast({
