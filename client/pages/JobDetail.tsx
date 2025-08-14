@@ -445,7 +445,7 @@ const extractServiceAttempts = (job: Job) => {
     // Try alternative attempt field names that ServeManager might use
     const alternativeAttempts = (job as any).service_attempts || (job as any).job_attempts || (job as any).service_history;
     if (alternativeAttempts && Array.isArray(alternativeAttempts)) {
-      console.log('✅ Found attempts in alternative field:', {
+      console.log('��� Found attempts in alternative field:', {
         fieldName: (job as any).service_attempts ? 'service_attempts' :
                    (job as any).job_attempts ? 'job_attempts' : 'service_history',
         attemptsCount: alternativeAttempts.length
@@ -817,7 +817,7 @@ export default function JobDetail() {
       ]);
 
       // Process invoices with enhanced error handling
-      if (invoicesResponse.status === 'fulfilled' && invoicesResponse.value.ok) {
+      if (invoicesResult.status === 'fulfilled' && invoicesResult.value.success) {
         try {
           const invoicesData = await invoicesResponse.value.json();
           setJobInvoices(invoicesData.invoices || []);
