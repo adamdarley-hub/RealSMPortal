@@ -445,7 +445,7 @@ const extractServiceAttempts = (job: Job) => {
     // Try alternative attempt field names that ServeManager might use
     const alternativeAttempts = (job as any).service_attempts || (job as any).job_attempts || (job as any).service_history;
     if (alternativeAttempts && Array.isArray(alternativeAttempts)) {
-      console.log('��� Found attempts in alternative field:', {
+      console.log('✅ Found attempts in alternative field:', {
         fieldName: (job as any).service_attempts ? 'service_attempts' :
                    (job as any).job_attempts ? 'job_attempts' : 'service_history',
         attemptsCount: alternativeAttempts.length
@@ -558,7 +558,7 @@ const extractServiceAttempts = (job: Job) => {
           const miscAttachments = attempt.misc_attachments || attempt.attachments || [];
 
           // Comprehensive debug logging
-          console.log(`🖼️ Attempt ${index + 1} FULL photo extraction debug:`, {
+          console.log(`🖼��� Attempt ${index + 1} FULL photo extraction debug:`, {
             attemptId: attempt.id,
             attemptKeys: Object.keys(attempt),
             hasMiscAttachments: !!attempt.misc_attachments,
@@ -818,15 +818,10 @@ export default function JobDetail() {
 
       // Process invoices with enhanced error handling
       if (invoicesResult.status === 'fulfilled' && invoicesResult.value.success) {
-        try {
-          const invoicesData = await invoicesResponse.value.json();
-          setJobInvoices(invoicesData.invoices || []);
-          setCurrentInvoiceIndex(0);
-          console.log('✅ Invoices loaded:', invoicesData.invoices?.length || 0);
-        } catch (jsonError) {
-          console.warn('⚠️ Failed to parse invoices JSON:', jsonError);
-          setJobInvoices([]);
-        }
+        const invoicesData = invoicesResult.value.data;
+        setJobInvoices(invoicesData.invoices || []);
+        setCurrentInvoiceIndex(0);
+        console.log('✅ Invoices loaded:', invoicesData.invoices?.length || 0);
       } else {
         console.log('❌ Invoices request failed:', invoicesResponse);
         setJobInvoices([]);
