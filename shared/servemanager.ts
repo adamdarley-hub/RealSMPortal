@@ -152,6 +152,8 @@ export interface Client {
   };
   created_date: string;
   active: boolean;
+  raw_data?: any;
+  _raw?: any;
 }
 
 export interface Server {
