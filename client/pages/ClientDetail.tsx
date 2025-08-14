@@ -167,18 +167,38 @@ export default function ClientDetail() {
   }, [id, client, toast]);
 
   const loadJobs = useCallback(async () => {
-    if (!id) return;
+    if (!id || !client) return;
 
     setJobsLoading(true);
     try {
-      const response = await fetch(`/api/jobs?client_id=${id}`);
+      // Fetch all jobs and filter client-side since API might not support client_id filtering
+      const response = await fetch(`/api/jobs`);
       if (!response.ok) {
         throw new Error('Failed to fetch jobs');
       }
 
       const data = await response.json();
-      // Map job data to our simplified Job interface
-      const clientJobs: Job[] = data.jobs.map((job: any) => ({
+
+      // Filter jobs for this specific client
+      const allJobs = data.jobs || [];
+      const clientJobs = allJobs.filter((job: any) => {
+        // Match by client_id
+        if (job.client_id === id) return true;
+
+        // Match by client company name
+        if (client.company && job.client_company &&
+            job.client_company.toLowerCase() === client.company.toLowerCase()) {
+          return true;
+        }
+
+        // Match by client name
+        if (client.name && job.client_name &&
+            job.client_name.toLowerCase() === client.name.toLowerCase()) {
+          return true;
+        }
+
+        return false;
+      }).map((job: any) => ({
         id: job.id,
         job_number: job.job_number || job.servemanager_job_number || job.id,
         status: job.status || job.job_status || 'Unknown',
@@ -199,7 +219,7 @@ export default function ClientDetail() {
     } finally {
       setJobsLoading(false);
     }
-  }, [id, toast]);
+  }, [id, client, toast]);
 
   useEffect(() => {
     loadClientDetails();
