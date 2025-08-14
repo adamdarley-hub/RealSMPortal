@@ -374,11 +374,14 @@ export function mapInvoiceFromServeManager(rawInvoice: any, clientsCache?: any[]
     if (clientsCache && rawInvoice.client_id) {
       const cachedClient = clientsCache.find(c => String(c.id) === clientId);
       if (cachedClient) {
+        console.log(`🔍 Found client ${clientId}:`, { name: cachedClient.name, company: cachedClient.company });
         return {
           id: clientId,
           name: cachedClient.name || 'Unknown Contact',
           company: cachedClient.company || 'Unknown Company'
         };
+      } else {
+        console.log(`⚠️ Client ${clientId} not found in cache of ${clientsCache.length} clients`);
       }
     }
 
