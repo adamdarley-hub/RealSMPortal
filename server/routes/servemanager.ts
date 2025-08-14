@@ -515,8 +515,9 @@ export const getInvoices: RequestHandler = async (req, res) => {
     // Fetch clients cache to lookup client names for invoices
     let clientsCache: any[] = [];
     try {
-      const clientsResponse = await makeServeManagerRequest('/clients?per_page=1000');
-      clientsCache = clientsResponse.data || clientsResponse.clients || [];
+      const clientsResponse = await makeServeManagerRequest('/companies?per_page=1000');
+      clientsCache = clientsResponse.data || clientsResponse.companies || [];
+      console.log(`✅ Fetched ${clientsCache.length} clients for invoice mapping`);
     } catch (error) {
       console.warn('Could not fetch clients cache for invoice mapping:', error);
     }
