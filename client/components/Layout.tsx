@@ -126,8 +126,8 @@ export default function Layout({ children }: LayoutProps) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-sidebar-foreground">{currentUser.name}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{currentUser.role}</p>
+                    <p className="text-sm font-medium text-sidebar-foreground">{user?.name}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{user?.role} Portal</p>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
