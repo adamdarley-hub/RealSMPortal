@@ -121,7 +121,14 @@ export const getCachedServers: RequestHandler = async (req, res) => {
     const servers = await cacheService.getServersFromCache();
     const responseTime = Date.now() - startTime;
 
-    console.log(`⚡ Served ${servers.length} servers from cache in ${responseTime}ms`);
+    console.log(`�� Served ${servers.length} servers from cache in ${responseTime}ms`);
+
+    // Add production caching headers
+    res.set({
+      'Cache-Control': 'public, max-age=600', // Cache for 10 minutes (servers change rarely)
+      'ETag': `servers-${servers.length}`,
+      'X-Response-Time': `${responseTime}ms`
+    });
 
     res.json({
       servers,
