@@ -73,14 +73,21 @@ interface RecentJob {
 }
 
 interface CourtCase {
-  case_number: string;
+  id: string;
+  type: string;
+  number: string;
   plaintiff: string;
   defendant: string;
-  court_name?: string;
-  jobs: RecentJob[];
-  totalJobs: number;
-  servedJobs: number;
-  lastActivity: string;
+  filed_date: string;
+  court_date?: string;
+  court: {
+    id: string;
+    name: string;
+    county?: string;
+    state?: string;
+  };
+  created_at: string;
+  updated_at: string;
 }
 
 // User scoping - would normally come from auth context
