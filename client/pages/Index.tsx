@@ -198,8 +198,8 @@ export default function Dashboard() {
         ['pending', 'in_progress', 'assigned'].includes(job.status?.toLowerCase())
       ).length;
 
-      const completedJobs = jobs.filter((job: any) => 
-        ['served', 'completed'].includes(job.status?.toLowerCase())
+      const servedJobs = jobs.filter((job: any) =>
+        job.status?.toLowerCase() === 'served'
       ).length;
 
       const served7d = jobs.filter((job: any) => {
