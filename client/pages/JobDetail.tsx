@@ -1667,7 +1667,7 @@ export default function JobDetail() {
                                   return (
                                     <div className="relative w-full h-full">
                                       <iframe
-                                        src={`${getPreviewUrl(currentDocument.id, job.id)}#toolbar=0&navpanes=0`}
+                                        src={`${getPreviewUrl(currentDocument.id, job.id)}#navpanes=0`}
                                         className="w-full h-full border-0"
                                         title={`Document: ${currentDocument.title}`}
                                         key={`${currentDocument.id}-${urlRefreshCount}`}
@@ -1725,7 +1725,7 @@ export default function JobDetail() {
                                 return (
                                   <div className="relative w-full h-full">
                                     <iframe
-                                      src={`${getPreviewUrl(currentDocument.id, job.id)}#toolbar=0&navpanes=0`}
+                                      src={`${getPreviewUrl(currentDocument.id, job.id)}#navpanes=0`}
                                       className="w-full h-full border-0"
                                       title={`Document: ${currentDocument.title}`}
                                       key={`${currentDocument.id}-${urlRefreshCount}`}
@@ -1877,7 +1877,7 @@ export default function JobDetail() {
                             return (
                               <div className="relative w-full h-full">
                                 <iframe
-                                  src={`/api/jobs/${job.id}/invoices/${currentInvoice.id}/preview#toolbar=0&navpanes=0`}
+                                  src={`/api/jobs/${job.id}/invoices/${currentInvoice.id}/preview#navpanes=0`}
                                   className="w-full h-full border-0"
                                   title={`Invoice: ${currentInvoice.invoice_number || currentInvoice.id}`}
                                   key={`${currentInvoice.id}-${urlRefreshCount}`}
@@ -2024,7 +2024,7 @@ export default function JobDetail() {
                             return (
                               <div className="relative w-full h-full">
                                 <iframe
-                                  src={`/api/jobs/${job.id}/affidavits/${currentAffidavit.id}/preview#toolbar=0&navpanes=0`}
+                                  src={`/api/jobs/${job.id}/affidavits/${currentAffidavit.id}/preview#navpanes=0`}
                                   className="w-full h-full border-0"
                                   title={`Affidavit: ${currentAffidavit.id}`}
                                   key={`${currentAffidavit.id}-${urlRefreshCount}`}
