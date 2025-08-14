@@ -830,7 +830,7 @@ export default function JobDetail() {
       // Process affidavits with enhanced error handling
       if (affidavitsResult.status === 'fulfilled' && affidavitsResult.value.success) {
         try {
-          const affidavitsData = await affidavitsResponse.value.json();
+          const affidavitsData = affidavitsResult.value.data;
           setJobAffidavits(affidavitsData.affidavits || []);
           setCurrentAffidavitIndex(0);
           console.log('�� Affidavits loaded:', affidavitsData.affidavits?.length || 0);
