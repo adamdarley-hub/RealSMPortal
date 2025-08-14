@@ -264,6 +264,7 @@ export default function Clients() {
                   <TableHead>Address</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
+                  <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
