@@ -532,9 +532,19 @@ export const getInvoices: RequestHandler = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching all invoices, using mock data:', error);
+    console.error('Error fetching invoices from ServeManager API:', error);
 
-    // Enhanced mock data
+    // Return error response for production monitoring
+    if (process.env.NODE_ENV === 'production') {
+      res.status(500).json({
+        error: 'Failed to fetch invoices',
+        message: 'Unable to retrieve invoice data from ServeManager',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Enhanced mock data for development
     const mockInvoices = [
       {
         id: "inv001", invoice_number: "INV-2024-001",
