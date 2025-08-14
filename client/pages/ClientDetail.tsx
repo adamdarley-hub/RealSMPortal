@@ -573,8 +573,13 @@ export default function ClientDetail() {
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Billing Address</label>
                       <div>
-                        <p>{client.billing_address.street}</p>
-                        <p>{client.billing_address.city}, {client.billing_address.state} {client.billing_address.zip}</p>
+                        <p>{client.billing_address.street || 'No street address'}</p>
+                        <p>
+                          {[client.billing_address.city, client.billing_address.state, client.billing_address.zip]
+                            .filter(Boolean)
+                            .join(', ') || 'No city/state/zip'
+                          }
+                        </p>
                       </div>
                     </div>
                   </div>
