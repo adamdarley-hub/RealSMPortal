@@ -34,6 +34,7 @@ import {
   AlertCircle,
   Wifi,
   WifiOff,
+  ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSync } from "@/hooks/use-auto-sync";
