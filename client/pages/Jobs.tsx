@@ -883,16 +883,6 @@ export default function Jobs() {
               </span>
             </div>
 
-            {usingMockData && (
-              <Button
-                onClick={() => window.open('/api/debug/servemanager', '_blank')}
-                variant="secondary"
-                className="gap-2"
-              >
-                <AlertCircle className="w-4 h-4" />
-                Debug API
-              </Button>
-            )}
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="gap-2">
@@ -932,22 +922,6 @@ export default function Jobs() {
           </Alert>
         )}
 
-        {/* Debug Section - Show first job's raw data structure */}
-        {jobs.length > 0 && process.env.NODE_ENV === 'development' && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-sm text-blue-800">Debug: First Job Data Structure</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <details className="text-xs">
-                <summary className="cursor-pointer text-blue-700 mb-2">View Raw Job Data</summary>
-                <pre className="bg-white p-2 rounded text-xs overflow-auto max-h-40">
-                  {JSON.stringify(jobs[0], null, 2)}
-                </pre>
-              </details>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Filters and Search */}
         <Card>
