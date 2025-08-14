@@ -839,7 +839,7 @@ export default function JobDetail() {
           setJobAffidavits([]);
         }
       } else {
-        console.log('❌ Affidavits request failed:', affidavitsResponse);
+        console.log('❌ Affidavits request failed:', affidavitsResult);
         setJobAffidavits([]);
       }
 
