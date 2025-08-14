@@ -199,7 +199,7 @@ export function createServer() {
   app.get("/api/jobs/:id", getCachedJob);     // ⚡ INSTANT - Single job from cache
   app.get("/api/contacts", getContacts);      // 📋 CONTACTS - Fetch all contacts
   app.get("/api/court_cases", getCourtCases); // ⚖️ COURT CASES - Fetch all court cases
-  app.get("/api/invoices", getMockInvoices);  // 📄 INVOICES - Use mock data for now
+  app.get("/api/invoices", getInvoices);      // 📄 INVOICES - Real data from ServeManager API
 
   // Cache management routes
   app.post("/api/sync", triggerManualSync);        // 🔄 Trigger manual sync with better response
