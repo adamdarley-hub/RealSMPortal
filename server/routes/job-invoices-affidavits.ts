@@ -59,14 +59,6 @@ export const getJobInvoices: RequestHandler = async (req, res) => {
 
     // Filter invoices that contain the specific job
     const jobInvoices = allInvoices.filter(invoice => {
-      console.log(`🔍 Checking invoice ${invoice.id} for job ${jobId}:`, {
-        invoiceJobId: invoice.job_id,
-        invoiceJobIdType: typeof invoice.job_id,
-        jobIdParam: jobId,
-        jobIdParamType: typeof jobId,
-        jobIdParamInt: parseInt(jobId),
-        match: invoice.job_id === parseInt(jobId) || String(invoice.job_id) === String(jobId)
-      });
 
       // ServeManager invoice structure - check job_id directly
       if (invoice.job_id) {
