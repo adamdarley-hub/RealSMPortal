@@ -512,14 +512,14 @@ export const getInvoices: RequestHandler = async (req, res) => {
 
     console.log(`=== TOTAL INVOICES FETCHED: ${allInvoices.length} ===`);
 
-    // Fetch clients cache to lookup client names for invoices
+    // Use local client cache for performance (no additional API call needed)
     let clientsCache: any[] = [];
     try {
-      const clientsResponse = await makeServeManagerRequest('/companies?per_page=1000');
-      clientsCache = clientsResponse.data || clientsResponse.companies || [];
-      console.log(`✅ Fetched ${clientsCache.length} clients for invoice mapping`);
+      const cacheService = await import('../services/cache-service');
+      clientsCache = await cacheService.getClientsFromCache();
+      console.log(`✅ Using ${clientsCache.length} cached clients for invoice mapping`);
     } catch (error) {
-      console.warn('Could not fetch clients cache for invoice mapping:', error);
+      console.warn('Could not fetch cached clients for invoice mapping:', error);
     }
 
     // Transform invoices using mapper to ensure consistent data structure
