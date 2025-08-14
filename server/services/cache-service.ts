@@ -1,6 +1,6 @@
 import { db } from '../db/database';
 import { jobs, clients, servers, invoices, contacts, sync_log } from '../db/schema';
-import { eq, desc, gte, sql } from 'drizzle-orm';
+import { eq, desc, gte, sql, and } from 'drizzle-orm';
 import { mapJobFromServeManager, mapClientFromServeManager, mapServerFromServeManager } from '../utils/servemanager-mapper';
 
 // Import the ServeManager request function
