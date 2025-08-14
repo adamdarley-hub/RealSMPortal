@@ -412,6 +412,46 @@ export default function ClientDetail() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
+            {/* Summary Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-muted-foreground">Total Jobs</p>
+                      <p className="text-2xl font-bold">{jobs.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <Users className="h-8 w-8 text-muted-foreground" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-muted-foreground">Contacts</p>
+                      <p className="text-2xl font-bold">{contacts.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <DollarSign className="h-8 w-8 text-muted-foreground" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-muted-foreground">Total Value</p>
+                      <p className="text-2xl font-bold">
+                        ${jobs.reduce((sum, job) => sum + (job.amount || 0), 0).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
             {/* Basic Information */}
             <Card>
               <CardHeader>
