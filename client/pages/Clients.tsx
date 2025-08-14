@@ -249,7 +249,7 @@ export default function Clients() {
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 </CardTitle>
                 <CardDescription>
-                  Showing {filteredClients.length} of {totalClients} clients
+                  Showing {filteredClients.length} of {totalClients} clients • Click any row to view details
                 </CardDescription>
               </div>
             </div>
