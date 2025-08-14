@@ -48,6 +48,13 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
 
     console.log(`⚡ Served ${jobs.length}${isPaginated ? ` of ${allJobs.length}` : ''} jobs from cache (page ${pageNum}) in ${responseTime}ms`);
 
+    // Add production caching headers
+    res.set({
+      'Cache-Control': 'public, max-age=60', // Cache for 1 minute
+      'ETag': `jobs-${allJobs.length}-${Date.now()}`,
+      'X-Response-Time': `${responseTime}ms`
+    });
+
     res.json({
       jobs,
       total: allJobs.length,
