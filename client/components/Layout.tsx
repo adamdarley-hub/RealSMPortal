@@ -59,7 +59,7 @@ export default function Layout({ children }: LayoutProps) {
     window.location.href = '/login';
   };
   
-  const navItems = currentUser.role === "admin" ? adminNavItems : clientNavItems;
+  const navItems = adminNavItems; // Admin layout always uses admin nav items
 
   return (
     <div className="h-screen flex bg-background">
