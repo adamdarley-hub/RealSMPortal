@@ -15,13 +15,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Tabs,
   TabsContent,
   TabsList,
@@ -40,28 +33,24 @@ import {
   Plus,
   Search,
   Gavel,
-  Scale,
   Building,
-  UserCheck,
   Timer,
-  BarChart3,
   RefreshCw,
-  Filter,
+  ExternalLink,
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useToast } from "@/hooks/use-toast";
 
-// Types for our data structures
+// Types for our real data structures
 interface DashboardKPIs {
+  totalJobs: number;
   openJobs: number;
+  completedJobs: number;
   served7d: number;
   attempts24h: number;
-  invoicesDue: number;
-  invoicesDueAmount: number;
   upcomingDeadlines: number;
-  openCases: number;
-  hearings30d: number;
-  affidavitsAwaiting: number;
+  totalClients: number;
+  activeServers: number;
 }
 
 interface RecentJob {
@@ -78,43 +67,20 @@ interface RecentJob {
   due_date: string;
   created_at: string;
   amount: number;
+  court_case_number?: string;
+  plaintiff?: string;
+  defendant?: string;
 }
 
-interface RecentAttempt {
-  id: string;
-  job_id: string;
-  job_number: string;
-  timestamp: string;
-  outcome: string;
-  notes: string;
-  server_name: string;
-}
-
-interface UnpaidInvoice {
-  id: string;
-  invoice_number: string;
-  client_company: string;
-  amount: number;
-  due_date: string;
-  status: string;
-}
-
-interface CaseInfo {
-  id: string;
+interface CourtCase {
   case_number: string;
   plaintiff: string;
   defendant: string;
-  court_name: string;
-  court_county: string;
-  court_state: string;
-  filing_date: string;
-  next_hearing: string;
-  next_deadline: string;
-  served_parties: number;
-  total_parties: number;
-  affidavits_returned: number;
-  last_activity: string;
-  status: string;
+  court_name?: string;
+  jobs: RecentJob[];
+  totalJobs: number;
+  servedJobs: number;
+  lastActivity: string;
 }
 
 // User scoping - would normally come from auth context
@@ -132,15 +98,14 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null);
   const [recentJobs, setRecentJobs] = useState<RecentJob[]>([]);
-  const [recentAttempts, setRecentAttempts] = useState<RecentAttempt[]>([]);
-  const [unpaidInvoices, setUnpaidInvoices] = useState<UnpaidInvoice[]>([]);
-  const [cases, setCases] = useState<CaseInfo[]>([]);
+  const [courtCases, setCourtCases] = useState<CourtCase[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
+  const [servers, setServers] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   // Filters and search
   const [jobsSearch, setJobsSearch] = useState("");
   const [casesSearch, setCasesSearch] = useState("");
-  const [caseStatusFilter, setCaseStatusFilter] = useState("all");
 
   // User scoping - In real app, this would come from auth context
   const userScope: UserScope = useMemo(() => {
@@ -162,8 +127,17 @@ export default function Dashboard() {
     return true;
   }, [userScope]);
 
-  // Load KPIs with scoping
-  const loadKPIs = useCallback(async () => {
+  // Load all real data
+  const loadDashboardData = useCallback(async () => {
+    if (userScope.allowedClientIds.length === 0 && !userScope.isAdmin) {
+      setError('No data in scope for current user');
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
     try {
       // Build scoped query parameters
       const params = new URLSearchParams();
@@ -174,31 +148,45 @@ export default function Dashboard() {
         params.append('workspace_id', userScope.workspaceId);
       }
 
-      if (!validateScopedQuery('loadKPIs', !userScope.isAdmin)) {
+      if (!validateScopedQuery('loadDashboardData', !userScope.isAdmin)) {
         throw new Error('Invalid query scoping');
       }
 
-      // In a real app, these would be separate optimized endpoints
-      // For now, we'll use our existing data with client-side aggregation as a fallback
-      const [jobsResponse] = await Promise.all([
-        fetch(`/api/jobs?${params.toString()}`)
+      // Fetch all real data
+      const [jobsResponse, clientsResponse, serversResponse] = await Promise.all([
+        fetch(`/api/jobs?${params.toString()}`),
+        fetch(`/api/clients?${params.toString()}`),
+        fetch(`/api/servers?${params.toString()}`)
       ]);
 
       if (!jobsResponse.ok) {
-        throw new Error('Failed to load dashboard data');
+        throw new Error('Failed to load jobs data');
       }
 
       const jobsData = await jobsResponse.json();
       const jobs = jobsData.jobs || [];
 
-      // Calculate KPIs from available data
+      let clientsData = { clients: [] };
+      if (clientsResponse.ok) {
+        clientsData = await clientsResponse.json();
+      }
+
+      let serversData = { servers: [] };
+      if (serversResponse.ok) {
+        serversData = await serversResponse.json();
+      }
+
+      // Calculate real KPIs from job data
       const now = new Date();
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
       const openJobs = jobs.filter((job: any) => 
         ['pending', 'in_progress', 'assigned'].includes(job.status?.toLowerCase())
+      ).length;
+
+      const completedJobs = jobs.filter((job: any) => 
+        ['served', 'completed'].includes(job.status?.toLowerCase())
       ).length;
 
       const served7d = jobs.filter((job: any) => {
@@ -207,49 +195,25 @@ export default function Dashboard() {
                ['served', 'completed'].includes(job.status?.toLowerCase());
       }).length;
 
-      // Mock some additional KPIs that would come from dedicated endpoints
+      const upcomingDeadlines = jobs.filter((job: any) => {
+        const dueDate = job.due_date;
+        return dueDate && new Date(dueDate) <= sevenDaysFromNow && new Date(dueDate) >= now;
+      }).length;
+
+      // Real KPIs from actual data
       const kpisData: DashboardKPIs = {
+        totalJobs: jobs.length,
         openJobs,
+        completedJobs,
         served7d,
-        attempts24h: Math.floor(Math.random() * 15) + 3, // Mock data
-        invoicesDue: Math.floor(Math.random() * 8) + 2,
-        invoicesDueAmount: Math.random() * 5000 + 1000,
-        upcomingDeadlines: jobs.filter((job: any) => {
-          const dueDate = job.due_date;
-          return dueDate && new Date(dueDate) <= thirtyDaysFromNow && new Date(dueDate) >= now;
-        }).length,
-        openCases: Math.floor(Math.random() * 25) + 10, // Mock data
-        hearings30d: Math.floor(Math.random() * 12) + 3,
-        affidavitsAwaiting: Math.floor(Math.random() * 18) + 5,
+        attempts24h: 0, // We don't have attempt data in current schema
+        upcomingDeadlines,
+        totalClients: clientsData.clients.length,
+        activeServers: serversData.servers.filter((s: any) => s.active).length,
       };
 
-      setKpis(kpisData);
-    } catch (error) {
-      console.error('Error loading KPIs:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load KPIs');
-    }
-  }, [userScope, validateScopedQuery]);
-
-  // Load recent jobs with scoping
-  const loadRecentJobs = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      params.append('limit', '25');
-      params.append('sort', 'created_at_desc');
-      
-      if (!userScope.isAdmin && userScope.allowedClientIds.length > 0) {
-        params.append('client_ids', userScope.allowedClientIds.join(','));
-      }
-
-      if (!validateScopedQuery('loadRecentJobs', !userScope.isAdmin)) {
-        return;
-      }
-
-      const response = await fetch(`/api/jobs?${params.toString()}`);
-      if (!response.ok) throw new Error('Failed to load recent jobs');
-
-      const data = await response.json();
-      const jobs = (data.jobs || []).slice(0, 25).map((job: any) => ({
+      // Process recent jobs with real data
+      const processedJobs: RecentJob[] = jobs.slice(0, 25).map((job: any) => ({
         id: job.id,
         job_number: job.job_number || job.servemanager_job_number || job.id,
         client_company: job.client_company || job.client?.company || 'Unknown Client',
@@ -263,95 +227,80 @@ export default function Dashboard() {
         due_date: job.due_date || '',
         created_at: job.created_at || '',
         amount: job.amount || job.total || job.fee || 0,
+        court_case_number: job.case_number || job.court_case?.number,
+        plaintiff: job.plaintiff || job.court_case?.plaintiff,
+        defendant: job.defendant || job.court_case?.defendant,
       }));
 
-      setRecentJobs(jobs);
-    } catch (error) {
-      console.error('Error loading recent jobs:', error);
-    }
-  }, [userScope, validateScopedQuery]);
+      // Extract real court cases from job data
+      const caseMap = new Map<string, CourtCase>();
+      
+      jobs.forEach((job: any) => {
+        const caseNumber = job.case_number || job.court_case?.number;
+        if (caseNumber) {
+          if (!caseMap.has(caseNumber)) {
+            caseMap.set(caseNumber, {
+              case_number: caseNumber,
+              plaintiff: job.plaintiff || job.court_case?.plaintiff || '',
+              defendant: job.defendant || job.court_case?.defendant || '',
+              court_name: job.court_case?.court?.name || '',
+              jobs: [],
+              totalJobs: 0,
+              servedJobs: 0,
+              lastActivity: ''
+            });
+          }
+          
+          const courtCase = caseMap.get(caseNumber)!;
+          courtCase.jobs.push({
+            id: job.id,
+            job_number: job.job_number || job.servemanager_job_number || job.id,
+            client_company: job.client_company || job.client?.company || '',
+            recipient_name: job.recipient_name || job.defendant_name || '',
+            service_address: '',
+            city: job.service_address?.city || job.address?.city || '',
+            state: job.service_address?.state || job.address?.state || '',
+            county: '',
+            status: job.status || 'unknown',
+            priority: job.priority || 'medium',
+            due_date: job.due_date || '',
+            created_at: job.created_at || '',
+            amount: job.amount || 0
+          });
+          
+          courtCase.totalJobs++;
+          if (['served', 'completed'].includes(job.status?.toLowerCase())) {
+            courtCase.servedJobs++;
+          }
+          
+          // Update last activity
+          const jobDate = new Date(job.updated_at || job.created_at || '');
+          const currentLastActivity = new Date(courtCase.lastActivity || '1970-01-01');
+          if (jobDate > currentLastActivity) {
+            courtCase.lastActivity = job.updated_at || job.created_at || '';
+          }
+        }
+      });
 
-  // Load mock case data (would be real API in production)
-  const loadCases = useCallback(async () => {
-    try {
-      if (!validateScopedQuery('loadCases', !userScope.isAdmin)) {
-        return;
-      }
+      setKpis(kpisData);
+      setRecentJobs(processedJobs);
+      setCourtCases(Array.from(caseMap.values()));
+      setClients(clientsData.clients);
+      setServers(serversData.servers);
 
-      // Mock case data - in real app this would be from a cases API
-      const mockCases: CaseInfo[] = [
-        {
-          id: '1',
-          case_number: '2024-CV-001234',
-          plaintiff: 'Smith Industries LLC',
-          defendant: 'Johnson Manufacturing Corp',
-          court_name: 'Superior Court of Travis County',
-          court_county: 'Travis',
-          court_state: 'TX',
-          filing_date: '2024-01-15',
-          next_hearing: '2024-02-20',
-          next_deadline: '2024-02-15',
-          served_parties: 2,
-          total_parties: 3,
-          affidavits_returned: 1,
-          last_activity: '2024-01-28',
-          status: 'open'
-        },
-        {
-          id: '2',
-          case_number: '2024-CV-001567',
-          plaintiff: 'Davis & Associates',
-          defendant: 'Williams Construction Inc',
-          court_name: 'District Court of Harris County',
-          court_county: 'Harris',
-          court_state: 'TX',
-          filing_date: '2024-01-10',
-          next_hearing: '2024-03-05',
-          next_deadline: '2024-02-28',
-          served_parties: 1,
-          total_parties: 2,
-          affidavits_returned: 0,
-          last_activity: '2024-01-25',
-          status: 'open'
-        },
-      ];
-
-      setCases(mockCases);
-    } catch (error) {
-      console.error('Error loading cases:', error);
-    }
-  }, [userScope, validateScopedQuery]);
-
-  // Load all data
-  const loadDashboardData = useCallback(async () => {
-    if (userScope.allowedClientIds.length === 0 && !userScope.isAdmin) {
-      setError('No data in scope for current user');
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      await Promise.all([
-        loadKPIs(),
-        loadRecentJobs(),
-        loadCases(),
-      ]);
     } catch (error) {
       console.error('Error loading dashboard:', error);
       setError(error instanceof Error ? error.message : 'Failed to load dashboard');
     } finally {
       setLoading(false);
     }
-  }, [loadKPIs, loadRecentJobs, loadCases, userScope]);
+  }, [userScope, validateScopedQuery]);
 
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Filter functions
+  // Filter functions using real data
   const filteredJobs = useMemo(() => {
     return recentJobs.filter(job =>
       job.job_number.toLowerCase().includes(jobsSearch.toLowerCase()) ||
@@ -361,17 +310,13 @@ export default function Dashboard() {
   }, [recentJobs, jobsSearch]);
 
   const filteredCases = useMemo(() => {
-    return cases.filter(case_ => {
-      const matchesSearch = casesSearch === '' || 
+    return courtCases.filter(case_ => {
+      return casesSearch === '' || 
         case_.case_number.toLowerCase().includes(casesSearch.toLowerCase()) ||
         case_.plaintiff.toLowerCase().includes(casesSearch.toLowerCase()) ||
         case_.defendant.toLowerCase().includes(casesSearch.toLowerCase());
-      
-      const matchesStatus = caseStatusFilter === 'all' || case_.status === caseStatusFilter;
-      
-      return matchesSearch && matchesStatus;
     });
-  }, [cases, casesSearch, caseStatusFilter]);
+  }, [courtCases, casesSearch]);
 
   // Helper functions
   const getStatusColor = (status: string) => {
@@ -394,6 +339,7 @@ export default function Dashboard() {
   };
 
   const formatRelativeTime = (dateString: string) => {
+    if (!dateString) return 'No date';
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -405,6 +351,9 @@ export default function Dashboard() {
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
     return `${Math.floor(diffDays / 30)} months ago`;
   };
+
+  // Calculate success rate from real data
+  const successRate = kpis ? Math.round((kpis.completedJobs / Math.max(kpis.totalJobs, 1)) * 100) : 0;
 
   // Loading skeleton
   if (loading) {
@@ -486,8 +435,21 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Top KPIs Grid */}
+        {/* KPIs Grid - Real Data Only */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpis?.totalJobs || 0}</div>
+              <p className="text-xs text-muted-foreground">
+                All process service jobs
+              </p>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Open Jobs</CardTitle>
@@ -498,6 +460,17 @@ export default function Dashboard() {
               <p className="text-xs text-muted-foreground">
                 Currently in progress
               </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{successRate}%</div>
+              <Progress value={successRate} className="mt-2" />
             </CardContent>
           </Card>
 
@@ -516,68 +489,26 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Attempts (24h)</CardTitle>
-              <Timer className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Clients</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpis?.attempts24h || 0}</div>
+              <div className="text-2xl font-bold">{kpis?.totalClients || 0}</div>
               <p className="text-xs text-muted-foreground">
-                Service attempts today
+                Active client accounts
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Invoices Due</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Process Servers</CardTitle>
+              <Building className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpis?.invoicesDue || 0}</div>
+              <div className="text-2xl font-bold">{kpis?.activeServers || 0}</div>
               <p className="text-xs text-muted-foreground">
-                ${(kpis?.invoicesDueAmount || 0).toLocaleString()} total
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Case Info KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Open Cases</CardTitle>
-              <Gavel className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpis?.openCases || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Active legal cases
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Hearings (30d)</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpis?.hearings30d || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Upcoming hearings
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Affidavits Awaiting</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpis?.affidavitsAwaiting || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Returns pending
+                Active servers
               </p>
             </CardContent>
           </Card>
@@ -594,14 +525,26 @@ export default function Dashboard() {
               </p>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Court Cases</CardTitle>
+              <Gavel className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{courtCases.length}</div>
+              <p className="text-xs text-muted-foreground">
+                Active legal cases
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="jobs" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="jobs">Recent Jobs</TabsTrigger>
-            <TabsTrigger value="cases">Cases</TabsTrigger>
-            <TabsTrigger value="invoices">Invoices</TabsTrigger>
+            <TabsTrigger value="cases">Court Cases</TabsTrigger>
           </TabsList>
 
           <TabsContent value="jobs" className="space-y-4">
@@ -614,7 +557,7 @@ export default function Dashboard() {
                       Recent Jobs
                     </CardTitle>
                     <CardDescription>
-                      Latest process service requests and their current status
+                      Latest process service requests from real data
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
@@ -700,11 +643,11 @@ export default function Dashboard() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <CardTitle className="flex items-center gap-2">
-                      <Scale className="w-5 h-5" />
-                      Legal Cases
+                      <Gavel className="w-5 h-5" />
+                      Court Cases
                     </CardTitle>
                     <CardDescription>
-                      Court cases and their service progress
+                      Legal cases extracted from job data with case numbers
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
@@ -717,16 +660,6 @@ export default function Dashboard() {
                         className="pl-10 w-64"
                       />
                     </div>
-                    <Select value={caseStatusFilter} onValueChange={setCaseStatusFilter}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="open">Open</SelectItem>
-                        <SelectItem value="closed">Closed</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
               </CardHeader>
@@ -738,53 +671,44 @@ export default function Dashboard() {
                       <TableHead>Case Name</TableHead>
                       <TableHead>Court</TableHead>
                       <TableHead>Service Progress</TableHead>
-                      <TableHead>Next Deadline</TableHead>
-                      <TableHead>Affidavits</TableHead>
+                      <TableHead>Total Jobs</TableHead>
                       <TableHead>Last Activity</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredCases.map((case_) => (
                       <TableRow 
-                        key={case_.id} 
-                        className="hover:bg-muted/50 cursor-pointer"
-                        onClick={() => navigate(`/cases/${case_.id}`)}
+                        key={case_.case_number} 
+                        className="hover:bg-muted/50"
                       >
                         <TableCell className="font-medium">{case_.case_number}</TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{case_.plaintiff}</p>
-                            <p className="text-sm text-muted-foreground">vs. {case_.defendant}</p>
+                            <p className="font-medium">{case_.plaintiff || 'Unknown Plaintiff'}</p>
+                            <p className="text-sm text-muted-foreground">vs. {case_.defendant || 'Unknown Defendant'}</p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{case_.court_name}</p>
-                            <p className="text-sm text-muted-foreground">{case_.court_county}, {case_.court_state}</p>
+                            <p className="font-medium">{case_.court_name || 'Court not specified'}</p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-sm">
-                              <span>{case_.served_parties}/{case_.total_parties} served</span>
-                              <span>{Math.round((case_.served_parties / case_.total_parties) * 100)}%</span>
+                              <span>{case_.servedJobs}/{case_.totalJobs} served</span>
+                              <span>{Math.round((case_.servedJobs / Math.max(case_.totalJobs, 1)) * 100)}%</span>
                             </div>
-                            <Progress value={(case_.served_parties / case_.total_parties) * 100} className="h-2" />
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                            {case_.next_deadline ? new Date(case_.next_deadline).toLocaleDateString() : 'None'}
+                            <Progress value={(case_.servedJobs / Math.max(case_.totalJobs, 1)) * 100} className="h-2" />
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {case_.affidavits_returned} returned
+                            {case_.totalJobs} jobs
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {formatRelativeTime(case_.last_activity)}
+                          {formatRelativeTime(case_.lastActivity)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -793,36 +717,16 @@ export default function Dashboard() {
 
                 {filteredCases.length === 0 && (
                   <div className="text-center py-8">
-                    <Scale className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Cases Found</h3>
+                    <Gavel className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No Court Cases Found</h3>
                     <p className="text-muted-foreground">
-                      {casesSearch ? "No cases match your search criteria" : "No cases available"}
+                      {casesSearch 
+                        ? "No cases match your search criteria" 
+                        : "No jobs with case numbers found"
+                      }
                     </p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="invoices" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5" />
-                  Unpaid Invoices
-                </CardTitle>
-                <CardDescription>
-                  Outstanding invoices requiring attention
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <DollarSign className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Invoices Coming Soon</h3>
-                  <p className="text-muted-foreground">
-                    Invoice management will be available in the next update
-                  </p>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -845,7 +749,7 @@ export default function Dashboard() {
           <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/jobs')}>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-warning" />
+                <FileText className="w-5 h-5 text-warning" />
                 All Jobs
               </CardTitle>
               <CardDescription>
