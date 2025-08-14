@@ -393,9 +393,19 @@ export function mapInvoiceFromServeManager(rawInvoice: any): any {
     };
   };
 
-  // Extract jobs array
+  // Extract jobs array - ServeManager invoices are usually per job
   const extractJobs = () => {
-    const jobs = rawInvoice.jobs || rawInvoice.line_items || rawInvoice.services || [];
+    if (rawInvoice.job_id) {
+      // Single job invoice
+      return [{
+        id: String(rawInvoice.job_id),
+        job_number: rawInvoice.servemanager_job_number || String(rawInvoice.job_id),
+        amount: parseFloat(rawInvoice.total || rawInvoice.subtotal || 0)
+      }];
+    }
+
+    // Multiple jobs (line items)
+    const jobs = rawInvoice.jobs || rawInvoice.line_items || [];
     return jobs.map((job: any) => ({
       id: String(job.id || job.job_id || job.uuid),
       job_number: job.job_number || job.number || job.reference || String(job.id),
@@ -403,12 +413,12 @@ export function mapInvoiceFromServeManager(rawInvoice: any): any {
     }));
   };
 
-  // Extract and normalize status
+  // Extract and normalize status - ServeManager uses 'Draft', 'Issued', 'Paid'
   const extractStatus = () => {
     const status = rawInvoice.status || rawInvoice.invoice_status || rawInvoice.state;
     const normalizedStatus = status?.toLowerCase();
 
-    // Map common status variations to our expected values
+    // Map ServeManager status values to our expected values
     switch (normalizedStatus) {
       case 'issued': case 'sent': case 'delivered': case 'emailed':
         return 'sent';
