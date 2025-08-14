@@ -527,8 +527,13 @@ export default function ClientDetail() {
                         <label className="text-sm font-medium text-muted-foreground">Address</label>
                         {client.address ? (
                           <div>
-                            <p>{client.address.street}</p>
-                            <p>{client.address.city}, {client.address.state} {client.address.zip}</p>
+                            <p>{client.address.street || 'No street address'}</p>
+                            <p>
+                              {[client.address.city, client.address.state, client.address.zip]
+                                .filter(Boolean)
+                                .join(', ') || 'No city/state/zip'
+                              }
+                            </p>
                           </div>
                         ) : (
                           <p className="text-muted-foreground">Not specified</p>
