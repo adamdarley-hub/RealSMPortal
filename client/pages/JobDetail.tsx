@@ -1515,21 +1515,13 @@ export default function JobDetail() {
                       return (
                         <div className="text-center py-8 text-muted-foreground">
                           <FileText className="w-12 h-12 mx-auto mb-4" />
-                          <p>No documents to be served</p>
+                          <p className="text-lg font-medium">No Service Documents Available</p>
+                          <p className="text-sm mt-2">
+                            This job does not have any service documents attached.
+                          </p>
                           <p className="text-xs text-gray-500 mt-2">
                             Job ID: {job.id}
                           </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              console.log('📄 Full job object for debugging:', job);
-                            }}
-                            className="gap-2 mt-2"
-                          >
-                            <Eye className="w-4 h-4" />
-                            Debug Job Data
-                          </Button>
                         </div>
                       );
                     }
