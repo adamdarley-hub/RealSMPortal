@@ -107,16 +107,27 @@ export default function ClientDetail() {
   }, [id, toast]);
 
   const loadContacts = useCallback(async () => {
-    if (!id || !client) return;
+    if (!id || !client) {
+      console.log('loadContacts: Missing id or client', { id, client: !!client });
+      return;
+    }
 
+    console.log('loadContacts: Starting contact loading for client:', client.company || client.name);
     setContactsLoading(true);
     try {
       let allContacts: Contact[] = [];
 
       // First, check if the client has embedded contacts in raw data
       const clientRawData = client.raw_data || client._raw;
+      console.log('loadContacts: Client raw data check:', {
+        hasRawData: !!clientRawData,
+        hasContacts: !!(clientRawData?.contacts),
+        contactsLength: clientRawData?.contacts?.length || 0,
+        contactsIsArray: Array.isArray(clientRawData?.contacts)
+      });
+
       if (clientRawData?.contacts && Array.isArray(clientRawData.contacts)) {
-        console.log(`Found ${clientRawData.contacts.length} embedded contacts for client ${client.company}`);
+        console.log(`Found ${clientRawData.contacts.length} embedded contacts for client ${client.company}:`, clientRawData.contacts);
 
         const embeddedContacts: Contact[] = clientRawData.contacts.map((contact: any) => ({
           id: contact.id?.toString() || Math.random().toString(),
@@ -129,7 +140,10 @@ export default function ClientDetail() {
           raw_data: contact
         }));
 
+        console.log('loadContacts: Mapped embedded contacts:', embeddedContacts);
         allContacts.push(...embeddedContacts);
+      } else {
+        console.log('loadContacts: No embedded contacts found in client raw data');
       }
 
       // Also try to fetch contacts from the general contacts API
