@@ -279,25 +279,98 @@ export default function ClientDetail() {
 
   // Helper function to display raw data if available
   const renderRawDataSection = (rawData: any) => {
-    if (!rawData) return null;
+    if (!rawData) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Raw ServeManager Data
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">No raw data available for this client.</p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Extract key information sections for better readability
+    const sections = [];
+
+    if (rawData.contacts && Array.isArray(rawData.contacts)) {
+      sections.push({
+        title: "Contacts Array",
+        data: rawData.contacts
+      });
+    }
+
+    if (rawData.addresses && Array.isArray(rawData.addresses)) {
+      sections.push({
+        title: "Addresses Array",
+        data: rawData.addresses
+      });
+    }
+
+    if (rawData.email_addresses && Array.isArray(rawData.email_addresses)) {
+      sections.push({
+        title: "Email Addresses Array",
+        data: rawData.email_addresses
+      });
+    }
+
+    if (rawData.phone_numbers && Array.isArray(rawData.phone_numbers)) {
+      sections.push({
+        title: "Phone Numbers Array",
+        data: rawData.phone_numbers
+      });
+    }
 
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Raw ServeManager Data
-          </CardTitle>
-          <CardDescription>
-            Complete data structure from ServeManager API
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <pre className="bg-muted p-4 rounded-lg overflow-auto text-sm max-h-96">
-            {JSON.stringify(rawData, null, 2)}
-          </pre>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        {/* Key Information Sections */}
+        {sections.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Key Data Sections
+              </CardTitle>
+              <CardDescription>
+                Structured data arrays from ServeManager
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {sections.map((section, index) => (
+                <div key={index}>
+                  <h4 className="font-semibold mb-2">{section.title} ({section.data.length})</h4>
+                  <pre className="bg-muted p-3 rounded text-sm overflow-auto max-h-64">
+                    {JSON.stringify(section.data, null, 2)}
+                  </pre>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Complete Raw Data */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Complete Raw ServeManager Data
+            </CardTitle>
+            <CardDescription>
+              Full data structure from ServeManager API
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-muted p-4 rounded-lg overflow-auto text-sm max-h-96">
+              {JSON.stringify(rawData, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      </div>
     );
   };
 
