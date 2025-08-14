@@ -88,6 +88,96 @@ const mockJobs = [
     amount: 0.00,
     description: "Court Papers - Personal Injury",
     service_type: "Service"
+  },
+  {
+    id: "20527877",
+    job_number: "20527877",
+    client: {
+      id: "client1",
+      name: "Pronto Process Service",
+      company: "Pronto Process Service"
+    },
+    recipient: {
+      name: "Sarah Mitchell",
+      address: {
+        street: "455 E 5TH ST APT 204",
+        city: "AUSTIN",
+        state: "TX",
+        zip: "78701",
+        full_address: "455 E 5TH ST APT 204, AUSTIN TX 78701"
+      }
+    },
+    status: "completed" as const,
+    priority: "rush" as const,
+    server: {
+      id: "server1",
+      name: "Adam Darley"
+    },
+    due_date: null,
+    created_date: "2024-01-12T14:20:00Z",
+    amount: 75.00,
+    description: "Rush Service - Eviction Notice",
+    service_type: "Service"
+  },
+  {
+    id: "20508744",
+    job_number: "20508744",
+    client: {
+      id: "client2",
+      name: "Kerr Civil Process Service",
+      company: "Kerr Civil Process Service"
+    },
+    recipient: {
+      name: "Michael Thompson",
+      address: {
+        street: "1204 CEDAR PARK CT",
+        city: "CEDAR PARK",
+        state: "TX",
+        zip: "78613",
+        full_address: "1204 CEDAR PARK CT, CEDAR PARK TX 78613"
+      }
+    },
+    status: "completed" as const,
+    priority: "routine" as const,
+    server: {
+      id: "server1",
+      name: "Adam Darley"
+    },
+    due_date: null,
+    created_date: "2024-01-08T11:45:00Z",
+    amount: 45.00,
+    description: "Summons and Complaint",
+    service_type: "Service"
+  },
+  {
+    id: "20527878",
+    job_number: "20527878",
+    client: {
+      id: "client1",
+      name: "Pronto Process Service",
+      company: "Pronto Process Service"
+    },
+    recipient: {
+      name: "David Rodriguez",
+      address: {
+        street: "2301 S LAMAR BLVD",
+        city: "AUSTIN",
+        state: "TX",
+        zip: "78704",
+        full_address: "2301 S LAMAR BLVD, AUSTIN TX 78704"
+      }
+    },
+    status: "in_progress" as const,
+    priority: "routine" as const,
+    server: {
+      id: "server1",
+      name: "Adam Darley"
+    },
+    due_date: "2024-01-25",
+    created_date: "2024-01-16T09:10:00Z",
+    amount: 50.00,
+    description: "Service of Process - Contract Dispute",
+    service_type: "Service"
   }
 ];
 
