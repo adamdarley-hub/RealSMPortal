@@ -461,7 +461,7 @@ export default function Jobs() {
   }, [toast]);
 
   // Smart auto-sync: enabled but non-blocking
-  const { status: syncStatus, manualSync } = useAutoSync({
+  const { status: syncStatus } = useAutoSync({
     enabled: true, // Re-enabled for data freshness awareness
     interval: 45000, // 45 seconds - balanced frequency
     onDataUpdate
@@ -854,23 +854,6 @@ export default function Jobs() {
             <p className="text-muted-foreground">
               Manage all process service jobs and track their progress
             </p>
-            {/* Cache status indicator with staleness awareness */}
-            {cacheRef.current.timestamp > 0 && (
-              <div className="text-xs flex items-center gap-1 mt-1">
-                {(() => {
-                  const ageSeconds = Math.round((Date.now() - cacheRef.current.timestamp) / 1000);
-                  const isStale = ageSeconds > 60; // Consider stale after 1 minute
-                  return (
-                    <>
-                      <span className={`w-2 h-2 rounded-full ${isStale ? 'bg-orange-500' : 'bg-green-500'} ${!isStale ? 'animate-pulse' : ''}`}></span>
-                      <span className={isStale ? 'text-orange-600' : 'text-green-600'}>
-                        {isStale ? '🔄 Data may be stale' : '⚡ Instant Load'} - Cached data ({ageSeconds}s old)
-                      </span>
-                    </>
-                  );
-                })()}
-              </div>
-            )}
           </div>
           <div className="flex gap-2">
             {/* Real-time sync status indicator */}
