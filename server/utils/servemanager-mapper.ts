@@ -338,6 +338,7 @@ export function mapClientFromServeManager(rawClient: any): any {
     updated_date: rawClient.updated_at || rawClient.date_updated,
     active: rawClient.active !== false, // Default to true unless explicitly false
     status: rawClient.status || (rawClient.active !== false ? 'active' : 'inactive'),
+    raw_data: rawClient, // For compatibility with frontend
     _raw: rawClient
   };
 }
