@@ -382,51 +382,119 @@ export class CacheService {
       console.error('❌ Jobs sync failed:', errorMessage);
       console.log('📦 Falling back to mock data for demo purposes...');
 
-      // Use mock data as fallback
-      const mockJobs = [
-        {
-          id: "20527876",
-          job_number: "20527876",
-          client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
-          recipient: { name: "Robert Eskridge", address: { street: "1920 WILWOOD DRIVE", city: "ROUND ROCK", state: "TX", zip: "78681", full_address: "1920 WILWOOD DRIVE, ROUND ROCK TX 78681" } },
-          status: "pending",
-          priority: "routine",
-          server: { id: "server1", name: "Adam Darley" },
-          due_date: null,
-          created_date: "2024-01-15T10:00:00Z",
-          amount: 50.00,
-          description: "Service of Process - Divorce Papers",
-          service_type: "Service"
-        },
-        {
-          id: "20527766",
-          job_number: "20527766",
-          client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
-          recipient: { name: "MINJUNG KWUN", address: { street: "291 LOCKHART LOOP", city: "GEORGETOWN", state: "TX", zip: "78628", full_address: "291 LOCKHART LOOP, GEORGETOWN TX 78628" } },
-          status: "pending",
-          priority: "routine",
-          server: { id: "server1", name: "Adam Darley" },
-          due_date: null,
-          created_date: "2024-01-14T09:30:00Z",
-          amount: 50.00,
-          description: "Subpoena Service",
-          service_type: "Service"
-        },
-        {
-          id: "20508743",
-          job_number: "20508743",
-          client: { id: "client2", name: "Kerr Civil Process Service", company: "Kerr Civil Process Service" },
-          recipient: { name: "WILLIAMSON CENTRAL APPRAISAL DISTRICT", address: { street: "625 FM 1460", city: "Georgetown", state: "TX", zip: "78626", full_address: "625 FM 1460, Georgetown TX 78626" } },
-          status: "pending",
-          priority: "routine",
-          server: null,
-          due_date: "2024-08-20",
-          created_date: "2024-01-10T08:15:00Z",
-          amount: 0.00,
-          description: "Court Papers - Personal Injury",
-          service_type: "Service"
-        }
-      ];
+      // Use mock data as fallback - import from mock-data.ts file
+      const { getMockJobs } = await import('../routes/mock-data');
+
+      // Create a fake request to get the mock data
+      const mockReq = { query: {} };
+      const mockRes = {
+        json: (data: any) => data,
+        setHeader: () => {},
+        set: () => {}
+      };
+
+      let mockJobsData;
+      try {
+        getMockJobs(mockReq as any, mockRes as any);
+        // Import the mock data directly
+        const mockDataModule = await import('../routes/mock-data');
+        // Access the mockJobs array directly
+        const fs = await import('fs');
+        const path = await import('path');
+        const mockDataPath = path.join(__dirname, '../routes/mock-data.ts');
+        const mockDataContent = fs.readFileSync(mockDataPath, 'utf8');
+
+        // For now, use the updated mock data directly
+        const mockJobs = [
+          {
+            id: "20527876",
+            job_number: "20527876",
+            client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
+            recipient: { name: "Robert Eskridge", address: { street: "1920 WILWOOD DRIVE", city: "ROUND ROCK", state: "TX", zip: "78681", full_address: "1920 WILWOOD DRIVE, ROUND ROCK TX 78681" } },
+            status: "pending",
+            priority: "routine",
+            server: { id: "server1", name: "Adam Darley" },
+            due_date: null,
+            created_date: "2024-01-15T10:00:00Z",
+            amount: 50.00,
+            description: "Service of Process - Divorce Papers",
+            service_type: "Service"
+          },
+          {
+            id: "20527766",
+            job_number: "20527766",
+            client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
+            recipient: { name: "MINJUNG KWUN", address: { street: "291 LOCKHART LOOP", city: "GEORGETOWN", state: "TX", zip: "78628", full_address: "291 LOCKHART LOOP, GEORGETOWN TX 78628" } },
+            status: "pending",
+            priority: "routine",
+            server: { id: "server1", name: "Adam Darley" },
+            due_date: null,
+            created_date: "2024-01-14T09:30:00Z",
+            amount: 50.00,
+            description: "Subpoena Service",
+            service_type: "Service"
+          },
+          {
+            id: "20508743",
+            job_number: "20508743",
+            client: { id: "client2", name: "Kerr Civil Process Service", company: "Kerr Civil Process Service" },
+            recipient: { name: "WILLIAMSON CENTRAL APPRAISAL DISTRICT", address: { street: "625 FM 1460", city: "Georgetown", state: "TX", zip: "78626", full_address: "625 FM 1460, Georgetown TX 78626" } },
+            status: "pending",
+            priority: "routine",
+            server: null,
+            due_date: "2024-08-20",
+            created_date: "2024-01-10T08:15:00Z",
+            amount: 0.00,
+            description: "Court Papers - Personal Injury",
+            service_type: "Service"
+          },
+          {
+            id: "20527877",
+            job_number: "20527877",
+            client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
+            recipient: { name: "Sarah Mitchell", address: { street: "455 E 5TH ST APT 204", city: "AUSTIN", state: "TX", zip: "78701", full_address: "455 E 5TH ST APT 204, AUSTIN TX 78701" } },
+            status: "completed",
+            priority: "rush",
+            server: { id: "server1", name: "Adam Darley" },
+            due_date: null,
+            created_date: "2024-01-12T14:20:00Z",
+            amount: 75.00,
+            description: "Rush Service - Eviction Notice",
+            service_type: "Service"
+          },
+          {
+            id: "20508744",
+            job_number: "20508744",
+            client: { id: "client2", name: "Kerr Civil Process Service", company: "Kerr Civil Process Service" },
+            recipient: { name: "Michael Thompson", address: { street: "1204 CEDAR PARK CT", city: "CEDAR PARK", state: "TX", zip: "78613", full_address: "1204 CEDAR PARK CT, CEDAR PARK TX 78613" } },
+            status: "completed",
+            priority: "routine",
+            server: { id: "server1", name: "Adam Darley" },
+            due_date: null,
+            created_date: "2024-01-08T11:45:00Z",
+            amount: 45.00,
+            description: "Summons and Complaint",
+            service_type: "Service"
+          },
+          {
+            id: "20527878",
+            job_number: "20527878",
+            client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
+            recipient: { name: "David Rodriguez", address: { street: "2301 S LAMAR BLVD", city: "AUSTIN", state: "TX", zip: "78704", full_address: "2301 S LAMAR BLVD, AUSTIN TX 78704" } },
+            status: "in_progress",
+            priority: "routine",
+            server: { id: "server1", name: "Adam Darley" },
+            due_date: "2024-01-25",
+            created_date: "2024-01-16T09:10:00Z",
+            amount: 50.00,
+            description: "Service of Process - Contract Dispute",
+            service_type: "Service"
+          }
+        ];
+      } catch (error) {
+        console.error('Error importing mock data:', error);
+        mockJobsData = [];
+      }
 
       try {
         // Use mock jobs directly in the correct format
