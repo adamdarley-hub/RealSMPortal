@@ -1608,7 +1608,7 @@ export default function JobDetail() {
                         {documentsToBeServed.length > 0 && (
                           <div>
                             <div className="flex items-center justify-between mb-4">
-                              <h3 className="text-lg font-semibold">Document Viewer</h3>
+                              <h3 className="text-lg font-semibold">{getRecipientName(job)} - Service Documents</h3>
                               {documentsToBeServed.length > 1 && (
                                 <div className="flex items-center space-x-2">
                                   <Button
@@ -1677,7 +1677,7 @@ export default function JobDetail() {
 
                                 // If no URL found but we have a document ID, try using the proxy
                                 if (!documentUrl && currentDocument?.id) {
-                                  console.log('📄 No direct URL found, trying proxy approach...');
+                                  console.log('�� No direct URL found, trying proxy approach...');
                                   return (
                                     <div className="relative w-full h-full">
                                       <iframe
@@ -1844,7 +1844,7 @@ export default function JobDetail() {
                       {/* Invoice Viewer */}
                       <div>
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-semibold">Invoice Viewer</h3>
+                          <h3 className="text-lg font-semibold">{getRecipientName(job)} - Invoice</h3>
                           {jobInvoices.length > 1 && (
                             <div className="flex items-center space-x-2">
                               <Button
@@ -1991,7 +1991,7 @@ export default function JobDetail() {
                       {/* Affidavit Viewer */}
                       <div>
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-semibold">Affidavit Viewer</h3>
+                          <h3 className="text-lg font-semibold">{getRecipientName(job)} - Affidavit</h3>
                           {jobAffidavits.length > 1 && (
                             <div className="flex items-center space-x-2">
                               <Button
