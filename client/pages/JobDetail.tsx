@@ -828,7 +828,7 @@ export default function JobDetail() {
       }
 
       // Process affidavits with enhanced error handling
-      if (affidavitsResponse.status === 'fulfilled' && affidavitsResponse.value.ok) {
+      if (affidavitsResult.status === 'fulfilled' && affidavitsResult.value.success) {
         try {
           const affidavitsData = await affidavitsResponse.value.json();
           setJobAffidavits(affidavitsData.affidavits || []);
@@ -865,7 +865,7 @@ export default function JobDetail() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'REFRESH_JOB') {
-        console.log('���� Received refresh request from iframe');
+        console.log('🔄 Received refresh request from iframe');
         refreshJobData();
       }
     };
