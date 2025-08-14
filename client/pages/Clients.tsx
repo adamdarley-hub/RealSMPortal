@@ -54,6 +54,7 @@ const formatTimeAgo = (date: Date): string => {
 };
 
 export default function Clients() {
+  const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
