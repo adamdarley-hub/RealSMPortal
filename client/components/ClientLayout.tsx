@@ -67,52 +67,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             </nav>
           </div>
         </SheetContent>
-
-        {/* Main content with SheetTrigger inside */}
-        <>
-          {/* Top bar */}
-          <div className="sticky top-0 z-10 flex-shrink-0 flex h-16 bg-white shadow border-b border-gray-200">
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden px-4 border-r border-gray-200"
-              >
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-
-            <div className="flex-1 px-4 flex justify-between items-center">
-              <div className="flex-1" />
-
-              {/* User info */}
-              <div className="ml-4 flex items-center space-x-4">
-                <div className="flex flex-col text-right">
-                  <div className="text-sm font-medium text-gray-900">
-                    {user?.name}
-                  </div>
-                  <div className="text-xs text-gray-500 flex items-center">
-                    <Building className="h-3 w-3 mr-1" />
-                    {user?.company}
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Page content */}
-          <main className="flex-1">
-            {children}
-          </main>
-        </>
       </Sheet>
 
       {/* Desktop sidebar */}
