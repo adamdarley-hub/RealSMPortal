@@ -358,12 +358,6 @@ export default function Invoices() {
                             <p className="text-sm text-muted-foreground">
                               {invoice.client?.name || invoice._raw?.client?.name || 'Unknown Contact'}
                             </p>
-                            {/* Debug: Show raw client data if available */}
-                            {invoice._raw && (
-                              <p className="text-xs text-muted-foreground opacity-50">
-                                Raw: {JSON.stringify(invoice._raw.client || {}, null, 1).substring(0, 50)}...
-                              </p>
-                            )}
                           </div>
                         </div>
                       </TableCell>
