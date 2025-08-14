@@ -25,6 +25,7 @@ import SupabaseMigration from "./pages/SupabaseMigration";
 import Login from "./pages/Login";
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientInvoices from "./pages/ClientInvoices";
+import ClientProfile from "./pages/ClientProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,7 @@ function AppRoutes() {
       {/* Client routes */}
       <Route path="/client" element={<ProtectedRoute role="client"><ClientDashboard /></ProtectedRoute>} />
       <Route path="/client/invoices" element={<ProtectedRoute role="client"><ClientInvoices /></ProtectedRoute>} />
+      <Route path="/client/profile" element={<ProtectedRoute role="client"><ClientProfile /></ProtectedRoute>} />
       <Route path="/client/jobs/:id" element={<ProtectedRoute role="client"><JobDetail /></ProtectedRoute>} />
 
       {/* Catch-all */}
