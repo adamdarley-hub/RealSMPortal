@@ -345,10 +345,10 @@ export function mapClientFromServeManager(rawClient: any): any {
 
 export function mapServerFromServeManager(rawServer: any): any {
   if (!rawServer) return { _raw: rawServer };
-  
+
   return {
     id: rawServer.id || rawServer.uuid || rawServer.server_id,
-    name: rawServer.name || rawServer.server_name || 
+    name: rawServer.name || rawServer.server_name ||
           `${rawServer.first_name || ''} ${rawServer.last_name || ''}`.trim(),
     first_name: rawServer.first_name,
     last_name: rawServer.last_name,
@@ -360,5 +360,71 @@ export function mapServerFromServeManager(rawServer: any): any {
     territories: rawServer.territories || rawServer.zones || rawServer.areas || [],
     created_date: rawServer.created_at || rawServer.date_created || rawServer.created,
     _raw: rawServer
+  };
+}
+
+export function mapInvoiceFromServeManager(rawInvoice: any): any {
+  if (!rawInvoice) return { _raw: rawInvoice };
+
+  // Extract client information
+  const extractClient = () => {
+    const client = rawInvoice.client || rawInvoice.account || {};
+    return {
+      id: String(client.id || client.uuid || client.client_id || rawInvoice.client_id || rawInvoice.account_id),
+      name: client.name || client.contact_name || client.primary_contact ||
+            `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unknown Contact',
+      company: client.company || client.company_name || client.business_name ||
+               client.name || 'Unknown Company'
+    };
+  };
+
+  // Extract jobs array
+  const extractJobs = () => {
+    const jobs = rawInvoice.jobs || rawInvoice.line_items || rawInvoice.services || [];
+    return jobs.map((job: any) => ({
+      id: String(job.id || job.job_id || job.uuid),
+      job_number: job.job_number || job.number || job.reference || String(job.id),
+      amount: parseFloat(job.amount || job.cost || job.price || job.total || 0)
+    }));
+  };
+
+  // Extract and normalize status
+  const extractStatus = () => {
+    const status = rawInvoice.status || rawInvoice.invoice_status || rawInvoice.state;
+    const normalizedStatus = status?.toLowerCase();
+
+    // Map common status variations to our expected values
+    switch (normalizedStatus) {
+      case 'issued': case 'sent': case 'delivered': case 'emailed':
+        return 'sent';
+      case 'paid': case 'payment_received': case 'completed':
+        return 'paid';
+      case 'past_due': case 'overdue': case 'late':
+        return 'overdue';
+      case 'draft': case 'pending': case 'created':
+        return 'draft';
+      case 'cancelled': case 'canceled': case 'void':
+        return 'cancelled';
+      default:
+        return normalizedStatus || 'draft';
+    }
+  };
+
+  return {
+    id: String(rawInvoice.id || rawInvoice.uuid || rawInvoice.invoice_id),
+    invoice_number: rawInvoice.invoice_number || rawInvoice.number || rawInvoice.invoice_id ||
+                   `INV-${rawInvoice.id}`,
+    client: extractClient(),
+    jobs: extractJobs(),
+    status: extractStatus(),
+    subtotal: parseFloat(rawInvoice.subtotal || rawInvoice.sub_total || rawInvoice.amount || 0),
+    tax: parseFloat(rawInvoice.tax || rawInvoice.tax_amount || rawInvoice.vat || 0),
+    total: parseFloat(rawInvoice.total || rawInvoice.total_amount || rawInvoice.grand_total ||
+                     (parseFloat(rawInvoice.subtotal || 0) + parseFloat(rawInvoice.tax || 0))),
+    created_date: rawInvoice.created_at || rawInvoice.date_created || rawInvoice.created ||
+                  rawInvoice.issue_date || rawInvoice.invoice_date,
+    due_date: rawInvoice.due_date || rawInvoice.date_due || rawInvoice.payment_due_date,
+    paid_date: rawInvoice.paid_date || rawInvoice.payment_date || rawInvoice.date_paid,
+    _raw: rawInvoice
   };
 }
