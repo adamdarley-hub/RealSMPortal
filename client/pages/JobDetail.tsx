@@ -1487,7 +1487,25 @@ export default function JobDetail() {
                       documentsToBeServed = [];
                     }
 
-                    console.log('📄 Final documents to be served:', {
+                    // Filter out documents that have null/empty URLs (no actual files)
+                    documentsToBeServed = documentsToBeServed.filter(document => {
+                      const hasValidUrl = !!(
+                        document.upload?.links?.download_url ||
+                        document.upload?.download_url ||
+                        document.download_url ||
+                        document.links?.download_url ||
+                        document.url ||
+                        document.file_url
+                      );
+
+                      if (!hasValidUrl) {
+                        console.log('📄 Filtering out document with no valid URL:', document.title || document.id);
+                      }
+
+                      return hasValidUrl;
+                    });
+
+                    console.log('📄 Final documents to be served (with valid URLs):', {
                       count: documentsToBeServed.length,
                       documents: documentsToBeServed,
                       firstDocument: documentsToBeServed[0] || null
