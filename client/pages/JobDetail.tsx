@@ -1079,8 +1079,14 @@ export default function JobDetail() {
                 </TabsContent>
                 
                 <TabsContent value="recipient" className="space-y-4 mt-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Service Address - always show */}
+                  <div className="space-y-4">
+                    {/* Recipient Name - always first */}
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Recipient Name</label>
+                      <p className="text-sm text-slate-900">{getRecipientName(job)}</p>
+                    </div>
+
+                    {/* Service Address - always second */}
                     <div>
                       <label className="text-sm font-medium text-slate-700">Service Address</label>
                       <div className="text-sm text-slate-900">
@@ -1088,27 +1094,19 @@ export default function JobDetail() {
                       </div>
                     </div>
 
-                    {/* Dynamic recipient fields - show all fields with values */}
+                    {/* Additional dynamic recipient fields */}
                     {(() => {
                       const recipientInfo = getRecipientInfo(job);
 
-                      // If no recipient info found, show at least the name
-                      if (Object.keys(recipientInfo).length === 0) {
-                        return (
-                          <div>
-                            <label className="text-sm font-medium text-slate-700">Recipient Name</label>
-                            <p className="text-sm text-slate-900">{getRecipientName(job)}</p>
+                      // Show all available recipient fields (excluding name since it's already shown)
+                      return Object.entries(recipientInfo)
+                        .filter(([key]) => key !== 'Recipient Name') // Skip name since it's shown above
+                        .map(([key, value]) => (
+                          <div key={key}>
+                            <label className="text-sm font-medium text-slate-700">{key}</label>
+                            <p className="text-sm text-slate-900">{value}</p>
                           </div>
-                        );
-                      }
-
-                      // Show all available recipient fields
-                      return Object.entries(recipientInfo).map(([key, value]) => (
-                        <div key={key}>
-                          <label className="text-sm font-medium text-slate-700">{key}</label>
-                          <p className="text-sm text-slate-900">{value}</p>
-                        </div>
-                      ));
+                        ));
                     })()}
                   </div>
                 </TabsContent>
