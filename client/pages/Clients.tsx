@@ -35,6 +35,8 @@ import {
   Wifi,
   WifiOff,
   ExternalLink,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSync } from "@/hooks/use-auto-sync";
