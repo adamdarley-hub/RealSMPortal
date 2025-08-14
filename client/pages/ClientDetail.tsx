@@ -107,63 +107,100 @@ export default function ClientDetail() {
   }, [id, toast]);
 
   const loadContacts = useCallback(async () => {
-    if (!id) return;
+    if (!id || !client) return;
 
     setContactsLoading(true);
     try {
-      const response = await fetch(`/api/contacts`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch contacts');
+      let allContacts: Contact[] = [];
+
+      // First, check if the client has embedded contacts in raw data
+      const clientRawData = client.raw_data || client._raw;
+      if (clientRawData?.contacts && Array.isArray(clientRawData.contacts)) {
+        console.log(`Found ${clientRawData.contacts.length} embedded contacts for client ${client.company}`);
+
+        const embeddedContacts: Contact[] = clientRawData.contacts.map((contact: any) => ({
+          id: contact.id?.toString() || Math.random().toString(),
+          name: contact.name || `${contact.first_name || ''} ${contact.last_name || ''}`.trim() || 'Unknown Contact',
+          email: contact.email || contact.email_address,
+          phone: contact.phone || contact.phone_number || contact.telephone,
+          title: contact.title || contact.position || contact.job_title,
+          department: contact.department,
+          primary: contact.primary || contact.is_primary || false,
+          raw_data: contact
+        }));
+
+        allContacts.push(...embeddedContacts);
       }
 
-      const data = await response.json();
-      // Filter contacts that belong to this client or have matching company info
-      const clientContacts = data.contacts.filter((contact: any) => {
-        if (!contact) return false;
+      // Also try to fetch contacts from the general contacts API
+      try {
+        const response = await fetch(`/api/contacts`);
+        if (response.ok) {
+          const data = await response.json();
 
-        // Direct client ID match
-        if (contact.client_id === id) return true;
+          // Filter contacts that belong to this client or have matching company info
+          const apiContacts = data.contacts.filter((contact: any) => {
+            if (!contact) return false;
 
-        // Match by company name if available
-        if (client && contact.company && contact.company.toLowerCase() === client.company?.toLowerCase()) {
-          return true;
+            // Direct client ID match
+            if (contact.client_id === id) return true;
+
+            // Match by company name if available
+            if (client && contact.company && contact.company.toLowerCase() === client.company?.toLowerCase()) {
+              return true;
+            }
+
+            // Match by company name in raw data
+            if (client && contact.raw_data?.company && contact.raw_data.company.toLowerCase() === client.company?.toLowerCase()) {
+              return true;
+            }
+
+            // Match by email domain if company email matches
+            if (client?.email && contact.email) {
+              const clientDomain = client.email.split('@')[1];
+              const contactDomain = contact.email.split('@')[1];
+              if (clientDomain && contactDomain && clientDomain.toLowerCase() === contactDomain.toLowerCase()) {
+                return true;
+              }
+            }
+
+            // Check if contact name matches client name (they might be the same person)
+            if (client.name && contact.name && contact.name.toLowerCase() === client.name.toLowerCase()) {
+              return true;
+            }
+
+            return false;
+          });
+
+          // Map API contact data to our Contact interface
+          const mappedApiContacts: Contact[] = apiContacts.map((contact: any) => ({
+            id: contact.id || contact.contact_id || Math.random().toString(),
+            name: contact.name || contact.full_name || `${contact.first_name || ''} ${contact.last_name || ''}`.trim() || 'Unknown Contact',
+            email: contact.email || contact.email_address,
+            phone: contact.phone || contact.phone_number || contact.telephone,
+            title: contact.title || contact.position || contact.job_title,
+            department: contact.department,
+            primary: contact.primary || contact.is_primary || false,
+            raw_data: contact
+          }));
+
+          allContacts.push(...mappedApiContacts);
         }
+      } catch (apiError) {
+        console.warn('Could not fetch contacts from API:', apiError);
+      }
 
-        // Match by company name in raw data
-        if (client && contact.raw_data?.company && contact.raw_data.company.toLowerCase() === client.company?.toLowerCase()) {
-          return true;
-        }
-
-        // Match by email domain if company email matches
-        if (client?.email && contact.email) {
-          const clientDomain = client.email.split('@')[1];
-          const contactDomain = contact.email.split('@')[1];
-          if (clientDomain && contactDomain && clientDomain.toLowerCase() === contactDomain.toLowerCase()) {
-            return true;
-          }
-        }
-
-        // Check if contact name matches client name (they might be the same person)
-        if (client.name && contact.name && contact.name.toLowerCase() === client.name.toLowerCase()) {
-          return true;
-        }
-
-        return false;
+      // Remove duplicates based on email or name
+      const uniqueContacts = allContacts.filter((contact, index, self) => {
+        return index === self.findIndex(c =>
+          (contact.email && c.email && contact.email === c.email) ||
+          (contact.name && c.name && contact.name === c.name) ||
+          contact.id === c.id
+        );
       });
 
-      // Map raw contact data to our Contact interface
-      const mappedContacts: Contact[] = clientContacts.map((contact: any) => ({
-        id: contact.id || contact.contact_id || Math.random().toString(),
-        name: contact.name || contact.full_name || `${contact.first_name || ''} ${contact.last_name || ''}`.trim() || 'Unknown Contact',
-        email: contact.email || contact.email_address,
-        phone: contact.phone || contact.phone_number || contact.telephone,
-        title: contact.title || contact.position || contact.job_title,
-        department: contact.department,
-        primary: contact.primary || contact.is_primary || false,
-        raw_data: contact
-      }));
-
-      setContacts(mappedContacts);
+      console.log(`Total unique contacts found for ${client.company}: ${uniqueContacts.length}`);
+      setContacts(uniqueContacts);
     } catch (error) {
       console.error('Error loading contacts:', error);
       toast({
