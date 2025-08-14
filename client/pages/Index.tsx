@@ -45,7 +45,7 @@ import { useToast } from "@/hooks/use-toast";
 interface DashboardKPIs {
   totalJobs: number;
   openJobs: number;
-  completedJobs: number;
+  servedJobs: number;
   served7d: number;
   attempts24h: number;
   upcomingDeadlines: number;
