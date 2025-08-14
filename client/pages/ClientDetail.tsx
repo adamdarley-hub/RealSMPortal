@@ -91,6 +91,16 @@ export default function ClientDetail() {
         throw new Error('Client not found');
       }
 
+      console.log('loadClientDetails: Found client:', {
+        id: foundClient.id,
+        company: foundClient.company,
+        hasRawData: !!(foundClient.raw_data),
+        hasRaw: !!(foundClient._raw),
+        rawDataKeys: foundClient.raw_data ? Object.keys(foundClient.raw_data) : [],
+        rawKeys: foundClient._raw ? Object.keys(foundClient._raw) : [],
+        rawContacts: foundClient._raw?.contacts || foundClient.raw_data?.contacts
+      });
+
       setClient(foundClient);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load client details';
