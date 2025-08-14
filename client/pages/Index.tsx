@@ -217,7 +217,7 @@ export default function Dashboard() {
       const kpisData: DashboardKPIs = {
         totalJobs: jobs.length,
         openJobs,
-        completedJobs,
+        servedJobs,
         served7d,
         attempts24h: 0, // We don't have attempt data in current schema
         upcomingDeadlines,
