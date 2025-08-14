@@ -338,7 +338,7 @@ export default function Invoices() {
                       className="hover:bg-muted/50 cursor-pointer"
                       onClick={() => {
                         if (firstJobId) {
-                          window.location.href = `/jobs/${firstJobId}`;
+                          navigate(`/jobs/${firstJobId}`);
                         }
                       }}
                     >
