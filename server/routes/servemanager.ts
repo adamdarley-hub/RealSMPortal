@@ -555,7 +555,7 @@ export const getInvoices: RequestHandler = async (req, res) => {
     ];
 
     // Apply mapper to mock data for consistency
-    const mappedMockInvoices = mockInvoices.map(invoice => mapInvoiceFromServeManager(invoice));
+    const mappedMockInvoices = mockInvoices.map(invoice => mapInvoiceFromServeManager(invoice, []));
 
     res.json({
       invoices: mappedMockInvoices,
