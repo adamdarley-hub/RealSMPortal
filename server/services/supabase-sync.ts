@@ -230,24 +230,25 @@ export class SupabaseSyncService {
     }
   }
 
-  // Background sync every 5 minutes
+  // Background sync every 5 minutes (TEMPORARILY DISABLED)
   startBackgroundSync(): void {
-    const SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    console.log('⏰ Background Supabase sync DISABLED temporarily for performance');
 
-    setInterval(async () => {
-      if (this.isSyncing) {
-        console.log('⚠️ Background sync skipped - already syncing');
-        return;
-      }
-
-      try {
-        console.log('🔄 Starting background sync to Supabase...');
-        await this.startInitialSync();
-        console.log('✅ Background sync completed');
-      } catch (error) {
-        console.error('❌ Background sync failed:', error);
-      }
-    }, SYNC_INTERVAL);
+    // Temporarily disabled to fix UI performance - background sync was causing timeouts
+    // const SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    // setInterval(async () => {
+    //   if (this.isSyncing) {
+    //     console.log('⚠️ Background sync skipped - already syncing');
+    //     return;
+    //   }
+    //   try {
+    //     console.log('🔄 Starting background sync to Supabase...');
+    //     await this.startInitialSync();
+    //     console.log('✅ Background sync completed');
+    //   } catch (error) {
+    //     console.error('❌ Background sync failed:', error);
+    //   }
+    // }, SYNC_INTERVAL);
 
     console.log('⏰ Background Supabase sync scheduled: every 5 minutes');
   }
