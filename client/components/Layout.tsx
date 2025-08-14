@@ -52,6 +52,12 @@ const adminNavItems = [
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/login';
+  };
   
   const navItems = currentUser.role === "admin" ? adminNavItems : clientNavItems;
 
