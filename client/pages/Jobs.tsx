@@ -583,27 +583,6 @@ export default function Jobs() {
     }));
   };
 
-  const refreshJobs = async () => {
-    console.log('🔄 Refreshing jobs...');
-    setLoading(true);
-    try {
-      // Trigger manual sync and reload with force refresh
-      manualSync();
-      await loadJobs(0, true); // Force refresh jobs
-      toast({
-        title: "Refreshed",
-        description: "Job data has been refreshed successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Refresh Failed",
-        description: "Could not refresh job data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -931,54 +910,6 @@ export default function Jobs() {
                 Debug API
               </Button>
             )}
-            <Button
-              onClick={refreshJobs}
-              variant={(() => {
-                const ageSeconds = Math.round((Date.now() - cacheRef.current.timestamp) / 1000);
-                return ageSeconds > 60 ? "default" : "outline"; // Prominent when stale
-              })()}
-              className="gap-2"
-              disabled={syncStatus.isSyncing}
-            >
-              <RefreshCw className={`w-4 h-4 ${syncStatus.isSyncing ? 'animate-spin' : ''}`} />
-              Refresh{(() => {
-                const ageSeconds = Math.round((Date.now() - cacheRef.current.timestamp) / 1000);
-                return ageSeconds > 60 ? ' (Recommended)' : '';
-              })()}
-            </Button>
-            <Button
-              onClick={async () => {
-                console.log('🔄 Quick refresh - invalidating cache...');
-                setLoading(true);
-                try {
-                  // Simply clear cache and reload - no expensive backend operations
-                  cacheRef.current.timestamp = 0;
-
-                  // Quick reload from cached API
-                  await loadJobs(0, true);
-
-                  toast({
-                    title: "Cache Cleared",
-                    description: "Data reloaded from cache",
-                  });
-                } catch (error) {
-                  console.error('❌ Refresh failed:', error);
-                  toast({
-                    title: "Refresh Failed",
-                    description: "Could not reload data",
-                    variant: "destructive"
-                  });
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              variant="outline"
-              className="gap-2"
-              disabled={syncStatus.isSyncing || loading}
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Clear Cache
-            </Button>
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="gap-2">
