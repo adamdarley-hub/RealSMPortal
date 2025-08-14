@@ -5,7 +5,10 @@ import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+
+// Admin pages
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
 import JobDetail from "./pages/JobDetail";
@@ -17,6 +20,11 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import ApiConfig from "./pages/ApiConfig";
 import SupabaseMigration from "./pages/SupabaseMigration";
+
+// Auth and Client pages
+import Login from "./pages/Login";
+import ClientDashboard from "./pages/ClientDashboard";
+import ClientInvoices from "./pages/ClientInvoices";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
