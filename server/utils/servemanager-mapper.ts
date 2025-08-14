@@ -442,14 +442,12 @@ export function mapInvoiceFromServeManager(rawInvoice: any): any {
     client: extractClient(),
     jobs: extractJobs(),
     status: extractStatus(),
-    subtotal: parseFloat(rawInvoice.subtotal || rawInvoice.sub_total || rawInvoice.amount || 0),
-    tax: parseFloat(rawInvoice.tax || rawInvoice.tax_amount || rawInvoice.vat || 0),
-    total: parseFloat(rawInvoice.total || rawInvoice.total_amount || rawInvoice.grand_total ||
-                     (parseFloat(rawInvoice.subtotal || 0) + parseFloat(rawInvoice.tax || 0))),
-    created_date: rawInvoice.created_at || rawInvoice.date_created || rawInvoice.created ||
-                  rawInvoice.issue_date || rawInvoice.invoice_date,
-    due_date: rawInvoice.due_date || rawInvoice.date_due || rawInvoice.payment_due_date,
-    paid_date: rawInvoice.paid_date || rawInvoice.payment_date || rawInvoice.date_paid,
+    subtotal: parseFloat(rawInvoice.subtotal || 0),
+    tax: parseFloat(rawInvoice.total_tax_amount || rawInvoice.tax || 0),
+    total: parseFloat(rawInvoice.total || 0),
+    created_date: rawInvoice.created_at || rawInvoice.issued_on,
+    due_date: null, // ServeManager doesn't use due dates
+    paid_date: rawInvoice.paid_on || rawInvoice.payment_date,
     _raw: rawInvoice
   };
 }
