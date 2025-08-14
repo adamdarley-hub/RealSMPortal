@@ -120,15 +120,20 @@ export default function ClientDetail() {
       // Filter contacts that belong to this client or have matching company info
       const clientContacts = data.contacts.filter((contact: any) => {
         if (!contact) return false;
-        
+
         // Direct client ID match
         if (contact.client_id === id) return true;
-        
+
         // Match by company name if available
         if (client && contact.company && contact.company.toLowerCase() === client.company?.toLowerCase()) {
           return true;
         }
-        
+
+        // Match by company name in raw data
+        if (client && contact.raw_data?.company && contact.raw_data.company.toLowerCase() === client.company?.toLowerCase()) {
+          return true;
+        }
+
         // Match by email domain if company email matches
         if (client?.email && contact.email) {
           const clientDomain = client.email.split('@')[1];
@@ -136,6 +141,11 @@ export default function ClientDetail() {
           if (clientDomain && contactDomain && clientDomain.toLowerCase() === contactDomain.toLowerCase()) {
             return true;
           }
+        }
+
+        // Check if contact name matches client name (they might be the same person)
+        if (client.name && contact.name && contact.name.toLowerCase() === client.name.toLowerCase()) {
+          return true;
         }
 
         return false;
