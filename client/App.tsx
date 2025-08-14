@@ -12,6 +12,7 @@ import JobDetail from "./pages/JobDetail";
 import Documents from "./pages/Documents";
 import Invoices from "./pages/Invoices";
 import Clients from "./pages/Clients";
+import ClientDetail from "./pages/ClientDetail";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import ApiConfig from "./pages/ApiConfig";
