@@ -366,16 +366,6 @@ export function mapServerFromServeManager(rawServer: any): any {
 export function mapInvoiceFromServeManager(rawInvoice: any): any {
   if (!rawInvoice) return { _raw: rawInvoice };
 
-  // Debug: Log first few invoices to understand structure
-  if (rawInvoice && rawInvoice.id) {
-    console.log('🔍 MAPPING INVOICE:', {
-      id: rawInvoice.id,
-      keys: Object.keys(rawInvoice),
-      client: rawInvoice.client || 'NO CLIENT FIELD',
-      total: rawInvoice.total || 'NO TOTAL FIELD',
-      status: rawInvoice.status || 'NO STATUS FIELD'
-    });
-  }
 
   // Extract client information
   const extractClient = () => {
