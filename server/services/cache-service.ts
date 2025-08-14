@@ -502,9 +502,13 @@ export class CacheService {
         const mappedMockJobs = mockJobs.map(job => ({
           id: job.id,
           job_number: job.job_number,
+          client: job.client,
           client_name: job.client.name,
           client_company: job.client.company,
           recipient_name: job.recipient.name,
+          service_address: job.recipient.address.full_address,
+          city: job.recipient.address.city,
+          state: job.recipient.address.state,
           status: job.status,
           priority: job.priority,
           server_name: job.server?.name,
@@ -512,7 +516,8 @@ export class CacheService {
           amount: job.amount,
           description: job.description,
           service_type: job.service_type,
-          address: job.recipient.address
+          address: job.recipient.address,
+          due_date: job.due_date
         }));
         console.log('Mapped mock jobs result:', mappedMockJobs.length, 'items');
 
