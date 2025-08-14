@@ -134,24 +134,32 @@ export interface ServiceAttempt {
 
 export interface Client {
   id: string;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zip: string;
+  name?: string;
+  company?: string;
+  email?: string;
+  phone?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
   };
   billing_address?: {
-    street: string;
-    city: string;
-    state: string;
-    zip: string;
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
   };
-  created_date: string;
-  active: boolean;
+  mailing_address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+  };
+  created_date?: string;
+  updated_date?: string;
+  active?: boolean;
+  status?: string;
   raw_data?: any;
   _raw?: any;
 }
