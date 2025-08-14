@@ -277,8 +277,8 @@ export default function Dashboard() {
 
   const filteredCases = useMemo(() => {
     return courtCases.filter(case_ => {
-      return casesSearch === '' || 
-        case_.case_number.toLowerCase().includes(casesSearch.toLowerCase()) ||
+      return casesSearch === '' ||
+        case_.number.toLowerCase().includes(casesSearch.toLowerCase()) ||
         case_.plaintiff.toLowerCase().includes(casesSearch.toLowerCase()) ||
         case_.defendant.toLowerCase().includes(casesSearch.toLowerCase());
     });
