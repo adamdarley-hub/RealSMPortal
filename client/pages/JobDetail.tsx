@@ -778,19 +778,42 @@ export default function JobDetail() {
       return;
     }
 
+    // Completely isolated fetch functions to prevent any crashes
+    const safeFetchInvoices = async () => {
+      try {
+        const response = await fetch(`/api/jobs/${jobId}/invoices`);
+        if (response.ok) {
+          const data = await response.json();
+          return { success: true, data };
+        }
+        return { success: false, error: `HTTP ${response.status}` };
+      } catch (error) {
+        console.warn('🧾 Invoices fetch failed:', error);
+        return { success: false, error: error.message };
+      }
+    };
+
+    const safeFetchAffidavits = async () => {
+      try {
+        const response = await fetch(`/api/jobs/${jobId}/affidavits`);
+        if (response.ok) {
+          const data = await response.json();
+          return { success: true, data };
+        }
+        return { success: false, error: `HTTP ${response.status}` };
+      } catch (error) {
+        console.warn('📜 Affidavits fetch failed:', error);
+        return { success: false, error: error.message };
+      }
+    };
+
     try {
       console.log('📋 Loading invoices and affidavits for job:', jobId);
 
-      // Load both in parallel for instant tab switching
-      const [invoicesResponse, affidavitsResponse] = await Promise.allSettled([
-        fetch(`/api/jobs/${jobId}/invoices`).catch(err => {
-          console.warn('🧾 Invoices fetch failed:', err);
-          return { ok: false, status: 'network_error', error: err };
-        }),
-        fetch(`/api/jobs/${jobId}/affidavits`).catch(err => {
-          console.warn('📜 Affidavits fetch failed:', err);
-          return { ok: false, status: 'network_error', error: err };
-        })
+      // Load both in parallel with completely isolated error handling
+      const [invoicesResult, affidavitsResult] = await Promise.allSettled([
+        safeFetchInvoices(),
+        safeFetchAffidavits()
       ]);
 
       // Process invoices with enhanced error handling
