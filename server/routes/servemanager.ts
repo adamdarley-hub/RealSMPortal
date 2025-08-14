@@ -511,9 +511,12 @@ export const getInvoices: RequestHandler = async (req, res) => {
 
     console.log(`=== TOTAL INVOICES FETCHED: ${allInvoices.length} ===`);
 
+    // Transform invoices using mapper to ensure consistent data structure
+    const mappedInvoices = allInvoices.map(invoice => mapInvoiceFromServeManager(invoice));
+
     res.json({
-      invoices: allInvoices,
-      total: allInvoices.length,
+      invoices: mappedInvoices,
+      total: mappedInvoices.length,
       pages_fetched: page - 1
     });
 
