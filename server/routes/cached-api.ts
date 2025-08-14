@@ -88,6 +88,13 @@ export const getCachedClients: RequestHandler = async (req, res) => {
     
     console.log(`⚡ Served ${clients.length} clients from cache in ${responseTime}ms`);
     
+    // Add production caching headers
+    res.set({
+      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes (clients change less frequently)
+      'ETag': `clients-${clients.length}`,
+      'X-Response-Time': `${responseTime}ms`
+    });
+
     res.json({
       clients,
       total: clients.length,
