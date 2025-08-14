@@ -379,13 +379,17 @@ export function mapInvoiceFromServeManager(rawInvoice: any): any {
 
   // Extract client information
   const extractClient = () => {
+    // ServeManager invoice structure includes client info from job
+    const clientCompany = rawInvoice.client_company || {};
+    const clientContact = rawInvoice.client_contact || {};
     const client = rawInvoice.client || rawInvoice.account || {};
+
     return {
-      id: String(client.id || client.uuid || client.client_id || rawInvoice.client_id || rawInvoice.account_id),
-      name: client.name || client.contact_name || client.primary_contact ||
-            `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unknown Contact',
-      company: client.company || client.company_name || client.business_name ||
-               client.name || 'Unknown Company'
+      id: String(rawInvoice.client_id || clientCompany.id || client.id || 'unknown'),
+      name: clientContact.first_name && clientContact.last_name
+        ? `${clientContact.first_name} ${clientContact.last_name}`.trim()
+        : client.name || client.contact_name || 'Unknown Contact',
+      company: clientCompany.name || client.company || client.company_name || 'Unknown Company'
     };
   };
 
