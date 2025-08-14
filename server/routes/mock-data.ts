@@ -237,15 +237,14 @@ const mockInvoices = [
       company: "Pronto Process Service"
     },
     jobs: [
-      { id: "20527876", job_number: "20527876", amount: 50.00 },
-      { id: "20527766", job_number: "20527766", amount: 50.00 }
+      { id: "20527877", job_number: "20527877", amount: 75.00 }
     ],
-    status: "sent" as const,
-    subtotal: 100.00,
-    tax: 8.25,
-    total: 108.25,
-    created_date: "2024-01-15T00:00:00Z",
-    due_date: "2024-02-14T00:00:00Z"
+    status: "paid" as const,
+    subtotal: 75.00,
+    tax: 6.19,
+    total: 81.19,
+    created_date: "2024-01-13T00:00:00Z",
+    due_date: "2024-02-12T00:00:00Z"
   },
   {
     id: "inv002",
@@ -256,14 +255,33 @@ const mockInvoices = [
       company: "Kerr Civil Process Service"
     },
     jobs: [
-      { id: "20508743", job_number: "20508743", amount: 0.00 }
+      { id: "20508744", job_number: "20508744", amount: 45.00 }
+    ],
+    status: "sent" as const,
+    subtotal: 45.00,
+    tax: 3.71,
+    total: 48.71,
+    created_date: "2024-01-09T00:00:00Z",
+    due_date: "2024-02-08T00:00:00Z"
+  },
+  {
+    id: "inv003",
+    invoice_number: "INV-2024-003",
+    client: {
+      id: "client1",
+      name: "Pronto Process Service",
+      company: "Pronto Process Service"
+    },
+    jobs: [
+      { id: "20527876", job_number: "20527876", amount: 50.00 },
+      { id: "20527766", job_number: "20527766", amount: 50.00 }
     ],
     status: "draft" as const,
-    subtotal: 0.00,
-    tax: 0.00,
-    total: 0.00,
-    created_date: "2024-01-10T00:00:00Z",
-    due_date: "2024-02-09T00:00:00Z"
+    subtotal: 100.00,
+    tax: 8.25,
+    total: 108.25,
+    created_date: "2024-01-16T00:00:00Z",
+    due_date: "2024-02-15T00:00:00Z"
   }
 ];
 
