@@ -558,7 +558,7 @@ const extractServiceAttempts = (job: Job) => {
           const miscAttachments = attempt.misc_attachments || attempt.attachments || [];
 
           // Comprehensive debug logging
-          console.log(`🖼��� Attempt ${index + 1} FULL photo extraction debug:`, {
+          console.log(`🖼️ Attempt ${index + 1} FULL photo extraction debug:`, {
             attemptId: attempt.id,
             attemptKeys: Object.keys(attempt),
             hasMiscAttachments: !!attempt.misc_attachments,
@@ -823,7 +823,7 @@ export default function JobDetail() {
         setCurrentInvoiceIndex(0);
         console.log('✅ Invoices loaded:', invoicesData.invoices?.length || 0);
       } else {
-        console.log('❌ Invoices request failed:', invoicesResponse);
+        console.log('❌ Invoices request failed:', invoicesResult);
         setJobInvoices([]);
       }
 
@@ -865,7 +865,7 @@ export default function JobDetail() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'REFRESH_JOB') {
-        console.log('🔄 Received refresh request from iframe');
+        console.log('���� Received refresh request from iframe');
         refreshJobData();
       }
     };
