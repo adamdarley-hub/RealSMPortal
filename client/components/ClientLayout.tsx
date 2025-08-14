@@ -118,16 +118,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <div className="lg:pl-64 flex flex-col flex-1">
         {/* Top bar */}
         <div className="sticky top-0 z-10 flex-shrink-0 flex h-16 bg-white shadow border-b border-gray-200">
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden px-4 border-r border-gray-200"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
 
           <div className="flex-1 px-4 flex justify-between items-center">
             <div className="flex-1" />
