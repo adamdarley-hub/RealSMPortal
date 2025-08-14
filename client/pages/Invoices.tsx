@@ -363,7 +363,7 @@ export default function Invoices() {
                         </Badge>
                       </TableCell>
                       <TableCell className="font-bold">
-                        {formatCurrency(invoice.total || invoice._raw?.total || 0)}
+                        {formatCurrency(invoice.total || 0)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
