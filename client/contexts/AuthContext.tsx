@@ -32,7 +32,7 @@ const mockUsers: User[] = [
     email: 'kelly@kerrcivilprocess.com',
     role: 'client',
     company: 'Kerr Civil Process',
-    client_id: '1454323'
+    client_id: 'client2'
   },
   {
     id: '3',
@@ -40,7 +40,7 @@ const mockUsers: User[] = [
     email: 'office@prontoprocess.com',
     role: 'client',
     company: 'Pronto Process',
-    client_id: '1454358'
+    client_id: 'client1'
   }
 ];
 

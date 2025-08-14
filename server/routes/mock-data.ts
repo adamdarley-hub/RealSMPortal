@@ -143,7 +143,7 @@ const mockInvoices = [
     invoice_number: "INV-2024-001",
     client: {
       id: "client1",
-      name: "Pronto Process Service", 
+      name: "Pronto Process Service",
       company: "Pronto Process Service"
     },
     jobs: [
@@ -156,6 +156,24 @@ const mockInvoices = [
     total: 108.25,
     created_date: "2024-01-15T00:00:00Z",
     due_date: "2024-02-14T00:00:00Z"
+  },
+  {
+    id: "inv002",
+    invoice_number: "INV-2024-002",
+    client: {
+      id: "client2",
+      name: "Kerr Civil Process Service",
+      company: "Kerr Civil Process Service"
+    },
+    jobs: [
+      { id: "20508743", job_number: "20508743", amount: 0.00 }
+    ],
+    status: "draft" as const,
+    subtotal: 0.00,
+    tax: 0.00,
+    total: 0.00,
+    created_date: "2024-01-10T00:00:00Z",
+    due_date: "2024-02-09T00:00:00Z"
   }
 ];
 
