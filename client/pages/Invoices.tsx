@@ -45,6 +45,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Invoice, InvoicesResponse } from "@shared/servemanager";
 
 export default function Invoices() {
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
