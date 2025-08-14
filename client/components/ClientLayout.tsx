@@ -67,18 +67,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             </nav>
           </div>
         </SheetContent>
-
-        {/* Sheet trigger moved inside Sheet wrapper */}
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="lg:hidden px-4 border-r border-gray-200"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </SheetTrigger>
       </Sheet>
 
       {/* Desktop sidebar */}
