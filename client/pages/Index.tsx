@@ -208,20 +208,6 @@ export default function Dashboard() {
                jobStatus === 'served';
       }).length;
 
-      // Debug logging to verify calculation
-      console.log('🔍 Served Jobs Calculation Debug:');
-      console.log(`Total jobs: ${jobs.length}`);
-      console.log(`Served jobs: ${servedJobs}`);
-      console.log(`Success rate: ${Math.round((servedJobs / Math.max(jobs.length, 1)) * 100)}%`);
-
-      // Sample of job statuses for debugging
-      const statusSample = jobs.slice(0, 10).map((job: any) => ({
-        id: job.id,
-        status: job.status,
-        service_status: job.service_status,
-        job_status: job.job_status
-      }));
-      console.log('Sample job statuses:', statusSample);
 
       const served7d = jobs.filter((job: any) => {
         const completedDate = job.completed_date || job.service_date;
