@@ -595,9 +595,13 @@ export class CacheService {
         phone: client.phone,
         address: client.address ? JSON.parse(client.address) : null,
         billing_address: client.billing_address ? JSON.parse(client.billing_address) : null,
+        mailing_address: client.mailing_address ? JSON.parse(client.mailing_address) : null,
         created_date: client.created_date,
+        updated_date: client.updated_date,
         active: client.active,
         status: client.status,
+        raw_data: client.raw_data ? JSON.parse(client.raw_data) : null,
+        _raw: client.raw_data ? JSON.parse(client.raw_data) : null,
         _cached: true,
         _last_synced: client.last_synced
       }));
