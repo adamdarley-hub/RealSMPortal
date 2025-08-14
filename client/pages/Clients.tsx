@@ -128,12 +128,62 @@ export default function Clients() {
     });
   };
 
-  // Filter clients by search term
-  const filteredClients = (clients || []).filter(client =>
-    (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.company || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.email || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Sort function
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Filter and sort clients
+  const filteredAndSortedClients = useMemo(() => {
+    // First filter by search term
+    const filtered = (clients || []).filter(client =>
+      (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (client.company || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (client.email || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Then sort
+    return [...filtered].sort((a, b) => {
+      let aValue = '';
+      let bValue = '';
+
+      switch (sortField) {
+        case 'company':
+          aValue = (a.company || '').toLowerCase();
+          bValue = (b.company || '').toLowerCase();
+          break;
+        case 'name':
+          aValue = (a.name || '').toLowerCase();
+          bValue = (b.name || '').toLowerCase();
+          break;
+        case 'email':
+          aValue = (a.email || '').toLowerCase();
+          bValue = (b.email || '').toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [clients, searchTerm, sortField, sortDirection]);
+
+  // Render sort icon for headers
+  const renderSortIcon = (field: SortField) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' ?
+      <ChevronUp className="w-4 h-4" /> :
+      <ChevronDown className="w-4 h-4" />;
+  };
 
   if (error) {
     return (
