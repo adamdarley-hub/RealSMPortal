@@ -321,12 +321,8 @@ export default function Invoices() {
                   <TableHead>Invoice #</TableHead>
                   <TableHead>Client</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Jobs Count</TableHead>
-                  <TableHead>Subtotal</TableHead>
-                  <TableHead>Tax</TableHead>
-                  <TableHead>Total</TableHead>
+                  <TableHead>Amount</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead>Due Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
