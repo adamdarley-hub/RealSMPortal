@@ -352,12 +352,8 @@ export default function Invoices() {
                         <div className="flex items-center gap-2">
                           <Building className="w-4 h-4 text-muted-foreground" />
                           <div>
-                            <p className="font-medium">
-                              {invoice.client?.company || invoice._raw?.client?.company || 'Unknown Company'}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {invoice.client?.name || invoice._raw?.client?.name || 'Unknown Contact'}
-                            </p>
+                            <p className="font-medium">{invoice.client?.company || 'Unknown Company'}</p>
+                            <p className="text-sm text-muted-foreground">{invoice.client?.name || 'Unknown Contact'}</p>
                           </div>
                         </div>
                       </TableCell>
