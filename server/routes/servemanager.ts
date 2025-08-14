@@ -544,9 +544,12 @@ export const getInvoices: RequestHandler = async (req, res) => {
       }
     ];
 
+    // Apply mapper to mock data for consistency
+    const mappedMockInvoices = mockInvoices.map(invoice => mapInvoiceFromServeManager(invoice));
+
     res.json({
-      invoices: mockInvoices,
-      total: mockInvoices.length,
+      invoices: mappedMockInvoices,
+      total: mappedMockInvoices.length,
       mock: true
     });
   }
