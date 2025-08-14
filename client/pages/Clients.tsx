@@ -56,6 +56,10 @@ const formatTimeAgo = (date: Date): string => {
   return date.toLocaleDateString();
 };
 
+// Sort configuration type
+type SortField = 'company' | 'name' | 'email';
+type SortDirection = 'asc' | 'desc';
+
 export default function Clients() {
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
@@ -63,6 +67,8 @@ export default function Clients() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [totalClients, setTotalClients] = useState(0);
+  const [sortField, setSortField] = useState<SortField>('company');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { toast } = useToast();
 
   // Declare loadClients function first before using it in callbacks
