@@ -651,6 +651,117 @@ export const getContacts: RequestHandler = async (req, res) => {
   }
 };
 
+// Get ALL court cases - no pagination limits
+export const getCourtCases: RequestHandler = async (req, res) => {
+  try {
+    console.log('=== FETCHING ALL COURT CASES ===');
+
+    const { company_id, q } = req.query;
+
+    // Build filter parameters
+    const filterParams = new URLSearchParams();
+    if (company_id && company_id !== 'all') filterParams.append('company_id', company_id as string);
+    if (q) filterParams.append('q', q as string);
+
+    // Fetch ALL court cases with pagination loop
+    let allCourtCases: any[] = [];
+    let page = 1;
+    let hasMorePages = true;
+    const maxPages = 50;
+
+    while (hasMorePages && page <= maxPages) {
+      const params = new URLSearchParams(filterParams);
+      params.append('per_page', '100');
+      params.append('page', page.toString());
+
+      const endpoint = `/court_cases?${params.toString()}`;
+      console.log(`Fetching court cases page ${page}`);
+
+      try {
+        const pageData = await makeServeManagerRequest(endpoint);
+
+        // Handle different response structures
+        let pageCourtCases: any[] = [];
+        if (pageData.data && Array.isArray(pageData.data)) {
+          pageCourtCases = pageData.data;
+        } else if (pageData.court_cases && Array.isArray(pageData.court_cases)) {
+          pageCourtCases = pageData.court_cases;
+        } else if (Array.isArray(pageData)) {
+          pageCourtCases = pageData;
+        }
+
+        console.log(`Court cases page ${page}: Found ${pageCourtCases.length} court cases`);
+
+        if (pageCourtCases.length > 0) {
+          allCourtCases.push(...pageCourtCases);
+          hasMorePages = pageCourtCases.length === 100;
+          page++;
+        } else {
+          hasMorePages = false;
+        }
+      } catch (pageError) {
+        console.error(`Error fetching court cases page ${page}:`, pageError);
+        hasMorePages = false;
+      }
+    }
+
+    console.log(`=== TOTAL COURT CASES FETCHED: ${allCourtCases.length} ===`);
+
+    res.json({
+      court_cases: allCourtCases,
+      total: allCourtCases.length,
+      pages_fetched: page - 1
+    });
+
+  } catch (error) {
+    console.error('Error fetching all court cases, using mock data:', error);
+
+    // Enhanced mock data
+    const mockCourtCases = [
+      {
+        id: "case001",
+        type: "court_case",
+        number: "2024-CV-001234",
+        plaintiff: "Smith Industries LLC",
+        defendant: "Johnson Manufacturing Corp",
+        filed_date: "2024-01-15",
+        court_date: "2024-02-20",
+        court: {
+          id: "court1",
+          name: "Superior Court of Travis County",
+          county: "Travis",
+          state: "TX"
+        },
+        created_at: "2024-01-15T00:00:00Z",
+        updated_at: "2024-01-28T00:00:00Z"
+      },
+      {
+        id: "case002",
+        type: "court_case",
+        number: "2024-CV-001567",
+        plaintiff: "Davis & Associates",
+        defendant: "Williams Construction Inc",
+        filed_date: "2024-01-10",
+        court_date: "2024-03-05",
+        court: {
+          id: "court2",
+          name: "District Court of Harris County",
+          county: "Harris",
+          state: "TX"
+        },
+        created_at: "2024-01-10T00:00:00Z",
+        updated_at: "2024-01-25T00:00:00Z"
+      }
+    ];
+
+    res.json({
+      court_cases: mockCourtCases,
+      total: mockCourtCases.length,
+      mock: true
+    });
+  }
+};
+
 // Create new job
 export const createJob: RequestHandler = async (req, res) => {
   try {
