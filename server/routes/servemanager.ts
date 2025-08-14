@@ -456,7 +456,7 @@ export const getServers: RequestHandler = async (req, res) => {
 // Get ALL invoices with optional filtering - no pagination limits
 export const getInvoices: RequestHandler = async (req, res) => {
   try {
-    console.log('=== FETCHING ALL INVOICES ===');
+    console.log('🧾 === INVOICE API ENDPOINT CALLED ===');
 
     const { status, client_id, date_from, date_to } = req.query;
 
