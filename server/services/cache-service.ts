@@ -345,19 +345,9 @@ export class CacheService {
         } catch (insertError) {
           console.warn(`⚠️ Skipping job ${jobData.id} due to insertion error:`, insertError.message);
 
-          // Debug first few failures to understand the issue
-          if (recordsSynced < 5) {
-            console.log(`🔍 Debug job data for ${jobData.id}:`, {
-              jobDataKeys: Object.keys(jobData),
-              jobDataFieldCount: Object.keys(jobData).length,
-              rawJobKeys: Object.keys(job),
-              sampleJobData: {
-                id: jobData.id,
-                status: jobData.status,
-                client_id: jobData.client_id,
-                amount: jobData.amount
-              }
-            });
+          // Log limited debug info for first few failures
+          if (recordsSynced < 3) {
+            console.warn(`Failed job details: ${jobData.id} - Status: ${jobData.status}`);
           }
 
           // Continue processing other jobs instead of failing the entire sync
