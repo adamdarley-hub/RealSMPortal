@@ -393,6 +393,21 @@ export default function ClientDetail() {
             <p className="text-muted-foreground">
               Client ID: {client.id}
             </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                console.log('=== CLIENT DEBUG DATA ===');
+                console.log('Client object:', client);
+                console.log('Raw data (_raw):', client._raw);
+                console.log('Raw data (raw_data):', client.raw_data);
+                console.log('Contacts in _raw:', client._raw?.contacts);
+                console.log('Contacts in raw_data:', client.raw_data?.contacts);
+              }}
+              className="mt-2"
+            >
+              Debug Client Data (Check Console)
+            </Button>
           </div>
         </div>
 
