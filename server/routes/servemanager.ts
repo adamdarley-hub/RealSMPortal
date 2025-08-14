@@ -512,8 +512,17 @@ export const getInvoices: RequestHandler = async (req, res) => {
 
     console.log(`=== TOTAL INVOICES FETCHED: ${allInvoices.length} ===`);
 
+    // Fetch clients cache to lookup client names for invoices
+    let clientsCache: any[] = [];
+    try {
+      const clientsResponse = await makeServeManagerRequest('/clients?per_page=1000');
+      clientsCache = clientsResponse.data || clientsResponse.clients || [];
+    } catch (error) {
+      console.warn('Could not fetch clients cache for invoice mapping:', error);
+    }
+
     // Transform invoices using mapper to ensure consistent data structure
-    const mappedInvoices = allInvoices.map(invoice => mapInvoiceFromServeManager(invoice));
+    const mappedInvoices = allInvoices.map(invoice => mapInvoiceFromServeManager(invoice, clientsCache));
 
     res.json({
       invoices: mappedInvoices,
