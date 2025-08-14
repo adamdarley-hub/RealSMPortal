@@ -156,63 +156,8 @@ export default function ClientDetail() {
         console.log('loadContacts: No embedded contacts found in client raw data');
       }
 
-      // Also try to fetch contacts from the general contacts API
-      try {
-        const response = await fetch(`/api/contacts`);
-        if (response.ok) {
-          const data = await response.json();
-
-          // Filter contacts that belong to this client or have matching company info
-          const apiContacts = data.contacts.filter((contact: any) => {
-            if (!contact) return false;
-
-            // Direct client ID match
-            if (contact.client_id === id) return true;
-
-            // Match by company name if available
-            if (client && contact.company && contact.company.toLowerCase() === client.company?.toLowerCase()) {
-              return true;
-            }
-
-            // Match by company name in raw data
-            if (client && contact.raw_data?.company && contact.raw_data.company.toLowerCase() === client.company?.toLowerCase()) {
-              return true;
-            }
-
-            // Match by email domain if company email matches
-            if (client?.email && contact.email) {
-              const clientDomain = client.email.split('@')[1];
-              const contactDomain = contact.email.split('@')[1];
-              if (clientDomain && contactDomain && clientDomain.toLowerCase() === contactDomain.toLowerCase()) {
-                return true;
-              }
-            }
-
-            // Check if contact name matches client name (they might be the same person)
-            if (client.name && contact.name && contact.name.toLowerCase() === client.name.toLowerCase()) {
-              return true;
-            }
-
-            return false;
-          });
-
-          // Map API contact data to our Contact interface
-          const mappedApiContacts: Contact[] = apiContacts.map((contact: any) => ({
-            id: contact.id || contact.contact_id || Math.random().toString(),
-            name: contact.name || contact.full_name || `${contact.first_name || ''} ${contact.last_name || ''}`.trim() || 'Unknown Contact',
-            email: contact.email || contact.email_address,
-            phone: contact.phone || contact.phone_number || contact.telephone,
-            title: contact.title || contact.position || contact.job_title,
-            department: contact.department,
-            primary: contact.primary || contact.is_primary || false,
-            raw_data: contact
-          }));
-
-          allContacts.push(...mappedApiContacts);
-        }
-      } catch (apiError) {
-        console.warn('Could not fetch contacts from API:', apiError);
-      }
+      // Note: ServeManager doesn't have a separate contacts API endpoint
+      // All contacts are embedded within client data, so we only use embedded contacts
 
       // Remove duplicates based on email or name
       const uniqueContacts = allContacts.filter((contact, index, self) => {
