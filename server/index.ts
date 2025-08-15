@@ -56,7 +56,7 @@ import {
   syncSupabaseJob
 } from "./routes/supabase-api";
 
-export function createServer() {
+export async function createServer() {
   const app = express();
 
   // Middleware
@@ -273,8 +273,8 @@ export function createServer() {
 }
 
 // Enhanced server creation with WebSocket support
-export function createServerWithWebSockets() {
-  const app = createServer();
+export async function createServerWithWebSockets() {
+  const app = await createServer();
   const server = require('http').createServer(app);
 
   // Attach the Express app to the server for easy access
