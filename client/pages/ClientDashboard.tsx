@@ -350,21 +350,11 @@ export default function ClientDashboard() {
                           <div className="font-medium">
                             {job.recipient_name} - {job.job_number}
                           </div>
-                          {(() => {
-                            // Extract case info like admin portal does
-                            const courtCase = (job as any).raw_data?.court_case || (job as any).court_case;
-                            const plaintiff = courtCase?.plaintiff || job.plaintiff || '';
-                            const defendant = courtCase?.defendant || job.defendant_name || job.recipient_name || '';
-
-                            if (plaintiff && defendant) {
-                              return (
-                                <div className="text-sm text-muted-foreground">
-                                  {plaintiff} vs {defendant}
-                                </div>
-                              );
-                            }
-                            return null;
-                          })()}
+                          {job.plaintiff && job.recipient_name && (
+                            <div className="text-sm text-muted-foreground">
+                              {job.plaintiff} vs {job.recipient_name}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <MapPin className="w-3 h-3" />
