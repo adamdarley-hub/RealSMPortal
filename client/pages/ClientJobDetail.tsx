@@ -816,8 +816,9 @@ export default function ClientJobDetail() {
                 <CardContent>
                   <div className="space-y-4">
                     {(() => {
-                      const attempts = job.attempts || (job as any).service_attempts || [];
-                      if (!Array.isArray(attempts) || attempts.length === 0) {
+                      const serviceAttempts = extractServiceAttempts(job);
+
+                      if (serviceAttempts.length === 0) {
                         return (
                           <div className="text-center py-8 text-gray-500">
                             <Clock className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -826,147 +827,124 @@ export default function ClientJobDetail() {
                         );
                       }
 
-                      return attempts.map((attempt: any, index: number) => {
-                        const attemptNumber = index + 1;
-                        const isSuccessful = attempt.success === true || attempt.service_status === 'Served';
-                        const isMobile = attempt.mobile === true;
-
-                        return (
-                          <div key={index} className="border rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center space-x-3">
-                                <h4 className="font-medium text-lg">Attempt #{attemptNumber}</h4>
-                                <Badge className={isSuccessful ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
-                                  {isSuccessful ? "Successful" : "Attempted"}
+                      return serviceAttempts.map((attempt: any) => (
+                        <div key={attempt.id} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <h4 className="font-medium text-lg">Attempt #{attempt.number}</h4>
+                              <Badge className={attempt.statusColor}>
+                                {attempt.status}
+                              </Badge>
+                              <Badge variant="outline" className={attempt.methodColor}>
+                                <span className="mr-1">{attempt.methodIcon}</span>
+                                {attempt.method}
+                              </Badge>
+                              {attempt.details.photos.length > 0 && (
+                                <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                                  <img className="w-3 h-3 mr-1" alt="" />
+                                  {attempt.details.photos.length} photo{attempt.details.photos.length > 1 ? 's' : ''}
                                 </Badge>
-                                <Badge variant="outline" className={isMobile ? "bg-blue-50 text-blue-700" : "bg-gray-50 text-gray-700"}>
-                                  {isMobile ? "📱 Mobile App" : "💻 Manual"}
-                                </Badge>
-                                {attempt.photos && attempt.photos.length > 0 && (
-                                  <Badge variant="outline" className="bg-purple-50 text-purple-700">
-                                    📷 {attempt.photos.length} photo{attempt.photos.length > 1 ? 's' : ''}
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm text-gray-500">
-                                  {attempt.served_at ? formatDateTime(attempt.served_at) :
-                                   attempt.date ? formatDateTime(attempt.date) :
-                                   'Date not available'}
-                                </p>
-                                <div className="flex items-center text-sm text-gray-600">
-                                  {attempt.server_name || 'Server not specified'}
-                                </div>
-                              </div>
+                              )}
                             </div>
-
-                            <div className="space-y-4 border-t pt-4">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Serve Type</label>
-                                  <p className="text-sm text-gray-900">
-                                    {typeof attempt.serve_type === 'string' ? attempt.serve_type : 'Personal/Individual'}
-                                  </p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Service Status</label>
-                                  <p className="text-sm text-gray-900">
-                                    {typeof attempt.service_status === 'string' ? attempt.service_status : 'Attempted'}
-                                  </p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Recipient</label>
-                                  <p className="text-sm text-gray-900">
-                                    {typeof attempt.recipient === 'string' ? attempt.recipient :
-                                     typeof attempt.recipient === 'object' && attempt.recipient?.name ? attempt.recipient.name :
-                                     job.recipient_name || 'N/A'}
-                                  </p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Address</label>
-                                  <p className="text-sm text-gray-900">
-                                    {typeof attempt.address === 'string' ? attempt.address :
-                                     typeof attempt.address === 'object' && attempt.address ?
-                                       `${attempt.address.address1 || ''} ${attempt.address.city || ''} ${attempt.address.state || ''}`.trim() || 'Address not available' :
-                                     'Service address'}
-                                  </p>
-                                </div>
+                            <div className="text-right">
+                              <p className="text-sm text-gray-500">{attempt.date}</p>
+                              <div className="flex items-center text-sm text-gray-600">
+                                {attempt.server}
                               </div>
-
-                              <div>
-                                <label className="text-sm font-medium text-gray-700">Service Description</label>
-                                <div className="text-sm text-gray-900 mt-1 p-3 bg-gray-50 rounded-md">
-                                  {typeof attempt.description === 'string' ? attempt.description :
-                                   typeof attempt.notes === 'string' ? attempt.notes :
-                                   'No additional details'}
-                                </div>
-                              </div>
-
-                              {/* Attempt Photos */}
-                              {attempt.photos && attempt.photos.length > 0 && (
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700 mb-2 block">Attempt Photos</label>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    {attempt.photos.map((photo: any, photoIndex: number) => (
-                                      <div key={photoIndex} className="border rounded-lg overflow-hidden">
-                                        <img
-                                          src={`/api/proxy/photo/${job.id}/${attempt.id}/${photo.id || photoIndex}`}
-                                          alt={photo.name || `Photo ${photoIndex + 1}`}
-                                          className="w-full h-24 object-cover"
-                                          onError={(e) => {
-                                            e.currentTarget.style.display = 'none';
-                                          }}
-                                        />
-                                        <div className="p-2">
-                                          <p className="text-xs font-medium truncate">
-                                            {photo.name || `Mobile Attempt Photo ${photoIndex + 1}`}
-                                          </p>
-                                          {photo.size && (
-                                            <p className="text-xs text-gray-500">
-                                              {Math.round(photo.size / 1024)} KB
-                                            </p>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* GPS Information */}
-                              {(attempt.latitude || attempt.longitude) && (
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700 mb-3 block">Location</label>
-                                  <div className="grid grid-cols-2 gap-6">
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">Latitude</label>
-                                      <p className="text-sm text-gray-900">{attempt.latitude || 'N/A'}</p>
-                                    </div>
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">Longitude</label>
-                                      <p className="text-sm text-gray-900">{attempt.longitude || 'N/A'}</p>
-                                    </div>
-                                    {attempt.gps_accuracy && (
-                                      <div>
-                                        <label className="text-sm font-medium text-gray-700">GPS Accuracy</label>
-                                        <p className="text-sm text-gray-900">{attempt.gps_accuracy}</p>
-                                      </div>
-                                    )}
-                                    {attempt.gps_time && (
-                                      <div>
-                                        <label className="text-sm font-medium text-gray-700">GPS Time</label>
-                                        <p className="text-sm text-gray-900">
-                                          {typeof attempt.gps_time === 'string' ? formatDateTime(attempt.gps_time) : 'N/A'}
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           </div>
-                        );
-                      });
+
+                          <div className="space-y-4 border-t pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-sm font-medium text-gray-700">Serve Type</label>
+                                <p className="text-sm text-gray-900">{attempt.details.serveType}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-700">Service Status</label>
+                                <p className="text-sm text-gray-900">{attempt.details.serviceStatus}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-700">Recipient</label>
+                                <p className="text-sm text-gray-900">{attempt.details.recipient}</p>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-gray-700">Address</label>
+                                <p className="text-sm text-gray-900">{attempt.details.address}</p>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="text-sm font-medium text-gray-700">Service Description</label>
+                              <div className="text-sm text-gray-900 mt-1 p-3 bg-gray-50 rounded-md">
+                                {attempt.details.description}
+                              </div>
+                            </div>
+
+                            {/* Attempt Photos - only in expanded view */}
+                            {attempt.details.photos && attempt.details.photos.length > 0 && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-700 mb-2 block">Attempt Photos</label>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                  {attempt.details.photos.map((photo: any) => (
+                                    <div key={photo.id} className="border rounded-lg overflow-hidden group">
+                                      <div className="relative cursor-pointer">
+                                        <img
+                                          src={photo.url}
+                                          alt={photo.name}
+                                          className="w-full h-24 object-cover transition-transform group-hover:scale-105"
+                                          onError={(e) => {
+                                            // Hide broken images and their container
+                                            const container = e.currentTarget.closest('.border');
+                                            if (container) {
+                                              container.style.display = 'none';
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="p-2">
+                                        <p className="text-xs font-medium truncate" title={photo.name}>
+                                          {photo.name}
+                                        </p>
+                                        {photo.size && (
+                                          <p className="text-xs text-muted-foreground">
+                                            {formatFileSize(photo.size)}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* GPS Information */}
+                            {(attempt.details.gps.latitude || attempt.details.gps.longitude) && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-700 mb-3 block">Location</label>
+                                <div className="grid grid-cols-2 gap-6">
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">Latitude</label>
+                                    <p className="text-sm text-gray-900">{attempt.details.gps.latitude || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">Longitude</label>
+                                    <p className="text-sm text-gray-900">{attempt.details.gps.longitude || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">GPS Accuracy</label>
+                                    <p className="text-sm text-gray-900">{attempt.details.gps.accuracy || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">GPS Time</label>
+                                    <p className="text-sm text-gray-900">{attempt.details.gps.time ? formatDateTime(attempt.details.gps.time) : 'N/A'}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ));
                     })()}
                   </div>
                 </CardContent>
