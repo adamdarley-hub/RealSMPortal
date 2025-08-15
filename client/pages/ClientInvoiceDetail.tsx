@@ -466,7 +466,7 @@ export default function ClientInvoiceDetail() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {invoice.payments.map((payment) => (
+                  {(invoice.payments || []).map((payment) => (
                     <TableRow key={payment.id}>
                       <TableCell>
                         <div className="flex items-center gap-1">
