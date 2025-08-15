@@ -30,31 +30,59 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface InvoiceJob {
-  id: string;
-  job_number: string;
-  amount: number;
-  description?: string;
+interface LineItem {
+  type: string;
+  id: number;
+  name: string;
+  description: string;
+  unit_cost: string;
+  quantity: string;
+  updated_at: string;
+  created_at: string;
+}
+
+interface Payment {
+  type: string;
+  id: number;
+  amount: string;
+  description: string | null;
+  applied_on: string;
+  updated_at: string;
+  created_at: string;
 }
 
 interface InvoiceDetail {
-  id: string;
-  invoice_number: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-  subtotal: number;
-  tax: number;
-  total: number;
-  created_date: string;
-  due_date: string;
-  paid_date?: string;
-  client: {
+  type: string;
+  id: number;
+  balance_due: string;
+  locked: boolean;
+  issued_on: string | null;
+  total_paid: string;
+  subtotal: string;
+  total: string;
+  total_tax_amount: string;
+  terms: string | null;
+  paid_on: string | null;
+  job_id: number;
+  token: string;
+  status: string; // "Draft", "Issued", "Paid", etc.
+  taxes_enabled: boolean;
+  last_issued_at: string | null;
+  updated_at: string;
+  created_at: string;
+  client_id: number;
+  servemanager_job_number: number;
+  pdf_download_url: string;
+  line_items: LineItem[];
+  payments: Payment[];
+  // Client info (added by mapping)
+  client?: {
     id: string;
     name: string;
     company: string;
     email?: string;
     phone?: string;
   };
-  jobs: InvoiceJob[];
 }
 
 // Helper functions
