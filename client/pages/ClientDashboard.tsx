@@ -251,7 +251,10 @@ export default function ClientDashboard() {
 
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
+          <Card
+            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === null ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => setStatusFilter(null)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
@@ -261,7 +264,10 @@ export default function ClientDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'active' ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'active' ? null : 'active')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -271,7 +277,10 @@ export default function ClientDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'completed' ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'completed' ? null : 'completed')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Completed</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
@@ -281,7 +290,10 @@ export default function ClientDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'overdue' ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => setStatusFilter(statusFilter === 'overdue' ? null : 'overdue')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Overdue</CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
