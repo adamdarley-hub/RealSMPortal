@@ -508,6 +508,16 @@ export default function ClientInvoiceDetail() {
             </CardContent>
           </Card>
         )}
+
+        {/* Payment Modal */}
+        {invoice && (
+          <PaymentModal
+            isOpen={isPaymentModalOpen}
+            onClose={() => setIsPaymentModalOpen(false)}
+            invoice={invoice}
+            onPaymentSuccess={handlePaymentSuccess}
+          />
+        )}
       </div>
     </ClientLayout>
   );
