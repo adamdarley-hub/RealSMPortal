@@ -93,15 +93,16 @@ export const getAttemptPhotoProxy: RequestHandler = async (req, res) => {
     console.log('📸 Photo proxy request:', { jobId, attemptId, photoId, download });
 
     // Check cache first
-    const cached = jobDataCache.get(jobId);
+    const cacheKey = `job-${jobId}`;
+    const cached = jobDataCache.get(cacheKey);
     const now = Date.now();
     let job;
 
     if (cached && (now - cached.timestamp) < CACHE_TTL) {
-      console.log('📸 Using cached job data');
+      console.log(`📸 Using cached job data for ${jobId} (${Math.round((now - cached.timestamp) / 1000)}s old)`);
       job = cached.data;
     } else {
-      console.log('📸 Fetching fresh job data from ServeManager...');
+      console.log(`📸 Fetching fresh job data from ServeManager for ${jobId}...`);
 
       // Get fresh job data from ServeManager
       const { getServeManagerConfig } = await import('./servemanager');
@@ -124,9 +125,9 @@ export const getAttemptPhotoProxy: RequestHandler = async (req, res) => {
       const jobData = await jobResponse.json();
       job = jobData.data || jobData; // Handle both wrapped and unwrapped responses
 
-      // Cache the job data
-      jobDataCache.set(jobId, { data: job, timestamp: now });
-      console.log('📸 Job data cached for 5 minutes');
+      // Cache the job data with proper key
+      jobDataCache.set(cacheKey, { data: job, timestamp: now });
+      console.log(`📸 Job ${jobId} data cached for 5 minutes`);
     }
 
     console.log('📸 Fresh job lookup result:', {
