@@ -208,10 +208,20 @@ export const getAttemptPhotoProxy: RequestHandler = async (req, res) => {
     // Set headers
     const contentType = photoResponse.headers.get('content-type') || 'image/jpeg';
     const contentLength = photoResponse.headers.get('content-length');
-    
+
     res.setHeader('Content-Type', contentType);
     if (contentLength) {
       res.setHeader('Content-Length', contentLength);
+    }
+
+    // Add aggressive caching headers for images since they rarely change
+    res.setHeader('Cache-Control', 'public, max-age=86400, immutable'); // Cache for 24 hours
+    res.setHeader('ETag', `photo-${photoId}-${attemptId}`);
+
+    // Check if client already has this image cached
+    const clientETag = req.headers['if-none-match'];
+    if (clientETag === `photo-${photoId}-${attemptId}`) {
+      return res.status(304).end(); // Not modified
     }
 
     if (download === 'true') {
