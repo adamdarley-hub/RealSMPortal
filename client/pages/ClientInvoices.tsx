@@ -339,7 +339,11 @@ export default function ClientInvoices() {
               </TableHeader>
               <TableBody>
                 {filteredInvoices.map((invoice) => (
-                  <TableRow key={invoice.id} className="hover:bg-muted/50">
+                  <TableRow
+                    key={invoice.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => navigate(`/client/invoices/${invoice.id}`)}
+                  >
                     <TableCell className="font-medium">
                       <div>
                         <p className="font-mono">{invoice.invoice_number}</p>
