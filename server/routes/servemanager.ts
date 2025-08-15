@@ -576,6 +576,140 @@ export const getInvoices: RequestHandler = async (req, res) => {
   }
 };
 
+// Get single invoice by ID
+export const getInvoiceById: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`=== FETCHING INVOICE ${id} ===`);
+
+    // First try to get from ServeManager API
+    const endpoint = `/invoices/${id}`;
+    console.log(`Fetching invoice from: ${endpoint}`);
+
+    try {
+      const response = await makeServeManagerRequest(endpoint);
+      const invoice = response.data || response;
+
+      if (!invoice) {
+        return res.status(404).json({
+          error: 'Invoice not found',
+          message: `Invoice with ID ${id} not found`
+        });
+      }
+
+      // Get clients cache for mapping
+      const clientsCache = await getCachedClients();
+
+      // Transform invoice using mapper
+      const mappedInvoice = mapInvoiceFromServeManager(invoice, clientsCache);
+
+      console.log(`✅ Found invoice ${id}:`, {
+        id: mappedInvoice.id,
+        invoice_number: mappedInvoice.invoice_number,
+        status: mappedInvoice.status,
+        client_id: mappedInvoice.client?.id
+      });
+
+      res.json(mappedInvoice);
+
+    } catch (apiError) {
+      console.error(`Error fetching invoice ${id} from ServeManager API:`, apiError);
+
+      // Fall back to mock data for development
+      const mockInvoices = [
+        {
+          id: "10049462",
+          invoice_number: "INV-001",
+          status: "sent",
+          subtotal: 250.00,
+          tax: 20.00,
+          total: 270.00,
+          created_date: "2024-01-15T10:00:00Z",
+          due_date: "2024-02-15T10:00:00Z",
+          client: {
+            id: "1454323",
+            name: "John Smith",
+            company: "ABC Corp",
+            email: "john@abc.com",
+            phone: "(555) 123-4567"
+          },
+          jobs: [
+            {
+              id: "20508741",
+              job_number: "13227894",
+              amount: 125.00,
+              description: "Process Service - Civil Summons"
+            },
+            {
+              id: "20508742",
+              job_number: "13227895",
+              amount: 125.00,
+              description: "Process Service - Subpoena"
+            }
+          ]
+        },
+        {
+          id: "10049463",
+          invoice_number: "INV-002",
+          status: "paid",
+          subtotal: 175.00,
+          tax: 14.00,
+          total: 189.00,
+          created_date: "2024-01-10T09:00:00Z",
+          due_date: "2024-02-10T09:00:00Z",
+          paid_date: "2024-01-25T14:30:00Z",
+          client: {
+            id: "1454358",
+            name: "Jane Doe",
+            company: "XYZ Legal",
+            email: "jane@xyzlegal.com",
+            phone: "(555) 987-6543"
+          },
+          jobs: [
+            {
+              id: "20508743",
+              job_number: "13227896",
+              amount: 175.00,
+              description: "Process Service - Legal Notice"
+            }
+          ]
+        }
+      ];
+
+      // Find the mock invoice by ID
+      const mockInvoice = mockInvoices.find(inv => inv.id === id);
+
+      if (!mockInvoice) {
+        return res.status(404).json({
+          error: 'Invoice not found',
+          message: `Invoice with ID ${id} not found`
+        });
+      }
+
+      // Apply mapper to mock data for consistency
+      const mappedMockInvoice = mapInvoiceFromServeManager(mockInvoice, []);
+
+      console.log(`📋 Returning mock invoice ${id}:`, {
+        id: mappedMockInvoice.id,
+        invoice_number: mappedMockInvoice.invoice_number,
+        status: mappedMockInvoice.status
+      });
+
+      res.json({
+        ...mappedMockInvoice,
+        mock: true
+      });
+    }
+
+  } catch (error) {
+    console.error(`Error in getInvoiceById for ${req.params.id}:`, error);
+    res.status(500).json({
+      error: 'Failed to fetch invoice',
+      message: 'Unable to retrieve invoice data'
+    });
+  }
+};
+
 // Get ALL contacts - no pagination limits
 export const getContacts: RequestHandler = async (req, res) => {
   try {
