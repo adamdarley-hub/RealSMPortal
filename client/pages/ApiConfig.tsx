@@ -281,6 +281,56 @@ export default function ApiConfig() {
     }
   };
 
+  const testStripeConnection = async () => {
+    if (!config.stripe.secretKey) {
+      toast({
+        title: "Error",
+        description: "Please enter a Stripe secret key",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setTestingStripe(true);
+    try {
+      const response = await fetch('/api/test-stripe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          secretKey: config.stripe.secretKey,
+          environment: config.stripe.environment,
+        }),
+      });
+
+      if (response.ok) {
+        setStripeStatus('success');
+        toast({
+          title: "Success",
+          description: "Stripe API connection successful",
+        });
+      } else {
+        setStripeStatus('error');
+        toast({
+          title: "Error",
+          description: "Failed to connect to Stripe API",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      setStripeStatus('error');
+      console.error('Stripe test failed:', error);
+      toast({
+        title: "Error",
+        description: "Stripe API test failed",
+        variant: "destructive",
+      });
+    } finally {
+      setTestingStripe(false);
+    }
+  };
+
   const updateServeManagerConfig = (field: keyof ApiConfig['serveManager'], value: any) => {
     setConfig(prev => ({
       ...prev,
