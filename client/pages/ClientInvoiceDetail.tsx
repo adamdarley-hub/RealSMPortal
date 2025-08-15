@@ -175,6 +175,15 @@ export default function ClientInvoiceDetail() {
     }
   };
 
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false);
+    loadInvoice(); // Reload invoice to show updated payment status
+    toast({
+      title: "Payment Successful",
+      description: "Your payment has been processed successfully.",
+    });
+  };
+
   useEffect(() => {
     loadInvoice();
   }, [id, user?.client_id]);
