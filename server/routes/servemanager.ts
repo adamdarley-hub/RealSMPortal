@@ -511,7 +511,7 @@ export const getInvoices: RequestHandler = async (req, res) => {
     }
 
     console.log(`=== TOTAL INVOICES FETCHED: ${allInvoices.length} ===`);
-    console.log('�� Sample invoice IDs from API:', allInvoices.slice(0, 5).map(inv => ({
+    console.log('📋 Sample invoice IDs from API:', allInvoices.slice(0, 5).map(inv => ({
       id: inv.id,
       invoice_number: inv.invoice_number,
       servemanager_id: inv.servemanager_id
@@ -657,17 +657,33 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
         console.warn('Could not fetch cached clients for invoice mapping:', error);
       }
 
-      // Transform invoice using mapper
-      const mappedInvoice = mapInvoiceFromServeManager(invoice, clientsCache);
+      // Add client information to the raw invoice
+      const clientInfo = clientsCache.find(c =>
+        c.id === String(invoice.client_id) ||
+        c.servemanager_id === String(invoice.client_id)
+      );
+
+      if (clientInfo) {
+        invoice.client = {
+          id: clientInfo.id,
+          name: clientInfo.name,
+          company: clientInfo.company,
+          email: clientInfo.email,
+          phone: clientInfo.phone
+        };
+      }
 
       console.log(`✅ Found invoice ${id} from API:`, {
-        id: mappedInvoice.id,
-        invoice_number: mappedInvoice.invoice_number,
-        status: mappedInvoice.status,
-        client_id: mappedInvoice.client?.id
+        id: invoice.id,
+        servemanager_job_number: invoice.servemanager_job_number,
+        status: invoice.status,
+        balance_due: invoice.balance_due,
+        total: invoice.total,
+        line_items_count: invoice.line_items?.length || 0,
+        client_id: invoice.client_id
       });
 
-      res.json(mappedInvoice);
+      res.json(invoice);
 
     } catch (apiError) {
       console.error(`Error fetching invoice ${id} from ServeManager API:`, apiError);
