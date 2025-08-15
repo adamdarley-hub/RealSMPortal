@@ -122,12 +122,40 @@ export default function ClientDashboard() {
   }, [user?.client_id]);
 
   const filteredJobs = useMemo(() => {
-    return jobs.filter(job =>
+    let filtered = jobs;
+
+    // Apply status filter first
+    if (statusFilter) {
+      switch (statusFilter) {
+        case 'active':
+          filtered = filtered.filter(job =>
+            ['pending', 'in_progress', 'assigned'].includes(job.status?.toLowerCase())
+          );
+          break;
+        case 'completed':
+          filtered = filtered.filter(job =>
+            ['served', 'completed'].includes(job.status?.toLowerCase())
+          );
+          break;
+        case 'overdue':
+          filtered = filtered.filter(job => {
+            const dueDate = new Date(job.due_date);
+            const now = new Date();
+            return dueDate < now && !['served', 'completed'].includes(job.status?.toLowerCase());
+          });
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Apply search filter
+    return filtered.filter(job =>
       job.job_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.recipient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.court_case_number?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [jobs, searchTerm]);
+  }, [jobs, searchTerm, statusFilter]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
