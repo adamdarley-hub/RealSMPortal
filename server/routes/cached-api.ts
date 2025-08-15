@@ -44,6 +44,39 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
       isPaginated = true;
     }
 
+    // Optimize job objects for list view - remove heavy fields for better performance
+    const optimizedJobs = jobs.map(job => ({
+      id: job.id,
+      uuid: job.uuid,
+      job_number: job.job_number,
+      generated_job_id: job.generated_job_id,
+      reference: job.reference,
+      status: job.status,
+      job_status: job.job_status,
+      priority: job.priority,
+      created_at: job.created_at,
+      updated_at: job.updated_at,
+      due_date: job.due_date,
+      client_id: job.client_id,
+      client_name: job.client_name,
+      client_company: job.client_company,
+      recipient_name: job.recipient_name,
+      defendant_name: job.defendant_name,
+      server_id: job.server_id,
+      server_name: job.server_name,
+      amount: job.amount,
+      price: job.price,
+      total: job.total,
+      service_type: job.service_type,
+      description: job.description,
+      attempt_count: job.attempt_count,
+      case_number: job.case_number,
+      plaintiff: job.plaintiff,
+      // Exclude heavy fields like raw_data, attempts, documents for list view
+      _cached: job._cached,
+      _last_synced: job._last_synced
+    }));
+
     const responseTime = Date.now() - startTime;
 
     console.log(`⚡ Served ${jobs.length}${isPaginated ? ` of ${allJobs.length}` : ''} jobs from cache (page ${pageNum}) in ${responseTime}ms`);
