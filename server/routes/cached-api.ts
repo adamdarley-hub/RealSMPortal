@@ -79,7 +79,7 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
 
     const responseTime = Date.now() - startTime;
 
-    console.log(`⚡ Served ${jobs.length}${isPaginated ? ` of ${allJobs.length}` : ''} jobs from cache (page ${pageNum}) in ${responseTime}ms`);
+    console.log(`⚡ Served ${optimizedJobs.length}${isPaginated ? ` of ${allJobs.length}` : ''} jobs from cache (page ${pageNum}) in ${responseTime}ms`);
 
     // Add production caching headers with better performance
     res.set({
@@ -87,11 +87,12 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
       'ETag': `jobs-${allJobs.length}-${Math.floor(Date.now() / 60000)}`, // ETag changes every minute
       'X-Response-Time': `${responseTime}ms`,
       'X-Cache-Status': isPaginated ? 'paginated' : 'full',
+      'X-Cache-Optimized': 'true',
       'Content-Type': 'application/json; charset=utf-8'
     });
 
     res.json({
-      jobs,
+      jobs: optimizedJobs,
       total: allJobs.length,
       page: pageNum,
       limit: limitNum,
