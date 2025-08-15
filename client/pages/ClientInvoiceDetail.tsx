@@ -405,7 +405,7 @@ export default function ClientInvoiceDetail() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoice.line_items.map((item) => (
+                {(invoice.line_items || []).map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell className="text-muted-foreground">{item.description || '-'}</TableCell>
