@@ -53,7 +53,7 @@ interface ClientJob {
   amount: number;
   court_case_number?: string;
   plaintiff?: string;
-  defendant?: string;
+  defendant_name?: string;
 }
 
 interface ClientKPIs {
