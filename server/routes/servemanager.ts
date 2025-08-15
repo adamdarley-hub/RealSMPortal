@@ -722,10 +722,32 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
               console.warn('Could not fetch cached clients for invoice mapping:', error);
             }
 
-            // Transform using mapper
-            const mappedInvoice = mapInvoiceFromServeManager(foundInvoice, clientsCache);
+            // Add client information to the raw invoice
+            const clientInfo = clientsCache.find(c =>
+              c.id === String(foundInvoice.client_id) ||
+              c.servemanager_id === String(foundInvoice.client_id)
+            );
 
-            return res.json(mappedInvoice);
+            if (clientInfo) {
+              foundInvoice.client = {
+                id: clientInfo.id,
+                name: clientInfo.name,
+                company: clientInfo.company,
+                email: clientInfo.email,
+                phone: clientInfo.phone
+              };
+            }
+
+            console.log(`✅ Found invoice ${id} in list:`, {
+              id: foundInvoice.id,
+              servemanager_job_number: foundInvoice.servemanager_job_number,
+              status: foundInvoice.status,
+              balance_due: foundInvoice.balance_due,
+              total: foundInvoice.total,
+              line_items_count: foundInvoice.line_items?.length || 0
+            });
+
+            return res.json(foundInvoice);
           }
         }
       } catch (listError) {
