@@ -77,8 +77,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       // Add timeout and better error handling
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        controller.abort(new Error('Request timeout after 30 seconds'));
-      }, 30000); // 30 second timeout for slow sync operations
+        controller.abort(new Error('Request timeout after 60 seconds'));
+      }, 60000); // 60 second timeout for slow sync operations (increased from 30s)
 
       console.log('🔄 Starting auto-sync request...');
 
