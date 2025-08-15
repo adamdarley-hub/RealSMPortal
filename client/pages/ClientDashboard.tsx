@@ -298,7 +298,13 @@ export default function ClientDashboard() {
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <MapPin className="w-3 h-3" />
-                        {job.city && job.state ? `${job.city}, ${job.state}` : 'Address pending'}
+                        {(() => {
+                          const address = job.service_address || job.address;
+                          if (address && address.city && address.state) {
+                            return `${address.city}, ${address.state}`;
+                          }
+                          return 'Address pending';
+                        })()}
                       </div>
                     </TableCell>
                     <TableCell>
