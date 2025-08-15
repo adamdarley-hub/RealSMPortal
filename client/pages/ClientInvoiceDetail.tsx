@@ -133,7 +133,6 @@ export default function ClientInvoiceDetail() {
   const [loading, setLoading] = useState(true);
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const loadInvoice = async () => {
     if (!id || !user?.client_id) return;
