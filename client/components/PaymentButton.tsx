@@ -21,6 +21,7 @@ interface PaymentButtonProps {
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'sm' | 'default' | 'lg';
   className?: string;
+  onClick?: () => void;
   onPaymentSuccess?: (paymentResult: any) => void;
   showPaymentStatus?: boolean;
 }
