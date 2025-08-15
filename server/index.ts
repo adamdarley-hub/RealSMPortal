@@ -86,6 +86,14 @@ export async function createServer() {
   app.post("/api/test-radar", testRadar);
   app.post("/api/test-stripe", testStripe);
 
+  // Stripe payment processing routes (NEW - Phase 3)
+  const stripeRoutes = await import("./routes/stripe.js");
+  app.post("/api/stripe/create-payment-intent", stripeRoutes.createPaymentIntent);
+  app.post("/api/stripe/confirm-payment", stripeRoutes.confirmPayment);
+  app.post("/api/stripe/webhook", stripeRoutes.handleWebhook);
+  app.get("/api/stripe/publishable-key", stripeRoutes.getPublishableKey);
+  app.get("/api/stripe/payment-status/:invoiceId", stripeRoutes.getPaymentStatus);
+
   // Debug endpoint
   app.post("/api/debug", (req, res) => {
     console.log('Debug endpoint hit:', req.body);
