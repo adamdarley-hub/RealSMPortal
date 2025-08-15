@@ -50,9 +50,10 @@ interface ClientInvoice {
 }
 
 export default function ClientInvoices() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
