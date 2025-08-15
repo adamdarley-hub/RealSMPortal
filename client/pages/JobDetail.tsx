@@ -781,14 +781,23 @@ export default function JobDetail() {
     // Completely isolated fetch functions to prevent any crashes
     const safeFetchInvoices = async () => {
       try {
+        console.log(`🧾 Fetching invoices for job ${jobId}...`);
         const response = await fetch(`/api/jobs/${jobId}/invoices`);
+        console.log(`🧾 Invoices response status: ${response.status}`);
         if (response.ok) {
           const data = await response.json();
+          console.log(`🧾 Invoices data received:`, data);
           return { success: true, data };
         }
+        console.warn(`🧾 Invoices fetch failed with status: ${response.status}`);
         return { success: false, error: `HTTP ${response.status}` };
       } catch (error) {
-        console.warn('🧾 Invoices fetch failed:', error);
+        console.error('🧾 Invoices fetch failed with error:', error);
+        console.error('🧾 Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
         return { success: false, error: error.message };
       }
     };
