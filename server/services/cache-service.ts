@@ -84,6 +84,12 @@ export class CacheService {
         attempt_count: job.attempt_count,
         attempts: job.attempts ? JSON.parse(job.attempts) : [],
         documents: job.documents ? JSON.parse(job.documents) : [],
+        court: job.court,
+        case_number: job.case_number,
+        docket_number: job.docket_number,
+        plaintiff: job.plaintiff,
+        attorney: job.attorney,
+        law_firm: job.law_firm,
         _raw: job.raw_data ? JSON.parse(job.raw_data) : null,
         _cached: true,
         _last_synced: job.last_synced
