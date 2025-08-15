@@ -9,6 +9,7 @@ import {
   getClients,
   getServers,
   getInvoices,
+  getInvoiceById,
   getContacts,
   getCourtCases,
   createJob,
