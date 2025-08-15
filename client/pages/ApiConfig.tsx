@@ -411,7 +411,7 @@ export default function ApiConfig() {
         </Alert>
 
         <Tabs defaultValue="servemanager" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="servemanager" className="gap-2">
               <Database className="w-4 h-4" />
               ServeManager API
@@ -419,6 +419,10 @@ export default function ApiConfig() {
             <TabsTrigger value="radar" className="gap-2">
               <MapPin className="w-4 h-4" />
               radar.io API
+            </TabsTrigger>
+            <TabsTrigger value="stripe" className="gap-2">
+              <Key className="w-4 h-4" />
+              Stripe Payments
             </TabsTrigger>
           </TabsList>
 
