@@ -11,7 +11,7 @@ interface PaymentButtonProps {
     invoice_number?: string;
     servemanager_job_number?: string | number;
     total: number;
-    balance_due: string | number;
+    balance_due?: string | number;
     status: string;
     due_date?: string;
     client?: {
