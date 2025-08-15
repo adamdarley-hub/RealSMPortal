@@ -642,11 +642,15 @@ export default function ClientJobDetail() {
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <label className="text-sm font-medium text-gray-700">Serve Type</label>
-                                  <p className="text-sm text-gray-900">{attempt.serve_type || 'Personal/Individual'}</p>
+                                  <p className="text-sm text-gray-900">
+                                    {typeof attempt.serve_type === 'string' ? attempt.serve_type : 'Personal/Individual'}
+                                  </p>
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-gray-700">Service Status</label>
-                                  <p className="text-sm text-gray-900">{attempt.service_status || 'Attempted'}</p>
+                                  <p className="text-sm text-gray-900">
+                                    {typeof attempt.service_status === 'string' ? attempt.service_status : 'Attempted'}
+                                  </p>
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-gray-700">Recipient</label>
