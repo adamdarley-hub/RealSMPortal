@@ -63,6 +63,8 @@ export default function ClientInvoices() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 25; // Show 25 invoices per page for better performance
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const loadInvoices = async () => {
     if (!user?.client_id) return;
