@@ -587,53 +587,8 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
     const { id } = req.params;
     console.log(`=== FETCHING INVOICE ${id} ===`);
 
-    // Import database and schema to avoid circular dependency
-    const { db } = await import('../db/database');
-    const { invoices } = await import('../db/schema');
-    const { eq } = await import('drizzle-orm');
-
-    // First try to get from database cache
-    console.log(`Checking database cache for invoice ${id}...`);
-    try {
-      const cachedInvoice = await db.select().from(invoices).where(eq(invoices.id, id)).limit(1);
-
-      if (cachedInvoice.length > 0) {
-        const invoice = cachedInvoice[0];
-        console.log(`✅ Found invoice ${id} in cache:`, {
-          id: invoice.id,
-          invoice_number: invoice.invoice_number,
-          status: invoice.status,
-          client_id: invoice.client_id
-        });
-
-        // Transform cached invoice to expected format
-        const formattedInvoice = {
-          id: invoice.id,
-          invoice_number: invoice.invoice_number,
-          status: invoice.status,
-          subtotal: invoice.subtotal || 0,
-          tax: invoice.tax || 0,
-          total: invoice.total || 0,
-          created_date: invoice.created_date,
-          due_date: invoice.due_date,
-          paid_date: invoice.paid_date,
-          client: {
-            id: invoice.client_id,
-            name: invoice.client_name,
-            company: invoice.client_company,
-            email: null,
-            phone: null
-          },
-          jobs: invoice.jobs ? JSON.parse(invoice.jobs) : []
-        };
-
-        return res.json(formattedInvoice);
-      }
-    } catch (dbError) {
-      console.log(`Database query failed, trying ServeManager API:`, dbError);
-    }
-
-    // If not in cache, try ServeManager API
+    // Always try ServeManager API first for complete data (line_items, balance_due, payments)
+    // The cached data is incomplete and doesn't contain line items or payment details
     const endpoint = `/invoices/${id}`;
     console.log(`Fetching invoice from ServeManager API: ${endpoint}`);
 
