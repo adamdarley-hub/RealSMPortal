@@ -405,17 +405,25 @@ export default function ClientInvoiceDetail() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(invoice.line_items || []).map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{item.description || '-'}</TableCell>
-                    <TableCell className="text-center">{item.quantity}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.unit_cost)}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(parseFloat(item.unit_cost) * parseFloat(item.quantity))}
+                {(invoice.line_items || []).length > 0 ? (
+                  (invoice.line_items || []).map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{item.description || '-'}</TableCell>
+                      <TableCell className="text-center">{item.quantity}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.unit_cost)}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(parseFloat(item.unit_cost) * parseFloat(item.quantity))}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      No line items available for this invoice
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
 
