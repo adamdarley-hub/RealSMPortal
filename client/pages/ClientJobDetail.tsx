@@ -720,100 +720,21 @@ export default function ClientJobDetail() {
                   }
 
                   return (
-                    <div className="space-y-6">
-                      {/* Documents List */}
-                      <div>
-                        <h3 className="text-lg font-semibold mb-4">Documents to be Served</h3>
-                        <p className="text-sm text-muted-foreground mb-4">Legal documents that need to be served to the recipient</p>
-
-                        <div className="space-y-4">
-                          {documentsToBeServed.map((document: any, index: number) => (
-                            <div key={document.id || index} className="border rounded-lg p-4">
-                              <div className="flex items-center justify-between">
-                                <div className="space-y-2">
-                                  <h4 className="font-medium text-lg">{document.title || 'Document'}</h4>
-                                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                                    {document.pages && (
-                                      <span>{document.pages} page{document.pages > 1 ? 's' : ''}</span>
-                                    )}
-                                    {document.received_at && (
-                                      <span>Received: {formatDate(document.received_at)}</span>
-                                    )}
-                                    {document.created_at && !document.received_at && (
-                                      <span>Created: {formatDate(document.created_at)}</span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  {currentDocumentIndex === index && (
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                                      Viewing
-                                    </Badge>
-                                  )}
-                                  {document.id && (() => {
-                                    // Check if document has a valid URL before showing view/download buttons
-                                    const hasValidUrl = !!(
-                                      document.upload?.links?.download_url ||
-                                      document.upload?.download_url ||
-                                      document.download_url ||
-                                      document.links?.download_url ||
-                                      document.url ||
-                                      document.file_url
-                                    );
-
-                                    if (!hasValidUrl) {
-                                      return (
-                                        <div className="flex items-center gap-2">
-                                          <Badge variant="secondary" className="bg-gray-50 text-gray-600">
-                                            No File Attached
-                                          </Badge>
-                                        </div>
-                                      );
-                                    }
-
-                                    return (
-                                      <>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => setCurrentDocumentIndex(index)}
-                                          className="gap-2"
-                                        >
-                                          <Eye className="w-4 h-4" />
-                                          View
-                                        </Button>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          asChild
-                                          className="gap-2"
-                                        >
-                                          <a
-                                            href={getProxyDownloadUrl(document.id, job.id)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                          >
-                                            <Download className="w-4 h-4" />
-                                            Download
-                                          </a>
-                                        </Button>
-                                      </>
-                                    );
-                                  })()}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
+                    <div>
                       {/* Document Viewer */}
-                      {documentsToBeServed.length > 0 && (
-                        <div>
-                          <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3">
                             <h3 className="text-lg font-semibold">{getRecipientName(job)} - Service Documents</h3>
                             {documentsToBeServed.length > 1 && (
-                              <div className="flex items-center space-x-2">
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                {currentDocumentIndex + 1} of {documentsToBeServed.length}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {documentsToBeServed.length > 1 && (
+                              <>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -822,9 +743,6 @@ export default function ClientJobDetail() {
                                 >
                                   <ChevronLeft className="w-4 h-4" />
                                 </Button>
-                                <span className="text-sm text-muted-foreground">
-                                  {currentDocumentIndex + 1} of {documentsToBeServed.length}
-                                </span>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -833,72 +751,44 @@ export default function ClientJobDetail() {
                                 >
                                   <ChevronRight className="w-4 h-4" />
                                 </Button>
-                              </div>
+                              </>
                             )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              asChild
+                              className="gap-2"
+                            >
+                              <a
+                                href={getProxyDownloadUrl(documentsToBeServed[currentDocumentIndex]?.id, job.id)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Download className="w-4 h-4" />
+                                Download
+                              </a>
+                            </Button>
                           </div>
+                        </div>
 
-                          <div className="border rounded-lg overflow-hidden" style={{ height: '600px' }}>
-                            {(() => {
-                              const currentDocument = documentsToBeServed[currentDocumentIndex];
+                        <div className="border rounded-lg overflow-hidden" style={{ height: '600px' }}>
+                          {(() => {
+                            const currentDocument = documentsToBeServed[currentDocumentIndex];
 
-                              // Comprehensive document URL detection for ServeManager API
-                              const documentUrl =
-                                currentDocument?.upload?.links?.download_url ||
-                                currentDocument?.upload?.download_url ||
-                                currentDocument?.download_url ||
-                                currentDocument?.links?.download_url ||
-                                currentDocument?.url ||
-                                currentDocument?.file_url ||
-                                currentDocument?.links?.view ||
-                                currentDocument?.links?.preview ||
-                                currentDocument?.preview_url;
+                            // Comprehensive document URL detection for ServeManager API
+                            const documentUrl =
+                              currentDocument?.upload?.links?.download_url ||
+                              currentDocument?.upload?.download_url ||
+                              currentDocument?.download_url ||
+                              currentDocument?.links?.download_url ||
+                              currentDocument?.url ||
+                              currentDocument?.file_url ||
+                              currentDocument?.links?.view ||
+                              currentDocument?.links?.preview ||
+                              currentDocument?.preview_url;
 
-                              // If no URL found but we have a document ID, try using the proxy
-                              if (!documentUrl && currentDocument?.id) {
-                                return (
-                                  <div className="relative w-full h-full">
-                                    <iframe
-                                      src={`${getPreviewUrl(currentDocument.id, job.id)}#navpanes=0`}
-                                      className="w-full h-full border-0"
-                                      title={`Document: ${currentDocument.title}`}
-                                      key={`${currentDocument.id}-${currentDocumentIndex}`}
-                                      onError={() => {
-                                        console.error('📄 Iframe failed to load, trying alternative...');
-                                      }}
-                                    />
-                                  </div>
-                                );
-                              }
-
-                              if (!documentUrl) {
-                                // Check if this is a document without a file (null upload URL)
-                                const hasNullUpload = currentDocument?.upload?.links?.download_url === null;
-
-                                return (
-                                  <div className="flex items-center justify-center h-full text-muted-foreground">
-                                    <div className="text-center space-y-4">
-                                      <FileText className="w-12 h-12 mx-auto mb-4" />
-                                      {hasNullUpload ? (
-                                        <>
-                                          <p>No file attached to this document</p>
-                                          <p className="text-xs text-gray-500">
-                                            Document: {currentDocument?.title || 'Unknown'}
-                                          </p>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <p>Unable to load document preview</p>
-                                          <p className="text-xs text-gray-500">
-                                            Try downloading the document instead
-                                          </p>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              }
-
-                              // Use iframe for PDF/document viewing with proxy URL
+                            // If no URL found but we have a document ID, try using the proxy
+                            if (!documentUrl && currentDocument?.id) {
                               return (
                                 <div className="relative w-full h-full">
                                   <iframe
@@ -906,13 +796,56 @@ export default function ClientJobDetail() {
                                     className="w-full h-full border-0"
                                     title={`Document: ${currentDocument.title}`}
                                     key={`${currentDocument.id}-${currentDocumentIndex}`}
+                                    onError={() => {
+                                      console.error('📄 Iframe failed to load, trying alternative...');
+                                    }}
                                   />
                                 </div>
                               );
-                            })()}
-                          </div>
+                            }
+
+                            if (!documentUrl) {
+                              // Check if this is a document without a file (null upload URL)
+                              const hasNullUpload = currentDocument?.upload?.links?.download_url === null;
+
+                              return (
+                                <div className="flex items-center justify-center h-full text-muted-foreground">
+                                  <div className="text-center space-y-4">
+                                    <FileText className="w-12 h-12 mx-auto mb-4" />
+                                    {hasNullUpload ? (
+                                      <>
+                                        <p>No file attached to this document</p>
+                                        <p className="text-xs text-gray-500">
+                                          Document: {currentDocument?.title || 'Unknown'}
+                                        </p>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <p>Unable to load document preview</p>
+                                        <p className="text-xs text-gray-500">
+                                          Try downloading the document instead
+                                        </p>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            // Use iframe for PDF/document viewing with proxy URL
+                            return (
+                              <div className="relative w-full h-full">
+                                <iframe
+                                  src={`${getPreviewUrl(currentDocument.id, job.id)}#navpanes=0`}
+                                  className="w-full h-full border-0"
+                                  title={`Document: ${currentDocument.title}`}
+                                  key={`${currentDocument.id}-${currentDocumentIndex}`}
+                                />
+                              </div>
+                            );
+                          })()}
                         </div>
-                      )}
+                      </div>
                     </div>
                   );
                 })()}
