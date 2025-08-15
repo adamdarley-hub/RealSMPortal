@@ -267,12 +267,10 @@ export default function ClientInvoiceDetail() {
               {getStatusIcon(invoice.status)}
               <span className="ml-1">{invoice.status.toUpperCase()}</span>
             </Badge>
-            {(invoice.status.toLowerCase() === 'issued' || invoice.status.toLowerCase() === 'sent') && parseFloat(invoice.balance_due) > 0 && (
-              <Button>
-                <DollarSign className="w-4 h-4 mr-2" />
-                Pay ${invoice.balance_due}
-              </Button>
-            )}
+            <PaymentButton
+              invoice={invoice}
+              onClick={() => setIsPaymentModalOpen(true)}
+            />
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Download PDF
