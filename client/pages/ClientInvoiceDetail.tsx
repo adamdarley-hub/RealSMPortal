@@ -284,8 +284,8 @@ export default function ClientInvoiceDetail() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Invoice Number</label>
-                  <p className="font-mono text-sm">{invoice.invoice_number}</p>
+                  <label className="text-sm font-medium text-gray-500">Invoice ID</label>
+                  <p className="font-mono text-sm">{invoice.id}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Status</label>
@@ -297,26 +297,47 @@ export default function ClientInvoiceDetail() {
                   <label className="text-sm font-medium text-gray-500">Created Date</label>
                   <p className="text-sm flex items-center gap-1">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    {formatDate(invoice.created_date)}
+                    {formatDate(invoice.created_at)}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Due Date</label>
+                  <label className="text-sm font-medium text-gray-500">Issued Date</label>
                   <p className="text-sm flex items-center gap-1">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    {formatDate(invoice.due_date)}
+                    {formatDate(invoice.issued_on)}
                   </p>
                 </div>
-                {invoice.paid_date && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Balance Due</label>
+                  <p className="text-sm font-bold text-red-600">
+                    {formatCurrency(invoice.balance_due)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Total Paid</label>
+                  <p className="text-sm font-bold text-green-600">
+                    {formatCurrency(invoice.total_paid)}
+                  </p>
+                </div>
+                {invoice.paid_on && (
                   <>
                     <div>
                       <label className="text-sm font-medium text-gray-500">Paid Date</label>
                       <p className="text-sm flex items-center gap-1">
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        {formatDate(invoice.paid_date)}
+                        {formatDate(invoice.paid_on)}
                       </p>
                     </div>
                   </>
+                )}
+                {invoice.last_issued_at && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Last Issued</label>
+                    <p className="text-sm flex items-center gap-1">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      {formatDate(invoice.last_issued_at)}
+                    </p>
+                  </div>
                 )}
               </div>
             </CardContent>
