@@ -40,9 +40,9 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   );
 
   // Calculate balance due
-  const balanceDue = typeof invoice.balance_due === 'string' 
-    ? parseFloat(invoice.balance_due) 
-    : invoice.balance_due;
+  const balanceDue = invoice.balance_due !== undefined
+    ? (typeof invoice.balance_due === 'string' ? parseFloat(invoice.balance_due) : invoice.balance_due)
+    : invoice.total; // Fallback to total if balance_due is not available
 
   const isInvoicePaid = invoice.status.toLowerCase() === 'paid' || balanceDue <= 0;
   const canPay = !isInvoicePaid && (invoice.status.toLowerCase() === 'issued' || invoice.status.toLowerCase() === 'sent');
