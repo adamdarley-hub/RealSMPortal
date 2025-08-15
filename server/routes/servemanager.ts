@@ -698,6 +698,36 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
 
       console.log(`❌ Invoice ${id} not found in ${allInvoices.length} invoices`);
 
+      // Try to search by job if the invoice might be linked to a specific job
+      console.log(`🔍 Trying to find invoice ${id} by searching job-related endpoints...`);
+
+      try {
+        // Try job-invoices endpoint if it exists
+        const jobInvoicesResponse = await makeServeManagerRequest(`/job_invoices?invoice_id=${id}`);
+        if (jobInvoicesResponse && (jobInvoicesResponse.data || jobInvoicesResponse.length > 0)) {
+          console.log(`📋 Found invoice via job_invoices endpoint:`, jobInvoicesResponse);
+        }
+      } catch (jobInvoiceError) {
+        console.log(`Job invoices search failed:`, jobInvoiceError.message);
+      }
+
+      // Try alternative invoice endpoints
+      try {
+        const altResponse = await makeServeManagerRequest(`/invoice/${id}`);
+        if (altResponse && altResponse.id) {
+          console.log(`✅ Found invoice ${id} via alternative endpoint:`, {
+            id: altResponse.id,
+            status: altResponse.status,
+            total: altResponse.total
+          });
+
+          const enrichedInvoice = await addClientInfo(altResponse);
+          return res.json(enrichedInvoice);
+        }
+      } catch (altError) {
+        console.log(`Alternative endpoint failed:`, altError.message);
+      }
+
     } catch (listError) {
       console.log(`Could not check invoice list:`, listError);
     }
