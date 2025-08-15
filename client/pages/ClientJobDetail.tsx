@@ -207,6 +207,22 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
+// Helper function to get preview URL for inline viewing using fresh document fetch
+const getPreviewUrl = (documentId: string | number, jobId: string): string => {
+  if (!documentId || !jobId) return '';
+
+  // Use fresh document endpoint that fetches current URLs from ServeManager
+  return `/api/jobs/${jobId}/documents/${documentId}/preview`;
+};
+
+// Helper function to get download URL with fresh document fetch
+const getProxyDownloadUrl = (documentId: string | number, jobId: string): string => {
+  if (!documentId || !jobId) return '';
+
+  // Use fresh document endpoint that fetches current URLs from ServeManager
+  return `/api/jobs/${jobId}/documents/${documentId}/download`;
+};
+
 // Component for viewing images in a dialog
 const ImageDialog = ({ src, alt, children }: { src: string; alt: string; children: React.ReactNode }) => {
   return (
