@@ -59,6 +59,8 @@ export default function ClientInvoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 25; // Show 25 invoices per page for better performance
 
   const loadInvoices = async () => {
     if (!user?.client_id) return;
