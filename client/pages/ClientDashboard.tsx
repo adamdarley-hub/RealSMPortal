@@ -296,77 +296,77 @@ export default function ClientDashboard() {
               </TableHeader>
               <TableBody>
                 {filteredJobs.map((job) => (
-                  <TableRow 
-                    key={job.id} 
+                  <TableRow
+                    key={job.id}
                     className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => navigate(`/client/jobs/${job.id}`)}
                   >
-                    <TableCell className="font-medium">{job.job_number}</TableCell>
-                    <TableCell>{job.recipient_name}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPin className="w-3 h-3" />
-                        {(() => {
-                          const addressObj = job.service_address || job.address;
+                      <div className="space-y-1">
+                        <div className="font-medium">
+                          {job.recipient_name} - {job.job_number}
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <MapPin className="w-3 h-3" />
+                          {(() => {
+                            const addressObj = job.service_address || job.address;
 
-                          if (addressObj && typeof addressObj === 'object') {
-                            // Build full address using the exact field names from the mapper
-                            const parts = [];
+                            if (addressObj && typeof addressObj === 'object') {
+                              // Build full address using the exact field names from the mapper
+                              const parts = [];
 
-                            // Add street address (try all possible field names)
-                            const street = addressObj.street ||
-                                          addressObj.street1 ||
-                                          addressObj.address ||
-                                          addressObj.line1 ||
-                                          addressObj.address_line_1 ||
-                                          addressObj.street_address ||
-                                          addressObj.address1;
+                              // Add street address (try all possible field names)
+                              const street = addressObj.street ||
+                                            addressObj.street1 ||
+                                            addressObj.address ||
+                                            addressObj.line1 ||
+                                            addressObj.address_line_1 ||
+                                            addressObj.street_address ||
+                                            addressObj.address1;
 
-                            if (street) parts.push(street);
+                              if (street) parts.push(street);
 
-                            // Add street2 if it exists
-                            const street2 = addressObj.street2 ||
-                                           addressObj.line2 ||
-                                           addressObj.address_line_2 ||
-                                           addressObj.address2;
-                            if (street2) parts.push(street2);
+                              // Add street2 if it exists
+                              const street2 = addressObj.street2 ||
+                                             addressObj.line2 ||
+                                             addressObj.address_line_2 ||
+                                             addressObj.address2;
+                              if (street2) parts.push(street2);
 
-                            // Add city
-                            const city = addressObj.city || addressObj.locality || addressObj.town;
-                            if (city) parts.push(city);
+                              // Add city
+                              const city = addressObj.city || addressObj.locality || addressObj.town;
+                              if (city) parts.push(city);
 
-                            // Add state
-                            const state = addressObj.state || addressObj.province || addressObj.region;
-                            if (state) parts.push(state);
+                              // Add state
+                              const state = addressObj.state || addressObj.province || addressObj.region;
+                              if (state) parts.push(state);
 
-                            // Add zip
-                            const zip = addressObj.zip || addressObj.postal_code || addressObj.zipcode;
-                            if (zip) parts.push(zip);
+                              // Add zip
+                              const zip = addressObj.zip || addressObj.postal_code || addressObj.zipcode;
+                              if (zip) parts.push(zip);
 
-                            if (parts.length > 0) {
-                              return parts.join(', ');
+                              if (parts.length > 0) {
+                                return parts.join(', ');
+                              }
                             }
-                          }
 
-                          return 'Address pending';
-                        })()}
+                            return 'Address pending';
+                          })()}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(job.status)}>
-                        {job.status.replace('_', ' ')}
+                        {job.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={getPriorityColor(job.priority)}>
-                        {job.priority}
+                        {job.priority.replace(/\b\w/g, l => l.toUpperCase())}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {job.due_date ? formatDate(job.due_date) : 'No deadline'}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      ${job.amount?.toFixed(2) || '0.00'}
                     </TableCell>
                   </TableRow>
                 ))}
