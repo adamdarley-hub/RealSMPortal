@@ -201,9 +201,9 @@ export class CacheService {
       while (hasMorePages && page <= maxPages) {
         try {
           const params = new URLSearchParams();
-          params.append('per_page', '100');
+          params.append('per_page', '50'); // Reduced from 100 to 50 for better performance
           params.append('page', page.toString());
-          
+
           const endpoint = `/jobs?${params.toString()}`;
           const pageData = await makeServeManagerRequest(endpoint);
           
