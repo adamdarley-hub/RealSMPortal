@@ -105,6 +105,10 @@ export default function ClientDashboard() {
       }
 
       const data = await response.json();
+      console.log('First job data:', data.jobs?.[0]);
+      console.log('Plaintiff field:', data.jobs?.[0]?.plaintiff);
+      console.log('Defendant field:', data.jobs?.[0]?.defendant_name);
+      console.log('Recipient field:', data.jobs?.[0]?.recipient_name);
       setJobs(data.jobs || []);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load jobs';
