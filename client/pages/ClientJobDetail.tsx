@@ -674,11 +674,7 @@ export default function ClientJobDetail() {
 
           <TabsContent value="documents">
             <Card>
-              <CardHeader>
-                <CardTitle>Documents</CardTitle>
-                <CardDescription>Legal documents and attachments for this job</CardDescription>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {(() => {
                   // Handle multiple possible data structures from cache vs fresh API
                   let documentsToBeServed = 
