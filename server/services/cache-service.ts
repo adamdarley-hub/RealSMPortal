@@ -699,7 +699,7 @@ export class CacheService {
       while (hasMorePages && page <= maxPages) {
         try {
           const params = new URLSearchParams();
-          params.append('per_page', '100');
+          params.append('per_page', '50'); // Optimized page size
           params.append('page', page.toString());
           
           // Try multiple possible client endpoints since /clients returns 404
@@ -1145,7 +1145,7 @@ export class CacheService {
         })
         .where(eq(jobs.id, jobId));
 
-      console.log(`✅ Cache updated for job ${jobId}`);
+      console.log(`�� Cache updated for job ${jobId}`);
     } catch (error) {
       console.error(`❌ Failed to update cache for job ${jobId}:`, error);
       throw error;
