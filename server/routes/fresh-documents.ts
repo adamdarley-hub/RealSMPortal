@@ -235,10 +235,34 @@ export const getDocumentDownload: RequestHandler = async (req, res) => {
     // Set appropriate headers for download
     const contentType = documentResponse.headers.get('content-type') || 'application/pdf';
     const contentLength = documentResponse.headers.get('content-length');
-    const filename = document.title || document.file_name || `document-${documentId}.pdf`;
-    
+
+    // Use original filename from ServeManager, fallback to title with proper extension
+    let filename = document.file_name || document.filename || document.original_filename;
+
+    if (!filename) {
+      // Construct filename from title with proper extension
+      const baseTitle = document.title || `document-${documentId}`;
+      const extension = contentType.includes('pdf') ? '.pdf' :
+                       contentType.includes('word') ? '.docx' :
+                       contentType.includes('image') ? '.jpg' : '.pdf';
+      filename = `${baseTitle}${extension}`;
+    }
+
+    // Sanitize filename for download (remove special characters that could cause issues)
+    const sanitizedFilename = filename.replace(/[<>:"/\\|?*]/g, '_');
+
+    console.log('💾 Download filename debug:', {
+      documentId: document.id,
+      originalTitle: document.title,
+      fileName: document.file_name,
+      filename: document.filename,
+      originalFilename: document.original_filename,
+      contentType: contentType,
+      finalFilename: sanitizedFilename
+    });
+
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${sanitizedFilename}"`);
     
     if (contentLength) {
       res.setHeader('Content-Length', contentLength);
