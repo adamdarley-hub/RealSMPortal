@@ -889,7 +889,10 @@ export default function ClientJobDetail() {
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                   {attempt.details.photos.map((photo: any) => (
                                     <div key={photo.id} className="border rounded-lg overflow-hidden group">
-                                      <div className="relative cursor-pointer">
+                                      <div
+                                        className="relative cursor-pointer"
+                                        onClick={() => setSelectedPhoto(photo)}
+                                      >
                                         <img
                                           src={photo.url}
                                           alt={photo.name}
@@ -902,6 +905,9 @@ export default function ClientJobDetail() {
                                             }
                                           }}
                                         />
+                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                                          <Eye className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                        </div>
                                       </div>
                                       <div className="p-2">
                                         <p className="text-xs font-medium truncate" title={photo.name}>
