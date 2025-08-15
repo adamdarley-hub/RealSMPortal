@@ -454,11 +454,40 @@ export const getServers: RequestHandler = async (req, res) => {
 };
 
 // Get ALL invoices with optional filtering - no pagination limits
+// Simple in-memory cache for invoices to avoid repeated API calls
+const invoicesCache = new Map<string, { data: any[]; timestamp: number }>();
+const INVOICES_CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache for invoices
+
 export const getInvoices: RequestHandler = async (req, res) => {
   try {
-    console.log('=== FETCHING ALL INVOICES ===');
-
     const { status, client_id, date_from, date_to } = req.query;
+
+    // Create cache key based on filters
+    const cacheKey = `invoices-${status || 'all'}-${client_id || 'all'}-${date_from || ''}-${date_to || ''}`;
+    const cached = invoicesCache.get(cacheKey);
+    const now = Date.now();
+
+    // Check cache first
+    if (cached && (now - cached.timestamp) < INVOICES_CACHE_TTL) {
+      console.log(`⚡ Serving ${cached.data.length} invoices from cache (${Math.round((now - cached.timestamp) / 1000)}s old)`);
+
+      // Filter client-specific invoices
+      let invoices = cached.data;
+      if (client_id && client_id !== 'all') {
+        invoices = cached.data.filter(invoice =>
+          invoice.client_id?.toString() === client_id ||
+          invoice.client?.id?.toString() === client_id
+        );
+      }
+
+      return res.json({
+        invoices,
+        total: invoices.length,
+        source: 'cache'
+      });
+    }
+
+    console.log('=== FETCHING ALL INVOICES FROM API ===');
 
     // Build filter parameters
     const filterParams = new URLSearchParams();
