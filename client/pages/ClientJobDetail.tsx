@@ -670,7 +670,9 @@ export default function ClientJobDetail() {
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Service Description</label>
                                 <div className="text-sm text-gray-900 mt-1 p-3 bg-gray-50 rounded-md">
-                                  {attempt.description || attempt.notes || 'No additional details'}
+                                  {typeof attempt.description === 'string' ? attempt.description :
+                                   typeof attempt.notes === 'string' ? attempt.notes :
+                                   'No additional details'}
                                 </div>
                               </div>
 
