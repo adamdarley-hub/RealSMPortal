@@ -736,7 +736,7 @@ export class CacheService {
           if (pageClients.length > 0) {
             const mappedClients = pageClients.map(rawClient => mapClientFromServeManager(rawClient));
             allClients.push(...mappedClients);
-            hasMorePages = pageClients.length === 100;
+            hasMorePages = pageClients.length === 50; // Updated for optimized page size
             page++;
           } else {
             hasMorePages = false;
@@ -1145,7 +1145,7 @@ export class CacheService {
         })
         .where(eq(jobs.id, jobId));
 
-      console.log(`�� Cache updated for job ${jobId}`);
+      console.log(`✅ Cache updated for job ${jobId}`);
     } catch (error) {
       console.error(`❌ Failed to update cache for job ${jobId}:`, error);
       throw error;
