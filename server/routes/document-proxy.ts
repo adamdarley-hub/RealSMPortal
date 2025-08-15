@@ -80,6 +80,10 @@ export const getDocumentProxy: RequestHandler = async (req, res) => {
   }
 };
 
+// Simple in-memory cache for job data to avoid repeated API calls
+const jobDataCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 // Proxy endpoint for attempt photos
 export const getAttemptPhotoProxy: RequestHandler = async (req, res) => {
   try {
@@ -88,27 +92,42 @@ export const getAttemptPhotoProxy: RequestHandler = async (req, res) => {
 
     console.log('📸 Photo proxy request:', { jobId, attemptId, photoId, download });
 
-    // Get fresh job data from ServeManager instead of cache to avoid expired URLs
-    const { getServeManagerConfig } = await import('./servemanager');
-    const config = await getServeManagerConfig();
+    // Check cache first
+    const cached = jobDataCache.get(jobId);
+    const now = Date.now();
+    let job;
 
-    const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+    if (cached && (now - cached.timestamp) < CACHE_TTL) {
+      console.log('📸 Using cached job data');
+      job = cached.data;
+    } else {
+      console.log('📸 Fetching fresh job data from ServeManager...');
 
-    console.log('📸 Fetching fresh job data from ServeManager...');
-    const jobResponse = await fetch(`${config.baseUrl}/jobs/${jobId}`, {
-      headers: {
-        'Authorization': `Basic ${credentials}`,
-        'Content-Type': 'application/json',
-      },
-    });
+      // Get fresh job data from ServeManager
+      const { getServeManagerConfig } = await import('./servemanager');
+      const config = await getServeManagerConfig();
 
-    if (!jobResponse.ok) {
-      console.log('❌ Failed to fetch job from ServeManager:', jobResponse.status);
-      return res.status(404).json({ error: 'Job not found in ServeManager' });
+      const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+
+      const jobResponse = await fetch(`${config.baseUrl}/jobs/${jobId}`, {
+        headers: {
+          'Authorization': `Basic ${credentials}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!jobResponse.ok) {
+        console.log('❌ Failed to fetch job from ServeManager:', jobResponse.status);
+        return res.status(404).json({ error: 'Job not found in ServeManager' });
+      }
+
+      const jobData = await jobResponse.json();
+      job = jobData.data || jobData; // Handle both wrapped and unwrapped responses
+
+      // Cache the job data
+      jobDataCache.set(jobId, { data: job, timestamp: now });
+      console.log('📸 Job data cached for 5 minutes');
     }
-
-    const jobData = await jobResponse.json();
-    const job = jobData.data || jobData; // Handle both wrapped and unwrapped responses
 
     console.log('📸 Fresh job lookup result:', {
       jobFound: !!job,
