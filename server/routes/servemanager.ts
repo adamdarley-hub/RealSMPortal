@@ -710,31 +710,54 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
       // Try to search by job if the invoice might be linked to a specific job
       console.log(`🔍 Trying to find invoice ${id} by searching job-related endpoints...`);
 
+      // Since invoices are often associated with jobs, let's try to find it via job search
       try {
-        // Try job-invoices endpoint if it exists
-        const jobInvoicesResponse = await makeServeManagerRequest(`/job_invoices?invoice_id=${id}`);
-        if (jobInvoicesResponse && (jobInvoicesResponse.data || jobInvoicesResponse.length > 0)) {
-          console.log(`📋 Found invoice via job_invoices endpoint:`, jobInvoicesResponse);
-        }
-      } catch (jobInvoiceError) {
-        console.log(`Job invoices search failed:`, jobInvoiceError.message);
-      }
+        console.log(`🔍 Searching all jobs for invoice references...`);
+        let foundJobWithInvoice = null;
 
-      // Try alternative invoice endpoints
-      try {
-        const altResponse = await makeServeManagerRequest(`/invoice/${id}`);
-        if (altResponse && altResponse.id) {
-          console.log(`✅ Found invoice ${id} via alternative endpoint:`, {
-            id: altResponse.id,
-            status: altResponse.status,
-            total: altResponse.total
-          });
+        // Search recent jobs for invoice references
+        for (let page = 1; page <= 5; page++) {
+          try {
+            const jobsResponse = await makeServeManagerRequest(`/jobs?per_page=100&page=${page}&sort=updated_at&order=desc`);
+            const jobs = jobsResponse.data || jobsResponse.jobs || jobsResponse;
 
-          const enrichedInvoice = await addClientInfo(altResponse);
-          return res.json(enrichedInvoice);
+            if (Array.isArray(jobs)) {
+              foundJobWithInvoice = jobs.find(job =>
+                job.invoice_id?.toString() === id ||
+                job.invoices?.some((inv: any) => inv.id?.toString() === id) ||
+                (job.invoice && job.invoice.id?.toString() === id)
+              );
+
+              if (foundJobWithInvoice) {
+                console.log(`🎯 Found job ${foundJobWithInvoice.id} that references invoice ${id}`);
+
+                // Try to get the invoice through the job
+                const jobDetailResponse = await makeServeManagerRequest(`/jobs/${foundJobWithInvoice.id}`);
+                const jobDetail = jobDetailResponse.data || jobDetailResponse;
+
+                if (jobDetail.invoice || jobDetail.invoices) {
+                  const jobInvoice = jobDetail.invoice || jobDetail.invoices?.find((inv: any) => inv.id?.toString() === id);
+                  if (jobInvoice) {
+                    console.log(`✅ Found invoice ${id} via job ${foundJobWithInvoice.id}:`, {
+                      id: jobInvoice.id,
+                      status: jobInvoice.status,
+                      total: jobInvoice.total,
+                      line_items_count: jobInvoice.line_items?.length || 0
+                    });
+
+                    const enrichedInvoice = await addClientInfo(jobInvoice);
+                    return res.json(enrichedInvoice);
+                  }
+                }
+                break;
+              }
+            }
+          } catch (jobPageError) {
+            console.log(`Jobs page ${page} search failed:`, jobPageError.message);
+          }
         }
-      } catch (altError) {
-        console.log(`Alternative endpoint failed:`, altError.message);
+      } catch (jobSearchError) {
+        console.log(`Job-based invoice search failed:`, jobSearchError.message);
       }
 
     } catch (listError) {
