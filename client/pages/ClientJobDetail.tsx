@@ -650,11 +650,20 @@ export default function ClientJobDetail() {
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-gray-700">Recipient</label>
-                                  <p className="text-sm text-gray-900">{attempt.recipient || job.recipient_name || 'N/A'}</p>
+                                  <p className="text-sm text-gray-900">
+                                    {typeof attempt.recipient === 'string' ? attempt.recipient :
+                                     typeof attempt.recipient === 'object' && attempt.recipient?.name ? attempt.recipient.name :
+                                     job.recipient_name || 'N/A'}
+                                  </p>
                                 </div>
                                 <div>
                                   <label className="text-sm font-medium text-gray-700">Address</label>
-                                  <p className="text-sm text-gray-900">{attempt.address || 'Service address'}</p>
+                                  <p className="text-sm text-gray-900">
+                                    {typeof attempt.address === 'string' ? attempt.address :
+                                     typeof attempt.address === 'object' && attempt.address ?
+                                       `${attempt.address.address1 || ''} ${attempt.address.city || ''} ${attempt.address.state || ''}`.trim() || 'Address not available' :
+                                     'Service address'}
+                                  </p>
                                 </div>
                               </div>
 
