@@ -102,6 +102,12 @@ async function saveConfig(config: ApiConfig): Promise<void> {
     if (configToSave.radar?.secretKey && !configToSave.radar.secretKey.startsWith('***')) {
       configToSave.radar.secretKey = encrypt(configToSave.radar.secretKey);
     }
+    if (configToSave.stripe?.secretKey && !configToSave.stripe.secretKey.startsWith('***')) {
+      configToSave.stripe.secretKey = encrypt(configToSave.stripe.secretKey);
+    }
+    if (configToSave.stripe?.webhookSecret && !configToSave.stripe.webhookSecret.startsWith('***')) {
+      configToSave.stripe.webhookSecret = encrypt(configToSave.stripe.webhookSecret);
+    }
 
     await fs.writeFile(CONFIG_FILE, JSON.stringify(configToSave, null, 2));
   } catch (error) {
@@ -125,6 +131,11 @@ export const getConfig: RequestHandler = async (req, res) => {
       radar: config.radar ? {
         ...config.radar,
         secretKey: config.radar.secretKey ? '***' + config.radar.secretKey.slice(-4) : '',
+      } : undefined,
+      stripe: config.stripe ? {
+        ...config.stripe,
+        secretKey: config.stripe.secretKey ? '***' + config.stripe.secretKey.slice(-4) : '',
+        webhookSecret: config.stripe.webhookSecret ? '***' + config.stripe.webhookSecret.slice(-4) : '',
       } : undefined,
     };
     
