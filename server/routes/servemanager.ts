@@ -511,6 +511,11 @@ export const getInvoices: RequestHandler = async (req, res) => {
     }
 
     console.log(`=== TOTAL INVOICES FETCHED: ${allInvoices.length} ===`);
+    console.log('📋 Sample invoice IDs from API:', allInvoices.slice(0, 5).map(inv => ({
+      id: inv.id,
+      invoice_number: inv.invoice_number,
+      servemanager_id: inv.servemanager_id
+    })));
 
     // Use local client cache for performance (no additional API call needed)
     let clientsCache: any[] = [];
