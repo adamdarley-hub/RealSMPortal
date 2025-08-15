@@ -246,23 +246,23 @@ export default function ClientInvoiceDetail() {
             <div>
               <h1 className="text-3xl font-bold flex items-center gap-2">
                 <CreditCard className="w-8 h-8" />
-                {invoice.invoice_number}
+                INV-{invoice.servemanager_job_number}
               </h1>
               <p className="text-muted-foreground">
                 Invoice details and payment information
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Badge className={getStatusColor(invoice.status)}>
               {getStatusIcon(invoice.status)}
               <span className="ml-1">{invoice.status.toUpperCase()}</span>
             </Badge>
-            {invoice.status === 'sent' && (
+            {(invoice.status.toLowerCase() === 'issued' || invoice.status.toLowerCase() === 'sent') && parseFloat(invoice.balance_due) > 0 && (
               <Button>
                 <DollarSign className="w-4 h-4 mr-2" />
-                Pay Now
+                Pay ${invoice.balance_due}
               </Button>
             )}
             <Button variant="outline">
