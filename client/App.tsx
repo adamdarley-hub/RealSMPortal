@@ -86,11 +86,11 @@ function AppRoutes() {
       <Route path="/supabase-migration" element={<ProtectedRoute role="admin"><SupabaseMigration /></ProtectedRoute>} />
 
       {/* Client routes */}
-      <Route path="/client" element={<ProtectedRoute role="client"><ClientDashboard /></ProtectedRoute>} />
-      <Route path="/client/invoices" element={<ProtectedRoute role="client"><ClientInvoices /></ProtectedRoute>} />
-      <Route path="/client/invoices/:id" element={<ProtectedRoute role="client"><ClientInvoiceDetail /></ProtectedRoute>} />
-      <Route path="/client/profile" element={<ProtectedRoute role="client"><ClientProfile /></ProtectedRoute>} />
-      <Route path="/client/jobs/:id" element={<ProtectedRoute role="client"><ClientJobDetail /></ProtectedRoute>} />
+      <Route path="/client" element={<ProtectedRoute role="client"><StripeProvider><ClientDashboard /></StripeProvider></ProtectedRoute>} />
+      <Route path="/client/invoices" element={<ProtectedRoute role="client"><StripeProvider><ClientInvoices /></StripeProvider></ProtectedRoute>} />
+      <Route path="/client/invoices/:id" element={<ProtectedRoute role="client"><StripeProvider><ClientInvoiceDetail /></StripeProvider></ProtectedRoute>} />
+      <Route path="/client/profile" element={<ProtectedRoute role="client"><StripeProvider><ClientProfile /></StripeProvider></ProtectedRoute>} />
+      <Route path="/client/jobs/:id" element={<ProtectedRoute role="client"><StripeProvider><ClientJobDetail /></StripeProvider></ProtectedRoute>} />
 
       {/* Catch-all */}
       <Route path="*" element={<NotFound />} />
