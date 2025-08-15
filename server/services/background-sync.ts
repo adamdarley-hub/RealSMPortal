@@ -5,6 +5,7 @@ class BackgroundSyncService {
   private cacheService: CacheService;
   private syncInterval: number = 5 * 60 * 1000; // 5 minutes default
   private isRunning: boolean = false;
+  private isSyncing: boolean = false;
 
   constructor() {
     this.cacheService = new CacheService();
