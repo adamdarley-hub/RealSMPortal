@@ -310,41 +310,44 @@ export default function ClientDashboard() {
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <MapPin className="w-3 h-3" />
                         {(() => {
-                          // Try multiple possible address fields and formats
                           const addressObj = job.service_address || job.address;
-                          const addressStr = job.service_address_string || job.address_string;
 
-                          console.log('Full job debug:', job);
-
-                          // Check for string format first
-                          if (addressStr && typeof addressStr === 'string') {
-                            return addressStr;
-                          }
-
-                          // Check for object format
                           if (addressObj && typeof addressObj === 'object') {
-                            // Try various field combinations
-                            if (addressObj.full_address) return addressObj.full_address;
-                            if (addressObj.address_line_1) {
-                              const parts = [addressObj.address_line_1];
-                              if (addressObj.city) parts.push(addressObj.city);
-                              if (addressObj.state) parts.push(addressObj.state);
-                              if (addressObj.zip) parts.push(addressObj.zip);
-                              return parts.join(', ');
-                            }
-                            if (addressObj.street || addressObj.street1) {
-                              const parts = [addressObj.street || addressObj.street1];
-                              if (addressObj.city) parts.push(addressObj.city);
-                              if (addressObj.state) parts.push(addressObj.state);
-                              if (addressObj.zip || addressObj.postal_code) parts.push(addressObj.zip || addressObj.postal_code);
-                              return parts.join(', ');
-                            }
-                          }
+                            // Build full address using the exact field names from the mapper
+                            const parts = [];
 
-                          // Check any field that might contain full address
-                          for (const [key, value] of Object.entries(job)) {
-                            if (key.toLowerCase().includes('address') && typeof value === 'string' && value.length > 10) {
-                              return value;
+                            // Add street address (try all possible field names)
+                            const street = addressObj.street ||
+                                          addressObj.street1 ||
+                                          addressObj.address ||
+                                          addressObj.line1 ||
+                                          addressObj.address_line_1 ||
+                                          addressObj.street_address ||
+                                          addressObj.address1;
+
+                            if (street) parts.push(street);
+
+                            // Add street2 if it exists
+                            const street2 = addressObj.street2 ||
+                                           addressObj.line2 ||
+                                           addressObj.address_line_2 ||
+                                           addressObj.address2;
+                            if (street2) parts.push(street2);
+
+                            // Add city
+                            const city = addressObj.city || addressObj.locality || addressObj.town;
+                            if (city) parts.push(city);
+
+                            // Add state
+                            const state = addressObj.state || addressObj.province || addressObj.region;
+                            if (state) parts.push(state);
+
+                            // Add zip
+                            const zip = addressObj.zip || addressObj.postal_code || addressObj.zipcode;
+                            if (zip) parts.push(zip);
+
+                            if (parts.length > 0) {
+                              return parts.join(', ');
                             }
                           }
 
