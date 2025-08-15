@@ -310,31 +310,44 @@ export default function ClientDashboard() {
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <MapPin className="w-3 h-3" />
                         {(() => {
-                          const address = job.service_address || job.address;
-                          console.log('Address debug:', {
-                            job_id: job.id,
-                            service_address: job.service_address,
-                            address: job.address,
-                            selected_address: address
-                          });
+                          // Try multiple possible address fields and formats
+                          const addressObj = job.service_address || job.address;
+                          const addressStr = job.service_address_string || job.address_string;
 
-                          if (address) {
-                            // Use full_address if available, otherwise construct from parts
-                            if (address.full_address) {
-                              return address.full_address;
+                          console.log('Full job debug:', job);
+
+                          // Check for string format first
+                          if (addressStr && typeof addressStr === 'string') {
+                            return addressStr;
+                          }
+
+                          // Check for object format
+                          if (addressObj && typeof addressObj === 'object') {
+                            // Try various field combinations
+                            if (addressObj.full_address) return addressObj.full_address;
+                            if (addressObj.address_line_1) {
+                              const parts = [addressObj.address_line_1];
+                              if (addressObj.city) parts.push(addressObj.city);
+                              if (addressObj.state) parts.push(addressObj.state);
+                              if (addressObj.zip) parts.push(addressObj.zip);
+                              return parts.join(', ');
                             }
-
-                            // Construct full address from parts
-                            const parts = [];
-                            if (address.street) parts.push(address.street);
-                            if (address.city) parts.push(address.city);
-                            if (address.state) parts.push(address.state);
-                            if (address.zip) parts.push(address.zip);
-
-                            if (parts.length > 0) {
+                            if (addressObj.street || addressObj.street1) {
+                              const parts = [addressObj.street || addressObj.street1];
+                              if (addressObj.city) parts.push(addressObj.city);
+                              if (addressObj.state) parts.push(addressObj.state);
+                              if (addressObj.zip || addressObj.postal_code) parts.push(addressObj.zip || addressObj.postal_code);
                               return parts.join(', ');
                             }
                           }
+
+                          // Check any field that might contain full address
+                          for (const [key, value] of Object.entries(job)) {
+                            if (key.toLowerCase().includes('address') && typeof value === 'string' && value.length > 10) {
+                              return value;
+                            }
+                          }
+
                           return 'Address pending';
                         })()}
                       </div>
