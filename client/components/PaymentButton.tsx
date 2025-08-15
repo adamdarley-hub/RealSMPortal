@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, CreditCard, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
-import PaymentModal from "./PaymentModal";
 import { usePaymentStatus } from "@/hooks/use-payment-status";
 
 interface PaymentButtonProps {
