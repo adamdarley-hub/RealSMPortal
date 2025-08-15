@@ -641,80 +641,101 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
         return res.json(enrichedInvoice);
       }
     } catch (apiError) {
-      console.error(`Error fetching invoice ${id} from direct API:`, apiError);
-
-      // Before returning 404, let's check if this invoice exists in the main invoice list
-      // This might be an ID mismatch between list and detail APIs
-      console.log(`🔍 Invoice ${id} not found via direct API, checking if it exists in invoice list...`);
-
-      try {
-        // Get all invoices and look for this ID
-        const allInvoicesResponse = await makeServeManagerRequest('/invoices?per_page=100');
-        const allInvoices = allInvoicesResponse.data || allInvoicesResponse.invoices || allInvoicesResponse;
-
-        if (Array.isArray(allInvoices)) {
-          const foundInvoice = allInvoices.find(inv =>
-            inv.id?.toString() === id ||
-            inv.invoice_id?.toString() === id ||
-            inv.invoice_number === id ||
-            inv.servemanager_id?.toString() === id
-          );
-
-          if (foundInvoice) {
-            console.log(`✅ Found invoice ${id} in list with different structure:`, {
-              id: foundInvoice.id,
-              invoice_id: foundInvoice.invoice_id,
-              invoice_number: foundInvoice.invoice_number,
-              servemanager_id: foundInvoice.servemanager_id
-            });
-
-            // Get clients cache for mapping
-            let clientsCache: any[] = [];
-            try {
-              const { cacheService } = await import('../services/cache-service');
-              clientsCache = await cacheService.getClientsFromCache();
-            } catch (error) {
-              console.warn('Could not fetch cached clients for invoice mapping:', error);
-            }
-
-            // Add client information to the raw invoice
-            const clientInfo = clientsCache.find(c =>
-              c.id === String(foundInvoice.client_id) ||
-              c.servemanager_id === String(foundInvoice.client_id)
-            );
-
-            if (clientInfo) {
-              foundInvoice.client = {
-                id: clientInfo.id,
-                name: clientInfo.name,
-                company: clientInfo.company,
-                email: clientInfo.email,
-                phone: clientInfo.phone
-              };
-            }
-
-            console.log(`✅ Found invoice ${id} in list:`, {
-              id: foundInvoice.id,
-              servemanager_job_number: foundInvoice.servemanager_job_number,
-              status: foundInvoice.status,
-              balance_due: foundInvoice.balance_due,
-              total: foundInvoice.total,
-              line_items_count: foundInvoice.line_items?.length || 0
-            });
-
-            return res.json(foundInvoice);
-          }
-        }
-      } catch (listError) {
-        console.log(`Could not check invoice list:`, listError);
-      }
-
-      // Return 404 if truly not found
-      return res.status(404).json({
-        error: 'Invoice not found',
-        message: `Invoice with ID ${id} not found in database or ServeManager API`
-      });
+      console.log(`Direct API failed, trying invoice list search...`);
     }
+
+    // Fallback: search in invoice list if direct API fails
+    console.log(`🔍 Invoice ${id} not found via direct API, checking invoice list...`);
+
+    try {
+      // Get all invoices and look for this ID
+      const allInvoicesResponse = await makeServeManagerRequest('/invoices?per_page=100');
+      const allInvoices = allInvoicesResponse.data || allInvoicesResponse.invoices || allInvoicesResponse;
+
+      if (Array.isArray(allInvoices)) {
+        const foundInvoice = allInvoices.find(inv =>
+          inv.id?.toString() === id ||
+          inv.invoice_id?.toString() === id ||
+          inv.invoice_number === id ||
+          inv.servemanager_id?.toString() === id
+        );
+
+        if (foundInvoice) {
+          console.log(`✅ Found invoice ${id} in list:`, {
+            id: foundInvoice.id,
+            invoice_id: foundInvoice.invoice_id,
+            invoice_number: foundInvoice.invoice_number,
+            servemanager_id: foundInvoice.servemanager_id,
+            line_items_count: foundInvoice.line_items?.length || 0
+          });
+
+          const enrichedInvoice = await addClientInfo(foundInvoice);
+
+          console.log(`✅ Final invoice ${id} data:`, {
+            id: enrichedInvoice.id,
+            servemanager_job_number: enrichedInvoice.servemanager_job_number,
+            status: enrichedInvoice.status,
+            balance_due: enrichedInvoice.balance_due,
+            total: enrichedInvoice.total,
+            line_items_count: enrichedInvoice.line_items?.length || 0
+          });
+
+          return res.json(enrichedInvoice);
+        }
+      }
+    } catch (listError) {
+      console.log(`Could not check invoice list:`, listError);
+    }
+
+    // Fallback to database cache if API is completely unavailable
+    console.log(`API unavailable, checking database cache as last resort...`);
+    try {
+      const { db } = await import('../db/database');
+      const { invoices } = await import('../db/schema');
+      const { eq } = await import('drizzle-orm');
+
+      const cachedInvoice = await db.select().from(invoices).where(eq(invoices.id, id)).limit(1);
+
+      if (cachedInvoice.length > 0) {
+        const invoice = cachedInvoice[0];
+        console.log(`⚠️ Serving limited data from cache for invoice ${id} (no line_items available)`);
+
+        const formattedInvoice = {
+          id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          status: invoice.status,
+          subtotal: invoice.subtotal || 0,
+          total_tax_amount: invoice.tax || 0,
+          total: invoice.total || 0,
+          balance_due: String(invoice.total || 0), // Assume unpaid if no payment data
+          total_paid: "0.00",
+          created_date: invoice.created_date,
+          due_date: invoice.due_date,
+          paid_date: invoice.paid_date,
+          servemanager_job_number: parseInt(invoice.id) || 0,
+          line_items: [], // Empty - not stored in cache
+          payments: [], // Empty - not stored in cache
+          client: {
+            id: invoice.client_id,
+            name: invoice.client_name,
+            company: invoice.client_company,
+            email: null,
+            phone: null
+          },
+          jobs: invoice.jobs ? JSON.parse(invoice.jobs) : []
+        };
+
+        return res.json(formattedInvoice);
+      }
+    } catch (dbError) {
+      console.log(`Database fallback also failed:`, dbError);
+    }
+
+    // Return 404 if truly not found
+    return res.status(404).json({
+      error: 'Invoice not found',
+      message: `Invoice with ID ${id} not found in ServeManager API or local cache`
+    });
 
   } catch (error) {
     console.error(`Error in getInvoiceById for ${req.params.id}:`, error);
