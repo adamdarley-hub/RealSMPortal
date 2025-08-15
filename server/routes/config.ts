@@ -64,7 +64,7 @@ function decrypt(text: string): string {
   }
 }
 
-async function loadConfig(): Promise<Partial<ApiConfig>> {
+export async function loadConfig(): Promise<Partial<ApiConfig>> {
   try {
     const data = await fs.readFile(CONFIG_FILE, 'utf8');
     const config = JSON.parse(data);
@@ -75,6 +75,12 @@ async function loadConfig(): Promise<Partial<ApiConfig>> {
     }
     if (config.radar?.secretKey && !config.radar.secretKey.startsWith('***')) {
       config.radar.secretKey = decrypt(config.radar.secretKey);
+    }
+    if (config.stripe?.secretKey && !config.stripe.secretKey.startsWith('***')) {
+      config.stripe.secretKey = decrypt(config.stripe.secretKey);
+    }
+    if (config.stripe?.webhookSecret && !config.stripe.webhookSecret.startsWith('***')) {
+      config.stripe.webhookSecret = decrypt(config.stripe.webhookSecret);
     }
 
     return config;
