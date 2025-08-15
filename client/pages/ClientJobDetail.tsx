@@ -730,6 +730,11 @@ export default function ClientJobDetail() {
                                 {currentDocumentIndex + 1} of {documentsToBeServed.length}
                               </Badge>
                             )}
+                            {documentsToBeServed[currentDocumentIndex]?.title && (
+                              <span className="text-sm font-medium text-gray-900">
+                                {documentsToBeServed[currentDocumentIndex].title}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center space-x-2">
                             {documentsToBeServed.length > 1 && (
