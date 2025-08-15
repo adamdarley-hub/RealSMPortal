@@ -55,11 +55,16 @@ export const getDocumentProxy: RequestHandler = async (req, res) => {
     // Set appropriate headers
     const contentType = documentResponse.headers.get('content-type') || 'application/pdf';
     const contentLength = documentResponse.headers.get('content-length');
-    
+
     res.setHeader('Content-Type', contentType);
     if (contentLength) {
       res.setHeader('Content-Length', contentLength);
     }
+
+    // Add performance and caching headers
+    res.setHeader('Cache-Control', 'public, max-age=3600, immutable'); // Cache for 1 hour
+    res.setHeader('ETag', `doc-${jobId}-${documentId}-${Date.now()}`);
+    res.setHeader('X-Cache-Status', 'proxied');
 
     // Set Content-Disposition based on download parameter
     if (download === 'true') {
