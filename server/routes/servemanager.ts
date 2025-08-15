@@ -511,7 +511,7 @@ export const getInvoices: RequestHandler = async (req, res) => {
     }
 
     console.log(`=== TOTAL INVOICES FETCHED: ${allInvoices.length} ===`);
-    console.log('📋 Sample invoice IDs from API:', allInvoices.slice(0, 5).map(inv => ({
+    console.log('�� Sample invoice IDs from API:', allInvoices.slice(0, 5).map(inv => ({
       id: inv.id,
       invoice_number: inv.invoice_number,
       servemanager_id: inv.servemanager_id
@@ -700,7 +700,7 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
             // Get clients cache for mapping
             let clientsCache: any[] = [];
             try {
-              const cacheService = await import('../services/cache-service');
+              const { cacheService } = await import('../services/cache-service');
               clientsCache = await cacheService.getClientsFromCache();
             } catch (error) {
               console.warn('Could not fetch cached clients for invoice mapping:', error);
