@@ -38,6 +38,13 @@ interface ApiConfig {
     enabled: boolean;
     environment: 'test' | 'live';
   };
+  stripe: {
+    publishableKey: string;
+    secretKey: string;
+    enabled: boolean;
+    environment: 'test' | 'live';
+    webhookSecret: string;
+  };
 }
 
 const defaultConfig: ApiConfig = {
@@ -52,6 +59,13 @@ const defaultConfig: ApiConfig = {
     secretKey: '',
     enabled: false,
     environment: 'test',
+  },
+  stripe: {
+    publishableKey: '',
+    secretKey: '',
+    enabled: false,
+    environment: 'test',
+    webhookSecret: '',
   },
 };
 
