@@ -419,8 +419,19 @@ export default function ClientDashboard() {
                 <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Jobs Found</h3>
                 <p className="text-muted-foreground">
-                  {searchTerm ? "No jobs match your search criteria" : "No jobs available"}
+                  {searchTerm ? "No jobs match your search criteria" :
+                   statusFilter ? `No ${statusFilter} jobs found` :
+                   "No jobs available"}
                 </p>
+                {statusFilter && (
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => setStatusFilter(null)}
+                  >
+                    Clear Filter
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
