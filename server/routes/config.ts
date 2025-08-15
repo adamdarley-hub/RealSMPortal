@@ -16,6 +16,13 @@ interface ApiConfig {
     enabled: boolean;
     environment: 'test' | 'live';
   };
+  stripe: {
+    publishableKey: string;
+    secretKey: string;
+    enabled: boolean;
+    environment: 'test' | 'live';
+    webhookSecret: string;
+  };
 }
 
 const CONFIG_FILE = path.join(process.cwd(), '.api-config.json');
