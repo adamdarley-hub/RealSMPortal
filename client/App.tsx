@@ -87,6 +87,7 @@ function AppRoutes() {
       {/* Client routes */}
       <Route path="/client" element={<ProtectedRoute role="client"><ClientDashboard /></ProtectedRoute>} />
       <Route path="/client/invoices" element={<ProtectedRoute role="client"><ClientInvoices /></ProtectedRoute>} />
+      <Route path="/client/invoices/:id" element={<ProtectedRoute role="client"><ClientInvoiceDetail /></ProtectedRoute>} />
       <Route path="/client/profile" element={<ProtectedRoute role="client"><ClientProfile /></ProtectedRoute>} />
       <Route path="/client/jobs/:id" element={<ProtectedRoute role="client"><ClientJobDetail /></ProtectedRoute>} />
 
