@@ -582,9 +582,55 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
     const { id } = req.params;
     console.log(`=== FETCHING INVOICE ${id} ===`);
 
-    // First try to get from ServeManager API
+    // Import database and schema to avoid circular dependency
+    const { db } = await import('../db/database');
+    const { invoices } = await import('../db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    // First try to get from database cache
+    console.log(`Checking database cache for invoice ${id}...`);
+    try {
+      const cachedInvoice = await db.select().from(invoices).where(eq(invoices.id, id)).limit(1);
+
+      if (cachedInvoice.length > 0) {
+        const invoice = cachedInvoice[0];
+        console.log(`✅ Found invoice ${id} in cache:`, {
+          id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          status: invoice.status,
+          client_id: invoice.client_id
+        });
+
+        // Transform cached invoice to expected format
+        const formattedInvoice = {
+          id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          status: invoice.status,
+          subtotal: invoice.subtotal || 0,
+          tax: invoice.tax || 0,
+          total: invoice.total || 0,
+          created_date: invoice.created_date,
+          due_date: invoice.due_date,
+          paid_date: invoice.paid_date,
+          client: {
+            id: invoice.client_id,
+            name: invoice.client_name,
+            company: invoice.client_company,
+            email: null,
+            phone: null
+          },
+          jobs: invoice.jobs ? JSON.parse(invoice.jobs) : []
+        };
+
+        return res.json(formattedInvoice);
+      }
+    } catch (dbError) {
+      console.log(`Database query failed, trying ServeManager API:`, dbError);
+    }
+
+    // If not in cache, try ServeManager API
     const endpoint = `/invoices/${id}`;
-    console.log(`Fetching invoice from: ${endpoint}`);
+    console.log(`Fetching invoice from ServeManager API: ${endpoint}`);
 
     try {
       const response = await makeServeManagerRequest(endpoint);
@@ -603,7 +649,7 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
       // Transform invoice using mapper
       const mappedInvoice = mapInvoiceFromServeManager(invoice, clientsCache);
 
-      console.log(`✅ Found invoice ${id}:`, {
+      console.log(`✅ Found invoice ${id} from API:`, {
         id: mappedInvoice.id,
         invoice_number: mappedInvoice.invoice_number,
         status: mappedInvoice.status,
@@ -615,147 +661,10 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
     } catch (apiError) {
       console.error(`Error fetching invoice ${id} from ServeManager API:`, apiError);
 
-      // Fall back to mock data for development - comprehensive list to match various IDs
-      const mockInvoices = [
-        // Match the main invoices list mock data
-        {
-          id: "inv001",
-          invoice_number: "INV-2024-001",
-          status: "sent",
-          subtotal: 100.00,
-          tax: 8.25,
-          total: 108.25,
-          created_date: "2024-01-15T00:00:00Z",
-          due_date: "2024-02-14T00:00:00Z",
-          client: {
-            id: "client1",
-            name: "Pronto Process Service",
-            company: "Pronto Process Service",
-            email: "info@prontoprocess.com",
-            phone: "(555) 123-4567"
-          },
-          jobs: [
-            {
-              id: "20527876",
-              job_number: "20527876",
-              amount: 50.00,
-              description: "Process Service - Civil Summons"
-            },
-            {
-              id: "20527766",
-              job_number: "20527766",
-              amount: 50.00,
-              description: "Process Service - Legal Notice"
-            }
-          ]
-        },
-        {
-          id: "inv002",
-          invoice_number: "INV-2024-002",
-          status: "paid",
-          subtotal: 75.00,
-          tax: 6.19,
-          total: 81.19,
-          created_date: "2024-01-10T00:00:00Z",
-          due_date: "2024-02-09T00:00:00Z",
-          paid_date: "2024-01-25T00:00:00Z",
-          client: {
-            id: "client2",
-            name: "Kerr Civil Process Service",
-            company: "Kerr Civil Process Service",
-            email: "contact@kerrprocess.com",
-            phone: "(555) 987-6543"
-          },
-          jobs: [
-            {
-              id: "20508743",
-              job_number: "20508743",
-              amount: 75.00,
-              description: "Process Service - Subpoena"
-            }
-          ]
-        },
-        // Add more invoice IDs to cover common patterns
-        {
-          id: "10014111",
-          invoice_number: "INV-2024-003",
-          status: "sent",
-          subtotal: 150.00,
-          tax: 12.38,
-          total: 162.38,
-          created_date: "2024-01-20T00:00:00Z",
-          due_date: "2024-02-19T00:00:00Z",
-          client: {
-            id: "1454323",
-            name: "John Smith",
-            company: "ABC Legal Services",
-            email: "john@abclegal.com",
-            phone: "(555) 456-7890"
-          },
-          jobs: [
-            {
-              id: "20508741",
-              job_number: "13227894",
-              amount: 150.00,
-              description: "Process Service - Court Documents"
-            }
-          ]
-        },
-        {
-          id: "10049462",
-          invoice_number: "INV-2024-004",
-          status: "overdue",
-          subtotal: 200.00,
-          tax: 16.50,
-          total: 216.50,
-          created_date: "2024-01-05T00:00:00Z",
-          due_date: "2024-02-04T00:00:00Z",
-          client: {
-            id: "1454358",
-            name: "Jane Doe",
-            company: "XYZ Law Firm",
-            email: "jane@xyzlaw.com",
-            phone: "(555) 321-9876"
-          },
-          jobs: [
-            {
-              id: "20508742",
-              job_number: "13227895",
-              amount: 100.00,
-              description: "Process Service - Legal Notice"
-            },
-            {
-              id: "20508744",
-              job_number: "13227897",
-              amount: 100.00,
-              description: "Process Service - Summons"
-            }
-          ]
-        }
-      ];
-
-      // Find the mock invoice by ID
-      const mockInvoice = mockInvoices.find(inv => inv.id === id);
-
-      if (!mockInvoice) {
-        return res.status(404).json({
-          error: 'Invoice not found',
-          message: `Invoice with ID ${id} not found`
-        });
-      }
-
-      // Apply mapper to mock data for consistency
-      const mappedMockInvoice = mapInvoiceFromServeManager(mockInvoice, []);
-
-      console.log(`📋 Returning mock invoice ${id}:`, {
-        id: mappedMockInvoice.id,
-        invoice_number: mappedMockInvoice.invoice_number,
-        status: mappedMockInvoice.status
-      });
-
-      res.json({
-        ...mappedMockInvoice,
-        mock: true
+      // Return 404 instead of falling back to mock data
+      return res.status(404).json({
+        error: 'Invoice not found',
+        message: `Invoice with ID ${id} not found in database or ServeManager API`
       });
     }
 
