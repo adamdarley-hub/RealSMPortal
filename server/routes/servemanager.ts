@@ -615,62 +615,120 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
     } catch (apiError) {
       console.error(`Error fetching invoice ${id} from ServeManager API:`, apiError);
 
-      // Fall back to mock data for development
+      // Fall back to mock data for development - comprehensive list to match various IDs
       const mockInvoices = [
+        // Match the main invoices list mock data
         {
-          id: "10049462",
-          invoice_number: "INV-001",
+          id: "inv001",
+          invoice_number: "INV-2024-001",
           status: "sent",
-          subtotal: 250.00,
-          tax: 20.00,
-          total: 270.00,
-          created_date: "2024-01-15T10:00:00Z",
-          due_date: "2024-02-15T10:00:00Z",
+          subtotal: 100.00,
+          tax: 8.25,
+          total: 108.25,
+          created_date: "2024-01-15T00:00:00Z",
+          due_date: "2024-02-14T00:00:00Z",
           client: {
-            id: "1454323",
-            name: "John Smith",
-            company: "ABC Corp",
-            email: "john@abc.com",
+            id: "client1",
+            name: "Pronto Process Service",
+            company: "Pronto Process Service",
+            email: "info@prontoprocess.com",
             phone: "(555) 123-4567"
           },
           jobs: [
             {
-              id: "20508741",
-              job_number: "13227894",
-              amount: 125.00,
+              id: "20527876",
+              job_number: "20527876",
+              amount: 50.00,
               description: "Process Service - Civil Summons"
             },
             {
-              id: "20508742",
-              job_number: "13227895",
-              amount: 125.00,
-              description: "Process Service - Subpoena"
+              id: "20527766",
+              job_number: "20527766",
+              amount: 50.00,
+              description: "Process Service - Legal Notice"
             }
           ]
         },
         {
-          id: "10049463",
-          invoice_number: "INV-002",
+          id: "inv002",
+          invoice_number: "INV-2024-002",
           status: "paid",
-          subtotal: 175.00,
-          tax: 14.00,
-          total: 189.00,
-          created_date: "2024-01-10T09:00:00Z",
-          due_date: "2024-02-10T09:00:00Z",
-          paid_date: "2024-01-25T14:30:00Z",
+          subtotal: 75.00,
+          tax: 6.19,
+          total: 81.19,
+          created_date: "2024-01-10T00:00:00Z",
+          due_date: "2024-02-09T00:00:00Z",
+          paid_date: "2024-01-25T00:00:00Z",
           client: {
-            id: "1454358",
-            name: "Jane Doe",
-            company: "XYZ Legal",
-            email: "jane@xyzlegal.com",
+            id: "client2",
+            name: "Kerr Civil Process Service",
+            company: "Kerr Civil Process Service",
+            email: "contact@kerrprocess.com",
             phone: "(555) 987-6543"
           },
           jobs: [
             {
               id: "20508743",
-              job_number: "13227896",
-              amount: 175.00,
+              job_number: "20508743",
+              amount: 75.00,
+              description: "Process Service - Subpoena"
+            }
+          ]
+        },
+        // Add more invoice IDs to cover common patterns
+        {
+          id: "10014111",
+          invoice_number: "INV-2024-003",
+          status: "sent",
+          subtotal: 150.00,
+          tax: 12.38,
+          total: 162.38,
+          created_date: "2024-01-20T00:00:00Z",
+          due_date: "2024-02-19T00:00:00Z",
+          client: {
+            id: "1454323",
+            name: "John Smith",
+            company: "ABC Legal Services",
+            email: "john@abclegal.com",
+            phone: "(555) 456-7890"
+          },
+          jobs: [
+            {
+              id: "20508741",
+              job_number: "13227894",
+              amount: 150.00,
+              description: "Process Service - Court Documents"
+            }
+          ]
+        },
+        {
+          id: "10049462",
+          invoice_number: "INV-2024-004",
+          status: "overdue",
+          subtotal: 200.00,
+          tax: 16.50,
+          total: 216.50,
+          created_date: "2024-01-05T00:00:00Z",
+          due_date: "2024-02-04T00:00:00Z",
+          client: {
+            id: "1454358",
+            name: "Jane Doe",
+            company: "XYZ Law Firm",
+            email: "jane@xyzlaw.com",
+            phone: "(555) 321-9876"
+          },
+          jobs: [
+            {
+              id: "20508742",
+              job_number: "13227895",
+              amount: 100.00,
               description: "Process Service - Legal Notice"
+            },
+            {
+              id: "20508744",
+              job_number: "13227897",
+              amount: 100.00,
+              description: "Process Service - Summons"
             }
           ]
         }
