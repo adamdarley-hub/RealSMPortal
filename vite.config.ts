@@ -12,12 +12,18 @@ export default defineConfig(({ mode }) => ({
       allow: ["./client", "./shared"],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
-    // Remove proxy - using Express plugin instead
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   build: {
     outDir: "dist/spa",
   },
-  plugins: [react(), expressPlugin()],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./client"),
@@ -26,19 +32,4 @@ export default defineConfig(({ mode }) => ({
   },
 }));
 
-function expressPlugin(): Plugin {
-  return {
-    name: "express-plugin",
-    apply: "serve", // Only apply during development (serve mode)
-    configureServer(server) {
-      // Initialize Express app asynchronously
-      createServer().then((app) => {
-        // Add Express app as middleware to Vite dev server
-        server.middlewares.use(app);
-        console.log('✅ Express API server integrated with Vite dev server');
-      }).catch((error) => {
-        console.error('❌ Failed to initialize Express server in Vite:', error);
-      });
-    },
-  };
-}
+// Express plugin removed - using proxy to standalone backend server instead
