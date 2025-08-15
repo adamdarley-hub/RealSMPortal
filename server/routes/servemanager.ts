@@ -549,7 +549,7 @@ export const getInvoices: RequestHandler = async (req, res) => {
     // Use local client cache for performance (no additional API call needed)
     let clientsCache: any[] = [];
     try {
-      const cacheService = await import('../services/cache-service');
+      const { cacheService } = await import('../services/cache-service');
       clientsCache = await cacheService.getClientsFromCache();
       console.log(`✅ Using ${clientsCache.length} cached clients for invoice mapping`);
     } catch (error) {
