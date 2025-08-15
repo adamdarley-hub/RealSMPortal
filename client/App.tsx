@@ -31,6 +31,7 @@ import ClientProfile from "./pages/ClientProfile";
 import ClientJobDetail from "./pages/ClientJobDetail";
 import NotFound from "./pages/NotFound";
 import ApiTest from "./pages/ApiTest";
+import StripeIntegrationExample from "./pages/StripeIntegrationExample";
 
 const queryClient = new QueryClient();
 
