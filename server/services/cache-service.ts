@@ -231,7 +231,7 @@ export class CacheService {
             }).filter(Boolean); // Remove any undefined results
             console.log(`✅ Mapped ${mappedJobs.length} of ${pageJobs.length} jobs`);
             allJobs.push(...mappedJobs);
-            hasMorePages = pageJobs.length === 100;
+            hasMorePages = pageJobs.length === 50; // Updated for new page size
             page++;
           } else {
             hasMorePages = false;
