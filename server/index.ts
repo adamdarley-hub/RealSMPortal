@@ -55,6 +55,8 @@ import {
   getSupabaseSyncStatus,
   syncSupabaseJob
 } from "./routes/supabase-api";
+import { getPublishableKey, createPaymentIntent, confirmPayment, handleWebhook, getPaymentStatus } from './routes/stripe';
+import { createSetupIntent, confirmSetupIntent, processAffidavitPayment, getJobPaymentHistory, refundPayment } from './routes/setup-intents';
 
 export async function createServer() {
   const app = express();
