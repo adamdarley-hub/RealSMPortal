@@ -18,7 +18,7 @@ interface UseAutoSyncOptions {
 export function useAutoSync(options: UseAutoSyncOptions = {}) {
   const {
     enabled = false, // Temporarily disabled due to network issues
-    interval = 30000, // 30 seconds default
+    interval = 60000, // 60 seconds default (increased from 30s to reduce server load)
     onDataUpdate
   } = options;
 
@@ -239,7 +239,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       if (error instanceof Error) {
         if (error.name === 'AbortError' || error.message.includes('aborted')) {
           errorMessage = 'Sync timeout - using cached data';
-          console.log('🕐 Auto-sync request timed out after 30 seconds, using cached data');
+          console.log('�� Auto-sync request timed out after 30 seconds, using cached data');
         } else if (error.message.includes('Failed to fetch') || error.message.includes('Network connection failed')) {
           errorMessage = 'Server unavailable - using cached data';
           console.log('🌐 Network error detected, will continue with cached data');
