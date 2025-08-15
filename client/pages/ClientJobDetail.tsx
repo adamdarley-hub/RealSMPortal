@@ -207,6 +207,160 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
+// Helper function to detect if attempt was via mobile app
+const isMobileAttempt = (attempt: any): boolean => {
+  // ServeManager API has a direct 'mobile' boolean field
+  if (attempt.mobile === true) return true;
+  if (attempt.mobile === false) return false;
+
+  // Fallback to checking other fields if mobile field is not present
+  const source = (attempt.source || '').toLowerCase();
+  const method = (attempt.method || '').toLowerCase();
+  const createdVia = (attempt.created_via || '').toLowerCase();
+  const deviceType = (attempt.device_type || '').toLowerCase();
+
+  return source.includes('mobile') ||
+         source.includes('app') ||
+         method.includes('mobile') ||
+         method.includes('app') ||
+         createdVia.includes('mobile') ||
+         createdVia.includes('app') ||
+         deviceType === 'mobile' ||
+         deviceType === 'ios' ||
+         deviceType === 'android';
+};
+
+// Helper function to get method display name and color
+const getMethodDisplay = (attempt: any) => {
+  const isMobile = isMobileAttempt(attempt);
+
+  return {
+    name: isMobile ? "Mobile App" : "Manual Entry",
+    color: isMobile ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-700 border-gray-200",
+    icon: isMobile ? "📱" : "💻"
+  };
+};
+
+// Helper function to extract service attempts from job data
+const extractServiceAttempts = (job: Job) => {
+  if (!job.attempts || !Array.isArray(job.attempts)) {
+    // Try alternative attempt field names that ServeManager might use
+    const alternativeAttempts = (job as any).service_attempts || (job as any).job_attempts || (job as any).service_history;
+    if (alternativeAttempts && Array.isArray(alternativeAttempts)) {
+      job.attempts = alternativeAttempts;
+    } else {
+      return [];
+    }
+  }
+
+  return job.attempts.map((attempt: any, index: number) => {
+    // ServeManager attempt success detection based on serve_type field
+    const serveType = attempt.serve_type || attempt.service_type || '';
+    const successfulServeTypes = [
+      "Authorized", "Business", "Corporation", "Government Agency", "Mail",
+      "Personal/Individual", "Posted", "Registered Agent", "Secretary of State",
+      "Substitute Service - Abode", "Substitute Service - Business", "Substitute Service - Personal"
+    ];
+    const unsuccessfulServeTypes = ["Bad Address", "Non-Service", "Unsuccessful Attempt"];
+
+    let isSuccessful = false;
+
+    if (successfulServeTypes.includes(serveType)) {
+      isSuccessful = true;
+    } else if (unsuccessfulServeTypes.includes(serveType)) {
+      isSuccessful = false;
+    } else {
+      // Fallback to other detection methods if serve_type is not available
+      isSuccessful = (
+        attempt.success === true ||
+        attempt.service_status === 'Served' ||
+        attempt.served_at !== null && attempt.served_at !== undefined ||
+        attempt.served === true ||
+        attempt.status === 'served' ||
+        attempt.status === 'Served'
+      );
+    }
+
+    const methodDisplay = getMethodDisplay(attempt);
+
+    return {
+      id: attempt.id || index + 1,
+      number: index + 1,
+      status: isSuccessful ? "Successful" : "Unsuccessful Attempt",
+      statusColor: isSuccessful ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800",
+      date: formatDateTime(attempt.attempted_at || attempt.date || attempt.created_at),
+      server: attempt.server_name || attempt.process_server || attempt.employee_name || "Unknown Server",
+      method: methodDisplay.name,
+      methodColor: methodDisplay.color,
+      methodIcon: methodDisplay.icon,
+      isMobileAttempt: isMobileAttempt(attempt),
+      details: {
+        serveType: attempt.serve_type || attempt.service_type || "Personal",
+        serviceStatus: attempt.status || attempt.result || (isSuccessful ? "Served" : "Not Served"),
+        recipient: (() => {
+          if (attempt.recipient) {
+            if (typeof attempt.recipient === 'string') return attempt.recipient;
+            if (typeof attempt.recipient === 'object' && attempt.recipient.name) return attempt.recipient.name;
+          }
+          if (attempt.served_to && typeof attempt.served_to === 'string') return attempt.served_to;
+          if (attempt.description && typeof attempt.description === 'string') return attempt.description;
+          return "Unknown";
+        })(),
+        address: (() => {
+          if (attempt.address) {
+            if (typeof attempt.address === 'string') return attempt.address;
+            if (typeof attempt.address === 'object') {
+              return `${attempt.address.street || attempt.address.address1 || ''} ${attempt.address.street2 || ''}`.trim() +
+                     `, ${attempt.address.city || ''}, ${attempt.address.state || ''} ${attempt.address.zip || attempt.address.postal_code || ''}`;
+            }
+          }
+          return "Address not available";
+        })(),
+        description: attempt.notes || attempt.description || attempt.comments || "No additional details",
+        photos: (() => {
+          // ServeManager stores photos in misc_attachments array
+          const miscAttachments = attempt.misc_attachments || attempt.attachments || [];
+
+          return miscAttachments
+            .filter((attachment: any) => {
+              // Check if it's an image attachment
+              const isImage = attachment.upload?.content_type?.startsWith('image/') ||
+                             attachment.upload?.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i) ||
+                             attachment.content_type?.startsWith('image/') ||
+                             attachment.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
+
+              const hasValidStructure = attachment.id &&
+                                      (attachment.title || attachment.name) &&
+                                      (attachment.upload?.links?.download_url || attachment.download_url || attachment.url);
+
+              return isImage && hasValidStructure;
+            })
+            .map((photo: any, photoIndex: number) => {
+              // Use proxy URLs instead of direct S3 URLs to avoid expiration and CORS issues
+              const proxyUrl = `/api/proxy/photo/${job.id}/${attempt.id}/${photo.id}`;
+
+              return {
+                id: photo.id,
+                name: photo.title || photo.name || `Photo ${photoIndex + 1}`,
+                url: proxyUrl,
+                thumbnailUrl: proxyUrl, // Use same proxy URL for thumbnail
+                size: photo.upload?.size || photo.size || 0,
+                mimeType: photo.upload?.content_type || photo.content_type || 'image/jpeg',
+                uploadedAt: photo.created_at || photo.uploaded_at
+              };
+            });
+        })(),
+        gps: {
+          latitude: attempt.latitude || attempt.lat || attempt.gps?.lat,
+          longitude: attempt.longitude || attempt.lng || attempt.gps?.lng,
+          accuracy: attempt.gps_accuracy || attempt.accuracy || attempt.gps?.accuracy,
+          time: attempt.gps_time || attempt.location_time || attempt.gps?.timestamp
+        }
+      }
+    };
+  });
+};
+
 // Helper function to get preview URL for inline viewing using fresh document fetch
 const getPreviewUrl = (documentId: string | number, jobId: string): string => {
   if (!documentId || !jobId) return '';
