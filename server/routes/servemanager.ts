@@ -648,41 +648,56 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
     console.log(`🔍 Invoice ${id} not found via direct API, checking invoice list...`);
 
     try {
-      // Get all invoices and look for this ID
-      const allInvoicesResponse = await makeServeManagerRequest('/invoices?per_page=100');
-      const allInvoices = allInvoicesResponse.data || allInvoicesResponse.invoices || allInvoicesResponse;
+      // Get all invoices from multiple pages to find the target invoice
+      let allInvoices: any[] = [];
+      let page = 1;
+      let hasMorePages = true;
+      const maxPages = 10; // Search first 1000 invoices
 
-      if (Array.isArray(allInvoices)) {
-        const foundInvoice = allInvoices.find(inv =>
-          inv.id?.toString() === id ||
-          inv.invoice_id?.toString() === id ||
-          inv.invoice_number === id ||
-          inv.servemanager_id?.toString() === id
-        );
+      while (hasMorePages && page <= maxPages) {
+        const pageResponse = await makeServeManagerRequest(`/invoices?per_page=100&page=${page}`);
+        const pageInvoices = pageResponse.data || pageResponse.invoices || pageResponse;
 
-        if (foundInvoice) {
-          console.log(`✅ Found invoice ${id} in list:`, {
-            id: foundInvoice.id,
-            invoice_id: foundInvoice.invoice_id,
-            invoice_number: foundInvoice.invoice_number,
-            servemanager_id: foundInvoice.servemanager_id,
-            line_items_count: foundInvoice.line_items?.length || 0
-          });
+        if (Array.isArray(pageInvoices) && pageInvoices.length > 0) {
+          allInvoices.push(...pageInvoices);
+          hasMorePages = pageInvoices.length === 100;
+          page++;
 
-          const enrichedInvoice = await addClientInfo(foundInvoice);
+          // Check if we found our target invoice on this page
+          const foundOnPage = pageInvoices.find(inv =>
+            inv.id?.toString() === id ||
+            inv.invoice_id?.toString() === id ||
+            inv.invoice_number === id ||
+            inv.servemanager_id?.toString() === id
+          );
 
-          console.log(`✅ Final invoice ${id} data:`, {
-            id: enrichedInvoice.id,
-            servemanager_job_number: enrichedInvoice.servemanager_job_number,
-            status: enrichedInvoice.status,
-            balance_due: enrichedInvoice.balance_due,
-            total: enrichedInvoice.total,
-            line_items_count: enrichedInvoice.line_items?.length || 0
-          });
+          if (foundOnPage) {
+            console.log(`🎯 Found target invoice ${id} on page ${page - 1}:`, {
+              id: foundOnPage.id,
+              invoice_id: foundOnPage.invoice_id,
+              invoice_number: foundOnPage.invoice_number,
+              servemanager_id: foundOnPage.servemanager_id,
+              line_items_count: foundOnPage.line_items?.length || 0
+            });
 
-          return res.json(enrichedInvoice);
+            const enrichedInvoice = await addClientInfo(foundOnPage);
+            return res.json(enrichedInvoice);
+          }
+        } else {
+          hasMorePages = false;
         }
       }
+
+      console.log(`📊 Searched ${allInvoices.length} invoices across ${page - 1} pages. Sample IDs:`,
+        allInvoices.slice(0, 10).map(inv => ({
+          id: inv.id,
+          invoice_number: inv.invoice_number,
+          servemanager_id: inv.servemanager_id
+        }))
+      );
+
+      console.log(`❌ Invoice ${id} not found in ${allInvoices.length} invoices`);
+
     } catch (listError) {
       console.log(`Could not check invoice list:`, listError);
     }
