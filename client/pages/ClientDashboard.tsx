@@ -350,9 +350,9 @@ export default function ClientDashboard() {
                           <div className="font-medium">
                             {job.recipient_name} - {job.job_number}
                           </div>
-                          {job.plaintiff && job.defendant && (
+                          {job.plaintiff && (job.defendant_name || job.recipient_name) && (
                             <div className="text-sm text-muted-foreground">
-                              {job.plaintiff} vs {job.defendant}
+                              {job.plaintiff} vs {job.defendant_name || job.recipient_name}
                             </div>
                           )}
                         </div>
