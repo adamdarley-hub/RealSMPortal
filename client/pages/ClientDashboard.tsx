@@ -70,6 +70,7 @@ export default function ClientDashboard() {
   const [jobs, setJobs] = useState<ClientJob[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   const kpis = useMemo((): ClientKPIs => {
     const totalJobs = jobs.length;
