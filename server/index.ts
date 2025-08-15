@@ -250,7 +250,7 @@ export async function createServer() {
   app.get("/api/jobs/:jobId/invoices/:invoiceId/download", downloadJobInvoice);   // 💾 Download invoice PDF
   app.get("/api/jobs/:jobId/affidavits", getJobAffidavits);                      // 📜 Get affidavits for job (signed only)
   app.get("/api/jobs/:jobId/affidavits/:affidavitId/preview", previewJobAffidavit);  // 👁️ Preview affidavit PDF
-  app.get("/api/jobs/:jobId/affidavits/:affidavitId/download", downloadJobAffidavit); // 💾 Download affidavit PDF
+  app.get("/api/jobs/:jobId/affidavits/:affidavitId/download", downloadJobAffidavit); // ���� Download affidavit PDF
 
   // Direct ServeManager routes (for admin/debugging)
   app.get("/api/servemanager/jobs", getJobs);
@@ -268,6 +268,20 @@ export async function createServer() {
   app.get("/api/mock/clients", getMockClients);
   app.get("/api/mock/servers", getMockServers);
   app.get("/api/mock/invoices", getMockInvoices);
+
+  // Stripe Payment Routes
+  app.get("/api/stripe/publishable-key", getPublishableKey);              // 🔑 Get Stripe publishable key
+  app.post("/api/stripe/payment-intents", createPaymentIntent);           // 💳 Create payment intent
+  app.post("/api/stripe/confirm-payment", confirmPayment);                // ✅ Confirm payment
+  app.post("/api/stripe/webhook", handleWebhook);                         // 🔔 Stripe webhook
+  app.get("/api/stripe/payment-status/:id", getPaymentStatus);            // 📊 Get payment status
+
+  // Setup Intent Routes (Bill on Affidavit)
+  app.post("/api/stripe/setup-intents", createSetupIntent);               // 💳 Create setup intent for card collection
+  app.post("/api/stripe/setup-intents/confirm", confirmSetupIntent);      // ✅ Confirm setup intent
+  app.post("/api/stripe/affidavit-payment", processAffidavitPayment);     // 🔔 Process payment when affidavit signed
+  app.get("/api/stripe/jobs/:job_id/payments", getJobPaymentHistory);     // 📊 Get payment history for job
+  app.post("/api/stripe/refund", refundPayment);                          // 💰 Refund payment (admin only)
 
   // Initialize Supabase sync on startup
   setTimeout(async () => {
