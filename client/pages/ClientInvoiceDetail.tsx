@@ -102,6 +102,7 @@ const formatDate = (dateString: string | null) => {
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case "paid": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+    case "issued": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
     case "sent": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
     case "overdue": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
     case "draft": return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
@@ -113,6 +114,7 @@ const getStatusColor = (status: string) => {
 const getStatusIcon = (status: string) => {
   switch (status.toLowerCase()) {
     case "paid": return <CheckCircle className="w-4 h-4" />;
+    case "issued": return <Mail className="w-4 h-4" />;
     case "sent": return <Mail className="w-4 h-4" />;
     case "overdue": return <AlertCircle className="w-4 h-4" />;
     case "draft": return <Clock className="w-4 h-4" />;
