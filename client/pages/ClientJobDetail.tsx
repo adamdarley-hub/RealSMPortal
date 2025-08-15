@@ -47,27 +47,184 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Job } from "@shared/servemanager";
 
-interface JobData {
-  id: string;
-  job_number: string;
-  status: string;
-  priority: string;
-  created_at: string;
-  updated_at: string;
-  due_date: string;
-  client_id: string;
-  client_name: string;
-  recipient_name: string;
-  service_address?: any;
-  address?: any;
-  amount: number;
-  description: string;
-  service_type: string;
-  attempts?: any[];
-  documents?: any[];
-  court_case_number?: string;
-  [key: string]: any;
-}
+// Helper function to safely extract string values
+const safeString = (value: any, fallback: string = ''): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return value.toString();
+  if (typeof value === 'object' && value) {
+    // Try common string properties but don't stringify the whole object
+    return value.name || value.title || value.value || value.text || fallback;
+  }
+  return fallback;
+};
+
+// Helper function to safely extract recipient name from ServeManager recipient object
+const getRecipientName = (job: Job): string => {
+  // Check ALL possible places where recipient name could be stored
+  const possibleFields = [
+    job.recipient_name,
+    job.defendant_name,
+    (job as any).recipient?.name,
+    job.raw_data?.recipient?.name,
+    (job as any).service_to,
+    (job as any).party_to_serve,
+    (job as any).serve_to,
+    // Try combining first and last names
+    ((job as any).defendant_first_name && (job as any).defendant_last_name) ?
+      `${(job as any).defendant_first_name} ${(job as any).defendant_last_name}`.trim() : null,
+    ((job as any).first_name && (job as any).last_name) ?
+      `${(job as any).first_name} ${(job as any).last_name}`.trim() : null
+  ];
+
+  // Return the first non-empty string found
+  for (const field of possibleFields) {
+    if (field && typeof field === 'string' && field.trim()) {
+      return field.trim();
+    }
+  }
+
+  return 'Unknown Recipient';
+};
+
+// Helper function to get recipient info only showing fields with values
+const getRecipientInfo = (job: Job) => {
+  // Try multiple sources for recipient data
+  const recipient = job.raw_data?.recipient || (job as any).recipient || {};
+  const info: { [key: string]: string } = {};
+
+  // Add all fields that have non-null, non-empty values
+  if (recipient.name && recipient.name.trim()) {
+    info['Recipient Name'] = recipient.name.trim();
+  }
+  if (recipient.description && recipient.description.trim()) {
+    info['Description'] = recipient.description.trim();
+  }
+  if (recipient.age && recipient.age.toString().trim()) {
+    info['Age'] = recipient.age.toString();
+  }
+  if (recipient.ethnicity && recipient.ethnicity.trim()) {
+    info['Ethnicity'] = recipient.ethnicity.trim();
+  }
+  if (recipient.gender && recipient.gender.trim()) {
+    info['Gender'] = recipient.gender.trim();
+  }
+  if (recipient.weight && recipient.weight.toString().trim()) {
+    info['Weight'] = recipient.weight.toString();
+  }
+  if (recipient.height1 || recipient.height2) {
+    const height = [recipient.height1, recipient.height2].filter(Boolean).join("'") + '"';
+    info['Height'] = height;
+  }
+  if (recipient.hair && recipient.hair.trim()) {
+    info['Hair'] = recipient.hair.trim();
+  }
+  if (recipient.eyes && recipient.eyes.trim()) {
+    info['Eyes'] = recipient.eyes.trim();
+  }
+  if (recipient.relationship && recipient.relationship.trim()) {
+    info['Relationship'] = recipient.relationship.trim();
+  }
+
+  return info;
+};
+
+// Helper function to format court case with line breaks
+const getCourtCaseDisplay = (job: Job) => {
+  // Get court case data from the proper ServeManager court_case structure
+  const courtCase = (job.raw_data as any)?.court_case || (job as any).court_case;
+
+  const plaintiff = safeString(
+    courtCase?.plaintiff ||
+    job.plaintiff ||
+    (job as any).plaintiff_name ||
+    ''
+  ).trim();
+
+  const defendant = safeString(
+    courtCase?.defendant ||
+    getRecipientName(job) ||
+    ''
+  ).trim();
+
+  // If we have both plaintiff and defendant, show with line breaks
+  if (plaintiff && defendant && defendant !== 'Unknown Recipient') {
+    return (
+      <div className="text-sm text-slate-900">
+        <div>{plaintiff}</div>
+        <div>vs.</div>
+        <div>{defendant}</div>
+      </div>
+    );
+  }
+
+  // If we only have plaintiff, show just plaintiff
+  if (plaintiff) {
+    return <div className="text-sm text-slate-900">{plaintiff}</div>;
+  }
+
+  // Try case number from court case structure first
+  const caseNumber = safeString(
+    courtCase?.number ||
+    job.case_number ||
+    job.docket_number ||
+    ''
+  ).trim();
+
+  if (caseNumber) {
+    return <div className="text-sm text-slate-900">{caseNumber}</div>;
+  }
+
+  return <div className="text-sm text-slate-900">N/A</div>;
+};
+
+// Helper function to format currency
+const formatCurrency = (amount: number | null | undefined) => {
+  if (!amount) return "$0.00";
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount);
+};
+
+// Helper function to format date
+const formatDate = (dateString: string | null) => {
+  if (!dateString) return "No date";
+  return new Date(dateString).toLocaleDateString();
+};
+
+// Helper function to format full date/time
+const formatDateTime = (dateString: string | null) => {
+  if (!dateString) return "No date";
+  return new Date(dateString).toLocaleString();
+};
+
+// Helper function to format file sizes
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// Component for viewing images in a dialog
+const ImageDialog = ({ src, alt, children }: { src: string; alt: string; children: React.ReactNode }) => {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>{alt}</DialogTitle>
+        </DialogHeader>
+        <div className="mt-4">
+          <img src={src} alt={alt} className="w-full h-auto" />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default function ClientJobDetail() {
   const { id } = useParams<{ id: string }>();
@@ -75,37 +232,37 @@ export default function ClientJobDetail() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [job, setJob] = useState<JobData | null>(null);
+  const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [expandedCards, setExpandedCards] = useState<{ [key: string]: boolean }>({});
+  const [documentLoading, setDocumentLoading] = useState<{ [key: string]: boolean }>({});
 
-  const loadJob = async () => {
+  const loadJob = async (refresh = false) => {
     if (!id) return;
     
     setLoading(true);
-    setError(null);
 
     try {
-      const response = await fetch(`/api/jobs/${id}`);
+      const url = refresh ? `/api/jobs/${id}?refresh=true` : `/api/jobs/${id}`;
+      const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error('Failed to load job details');
+        throw new Error(`Failed to load job: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const jobData = await response.json();
       
       // Verify client has access to this job
-      if (user?.client_id && data.client_id !== user.client_id) {
+      if (user?.client_id && jobData.client_id !== user.client_id) {
         throw new Error('You do not have access to this job');
       }
       
-      setJob(data);
+      setJob(jobData);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load job details';
-      setError(errorMessage);
+      console.error("Error loading job:", error);
       toast({
-        title: "Error",
-        description: errorMessage,
+        title: "Error loading job",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
@@ -117,86 +274,73 @@ export default function ClientJobDetail() {
     loadJob();
   }, [id, user?.client_id]);
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "served": case "completed": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "in_progress": case "assigned": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-      case "attempted": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      case "pending": return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+  const toggleCard = (cardId: string) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [cardId]: !prev[cardId]
+    }));
+  };
+
+  const handleDocumentAction = async (documentUrl: string, action: 'preview' | 'download', documentTitle: string) => {
+    const docId = `${documentUrl}-${action}`;
+    setDocumentLoading(prev => ({ ...prev, [docId]: true }));
+
+    try {
+      window.open(documentUrl, action === 'preview' ? '_blank' : '_self');
+      
+      toast({
+        title: action === 'preview' ? "Opening Preview" : "Starting Download",
+        description: `${documentTitle} will ${action === 'preview' ? 'open in a new tab' : 'download shortly'}`,
+      });
+    } catch (error) {
+      console.error(`Error with document ${action}:`, error);
+      toast({
+        title: `Error ${action === 'preview' ? 'previewing' : 'downloading'} document`,
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setTimeout(() => {
+        setDocumentLoading(prev => ({ ...prev, [docId]: false }));
+      }, 1000);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'Not set';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getFullAddress = (addressObj: any) => {
-    if (!addressObj || typeof addressObj !== 'object') return 'Address not available';
-    
-    const parts = [];
-    const street = addressObj.street || addressObj.street1 || addressObj.address || addressObj.line1;
-    if (street) parts.push(street);
-    
-    const street2 = addressObj.street2 || addressObj.line2;
-    if (street2) parts.push(street2);
-    
-    const city = addressObj.city || addressObj.locality;
-    if (city) parts.push(city);
-    
-    const state = addressObj.state || addressObj.province;
-    if (state) parts.push(state);
-    
-    const zip = addressObj.zip || addressObj.postal_code;
-    if (zip) parts.push(zip);
-    
-    return parts.length > 0 ? parts.join(', ') : 'Address not available';
   };
 
   if (loading) {
     return (
       <ClientLayout>
-        <div className="p-6 space-y-6">
-          <div className="flex items-center space-x-4">
-            <Skeleton className="h-10 w-32" />
-            <div>
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-64 mt-2" />
+        <div className="container mx-auto p-6 space-y-6">
+          <div className="animate-pulse space-y-6">
+            <div className="flex items-center space-x-4">
+              <div className="h-10 w-32 bg-gray-200 rounded"></div>
+              <div className="h-8 w-48 bg-gray-200 rounded"></div>
             </div>
+            <div className="h-48 bg-gray-200 rounded"></div>
+            <div className="h-64 bg-gray-200 rounded"></div>
           </div>
-          <Skeleton className="h-64 w-full" />
         </div>
       </ClientLayout>
     );
   }
 
-  if (error || !job) {
+  if (!job) {
     return (
       <ClientLayout>
-        <div className="p-6">
+        <div className="container mx-auto p-6">
           <Card>
-            <CardContent className="p-6">
-              <div className="text-center space-y-4">
-                <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
-                <h3 className="text-lg font-semibold">Unable to Load Job</h3>
-                <p className="text-muted-foreground">{error || 'Job not found'}</p>
-                <div className="flex gap-2 justify-center">
-                  <Button onClick={() => navigate('/client')} variant="outline">
-                    Back to Dashboard
-                  </Button>
-                  <Button onClick={loadJob} className="gap-2">
-                    <RefreshCw className="w-4 h-4" />
-                    Retry
-                  </Button>
-                </div>
-              </div>
+            <CardContent className="text-center py-12">
+              <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">Job Not Found</h2>
+              <p className="text-gray-600 mb-6">
+                The job you're looking for doesn't exist or you don't have permission to view it.
+              </p>
+              <Button onClick={() => navigate('/client')} className="mr-4">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <Button variant="outline" onClick={() => loadJob()}>
+                Try Again
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -204,157 +348,446 @@ export default function ClientJobDetail() {
     );
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "served": 
+      case "completed": 
+        return "bg-green-100 text-green-800 border-green-200";
+      case "in_progress": 
+      case "assigned": 
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "attempted": 
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "pending": 
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default: 
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const recipientName = getRecipientName(job);
+  const recipientInfo = getRecipientInfo(job);
+
   return (
     <ClientLayout>
-      <div className="p-6 space-y-6">
+      <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Button variant="outline" onClick={() => navigate('/client')} className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
+            <Button variant="outline" onClick={() => navigate('/client')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Jobs
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Job Details</h1>
-              <p className="text-muted-foreground">
-                {job.job_number} - {job.client_name}
-              </p>
+              <h1 className="text-3xl font-bold">{recipientName}</h1>
+              <p className="text-gray-600">Job #{job.job_number || job.id}</p>
             </div>
           </div>
-          <Badge className={getStatusColor(job.status)}>
-            {job.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-          </Badge>
+          <div className="flex items-center space-x-4">
+            <Badge className={getStatusColor(job.status)}>
+              {job.status?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown'}
+            </Badge>
+            <Button variant="outline" onClick={() => loadJob(true)}>
+              <Loader2 className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {/* Job Overview Card */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  {job.recipient_name}
-                </CardTitle>
-                <CardDescription>{job.service_type}</CardDescription>
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <FileText className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">{job.service_type || 'Process Service'}</CardTitle>
+                  <CardDescription>
+                    Created {formatDate(job.created_at)} • Due {formatDate(job.due_date)}
+                  </CardDescription>
+                </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold">${job.amount?.toFixed(2) || '0.00'}</p>
-                <p className="text-sm text-muted-foreground">Service Fee</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(job.amount || job.price || job.total)}</p>
+                <p className="text-sm text-gray-500">Service Fee</p>
               </div>
             </div>
           </CardHeader>
         </Card>
 
-        {/* Job Details Tabs */}
-        <Tabs defaultValue="details" className="space-y-6">
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="job-info" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="details">Job Details</TabsTrigger>
-            <TabsTrigger value="recipient">Recipient Info</TabsTrigger>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            <TabsTrigger value="job-info">Job Information</TabsTrigger>
+            <TabsTrigger value="recipient">Recipient Information</TabsTrigger>
+            <TabsTrigger value="court-timeline">Court Case & Timeline</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="details" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Job Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Job ID</label>
-                    <p className="text-sm">{job.job_number}</p>
+          <TabsContent value="job-info">
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Job Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <FileText className="w-5 h-5 mr-2" />
+                    Job Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Job ID</label>
+                        <p className="text-sm">{job.job_number || job.id}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Status</label>
+                        <p className="text-sm">{job.status?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Priority</label>
+                        <p className="text-sm">{job.priority?.replace(/\b\w/g, l => l.toUpperCase()) || 'Normal'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Service Type</label>
+                        <p className="text-sm">{job.service_type || 'Process Service'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Created</label>
+                        <p className="text-sm">{formatDateTime(job.created_at)}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Due Date</label>
+                        <p className="text-sm">{formatDateTime(job.due_date)}</p>
+                      </div>
+                    </div>
+                    
+                    {job.description && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Description</label>
+                        <p className="text-sm mt-1">{job.description}</p>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Service Type</label>
-                    <p className="text-sm">{job.service_type}</p>
+                </CardContent>
+              </Card>
+
+              {/* Service Address */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <MapPin className="w-5 h-5 mr-2" />
+                    Service Address
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {(() => {
+                      const address = job.service_address || job.address || job.defendant_address;
+                      if (address && typeof address === 'object') {
+                        const parts = [];
+                        if (address.street) parts.push(address.street);
+                        if (address.street2) parts.push(address.street2);
+                        if (address.city) parts.push(address.city);
+                        if (address.state) parts.push(address.state);
+                        if (address.zip) parts.push(address.zip);
+                        
+                        return parts.length > 0 ? (
+                          <div>
+                            {address.street && <p className="font-medium">{address.street}</p>}
+                            {address.street2 && <p>{address.street2}</p>}
+                            <p>{[address.city, address.state, address.zip].filter(Boolean).join(', ')}</p>
+                          </div>
+                        ) : <p className="text-gray-500">Address not available</p>;
+                      }
+                      return <p className="text-gray-500">Address not available</p>;
+                    })()}
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Priority</label>
-                    <p className="text-sm">{job.priority?.replace(/\b\w/g, l => l.toUpperCase())}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Status</label>
-                    <p className="text-sm">{job.status?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Created</label>
-                    <p className="text-sm">{formatDate(job.created_at)}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Due Date</label>
-                    <p className="text-sm">{job.due_date ? formatDate(job.due_date) : 'No deadline'}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
-          <TabsContent value="recipient" className="space-y-4">
+          <TabsContent value="recipient">
             <Card>
               <CardHeader>
-                <CardTitle>Recipient Information</CardTitle>
+                <CardTitle className="flex items-center">
+                  <User className="w-5 h-5 mr-2" />
+                  Recipient Information
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Name</label>
-                    <p className="text-sm">{job.recipient_name}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Service Address</label>
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground" />
-                      <p className="text-sm">{getFullAddress(job.service_address || job.address)}</p>
-                    </div>
-                  </div>
-                  {job.description && (
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Description</label>
-                      <p className="text-sm">{job.description}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="timeline" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Service Timeline</CardTitle>
-                <CardDescription>Timeline and attempts for this job</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 border rounded-lg">
-                    <Calendar className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Job Created</p>
-                      <p className="text-sm text-muted-foreground">{formatDate(job.created_at)}</p>
-                    </div>
+                    <label className="text-sm font-medium text-gray-500">Name</label>
+                    <p className="text-lg font-medium">{recipientName}</p>
                   </div>
                   
-                  {job.attempts && job.attempts.length > 0 ? (
-                    job.attempts.map((attempt: any, index: number) => (
-                      <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
-                        <Clock className="w-5 h-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">Service Attempt #{index + 1}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {attempt.date ? formatDate(attempt.date) : 'Date not available'}
-                          </p>
-                          {attempt.result && (
-                            <p className="text-sm">{attempt.result}</p>
-                          )}
+                  {Object.keys(recipientInfo).length > 0 && (
+                    <div className="grid grid-cols-2 gap-4">
+                      {Object.entries(recipientInfo).map(([key, value]) => (
+                        <div key={key}>
+                          <label className="text-sm font-medium text-gray-500">{key}</label>
+                          <p className="text-sm">{value}</p>
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No service attempts recorded yet</p>
+                      ))}
                     </div>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="court-timeline">
+            <div className="space-y-6">
+              {/* Court Case Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Building className="w-5 h-5 mr-2" />
+                    Court Case Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Case Details</label>
+                      <div className="mt-1">
+                        {getCourtCaseDisplay(job)}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Timeline */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Clock className="w-5 h-5 mr-2" />
+                    Service Timeline
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <Calendar className="w-5 h-5 text-gray-500" />
+                      <div>
+                        <p className="font-medium">Job Created</p>
+                        <p className="text-sm text-gray-500">{formatDateTime(job.created_at)}</p>
+                      </div>
+                    </div>
+                    
+                    {job.updated_at && job.updated_at !== job.created_at && (
+                      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <Clock className="w-5 h-5 text-gray-500" />
+                        <div>
+                          <p className="font-medium">Last Updated</p>
+                          <p className="text-sm text-gray-500">{formatDateTime(job.updated_at)}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {(() => {
+                      const attempts = job.attempts || (job as any).service_attempts || [];
+                      if (Array.isArray(attempts) && attempts.length > 0) {
+                        return attempts.map((attempt: any, index: number) => (
+                          <div key={index} className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                            <Clock className="w-5 h-5 text-yellow-600" />
+                            <div>
+                              <p className="font-medium">Service Attempt #{index + 1}</p>
+                              <p className="text-sm text-gray-500">
+                                {attempt.date ? formatDateTime(attempt.date) : 'Date not available'}
+                              </p>
+                              {attempt.result && <p className="text-sm">{attempt.result}</p>}
+                            </div>
+                          </div>
+                        ));
+                      }
+                      return (
+                        <div className="text-center py-8 text-gray-500">
+                          <Clock className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                          <p>No service attempts recorded yet</p>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Secondary Tabs for Documents, etc. */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="invoices">Invoices</TabsTrigger>
+            <TabsTrigger value="affidavit">Affidavit</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            <Card>
+              <CardHeader>
+                <CardTitle>Job Summary</CardTitle>
+                <CardDescription>Complete overview of this service job</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-500">Client</label>
+                    <p className="font-medium">{job.client_name || 'N/A'}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-500">Recipient</label>
+                    <p className="font-medium">{recipientName}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-500">Amount</label>
+                    <p className="font-medium text-green-600">{formatCurrency(job.amount || job.price || job.total)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="documents">
+            <Card>
+              <CardHeader>
+                <CardTitle>Documents</CardTitle>
+                <CardDescription>Legal documents and attachments for this job</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  // Handle multiple possible data structures from cache vs fresh API
+                  let documentsToBeServed = 
+                    job.raw_data?.documents_to_be_served ||
+                    job.documents_to_be_served ||
+                    job.data?.documents_to_be_served ||
+                    (job as any).attachments ||
+                    (job as any).documents ||
+                    (job as any).files ||
+                    [];
+
+                  // Ensure it's an array
+                  if (!Array.isArray(documentsToBeServed)) {
+                    documentsToBeServed = [];
+                  }
+
+                  // Filter out documents that have null/empty URLs
+                  documentsToBeServed = documentsToBeServed.filter((document: any) => {
+                    return !!(
+                      document.upload?.links?.download_url ||
+                      document.upload?.download_url ||
+                      document.download_url ||
+                      document.links?.download_url ||
+                      document.url ||
+                      document.file_url
+                    );
+                  });
+
+                  if (documentsToBeServed.length === 0) {
+                    return (
+                      <div className="text-center py-8 text-gray-500">
+                        <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                        <p className="text-lg font-medium">No Service Documents Available</p>
+                        <p className="text-sm mt-2">
+                          This job does not have any service documents attached.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-4">
+                      {documentsToBeServed.map((document: any, index: number) => {
+                        const downloadUrl = 
+                          document.upload?.links?.download_url ||
+                          document.upload?.download_url ||
+                          document.download_url ||
+                          document.links?.download_url ||
+                          document.url ||
+                          document.file_url;
+
+                        const title = document.title || document.name || `Document ${index + 1}`;
+                        const fileSize = document.upload?.file_size || document.file_size || document.size;
+
+                        return (
+                          <div key={document.id || index} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <p className="font-medium">{title}</p>
+                                <p className="text-sm text-gray-500">
+                                  {fileSize ? formatFileSize(fileSize) : 'Size unknown'}
+                                </p>
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDocumentAction(downloadUrl, 'preview', title)}
+                                  disabled={documentLoading[`${downloadUrl}-preview`]}
+                                >
+                                  {documentLoading[`${downloadUrl}-preview`] ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Eye className="w-4 h-4" />
+                                  )}
+                                  <span className="ml-2">Preview</span>
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDocumentAction(downloadUrl, 'download', title)}
+                                  disabled={documentLoading[`${downloadUrl}-download`]}
+                                >
+                                  {documentLoading[`${downloadUrl}-download`] ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Download className="w-4 h-4" />
+                                  )}
+                                  <span className="ml-2">Download</span>
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="invoices">
+            <Card>
+              <CardHeader>
+                <CardTitle>Invoices</CardTitle>
+                <CardDescription>Billing information for this job</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-gray-500">
+                  <DollarSign className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>Invoice information will be displayed here when available</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="affidavit">
+            <Card>
+              <CardHeader>
+                <CardTitle>Affidavit of Service</CardTitle>
+                <CardDescription>Legal proof of service completion</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>Affidavit will be available after service is completed</p>
                 </div>
               </CardContent>
             </Card>
