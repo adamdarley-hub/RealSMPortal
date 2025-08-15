@@ -402,10 +402,40 @@ export default function ClientInvoices() {
                 <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Invoices Found</h3>
                 <p className="text-muted-foreground">
-                  {searchTerm || statusFilter 
-                    ? "No invoices match your current filters" 
+                  {searchTerm || statusFilter
+                    ? "No invoices match your current filters"
                     : "No invoices available"}
                 </p>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredInvoices.length)} of {filteredInvoices.length} invoices
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="px-3 py-1 text-sm">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
