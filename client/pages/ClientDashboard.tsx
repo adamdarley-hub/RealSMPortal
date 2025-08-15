@@ -288,13 +288,10 @@ export default function ClientDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Job Number</TableHead>
-                  <TableHead>Recipient</TableHead>
-                  <TableHead>Location</TableHead>
+                  <TableHead>Recipient & Job</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Due Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
