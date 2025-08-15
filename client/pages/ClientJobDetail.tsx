@@ -409,6 +409,7 @@ export default function ClientJobDetail() {
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
   const [jobAffidavits, setJobAffidavits] = useState<any[]>([]);
   const [currentAffidavitIndex, setCurrentAffidavitIndex] = useState(0);
+  const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
 
   const loadJob = async (refresh = false) => {
     if (!id) return;
