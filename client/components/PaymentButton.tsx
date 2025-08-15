@@ -35,7 +35,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   onPaymentSuccess,
   showPaymentStatus = false,
 }) => {
-  const { paymentStatus, isLoading: statusLoading, refetch } = usePaymentStatus(
+  const { paymentStatus, isLoading: statusLoading } = usePaymentStatus(
     showPaymentStatus ? invoice.id : null
   );
 
@@ -52,16 +52,6 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       style: 'currency',
       currency: 'USD',
     }).format(amount);
-  };
-
-  const handlePaymentSuccess = (paymentResult: any) => {
-    // Refetch payment status to update UI
-    if (showPaymentStatus) {
-      setTimeout(() => refetch(), 1000);
-    }
-    
-    onPaymentSuccess?.(paymentResult);
-    setIsModalOpen(false);
   };
 
   const getButtonContent = () => {
