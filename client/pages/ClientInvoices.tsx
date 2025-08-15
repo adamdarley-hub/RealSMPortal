@@ -413,6 +413,18 @@ export default function ClientInvoices() {
                     <TableCell>
                       {invoice.due_date ? formatDate(invoice.due_date) : 'No due date'}
                     </TableCell>
+                    <TableCell>
+                      {(invoice.status.toLowerCase() === 'sent' || invoice.status.toLowerCase() === 'issued') && (
+                        <Button
+                          size="sm"
+                          onClick={(e) => handlePaymentClick(invoice, e)}
+                          className="gap-1"
+                        >
+                          <DollarSign className="w-3 h-3" />
+                          Pay
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
