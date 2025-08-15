@@ -277,6 +277,9 @@ export default function ClientJobDetail() {
       }
       
       setJob(jobData);
+
+      // Load affidavits for this job
+      loadJobAffidavits(id);
     } catch (error) {
       console.error("Error loading job:", error);
       toast({
@@ -286,6 +289,26 @@ export default function ClientJobDetail() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadJobAffidavits = async (jobId: string) => {
+    if (!jobId) return;
+
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/affidavits`);
+      if (response.ok) {
+        const data = await response.json();
+        setJobAffidavits(data.affidavits || []);
+        setCurrentAffidavitIndex(0);
+        console.log('📜 Affidavits loaded:', data.affidavits?.length || 0);
+      } else {
+        console.warn('📜 Affidavits fetch failed:', response.status);
+        setJobAffidavits([]);
+      }
+    } catch (error) {
+      console.warn('📜 Affidavits fetch error:', error);
+      setJobAffidavits([]);
     }
   };
 
