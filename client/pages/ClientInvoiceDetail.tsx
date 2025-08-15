@@ -385,55 +385,106 @@ export default function ClientInvoiceDetail() {
           </Card>
         </div>
 
-        {/* Jobs Table */}
+        {/* Line Items Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Jobs Included</CardTitle>
+            <CardTitle>Line Items</CardTitle>
             <CardDescription>
-              Services included in this invoice
+              Services and charges for job #{invoice.servemanager_job_number}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Job Number</TableHead>
+                  <TableHead>Service</TableHead>
                   <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-center">Qty</TableHead>
+                  <TableHead className="text-right">Unit Cost</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoice.jobs.map((job) => (
-                  <TableRow key={job.id}>
-                    <TableCell className="font-mono">{job.job_number}</TableCell>
-                    <TableCell>{job.description || 'Process Service'}</TableCell>
+                {invoice.line_items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{item.description || '-'}</TableCell>
+                    <TableCell className="text-center">{item.quantity}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.unit_cost)}</TableCell>
                     <TableCell className="text-right font-medium">
-                      {formatCurrency(job.amount)}
+                      {formatCurrency(parseFloat(item.unit_cost) * parseFloat(item.quantity))}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-            
+
             {/* Invoice Totals */}
             <div className="mt-6 space-y-2 border-t pt-4">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
                 <span>{formatCurrency(invoice.subtotal)}</span>
               </div>
-              {invoice.tax > 0 && (
+              {parseFloat(invoice.total_tax_amount) > 0 && (
                 <div className="flex justify-between">
                   <span>Tax:</span>
-                  <span>{formatCurrency(invoice.tax)}</span>
+                  <span>{formatCurrency(invoice.total_tax_amount)}</span>
                 </div>
               )}
               <div className="flex justify-between text-lg font-bold border-t pt-2">
                 <span>Total:</span>
                 <span>{formatCurrency(invoice.total)}</span>
               </div>
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Total Paid:</span>
+                <span className="text-green-600 font-medium">{formatCurrency(invoice.total_paid)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold text-red-600">
+                <span>Balance Due:</span>
+                <span>{formatCurrency(invoice.balance_due)}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Payments Table (if any payments exist) */}
+        {invoice.payments && invoice.payments.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment History</CardTitle>
+              <CardDescription>
+                Payments received for this invoice
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoice.payments.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          {formatDate(payment.applied_on)}
+                        </div>
+                      </TableCell>
+                      <TableCell>{payment.description || 'Payment received'}</TableCell>
+                      <TableCell className="text-right font-medium text-green-600">
+                        {formatCurrency(payment.amount)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </ClientLayout>
   );
