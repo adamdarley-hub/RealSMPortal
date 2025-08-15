@@ -1,25 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from '@/contexts/AuthContext';
 import ClientLayout from '@/components/ClientLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   ArrowLeft,
   FileText,
-  MapPin,
-  Calendar,
-  Clock,
+  ChevronDown,
+  ChevronUp,
   User,
+  MapPin,
+  Eye,
+  Loader2,
+  AlertCircle,
   Phone,
   Mail,
-  AlertCircle,
-  RefreshCw,
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+  Calendar,
+  DollarSign,
+  Building,
+  Clock,
+  Download,
+  Printer,
+  Navigation,
+  Image as ImageIcon,
+  ExternalLink,
+  Copy,
+  Share,
+  Edit,
+  Check,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Job } from "@shared/servemanager";
 
 interface JobData {
   id: string;
