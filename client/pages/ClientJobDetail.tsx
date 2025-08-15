@@ -855,11 +855,7 @@ export default function ClientJobDetail() {
 
           <TabsContent value="invoices">
             <Card>
-              <CardHeader>
-                <CardTitle>Invoices</CardTitle>
-                <CardDescription>Billing information for this job</CardDescription>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="text-center py-8 text-gray-500">
                   <DollarSign className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                   <p>Invoice information will be displayed here when available</p>
