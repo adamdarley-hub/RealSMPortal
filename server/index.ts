@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
-import { getConfig, saveConfigHandler, testServeManager, testRadar } from "./routes/config";
+import { getConfig, saveConfigHandler, testServeManager, testRadar, testStripe } from "./routes/config";
 import {
   getJobs,
   getJob,
@@ -84,6 +84,7 @@ export async function createServer() {
   app.post("/api/config", saveConfigHandler);
   app.post("/api/test-servemanager", testServeManager);
   app.post("/api/test-radar", testRadar);
+  app.post("/api/test-stripe", testStripe);
 
   // Debug endpoint
   app.post("/api/debug", (req, res) => {
