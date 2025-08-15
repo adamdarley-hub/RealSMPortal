@@ -90,7 +90,10 @@ export async function createServer() {
   const stripeRoutes = await import("./routes/stripe.js");
   app.post("/api/stripe/create-payment-intent", stripeRoutes.createPaymentIntent);
   app.post("/api/stripe/confirm-payment", stripeRoutes.confirmPayment);
-  app.post("/api/stripe/webhook", stripeRoutes.handleWebhook);
+
+  // Stripe webhook needs raw body data
+  app.post("/api/stripe/webhook", express.raw({ type: 'application/json' }), stripeRoutes.handleWebhook);
+
   app.get("/api/stripe/publishable-key", stripeRoutes.getPublishableKey);
   app.get("/api/stripe/payment-status/:invoiceId", stripeRoutes.getPaymentStatus);
 
