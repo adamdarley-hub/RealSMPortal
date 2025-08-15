@@ -896,6 +896,7 @@ export default function ClientJobDetail() {
                                         <img
                                           src={photo.url}
                                           alt={photo.name}
+                                          loading="lazy"
                                           className="w-full h-24 object-cover transition-transform group-hover:scale-105"
                                           onError={(e) => {
                                             // Hide broken images and their container
