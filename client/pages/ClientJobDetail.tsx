@@ -890,7 +890,7 @@ export default function ClientJobDetail() {
                                   {attempt.details.photos.map((photo: any) => (
                                     <div key={photo.id} className="border rounded-lg overflow-hidden group">
                                       <div
-                                        className="relative cursor-pointer"
+                                        className="relative cursor-pointer bg-gray-100"
                                         onClick={() => setSelectedPhoto(photo)}
                                       >
                                         <img
@@ -898,6 +898,13 @@ export default function ClientJobDetail() {
                                           alt={photo.name}
                                           loading="lazy"
                                           className="w-full h-24 object-cover transition-transform group-hover:scale-105"
+                                          onLoad={(e) => {
+                                            // Remove loading background once image loads
+                                            const parent = e.currentTarget.parentElement;
+                                            if (parent) {
+                                              parent.classList.remove('bg-gray-100');
+                                            }
+                                          }}
                                           onError={(e) => {
                                             // Hide broken images and their container
                                             const container = e.currentTarget.closest('.border');
