@@ -346,8 +346,15 @@ export default function ClientDashboard() {
                   >
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="font-medium">
-                          {job.recipient_name} - {job.job_number}
+                        <div className="flex items-center gap-3">
+                          <div className="font-medium">
+                            {job.recipient_name} - {job.job_number}
+                          </div>
+                          {job.plaintiff && job.defendant && (
+                            <div className="text-sm text-muted-foreground">
+                              {job.plaintiff} vs {job.defendant}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <MapPin className="w-3 h-3" />
