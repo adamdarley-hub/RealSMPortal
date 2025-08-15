@@ -311,6 +311,13 @@ export default function ClientDashboard() {
                         <MapPin className="w-3 h-3" />
                         {(() => {
                           const address = job.service_address || job.address;
+                          console.log('Address debug:', {
+                            job_id: job.id,
+                            service_address: job.service_address,
+                            address: job.address,
+                            selected_address: address
+                          });
+
                           if (address) {
                             // Use full_address if available, otherwise construct from parts
                             if (address.full_address) {
