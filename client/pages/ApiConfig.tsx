@@ -359,6 +359,20 @@ export default function ApiConfig() {
     }
   };
 
+  const updateStripeConfig = (field: keyof ApiConfig['stripe'], value: any) => {
+    setConfig(prev => ({
+      ...prev,
+      stripe: {
+        ...prev.stripe,
+        [field]: value,
+      },
+    }));
+    // Reset status when config changes
+    if (field === 'publishableKey' || field === 'secretKey') {
+      setStripeStatus('idle');
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
