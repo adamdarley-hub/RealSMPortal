@@ -938,14 +938,147 @@ export default function ClientJobDetail() {
           <TabsContent value="affidavit">
             <Card>
               <CardHeader>
-                <CardTitle>Affidavit of Service</CardTitle>
-                <CardDescription>Legal proof of service completion</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Affidavits</CardTitle>
+                    <CardDescription>Signed affidavits of service for this job</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>Affidavit will be available after service is completed</p>
-                </div>
+                {jobAffidavits.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="w-12 h-12 mx-auto mb-4" />
+                    <p>No signed affidavits for this job</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Only signed affidavits are displayed
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Affidavit List */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Affidavit Documents</h3>
+                      <div className="space-y-4">
+                        {jobAffidavits.map((affidavit: any, index: number) => (
+                          <div key={affidavit.id || index} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-lg">
+                                  Affidavit of Service
+                                </h4>
+                                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                                  <Badge variant="outline" className="bg-green-50 text-green-700">
+                                    Signed
+                                  </Badge>
+                                  {affidavit.signed_at && (
+                                    <span>Signed: {formatDate(affidavit.signed_at)}</span>
+                                  )}
+                                  {affidavit.created_at && (
+                                    <span>Created: {formatDate(affidavit.created_at)}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                {currentAffidavitIndex === index && (
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                    Viewing
+                                  </Badge>
+                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setCurrentAffidavitIndex(index)}
+                                  className="gap-2"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                  View
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  asChild
+                                  className="gap-2"
+                                >
+                                  <a
+                                    href={`/api/jobs/${job.id}/affidavits/${affidavit.id}/download`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    Download
+                                  </a>
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Affidavit Viewer */}
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold">{getRecipientName(job)} - Affidavit</h3>
+                        {jobAffidavits.length > 1 && (
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentAffidavitIndex(Math.max(0, currentAffidavitIndex - 1))}
+                              disabled={currentAffidavitIndex === 0}
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                            </Button>
+                            <span className="text-sm text-muted-foreground">
+                              {currentAffidavitIndex + 1} of {jobAffidavits.length}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentAffidavitIndex(Math.min(jobAffidavits.length - 1, currentAffidavitIndex + 1))}
+                              disabled={currentAffidavitIndex === jobAffidavits.length - 1}
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="border rounded-lg overflow-hidden" style={{ height: '600px' }}>
+                        {(() => {
+                          const currentAffidavit = jobAffidavits[currentAffidavitIndex];
+
+                          if (!currentAffidavit?.pdf_url && !currentAffidavit?.id) {
+                            return (
+                              <div className="flex items-center justify-center h-full text-muted-foreground">
+                                <div className="text-center space-y-4">
+                                  <FileText className="w-12 h-12 mx-auto mb-4" />
+                                  <p>Affidavit preview not available</p>
+                                  <p className="text-xs text-gray-500">
+                                    Affidavit ID: {currentAffidavit?.id || 'Unknown'}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // Use iframe for PDF viewing with proxy URL
+                          return (
+                            <div className="relative w-full h-full">
+                              <iframe
+                                src={`/api/jobs/${job.id}/affidavits/${currentAffidavit.id}/preview#navpanes=0`}
+                                className="w-full h-full border-0"
+                                title={`Affidavit: ${currentAffidavit.id}`}
+                                key={`${currentAffidavit.id}-${currentAffidavitIndex}`}
+                              />
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
