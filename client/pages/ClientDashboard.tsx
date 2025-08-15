@@ -331,7 +331,7 @@ export default function ClientDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Recipient & Job</TableHead>
+                  <TableHead>Recipient</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Due Date</TableHead>
