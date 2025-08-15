@@ -31,10 +31,10 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   variant = 'default',
   size = 'default',
   className = '',
+  onClick,
   onPaymentSuccess,
   showPaymentStatus = false,
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { paymentStatus, isLoading: statusLoading, refetch } = usePaymentStatus(
     showPaymentStatus ? invoice.id : null
   );
