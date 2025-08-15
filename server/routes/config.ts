@@ -250,3 +250,48 @@ export const testRadar: RequestHandler = async (req, res) => {
     res.status(500).json({ error: 'Failed to test radar.io connection' });
   }
 };
+
+// Test Stripe connection
+export const testStripe: RequestHandler = async (req, res) => {
+  try {
+    const { secretKey, environment } = req.body;
+
+    if (!secretKey) {
+      return res.status(400).json({ error: 'Secret key is required' });
+    }
+
+    // Validate key format
+    const expectedPrefix = environment === 'test' ? 'sk_test_' : 'sk_live_';
+    if (!secretKey.startsWith(expectedPrefix)) {
+      return res.status(400).json({
+        error: `Invalid key format for ${environment} environment. Expected key to start with ${expectedPrefix}`
+      });
+    }
+
+    // Test Stripe API with account retrieval
+    const response = await fetch('https://api.stripe.com/v1/account', {
+      headers: {
+        'Authorization': `Bearer ${secretKey}`,
+        'Stripe-Version': '2023-10-16',
+      },
+    });
+
+    if (response.ok) {
+      const accountData = await response.json();
+      res.json({
+        message: 'Stripe connection successful',
+        accountId: accountData.id,
+        livemode: accountData.livemode,
+        environment: accountData.livemode ? 'live' : 'test'
+      });
+    } else {
+      const errorData = await response.json();
+      res.status(response.status).json({
+        error: `Stripe API returned ${response.status}: ${errorData.error?.message || response.statusText}`
+      });
+    }
+  } catch (error) {
+    console.error('Stripe test error:', error);
+    res.status(500).json({ error: 'Failed to test Stripe connection' });
+  }
+};
