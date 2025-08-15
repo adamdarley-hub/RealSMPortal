@@ -32,9 +32,20 @@ interface ClientJob {
   id: string;
   job_number: string;
   recipient_name: string;
-  service_address: string;
-  city: string;
-  state: string;
+  service_address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    full_address?: string;
+  };
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    full_address?: string;
+  };
   status: string;
   priority: string;
   due_date: string;
