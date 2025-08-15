@@ -96,12 +96,13 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
       total: allJobs.length,
       page: pageNum,
       limit: limitNum,
-      showing: jobs.length,
+      showing: optimizedJobs.length,
       has_more: offset + limitNum < allJobs.length,
       cached: true,
       paginated: isPaginated,
+      optimized: true,
       response_time_ms: responseTime,
-      last_synced: jobs[0]?._last_synced || null
+      last_synced: optimizedJobs[0]?._last_synced || null
     });
     
   } catch (error) {
