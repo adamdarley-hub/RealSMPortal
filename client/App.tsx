@@ -25,6 +25,7 @@ import SupabaseMigration from "./pages/SupabaseMigration";
 import Login from "./pages/Login";
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientInvoices from "./pages/ClientInvoices";
+import ClientInvoiceDetail from "./pages/ClientInvoiceDetail";
 import ClientProfile from "./pages/ClientProfile";
 import ClientJobDetail from "./pages/ClientJobDetail";
 import NotFound from "./pages/NotFound";
