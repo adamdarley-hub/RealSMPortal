@@ -298,30 +298,6 @@ export default function ClientJobDetail() {
     }));
   };
 
-  const handleDocumentAction = async (documentUrl: string, action: 'preview' | 'download', documentTitle: string) => {
-    const docId = `${documentUrl}-${action}`;
-    setDocumentLoading(prev => ({ ...prev, [docId]: true }));
-
-    try {
-      window.open(documentUrl, action === 'preview' ? '_blank' : '_self');
-      
-      toast({
-        title: action === 'preview' ? "Opening Preview" : "Starting Download",
-        description: `${documentTitle} will ${action === 'preview' ? 'open in a new tab' : 'download shortly'}`,
-      });
-    } catch (error) {
-      console.error(`Error with document ${action}:`, error);
-      toast({
-        title: `Error ${action === 'preview' ? 'previewing' : 'downloading'} document`,
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setTimeout(() => {
-        setDocumentLoading(prev => ({ ...prev, [docId]: false }));
-      }, 1000);
-    }
-  };
 
   if (loading) {
     return (
