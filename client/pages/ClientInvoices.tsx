@@ -104,6 +104,22 @@ export default function ClientInvoices() {
     }
   };
 
+  const handlePaymentClick = (invoice: any, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent navigation to detail page
+    setSelectedInvoice(invoice);
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false);
+    setSelectedInvoice(null);
+    loadInvoices(); // Reload invoices to show updated payment status
+    toast({
+      title: "Payment Successful",
+      description: "Your payment has been processed successfully.",
+    });
+  };
+
   useEffect(() => {
     loadInvoices();
   }, [user?.client_id, statusFilter]);
