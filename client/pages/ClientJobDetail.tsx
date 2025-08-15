@@ -725,7 +725,6 @@ export default function ClientJobDetail() {
                       <div>
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-3">
-                            <h3 className="text-lg font-semibold">{getRecipientName(job)} - Service Documents</h3>
                             {documentsToBeServed.length > 1 && (
                               <Badge variant="outline" className="bg-blue-50 text-blue-700">
                                 {currentDocumentIndex + 1} of {documentsToBeServed.length}
