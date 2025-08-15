@@ -70,7 +70,7 @@ class BackgroundSyncService {
 export const backgroundSync = new BackgroundSyncService();
 
 // Auto-start background sync optimized for production
-const BACKGROUND_SYNC_INTERVAL = parseInt(process.env.BACKGROUND_SYNC_MINUTES || '15'); // Default 15 minutes for production
+const BACKGROUND_SYNC_INTERVAL = parseInt(process.env.BACKGROUND_SYNC_MINUTES || '30'); // Default 30 minutes for production (optimized)
 if (process.env.NODE_ENV !== 'test') {
   // Start background sync automatically after server is ready
   setTimeout(() => {
