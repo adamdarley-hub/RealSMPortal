@@ -30,6 +30,7 @@ import ClientInvoiceDetail from "./pages/ClientInvoiceDetail";
 import ClientProfile from "./pages/ClientProfile";
 import ClientJobDetail from "./pages/ClientJobDetail";
 import NotFound from "./pages/NotFound";
+import ApiTest from "./pages/ApiTest";
 
 const queryClient = new QueryClient();
 
