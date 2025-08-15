@@ -641,6 +641,175 @@ export default function ApiConfig() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Stripe Configuration */}
+          <TabsContent value="stripe" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Key className="w-5 h-5" />
+                  Stripe Payment Integration
+                  <Badge variant={config.stripe.enabled ? "default" : "secondary"}>
+                    {config.stripe.enabled ? "Enabled" : "Disabled"}
+                  </Badge>
+                  {stripeStatus === 'success' && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Connected
+                    </Badge>
+                  )}
+                  {stripeStatus === 'error' && (
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                      <XCircle className="w-3 h-3 mr-1" />
+                      Error
+                    </Badge>
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  Configure your Stripe API keys for payment processing. Use test keys for development and live keys for production.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Enable/Disable Toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="stripe-enabled">Enable Stripe Integration</Label>
+                    <div className="text-sm text-muted-foreground">
+                      Allow payment processing through Stripe
+                    </div>
+                  </div>
+                  <Switch
+                    id="stripe-enabled"
+                    checked={config.stripe.enabled}
+                    onCheckedChange={(checked) => updateStripeConfig('enabled', checked)}
+                  />
+                </div>
+
+                {/* Environment Selection */}
+                <div className="space-y-2">
+                  <Label>Environment</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={config.stripe.environment === 'test' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => updateStripeConfig('environment', 'test')}
+                      className="gap-2"
+                    >
+                      <TestTube className="w-4 h-4" />
+                      Test Mode
+                    </Button>
+                    <Button
+                      variant={config.stripe.environment === 'live' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => updateStripeConfig('environment', 'live')}
+                      className="gap-2"
+                    >
+                      <Globe className="w-4 h-4" />
+                      Live Mode
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Publishable Key */}
+                <div className="space-y-2">
+                  <Label htmlFor="stripe-publishable-key">
+                    Publishable Key
+                    <Badge variant="outline" className="ml-2 text-xs">
+                      {config.stripe.environment === 'test' ? 'pk_test_...' : 'pk_live_...'}
+                    </Badge>
+                  </Label>
+                  <Input
+                    id="stripe-publishable-key"
+                    type="text"
+                    placeholder={`${config.stripe.environment === 'test' ? 'pk_test_' : 'pk_live_'}...`}
+                    value={config.stripe.publishableKey}
+                    onChange={(e) => updateStripeConfig('publishableKey', e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    This key is safe to use in client-side code
+                  </div>
+                </div>
+
+                {/* Secret Key */}
+                <div className="space-y-2">
+                  <Label htmlFor="stripe-secret-key">
+                    Secret Key
+                    <Badge variant="outline" className="ml-2 text-xs">
+                      {config.stripe.environment === 'test' ? 'sk_test_...' : 'sk_live_...'}
+                    </Badge>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="stripe-secret-key"
+                      type={showStripeSecret ? "text" : "password"}
+                      placeholder={`${config.stripe.environment === 'test' ? 'sk_test_' : 'sk_live_'}...`}
+                      value={config.stripe.secretKey}
+                      onChange={(e) => updateStripeConfig('secretKey', e.target.value)}
+                      className="font-mono text-sm pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowStripeSecret(!showStripeSecret)}
+                    >
+                      {showStripeSecret ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Keep this key secure and never expose it in client-side code
+                  </div>
+                </div>
+
+                {/* Webhook Secret */}
+                <div className="space-y-2">
+                  <Label htmlFor="stripe-webhook-secret">
+                    Webhook Endpoint Secret
+                    <Badge variant="outline" className="ml-2 text-xs">
+                      whsec_...
+                    </Badge>
+                  </Label>
+                  <Input
+                    id="stripe-webhook-secret"
+                    type="password"
+                    placeholder="whsec_..."
+                    value={config.stripe.webhookSecret}
+                    onChange={(e) => updateStripeConfig('webhookSecret', e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Optional: Used to verify webhook events from Stripe
+                  </div>
+                </div>
+
+                {/* Test Connection */}
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Test your Stripe connection to ensure the keys are valid
+                  </div>
+                  <Button
+                    onClick={testStripeConnection}
+                    disabled={testingStripe || !config.stripe.secretKey}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    {testingStripe ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <TestTube className="w-4 h-4" />
+                    )}
+                    Test Connection
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
     </Layout>
