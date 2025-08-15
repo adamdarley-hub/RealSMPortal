@@ -106,7 +106,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
         variant={getButtonVariant()}
         size={size}
         className={getButtonClassName()}
-        onClick={() => setIsModalOpen(true)}
+        onClick={onClick}
         disabled={!canPay}
       >
         {getButtonContent()}
@@ -127,14 +127,6 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
           )}
         </div>
       )}
-
-      {/* Payment Modal */}
-      <PaymentModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        invoice={invoice}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
     </div>
   );
 };
