@@ -371,6 +371,7 @@ export default function ClientInvoices() {
                   <TableHead>Amount</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Due Date</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
