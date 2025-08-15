@@ -208,11 +208,12 @@ export function createServer() {
   app.get("/api/sync/status", getDetailedSyncStatus); // 📊 Get detailed sync status
   app.post("/api/sync/legacy", triggerSync);       // 🔄 Legacy sync endpoint
   app.get("/api/sync/legacy-status", getSyncStatus); // 📊 Legacy sync status
-  app.post("/api/force-refresh", require("./routes/force-refresh").forceRefresh); // 🔄 Clear cache and force refresh
+  const { forceRefresh } = await import("./routes/force-refresh.js");
+  app.post("/api/force-refresh", forceRefresh); // 🔄 Clear cache and force refresh
 
   // Document proxy routes (handles S3 URL expiration)
-  const { getDocumentProxy, getAttemptPhotoProxy } = require("./routes/document-proxy");
-  const { genericProxy } = require("./routes/generic-proxy");
+  const { getDocumentProxy, getAttemptPhotoProxy } = await import("./routes/document-proxy.js");
+  const { genericProxy } = await import("./routes/generic-proxy.js");
   const { getDocumentPreview, getDocumentDownload } = require("./routes/fresh-documents");
   app.get("/api/proxy/document/:jobId/:documentId/:type?", getDocumentProxy);      // 📄 Proxy for documents
   app.get("/api/proxy/photo/:jobId/:attemptId/:photoId", getAttemptPhotoProxy);   // 📸 Proxy for attempt photos
