@@ -678,8 +678,9 @@ export default function JobDetail() {
 
         // Try fresh ServeManager API first
         try {
-          console.log('🔄 Attempting to fetch fresh data from ServeManager...');
+          console.log(`🔄 Attempting to fetch fresh data from ServeManager for job ${id}...`);
           response = await fetch(`/api/servemanager/jobs/${id}`);
+          console.log(`🔄 ServeManager response status: ${response.status}`);
 
           if (response.ok) {
             rawJobData = await response.json();
@@ -689,7 +690,12 @@ export default function JobDetail() {
             throw new Error(`ServeManager API failed: ${response.status}`);
           }
         } catch (serveManagerError) {
-          console.warn('⚠️ ServeManager API failed, falling back to cached data:', serveManagerError);
+          console.error('⚠️ ServeManager API failed, falling back to cached data:', serveManagerError);
+          console.error('⚠️ ServeManager error details:', {
+            name: serveManagerError.name,
+            message: serveManagerError.message,
+            stack: serveManagerError.stack
+          });
 
           // Fallback to cached data
           console.log('🔄 Falling back to cached data...');
