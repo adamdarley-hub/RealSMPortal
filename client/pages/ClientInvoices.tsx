@@ -107,11 +107,25 @@ export default function ClientInvoices() {
   const filteredInvoices = useMemo(() => {
     return invoices.filter(invoice =>
       invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.jobs.some(job => 
+      invoice.jobs.some(job =>
         job.job_number.toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
   }, [invoices, searchTerm]);
+
+  // Paginated invoices for performance
+  const paginatedInvoices = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredInvoices.slice(startIndex, endIndex);
+  }, [filteredInvoices, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   const invoiceStats = useMemo(() => {
     const total = invoices.length;
