@@ -253,6 +253,8 @@ export default function ClientJobDetail() {
   const [expandedCards, setExpandedCards] = useState<{ [key: string]: boolean }>({});
   const [documentLoading, setDocumentLoading] = useState<{ [key: string]: boolean }>({});
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
+  const [jobAffidavits, setJobAffidavits] = useState<any[]>([]);
+  const [currentAffidavitIndex, setCurrentAffidavitIndex] = useState(0);
 
   const loadJob = async (refresh = false) => {
     if (!id) return;
