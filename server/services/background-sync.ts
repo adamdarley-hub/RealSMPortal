@@ -41,20 +41,29 @@ class BackgroundSyncService {
   }
 
   private async performSync() {
+    if (this.isSyncing) {
+      console.log('⏭️ Skipping sync - already in progress');
+      return;
+    }
+
     try {
+      this.isSyncing = true;
       console.log('🔄 Background sync starting...');
       const startTime = Date.now();
-      
+
       const result = await this.cacheService.syncAllData();
-      
+
       const duration = Date.now() - startTime;
       console.log(`✅ Background sync completed in ${duration}ms:`, {
         jobs: result.jobs?.recordsSynced || 0,
-        clients: result.clients?.recordsSynced || 0
+        clients: result.clients?.recordsSynced || 0,
+        servers: result.servers?.recordsSynced || 0
       });
 
     } catch (error) {
       console.error('❌ Background sync failed:', error);
+    } finally {
+      this.isSyncing = false;
     }
   }
 
