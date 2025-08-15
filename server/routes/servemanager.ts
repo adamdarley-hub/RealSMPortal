@@ -589,21 +589,9 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
 
     // Always try ServeManager API first for complete data (line_items, balance_due, payments)
     // The cached data is incomplete and doesn't contain line items or payment details
-    const endpoint = `/invoices/${id}`;
-    console.log(`Fetching invoice from ServeManager API: ${endpoint}`);
 
-    try {
-      const response = await makeServeManagerRequest(endpoint);
-      const invoice = response.data || response;
-
-      if (!invoice) {
-        return res.status(404).json({
-          error: 'Invoice not found',
-          message: `Invoice with ID ${id} not found`
-        });
-      }
-
-      // Get clients cache for mapping
+    // Helper function to add client information to invoice
+    const addClientInfo = async (invoice: any) => {
       let clientsCache: any[] = [];
       try {
         const { cacheService } = await import('../services/cache-service');
@@ -612,7 +600,6 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
         console.warn('Could not fetch cached clients for invoice mapping:', error);
       }
 
-      // Add client information to the raw invoice
       const clientInfo = clientsCache.find(c =>
         c.id === String(invoice.client_id) ||
         c.servemanager_id === String(invoice.client_id)
@@ -627,21 +614,34 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
           phone: clientInfo.phone
         };
       }
+      return invoice;
+    };
 
-      console.log(`✅ Found invoice ${id} from API:`, {
-        id: invoice.id,
-        servemanager_job_number: invoice.servemanager_job_number,
-        status: invoice.status,
-        balance_due: invoice.balance_due,
-        total: invoice.total,
-        line_items_count: invoice.line_items?.length || 0,
-        client_id: invoice.client_id
-      });
+    // Try direct API endpoint first
+    const endpoint = `/invoices/${id}`;
+    console.log(`Fetching invoice from ServeManager API: ${endpoint}`);
 
-      res.json(invoice);
+    try {
+      const response = await makeServeManagerRequest(endpoint);
+      const invoice = response.data || response;
 
+      if (invoice && invoice.id) {
+        const enrichedInvoice = await addClientInfo(invoice);
+
+        console.log(`✅ Found invoice ${id} from direct API:`, {
+          id: enrichedInvoice.id,
+          servemanager_job_number: enrichedInvoice.servemanager_job_number,
+          status: enrichedInvoice.status,
+          balance_due: enrichedInvoice.balance_due,
+          total: enrichedInvoice.total,
+          line_items_count: enrichedInvoice.line_items?.length || 0,
+          client_id: enrichedInvoice.client_id
+        });
+
+        return res.json(enrichedInvoice);
+      }
     } catch (apiError) {
-      console.error(`Error fetching invoice ${id} from ServeManager API:`, apiError);
+      console.error(`Error fetching invoice ${id} from direct API:`, apiError);
 
       // Before returning 404, let's check if this invoice exists in the main invoice list
       // This might be an ID mismatch between list and detail APIs
