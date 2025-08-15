@@ -354,7 +354,7 @@ export default function ClientInvoices() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInvoices.map((invoice) => (
+                {paginatedInvoices.map((invoice) => (
                   <TableRow
                     key={invoice.id}
                     className="hover:bg-muted/50 cursor-pointer"
