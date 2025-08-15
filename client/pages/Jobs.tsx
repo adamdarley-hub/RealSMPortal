@@ -463,7 +463,7 @@ export default function Jobs() {
   // Smart auto-sync: enabled but non-blocking
   const { status: syncStatus } = useAutoSync({
     enabled: true, // Re-enabled for data freshness awareness
-    interval: 45000, // 45 seconds - balanced frequency
+    interval: 90000, // 90 seconds - reduced frequency to prevent timeouts (was 45s)
     onDataUpdate
   });
 
@@ -553,7 +553,7 @@ export default function Jobs() {
         offset: prev.offset + prev.limit
       }));
     } else {
-      console.log(`❌ Cannot go to next page - already at last page ${currentPage}/${totalPages}`);
+      console.log(`�� Cannot go to next page - already at last page ${currentPage}/${totalPages}`);
     }
   };
 
