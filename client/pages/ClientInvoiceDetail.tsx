@@ -147,12 +147,17 @@ export default function ClientInvoiceDetail() {
       }
 
       const invoiceData = await response.json();
-      
+      console.log('📄 Received invoice data:', invoiceData);
+      console.log('📄 Line items:', invoiceData.line_items);
+      console.log('📄 Balance due:', invoiceData.balance_due);
+      console.log('📄 Total:', invoiceData.total);
+      console.log('📄 Job number:', invoiceData.servemanager_job_number);
+
       // Verify this invoice belongs to the client
       if (invoiceData.client?.id !== user.client_id) {
         throw new Error('Invoice not found');
       }
-      
+
       setInvoice(invoiceData);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load invoice';
