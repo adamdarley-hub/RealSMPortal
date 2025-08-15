@@ -214,7 +214,7 @@ export async function createServer() {
   // Document proxy routes (handles S3 URL expiration)
   const { getDocumentProxy, getAttemptPhotoProxy } = await import("./routes/document-proxy.js");
   const { genericProxy } = await import("./routes/generic-proxy.js");
-  const { getDocumentPreview, getDocumentDownload } = require("./routes/fresh-documents");
+  const { getDocumentPreview, getDocumentDownload } = await import("./routes/fresh-documents.js");
   app.get("/api/proxy/document/:jobId/:documentId/:type?", getDocumentProxy);      // 📄 Proxy for documents
   app.get("/api/proxy/photo/:jobId/:attemptId/:photoId", getAttemptPhotoProxy);   // 📸 Proxy for attempt photos
   app.get("/api/proxy", genericProxy);                                            // 🔗 Generic proxy for any URL
@@ -275,7 +275,8 @@ export async function createServer() {
 // Enhanced server creation with WebSocket support
 export async function createServerWithWebSockets() {
   const app = await createServer();
-  const server = require('http').createServer(app);
+  const { createServer: createHttpServer } = await import('http');
+  const server = createHttpServer(app);
 
   // Attach the Express app to the server for easy access
   (server as any).app = app;
