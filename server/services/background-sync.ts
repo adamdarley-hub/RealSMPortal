@@ -70,6 +70,7 @@ class BackgroundSyncService {
   getStatus() {
     return {
       isRunning: this.isRunning,
+      isSyncing: this.isSyncing,
       intervalMinutes: this.syncInterval / (60 * 1000),
       nextSync: this.intervalId ? new Date(Date.now() + this.syncInterval) : null
     };
