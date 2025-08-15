@@ -276,7 +276,7 @@ export default function ClientInvoiceDetail() {
             </Badge>
             <PaymentButton
               invoice={invoice}
-              onClick={() => setIsPaymentModalOpen(true)}
+              onPaymentSuccess={handlePaymentSuccess}
             />
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
