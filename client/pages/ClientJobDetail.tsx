@@ -1251,6 +1251,64 @@ export default function ClientJobDetail() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Photo Modal */}
+      <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="p-6 pb-4">
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              {selectedPhoto?.name || 'Service Attempt Photo'}
+            </DialogTitle>
+            {selectedPhoto?.uploadedAt && (
+              <DialogDescription>
+                Uploaded on {new Date(selectedPhoto.uploadedAt).toLocaleString()}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+
+          <div className="flex items-center justify-center p-6 pt-0 max-h-[70vh]">
+            {selectedPhoto && (
+              <img
+                src={selectedPhoto.url}
+                alt={selectedPhoto.name}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
+              />
+            )}
+          </div>
+
+          {selectedPhoto && (
+            <div className="px-6 pb-6 pt-0">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                {selectedPhoto.size && (
+                  <span>Size: {formatFileSize(selectedPhoto.size)}</span>
+                )}
+                {selectedPhoto.mimeType && (
+                  <span>Type: {selectedPhoto.mimeType}</span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className="ml-auto"
+                >
+                  <a
+                    href={selectedPhoto.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={selectedPhoto.name}
+                  >
+                    Download Original
+                  </a>
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </ClientLayout>
   );
 }
