@@ -350,9 +350,6 @@ export default function ClientDashboard() {
                           <div className="font-medium">
                             {job.recipient_name} - {job.job_number}
                           </div>
-                          <div className="text-xs text-red-500 bg-red-100 p-1 rounded">
-                            DEBUG: plaintiff="{job.plaintiff || 'null'}" | defendant_name="{job.defendant_name || 'null'}" | recipient="{job.recipient_name || 'null'}"
-                          </div>
                           {job.plaintiff && (job.defendant_name || job.recipient_name) && (
                             <div className="text-sm text-muted-foreground">
                               {job.plaintiff} vs {job.defendant_name || job.recipient_name}
