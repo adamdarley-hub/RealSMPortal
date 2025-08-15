@@ -174,7 +174,6 @@ export default function ClientInvoiceDetail() {
   };
 
   const handlePaymentSuccess = () => {
-    setIsPaymentModalOpen(false);
     loadInvoice(); // Reload invoice to show updated payment status
     toast({
       title: "Payment Successful",
