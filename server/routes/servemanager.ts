@@ -559,10 +559,15 @@ export const getInvoices: RequestHandler = async (req, res) => {
     // Transform invoices using mapper to ensure consistent data structure
     const mappedInvoices = allInvoices.map(invoice => mapInvoiceFromServeManager(invoice, clientsCache));
 
+    // Cache the invoices for future requests
+    invoicesCache.set(cacheKey, { data: mappedInvoices, timestamp: now });
+    console.log(`💾 Cached ${mappedInvoices.length} invoices for 2 minutes`);
+
     res.json({
       invoices: mappedInvoices,
       total: mappedInvoices.length,
-      pages_fetched: page - 1
+      pages_fetched: page - 1,
+      source: 'api'
     });
 
   } catch (error) {
