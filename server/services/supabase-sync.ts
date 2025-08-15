@@ -12,6 +12,9 @@ export class SupabaseSyncService {
       return;
     }
 
+    console.log('⚠️ Supabase sync temporarily disabled to fix performance issues');
+    return;
+
     console.log('🚀 Starting initial Supabase sync...');
     this.isSyncing = true;
 
