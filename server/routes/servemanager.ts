@@ -649,7 +649,13 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
       }
 
       // Get clients cache for mapping
-      const clientsCache = await getCachedClients();
+      let clientsCache: any[] = [];
+      try {
+        const cacheService = await import('../services/cache-service');
+        clientsCache = await cacheService.getClientsFromCache();
+      } catch (error) {
+        console.warn('Could not fetch cached clients for invoice mapping:', error);
+      }
 
       // Transform invoice using mapper
       const mappedInvoice = mapInvoiceFromServeManager(invoice, clientsCache);
@@ -692,7 +698,13 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
             });
 
             // Get clients cache for mapping
-            const clientsCache = await getCachedClients();
+            let clientsCache: any[] = [];
+            try {
+              const cacheService = await import('../services/cache-service');
+              clientsCache = await cacheService.getClientsFromCache();
+            } catch (error) {
+              console.warn('Could not fetch cached clients for invoice mapping:', error);
+            }
 
             // Transform using mapper
             const mappedInvoice = mapInvoiceFromServeManager(foundInvoice, clientsCache);
