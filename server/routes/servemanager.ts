@@ -617,31 +617,40 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
       return invoice;
     };
 
-    // Try direct API endpoint first
-    const endpoint = `/invoices/${id}`;
-    console.log(`Fetching invoice from ServeManager API: ${endpoint}`);
+    // Try multiple API endpoint variations - different APIs use different formats
+    const endpointVariations = [
+      `/invoices/${id}`,
+      `/invoice/${id}`,
+      `/api/invoices/${id}`,
+      `/billing/invoices/${id}`,
+      `/invoices/${id}/details`
+    ];
 
-    try {
-      const response = await makeServeManagerRequest(endpoint);
-      const invoice = response.data || response;
+    for (const endpoint of endpointVariations) {
+      console.log(`Trying ServeManager API endpoint: ${endpoint}`);
 
-      if (invoice && invoice.id) {
-        const enrichedInvoice = await addClientInfo(invoice);
+      try {
+        const response = await makeServeManagerRequest(endpoint);
+        const invoice = response.data || response;
 
-        console.log(`✅ Found invoice ${id} from direct API:`, {
-          id: enrichedInvoice.id,
-          servemanager_job_number: enrichedInvoice.servemanager_job_number,
-          status: enrichedInvoice.status,
-          balance_due: enrichedInvoice.balance_due,
-          total: enrichedInvoice.total,
-          line_items_count: enrichedInvoice.line_items?.length || 0,
-          client_id: enrichedInvoice.client_id
-        });
+        if (invoice && (invoice.id || invoice.invoice_id)) {
+          const enrichedInvoice = await addClientInfo(invoice);
 
-        return res.json(enrichedInvoice);
+          console.log(`✅ Found invoice ${id} from endpoint ${endpoint}:`, {
+            id: enrichedInvoice.id || enrichedInvoice.invoice_id,
+            servemanager_job_number: enrichedInvoice.servemanager_job_number,
+            status: enrichedInvoice.status,
+            balance_due: enrichedInvoice.balance_due,
+            total: enrichedInvoice.total,
+            line_items_count: enrichedInvoice.line_items?.length || 0,
+            client_id: enrichedInvoice.client_id
+          });
+
+          return res.json(enrichedInvoice);
+        }
+      } catch (apiError) {
+        console.log(`Endpoint ${endpoint} failed: ${apiError.message}`);
       }
-    } catch (apiError) {
-      console.log(`Direct API failed, trying invoice list search...`);
     }
 
     // Fallback: search in invoice list if direct API fails
