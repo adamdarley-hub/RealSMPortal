@@ -75,10 +75,13 @@ export default function ApiConfig() {
   const [saving, setSaving] = useState(false);
   const [testingServeManager, setTestingServeManager] = useState(false);
   const [testingRadar, setTestingRadar] = useState(false);
+  const [testingStripe, setTestingStripe] = useState(false);
   const [showServeManagerKey, setShowServeManagerKey] = useState(false);
   const [showRadarSecret, setShowRadarSecret] = useState(false);
+  const [showStripeSecret, setShowStripeSecret] = useState(false);
   const [serveManagerStatus, setServeManagerStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [radarStatus, setRadarStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [stripeStatus, setStripeStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const { toast } = useToast();
 
   // Load configuration on component mount
