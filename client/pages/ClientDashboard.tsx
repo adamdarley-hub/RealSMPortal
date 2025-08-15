@@ -98,7 +98,7 @@ export default function ClientDashboard() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/jobs?client_id=${user.client_id}`);
+      const response = await fetch(`/api/jobs?client_id=${user.client_id}&limit=1000`);
       
       if (!response.ok) {
         throw new Error('Failed to load jobs');
