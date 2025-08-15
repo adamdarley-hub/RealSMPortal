@@ -651,7 +651,7 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
       // Get clients cache for mapping
       let clientsCache: any[] = [];
       try {
-        const cacheService = await import('../services/cache-service');
+        const { cacheService } = await import('../services/cache-service');
         clientsCache = await cacheService.getClientsFromCache();
       } catch (error) {
         console.warn('Could not fetch cached clients for invoice mapping:', error);
