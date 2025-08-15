@@ -311,8 +311,22 @@ export default function ClientDashboard() {
                         <MapPin className="w-3 h-3" />
                         {(() => {
                           const address = job.service_address || job.address;
-                          if (address && address.city && address.state) {
-                            return `${address.city}, ${address.state}`;
+                          if (address) {
+                            // Use full_address if available, otherwise construct from parts
+                            if (address.full_address) {
+                              return address.full_address;
+                            }
+
+                            // Construct full address from parts
+                            const parts = [];
+                            if (address.street) parts.push(address.street);
+                            if (address.city) parts.push(address.city);
+                            if (address.state) parts.push(address.state);
+                            if (address.zip) parts.push(address.zip);
+
+                            if (parts.length > 0) {
+                              return parts.join(', ');
+                            }
                           }
                           return 'Address pending';
                         })()}
