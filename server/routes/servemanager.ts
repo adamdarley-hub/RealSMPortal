@@ -666,7 +666,45 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
     } catch (apiError) {
       console.error(`Error fetching invoice ${id} from ServeManager API:`, apiError);
 
-      // Return 404 instead of falling back to mock data
+      // Before returning 404, let's check if this invoice exists in the main invoice list
+      // This might be an ID mismatch between list and detail APIs
+      console.log(`🔍 Invoice ${id} not found via direct API, checking if it exists in invoice list...`);
+
+      try {
+        // Get all invoices and look for this ID
+        const allInvoicesResponse = await makeServeManagerRequest('/invoices?per_page=100');
+        const allInvoices = allInvoicesResponse.data || allInvoicesResponse.invoices || allInvoicesResponse;
+
+        if (Array.isArray(allInvoices)) {
+          const foundInvoice = allInvoices.find(inv =>
+            inv.id?.toString() === id ||
+            inv.invoice_id?.toString() === id ||
+            inv.invoice_number === id ||
+            inv.servemanager_id?.toString() === id
+          );
+
+          if (foundInvoice) {
+            console.log(`✅ Found invoice ${id} in list with different structure:`, {
+              id: foundInvoice.id,
+              invoice_id: foundInvoice.invoice_id,
+              invoice_number: foundInvoice.invoice_number,
+              servemanager_id: foundInvoice.servemanager_id
+            });
+
+            // Get clients cache for mapping
+            const clientsCache = await getCachedClients();
+
+            // Transform using mapper
+            const mappedInvoice = mapInvoiceFromServeManager(foundInvoice, clientsCache);
+
+            return res.json(mappedInvoice);
+          }
+        }
+      } catch (listError) {
+        console.log(`Could not check invoice list:`, listError);
+      }
+
+      // Return 404 if truly not found
       return res.status(404).json({
         error: 'Invoice not found',
         message: `Invoice with ID ${id} not found in database or ServeManager API`
