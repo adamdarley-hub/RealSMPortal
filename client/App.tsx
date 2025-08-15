@@ -84,6 +84,7 @@ function AppRoutes() {
       <Route path="/analytics" element={<ProtectedRoute role="admin"><Analytics /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute role="admin"><Settings /></ProtectedRoute>} />
       <Route path="/api-config" element={<ProtectedRoute role="admin"><ApiConfig /></ProtectedRoute>} />
+      <Route path="/api-test" element={<ProtectedRoute role="admin"><ApiTest /></ProtectedRoute>} />
       <Route path="/supabase-migration" element={<ProtectedRoute role="admin"><SupabaseMigration /></ProtectedRoute>} />
 
       {/* Client routes */}
