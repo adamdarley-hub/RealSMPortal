@@ -698,7 +698,9 @@ export default function ClientJobDetail() {
                                     {attempt.gps_time && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">GPS Time</label>
-                                        <p className="text-sm text-gray-900">{formatDateTime(attempt.gps_time)}</p>
+                                        <p className="text-sm text-gray-900">
+                                          {typeof attempt.gps_time === 'string' ? formatDateTime(attempt.gps_time) : 'N/A'}
+                                        </p>
                                       </div>
                                     )}
                                   </div>
