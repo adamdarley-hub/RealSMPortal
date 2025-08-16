@@ -14,7 +14,7 @@
   "stripe": {
     "publishableKey": "pk_live_51RwXXIGpVBuTTmSjd8ptklvwTTpFWjJ2REy6WVEWUifVoDC3rl3sgg0sNu81bEMxABzsNrOyq27J9lr26R2OMRMg00Ppnt3wax",
     "secretKey": "69f60f979cce5b1693a135c2accf984c:ae2e9e71551bac0be887b83bc3a185783f7fedf23e3c0ff4f522022ec59146fb4be17374e715b96a3a27096f97dbd8e052398432f967055c6871e39ff6c40e98edfeb503dbb96e2bb76335bda54bbc092eb928e1b0a1080463b8eefc0891cb5dbf946b42a0ae9abe9ba0cf31a3ee2d23",
-    "enabled": false,
+    "enabled": true,
     "environment": "live",
     "webhookSecret": ""
   }
