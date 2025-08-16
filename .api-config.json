@@ -1,7 +1,7 @@
 {
   "serveManager": {
     "baseUrl": "https://www.servemanager.com/api",
-    "apiKey": "813b4cd488f7850160602bdb8195a31f:7204f6d30348c505838d6f809cd3a225665d3c14bb88a552fa7f76033c330007",
+    "apiKey": "882a2b0da66d0388c66554299ca38eb1:6f194333a671fe7afbb5098241cfeed39e7aaac6c422574bdfa8d3810a3b76b9",
     "enabled": true,
     "testEndpoint": "/account"
   },
@@ -10,5 +10,12 @@
     "secretKey": "",
     "enabled": false,
     "environment": "test"
+  },
+  "stripe": {
+    "publishableKey": "pk_live_51RwXXIGpVBuTTmSjd8ptklvwTTpFWjJ2REy6WVEWUifVoDC3rl3sgg0sNu81bEMxABzsNrOyq27J9lr26R2OMRMg00Ppnt3wax",
+    "secretKey": "69f60f979cce5b1693a135c2accf984c:ae2e9e71551bac0be887b83bc3a185783f7fedf23e3c0ff4f522022ec59146fb4be17374e715b96a3a27096f97dbd8e052398432f967055c6871e39ff6c40e98edfeb503dbb96e2bb76335bda54bbc092eb928e1b0a1080463b8eefc0891cb5dbf946b42a0ae9abe9ba0cf31a3ee2d23",
+    "enabled": false,
+    "environment": "live",
+    "webhookSecret": ""
   }
 }
