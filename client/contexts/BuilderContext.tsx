@@ -83,13 +83,27 @@ const BuilderContext = createContext<BuilderContextType>({
 });
 
 export function BuilderProvider({ children }: { children: ReactNode }) {
+  // Enhanced sandbox detection
+  const isSandboxed = typeof window !== 'undefined' && (() => {
+    try {
+      // Test for sandbox restrictions
+      window.top?.location.href;
+      return false;
+    } catch (e) {
+      return true;
+    }
+  })();
+
   // Safely detect if we're in Builder.io edit mode
   const isEditMode = typeof window !== 'undefined' && (() => {
     try {
+      const url = window.location.search;
+      const inIframe = window.parent !== window;
       return (
-        window.location.search.includes('builder.preview=') ||
-        window.location.search.includes('builder.space=') ||
-        window.parent !== window
+        url.includes('builder.preview=') ||
+        url.includes('builder.space=') ||
+        url.includes('builder.edit=') ||
+        inIframe
       );
     } catch (e) {
       // Handle sandbox restrictions
@@ -105,16 +119,23 @@ export function BuilderProvider({ children }: { children: ReactNode }) {
     }
   })();
 
-  // Enable Builder.io editing features when in edit mode
-  if (isEditMode && typeof window !== 'undefined') {
+  // Configure Builder.io for sandbox/preview safety
+  if (typeof window !== 'undefined') {
     try {
       builder.set({
-        includeRefs: true,
-        // Disable problematic features in sandbox
-        cookies: false
+        includeRefs: isEditMode,
+        // Sandbox-safe configuration
+        canTrack: !isSandboxed && !isPreviewMode,
+        noCache: isSandboxed || isPreviewMode,
+        cookies: !isSandboxed,
+        // Disable problematic features in sandbox/preview
+        ...(isSandboxed && {
+          apiKey: import.meta.env.VITE_PUBLIC_BUILDER_KEY || 'a0b2fe3b0e09431caaa97bd8f93a665d',
+          cachebust: true
+        })
       });
     } catch (e) {
-      console.warn('Builder.io config restricted in sandbox:', e);
+      console.warn('Builder.io config restricted:', e);
     }
   }
 
