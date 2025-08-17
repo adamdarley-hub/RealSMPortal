@@ -1,9 +1,76 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { builder } from '@builder.io/react';
 
-// Initialize Builder.io with your public API key
-// You'll need to replace this with your actual Builder.io API key
-builder.init(import.meta.env.VITE_PUBLIC_BUILDER_KEY || 'a0b2fe3b0e09431caaa97bd8f93a665d');
+// Safe storage access wrapper for sandbox environments
+const safeStorageAccess = {
+  getItem: (key: string) => {
+    try {
+      return localStorage?.getItem(key) || null;
+    } catch (e) {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    try {
+      localStorage?.setItem(key, value);
+    } catch (e) {
+      // Silently fail in sandbox
+    }
+  },
+  removeItem: (key: string) => {
+    try {
+      localStorage?.removeItem(key);
+    } catch (e) {
+      // Silently fail in sandbox
+    }
+  }
+};
+
+// Safe cookie access wrapper
+const safeCookieAccess = {
+  get: (name: string) => {
+    try {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+      return null;
+    } catch (e) {
+      return null;
+    }
+  },
+  set: (name: string, value: string, options: any = {}) => {
+    try {
+      let cookieString = `${name}=${value}`;
+      if (options.expires) cookieString += `; expires=${options.expires}`;
+      if (options.path) cookieString += `; path=${options.path}`;
+      if (options.domain) cookieString += `; domain=${options.domain}`;
+      if (options.secure) cookieString += `; secure`;
+      if (options.sameSite) cookieString += `; samesite=${options.sameSite}`;
+      document.cookie = cookieString;
+    } catch (e) {
+      // Silently fail in sandbox
+    }
+  }
+};
+
+// Initialize Builder.io with sandbox-safe configuration
+try {
+  builder.init(import.meta.env.VITE_PUBLIC_BUILDER_KEY || 'a0b2fe3b0e09431caaa97bd8f93a665d');
+
+  // Configure Builder.io for sandbox safety
+  builder.set({
+    // Disable features that cause sandbox issues
+    canTrack: false,
+    noCache: true,
+    // Use safe storage wrapper
+    ...(typeof window !== 'undefined' && {
+      storage: safeStorageAccess,
+      cookies: safeCookieAccess
+    })
+  });
+} catch (e) {
+  console.warn('Builder.io initialization failed in sandbox:', e);
+}
 
 export interface BuilderContextType {
   isEditMode: boolean;
