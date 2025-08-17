@@ -81,6 +81,7 @@ export interface BuilderContextType {
 const BuilderContext = createContext<BuilderContextType>({
   isEditMode: false,
   isPreviewMode: false,
+  isSandboxed: false,
 });
 
 export function BuilderProvider({ children }: { children: ReactNode }) {
