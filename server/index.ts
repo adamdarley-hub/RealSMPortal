@@ -99,6 +99,15 @@ export async function createServer() {
   app.get("/api/stripe/publishable-key", stripeRoutes.getPublishableKey);
   app.get("/api/stripe/payment-status/:invoiceId", stripeRoutes.getPaymentStatus);
 
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
+    res.json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
+
   // Debug endpoint
   app.post("/api/debug", (req, res) => {
     console.log('Debug endpoint hit:', req.body);
