@@ -8,11 +8,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { StripeProvider } from "./contexts/StripeContext";
-import { BuilderProvider } from "./contexts/BuilderContext";
-import "./utils/mcpGuard"; // Initialize MCP guard to prevent OAuth refresh loops
-import "./utils/fontProxy"; // Initialize font proxy to handle CORS issues
-import "./utils/builderConfig"; // Initialize Builder.io config to eliminate warnings
-import "./utils/scriptManager"; // Initialize script manager to disable third-party scripts in preview
 
 // Admin pages
 import Index from "./pages/Index";
@@ -37,7 +32,6 @@ import ClientJobDetail from "./pages/ClientJobDetail";
 import NotFound from "./pages/NotFound";
 import ApiTest from "./pages/ApiTest";
 import StripeIntegrationExample from "./pages/StripeIntegrationExample";
-import BuilderPage from "./pages/BuilderPage";
 
 const queryClient = new QueryClient();
 
@@ -102,10 +96,6 @@ function AppRoutes() {
       <Route path="/client/profile" element={<ProtectedRoute role="client"><StripeProvider><ClientProfile /></StripeProvider></ProtectedRoute>} />
       <Route path="/client/jobs/:id" element={<ProtectedRoute role="client"><StripeProvider><ClientJobDetail /></StripeProvider></ProtectedRoute>} />
 
-      {/* Builder.io pages */}
-      <Route path="/builder" element={<BuilderPage />} />
-      <Route path="/builder/:slug" element={<BuilderPage />} />
-
       {/* Catch-all */}
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -114,17 +104,15 @@ function AppRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BuilderProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </BuilderProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

@@ -6,24 +6,18 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 5173,
-    strictPort: true,
+    port: 8080,
     fs: {
       allow: ["./client", "./shared"],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path // Keep /api prefix
       }
     }
-  },
-  preview: {
-    port: 5173,
-    strictPort: true
   },
   build: {
     outDir: "dist/spa",

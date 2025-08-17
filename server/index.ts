@@ -61,36 +61,8 @@ import { createSetupIntent, confirmSetupIntent, processAffidavitPayment, getJobP
 export async function createServer() {
   const app = express();
 
-  // Enhanced CORS configuration for Builder.io preview
-  app.use(cors({
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://*.builder.io',
-      'https://builder.io',
-      /\.vercel\.app$/,
-      /\.netlify\.app$/,
-      /\.builder\.io$/
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-  }));
-
-  // Additional CORS headers for static assets
-  app.use('*', (req, res, next) => {
-    // Set CORS headers for all responses including assets
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
-    } else {
-      next();
-    }
-  });
+  // Middleware
+  app.use(cors());
 
   // Add compression for better performance
   app.use((req, res, next) => {
@@ -126,15 +98,6 @@ export async function createServer() {
 
   app.get("/api/stripe/publishable-key", stripeRoutes.getPublishableKey);
   app.get("/api/stripe/payment-status/:invoiceId", stripeRoutes.getPaymentStatus);
-
-  // Health check endpoint
-  app.get("/api/health", (req, res) => {
-    res.json({
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime()
-    });
-  });
 
   // Debug endpoint
   app.post("/api/debug", (req, res) => {
