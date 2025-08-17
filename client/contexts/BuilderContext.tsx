@@ -3,7 +3,7 @@ import { builder } from '@builder.io/react';
 
 // Initialize Builder.io with your public API key
 // You'll need to replace this with your actual Builder.io API key
-builder.init(process.env.VITE_BUILDER_PUBLIC_KEY || 'a0b2fe3b0e09431caaa97bd8f93a665d');
+builder.init(import.meta.env.VITE_PUBLIC_BUILDER_KEY || 'a0b2fe3b0e09431caaa97bd8f93a665d');
 
 export interface BuilderContextType {
   isEditMode: boolean;
