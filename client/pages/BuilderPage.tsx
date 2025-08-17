@@ -4,7 +4,7 @@ import { useBuilder } from '../contexts/BuilderContext';
 import Layout from '../components/Layout';
 
 // Initialize builder with your API key
-builder.init(process.env.VITE_BUILDER_PUBLIC_KEY || 'a0b2fe3b0e09431caaa97bd8f93a665d');
+builder.init(import.meta.env.VITE_PUBLIC_BUILDER_KEY || 'a0b2fe3b0e09431caaa97bd8f93a665d');
 
 export default function BuilderPage() {
   const { slug } = useParams();
