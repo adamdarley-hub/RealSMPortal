@@ -75,6 +75,7 @@ try {
 export interface BuilderContextType {
   isEditMode: boolean;
   isPreviewMode: boolean;
+  isSandboxed: boolean;
 }
 
 const BuilderContext = createContext<BuilderContextType>({
