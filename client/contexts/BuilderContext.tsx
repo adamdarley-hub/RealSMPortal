@@ -16,18 +16,39 @@ const BuilderContext = createContext<BuilderContextType>({
 });
 
 export function BuilderProvider({ children }: { children: ReactNode }) {
-  // Detect if we're in Builder.io edit mode
-  const isEditMode = typeof window !== 'undefined' && 
-    (window.location.search.includes('builder.preview=') || 
-     window.location.search.includes('builder.space=') ||
-     window.parent !== window);
-     
-  const isPreviewMode = typeof window !== 'undefined' && 
-    window.location.search.includes('builder.preview=');
+  // Safely detect if we're in Builder.io edit mode
+  const isEditMode = typeof window !== 'undefined' && (() => {
+    try {
+      return (
+        window.location.search.includes('builder.preview=') ||
+        window.location.search.includes('builder.space=') ||
+        window.parent !== window
+      );
+    } catch (e) {
+      // Handle sandbox restrictions
+      return false;
+    }
+  })();
+
+  const isPreviewMode = typeof window !== 'undefined' && (() => {
+    try {
+      return window.location.search.includes('builder.preview=');
+    } catch (e) {
+      return false;
+    }
+  })();
 
   // Enable Builder.io editing features when in edit mode
   if (isEditMode && typeof window !== 'undefined') {
-    builder.set({ includeRefs: true });
+    try {
+      builder.set({
+        includeRefs: true,
+        // Disable problematic features in sandbox
+        cookies: false
+      });
+    } catch (e) {
+      console.warn('Builder.io config restricted in sandbox:', e);
+    }
   }
 
   return (
