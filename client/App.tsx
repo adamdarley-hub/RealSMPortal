@@ -12,6 +12,7 @@ import { BuilderProvider } from "./contexts/BuilderContext";
 import "./utils/mcpGuard"; // Initialize MCP guard to prevent OAuth refresh loops
 import "./utils/fontProxy"; // Initialize font proxy to handle CORS issues
 import "./utils/builderConfig"; // Initialize Builder.io config to eliminate warnings
+import "./utils/scriptManager"; // Initialize script manager to disable third-party scripts in preview
 
 // Admin pages
 import Index from "./pages/Index";
