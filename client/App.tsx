@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { StripeProvider } from "./contexts/StripeContext";
 import { BuilderProvider } from "./contexts/BuilderContext";
+import "./utils/mcpGuard"; // Initialize MCP guard to prevent OAuth refresh loops
 
 // Admin pages
 import Index from "./pages/Index";
