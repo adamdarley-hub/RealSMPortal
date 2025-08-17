@@ -142,7 +142,7 @@ export function BuilderProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <BuilderContext.Provider value={{ isEditMode, isPreviewMode }}>
+    <BuilderContext.Provider value={{ isEditMode, isPreviewMode, isSandboxed }}>
       {children}
     </BuilderContext.Provider>
   );
