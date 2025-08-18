@@ -65,7 +65,12 @@ export async function makeServeManagerRequest(endpoint: string, options: Request
   // ServeManager uses HTTP Basic Auth with API key as username and "x" as password (per working PHP code)
   const credentials = Buffer.from(`${config.apiKey}:x`).toString('base64');
 
-  const response = await fetch(`${config.baseUrl}${endpoint}`, {
+  const fullUrl = `${config.baseUrl}${endpoint}`;
+  console.log(`🌐 ServeManager request: ${options.method || 'GET'} ${fullUrl}`);
+  console.log(`🔑 Base URL: ${config.baseUrl}`);
+  console.log(`📍 Endpoint: ${endpoint}`);
+
+  const response = await fetch(fullUrl, {
     ...options,
     headers: {
       'Authorization': `Basic ${credentials}`,
