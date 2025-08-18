@@ -460,58 +460,52 @@ async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'pai
 
     console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager...`);
 
-    // Try multiple API endpoints for updating invoice status
-    const updateEndpoints = [
-      `/invoices/${invoiceId}`,
-      `/invoices/${invoiceId}/status`,
-      `/api/invoices/${invoiceId}`,
-      `/billing/invoices/${invoiceId}`,
-      `/invoices/${invoiceId}/payment`,
-      `/jobs/invoices/${invoiceId}`,
-      `/invoices/${invoiceId}/mark_paid`
-    ];
+    // Use the correct ServeManager API format according to documentation
+    const endpoint = `/api/invoices/${invoiceId}`;
 
+    // ServeManager uses JSON:API format and requires paid_on field to mark as paid
     const updateData = {
-      status: status === 'paid' ? 'paid' : 'issued',
-      payment_status: status,
-      paid: status === 'paid',
-      balance_due: status === 'paid' ? 0 : undefined
+      data: {
+        type: "invoice",
+        paid_on: status === 'paid' ? new Date().toISOString() : null
+      }
     };
 
     let updateSuccessful = false;
     let lastError: any = null;
 
-    for (const endpoint of updateEndpoints) {
-      try {
-        console.log(`📝 Trying to update invoice via: ${endpoint}`);
+    try {
+      console.log(`📝 Updating invoice ${invoiceId} via ServeManager API: ${endpoint}`);
+      console.log(`📝 Request data:`, JSON.stringify(updateData, null, 2));
 
-        await makeServeManagerRequest(endpoint, {
+      await makeServeManagerRequest(endpoint, {
+        method: 'PUT',
+        body: JSON.stringify(updateData),
+      });
+
+      console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" in ServeManager`);
+      updateSuccessful = true;
+
+    } catch (apiError) {
+      console.log(`❌ Failed to update invoice ${invoiceId}: ${apiError.message}`);
+      lastError = apiError;
+
+      // Also try without the /api prefix in case the base URL already includes it
+      try {
+        const fallbackEndpoint = `/invoices/${invoiceId}`;
+        console.log(`📝 Trying fallback endpoint: ${fallbackEndpoint}`);
+
+        await makeServeManagerRequest(fallbackEndpoint, {
           method: 'PUT',
           body: JSON.stringify(updateData),
         });
 
-        console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" via ${endpoint}`);
+        console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" via fallback endpoint`);
         updateSuccessful = true;
-        break;
 
-      } catch (endpointError) {
-        console.log(`❌ Failed to update via ${endpoint}: ${endpointError.message}`);
-        lastError = endpointError;
-
-        // Also try PATCH method
-        try {
-          await makeServeManagerRequest(endpoint, {
-            method: 'PATCH',
-            body: JSON.stringify(updateData),
-          });
-
-          console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" via PATCH ${endpoint}`);
-          updateSuccessful = true;
-          break;
-
-        } catch (patchError) {
-          console.log(`❌ PATCH also failed for ${endpoint}: ${patchError.message}`);
-        }
+      } catch (fallbackError) {
+        console.log(`❌ Fallback endpoint also failed: ${fallbackError.message}`);
+        lastError = fallbackError;
       }
     }
 
