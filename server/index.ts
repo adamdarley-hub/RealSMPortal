@@ -363,6 +363,12 @@ export async function createServer() {
       if (req.path.startsWith('/api')) return next();
       res.sendFile(path.join(distPath, 'index.html'));
     });
+  } else {
+    // In development, redirect non-API routes to frontend
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
+      res.redirect(`http://localhost:5173${req.path}`);
+    });
   }
 
   return app;
