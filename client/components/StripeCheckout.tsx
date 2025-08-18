@@ -513,11 +513,14 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
                     </div>
                     <div className="flex items-center gap-2">
                       <CreditCard className="w-4 h-4 text-gray-500" />
-                      <span className="capitalize">{pm.card.brand}</span>
-                      <span>���••• {pm.card.last4}</span>
-                      <span className="text-sm text-gray-500">
-                        {pm.card.exp_month}/{pm.card.exp_year}
-                      </span>
+                      <div>
+                        <div className="font-medium">
+                          {pm.friendlyName || `${pm.card.brand?.charAt(0).toUpperCase() + pm.card.brand?.slice(1) || 'Card'} ending in ${pm.card.last4 || '0000'}`}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          •••• {pm.card.last4 || '0000'} • Expires {pm.card.exp_month || 12}/{pm.card.exp_year || 2024}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <Button
