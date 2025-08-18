@@ -30,6 +30,7 @@ import ClientInvoices from "./pages/ClientInvoices";
 import ClientInvoiceDetail from "./pages/ClientInvoiceDetail";
 import ClientProfile from "./pages/ClientProfile";
 import ClientJobDetail from "./pages/ClientJobDetail";
+import ClientSettings from "./pages/ClientSettings";
 import NotFound from "./pages/NotFound";
 import ApiTest from "./pages/ApiTest";
 import StripeIntegrationExample from "./pages/StripeIntegrationExample";
