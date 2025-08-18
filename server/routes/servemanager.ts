@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { mapJobFromServeManager, mapClientFromServeManager, mapServerFromServeManager, mapInvoiceFromServeManager } from '../utils/servemanager-mapper';
+import { supabaseSyncService } from '../services/supabase-sync';
 
 const CONFIG_FILE = path.join(process.cwd(), '.api-config.json');
 const ENCRYPTION_KEY = process.env.CONFIG_ENCRYPTION_KEY || 'default-key-change-in-production';
