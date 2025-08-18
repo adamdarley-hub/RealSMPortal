@@ -1,7 +1,7 @@
 {
   "serveManager": {
     "baseUrl": "https://www.servemanager.com/api",
-    "apiKey": "c1e2d182168593cd6a8bd11f5aae15c2:4f3f421633643761872eabc1b1807becf8b215835c5d8a580f1ecaa07dab9af5",
+    "apiKey": "072593b5a6a9bfbeb06f39fd0f92add3:fde85c77cf979c50098de9111230619d3ea7efc4ef911cdae31a9933fe789c62",
     "enabled": true,
     "testEndpoint": "/account"
   },
@@ -16,6 +16,6 @@
     "secretKey": "***7P6b",
     "enabled": true,
     "environment": "live",
-    "webhookSecret": ""
+    "webhookSecret": "cf14438edbbf69046caf3692907e648a:7b2adc86b7970178671f0e4bf60b78ed1d5eea85bd89efcfa9c3ec0230f5c99c78d47ecc4de6d859047551c281fb84c8"
   }
 }
