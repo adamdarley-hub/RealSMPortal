@@ -103,14 +103,18 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
 
     // Use existing payment method if specified
     if (useExistingPaymentMethod && paymentMethodId && customerId) {
+      console.log(`💳 Using existing payment method ${paymentMethodId} for customer ${customerId}`);
       paymentIntentData.payment_method = paymentMethodId;
       paymentIntentData.confirmation_method = 'manual';
       paymentIntentData.confirm = true;
+      // Do NOT add automatic_payment_methods when using existing payment method
     } else {
+      console.log(`💳 Creating payment intent for new payment method`);
       // Only use automatic payment methods if not using existing payment method
       paymentIntentData.automatic_payment_methods = {
         enabled: true,
       };
+      // Do NOT add confirmation_method when using automatic payment methods
     }
     
     // Create payment intent
