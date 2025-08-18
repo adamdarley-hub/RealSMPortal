@@ -124,9 +124,9 @@ export const confirmPayment: RequestHandler = async (req, res) => {
     }
     
     console.log(`✅ Payment confirmed for invoice ${invoiceId}: ${paymentIntentId}`);
-    
-    // TODO: Update invoice status in ServeManager (would need ServeManager API endpoint)
-    // For now, we'll just confirm the payment was successful
+
+    // Update invoice status in ServeManager
+    await updateInvoiceStatusInServeManager(invoiceId.toString(), 'paid');
     
     res.json({
       success: true,
