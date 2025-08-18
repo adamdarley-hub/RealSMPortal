@@ -87,22 +87,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('🔐 Login attempt:', { email, password });
     setIsLoading(true);
 
-    // Mock authentication - in production this would be an API call
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+    // Check password - generic password for all users during development
+    if (password !== 'password') {
+      console.log('❌ Invalid password');
+      setIsLoading(false);
+      return false;
+    }
 
-    const foundUser = mockUsers.find(u => u.email === email);
-    console.log('👤 Found user:', foundUser);
-
-    if (foundUser && password === 'password') { // Simple mock password
-      console.log('✅ Login successful, setting user');
-      setUser(foundUser);
-      localStorage.setItem('serveportal_user', JSON.stringify(foundUser));
-      localStorage.removeItem('serveportal_logged_out'); // Clear logout flag
+    // Check if it's the admin user first
+    const adminUser = mockUsers.find(u => u.role === 'admin' && u.email === email);
+    if (adminUser) {
+      console.log('✅ Admin login successful');
+      setUser(adminUser);
+      localStorage.setItem('serveportal_user', JSON.stringify(adminUser));
+      localStorage.removeItem('serveportal_logged_out');
       setIsLoading(false);
       return true;
     }
 
-    console.log('❌ Login failed');
+    // Check if it's a hardcoded mock client
+    const mockClient = mockUsers.find(u => u.role === 'client' && u.email === email);
+    if (mockClient) {
+      console.log('✅ Mock client login successful');
+      setUser(mockClient);
+      localStorage.setItem('serveportal_user', JSON.stringify(mockClient));
+      localStorage.removeItem('serveportal_logged_out');
+      setIsLoading(false);
+      return true;
+    }
+
+    // Check if email exists in the clients database
+    try {
+      const response = await fetch('/api/clients');
+      const data = await response.json();
+
+      if (data.clients) {
+        const foundClient = data.clients.find((client: any) =>
+          client.email?.toLowerCase() === email.toLowerCase()
+        );
+
+        if (foundClient) {
+          console.log('✅ Database client login successful:', foundClient);
+
+          // Create user object from client data
+          const clientUser: User = {
+            id: foundClient.id,
+            name: foundClient.name,
+            email: foundClient.email,
+            role: 'client',
+            company: foundClient.company,
+            client_id: foundClient.id
+          };
+
+          setUser(clientUser);
+          localStorage.setItem('serveportal_user', JSON.stringify(clientUser));
+          localStorage.removeItem('serveportal_logged_out');
+          setIsLoading(false);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking client database:', error);
+    }
+
+    console.log('❌ Login failed - user not found');
     setIsLoading(false);
     return false;
   };
