@@ -135,6 +135,11 @@ export async function createServer() {
   app.get("/api/stripe/publishable-key", stripeRoutes.getPublishableKey);
   app.get("/api/stripe/payment-status/:invoiceId", stripeRoutes.getPaymentStatus);
 
+  // Root route - redirect to frontend
+  app.get("/", (req, res) => {
+    res.redirect("http://localhost:5173/");
+  });
+
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({
