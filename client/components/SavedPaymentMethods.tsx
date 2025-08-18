@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CreditCard, Plus, Trash2, AlertCircle, CheckCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, CreditCard, Plus, Trash2, AlertCircle, CheckCircle, Edit2, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useStripe } from "@/contexts/StripeContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +25,7 @@ interface SavedPaymentMethod {
     exp_year: number;
   };
   created: number;
+  friendlyName?: string;
 }
 
 interface SavedPaymentMethodsProps {
@@ -60,6 +63,7 @@ const AddCardForm: React.FC<{
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cardComplete, setCardComplete] = useState(false);
+  const [friendlyName, setFriendlyName] = useState('');
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -106,12 +110,20 @@ const AddCardForm: React.FC<{
         throw new Error('Card element not found');
       }
 
-      // Confirm setup intent
-      const { error: stripeError, setupIntent } = await stripe.confirmCardSetup(setupData.clientSecret, {
+      // Confirm setup intent with optional friendly name
+      const setupPayload: any = {
         payment_method: {
           card: cardElement,
         }
-      });
+      };
+
+      if (friendlyName.trim()) {
+        setupPayload.payment_method.metadata = {
+          friendly_name: friendlyName.trim()
+        };
+      }
+
+      const { error: stripeError, setupIntent } = await stripe.confirmCardSetup(setupData.clientSecret, setupPayload);
 
       if (stripeError) {
         throw new Error(stripeError.message || 'Failed to save payment method');
@@ -122,7 +134,7 @@ const AddCardForm: React.FC<{
 
       toast({
         title: "Payment Method Saved",
-        description: "Your payment method has been saved successfully.",
+        description: "Your payment method has been saved successfully by Stripe.",
       });
 
       onSuccess(setupData.customerId);
@@ -134,7 +146,7 @@ const AddCardForm: React.FC<{
 
       toast({
         title: "Error",
-        description: isStripeNotConfigured
+        description: isStripeNotConfigured 
           ? "Stripe payments are not configured. Please contact your administrator to set up Stripe integration."
           : errorMessage,
         variant: "destructive",
@@ -157,9 +169,21 @@ const AddCardForm: React.FC<{
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Friendly name input */}
+          <div className="space-y-2">
+            <Label htmlFor="friendly-name">Card Name (Optional)</Label>
+            <Input
+              id="friendly-name"
+              placeholder="e.g., Personal Visa, Business Card, etc."
+              value={friendlyName}
+              onChange={(e) => setFriendlyName(e.target.value)}
+              maxLength={50}
+            />
+          </div>
+
           {/* Card input */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Card Information</label>
+            <Label className="text-sm font-medium">Card Information</Label>
             <div className="p-3 border rounded-lg bg-white">
               <CardElement
                 options={cardElementOptions}
@@ -183,6 +207,16 @@ const AddCardForm: React.FC<{
             </Alert>
           )}
 
+          {/* Stripe security notice */}
+          <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+            <Shield className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-blue-800">
+              <strong>Secure Storage by Stripe</strong>
+              <br />
+              Your payment information is securely stored by Stripe, not on our servers. Stripe is PCI DSS Level 1 certified and uses bank-level security.
+            </div>
+          </div>
+
           {/* Action buttons */}
           <div className="flex gap-2 pt-2">
             <Button
@@ -202,7 +236,7 @@ const AddCardForm: React.FC<{
               {isProcessing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
+                  Saving to Stripe...
                 </>
               ) : (
                 <>
@@ -231,6 +265,8 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   // Load customer and payment methods
   useEffect(() => {
@@ -306,7 +342,7 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
 
   const handleDeletePaymentMethod = async (paymentMethodId: string) => {
     setDeletingId(paymentMethodId);
-
+    
     try {
       const response = await fetch(`/api/stripe/payment-methods/${paymentMethodId}`, {
         method: 'DELETE',
@@ -326,10 +362,10 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
       const responseData = await response.json();
 
       setPaymentMethods(prev => prev.filter(pm => pm.id !== paymentMethodId));
-
+      
       toast({
         title: "Payment Method Deleted",
-        description: "The payment method has been removed successfully.",
+        description: "The payment method has been removed from Stripe.",
       });
 
       onPaymentMethodRemoved?.();
@@ -347,24 +383,24 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
   const handleAddSuccess = async (newCustomerId?: string) => {
     console.log('🔄 handleAddSuccess called with customer ID:', newCustomerId);
     setShowAddForm(false);
-
+    
     // Use the provided customer ID or the existing one
     const customerIdToUse = newCustomerId || customerId;
-
+    
     console.log('🔄 Customer ID to use for reload:', customerIdToUse);
     console.log('🔄 Current customerId state:', customerId);
-
+    
     if (!customerIdToUse) {
       console.error('No customer ID available to reload payment methods');
       return;
     }
-
+    
     // Update customer ID if we got a new one
     if (newCustomerId && newCustomerId !== customerId) {
       console.log('🔄 Updating customer ID from', customerId, 'to', newCustomerId);
       setCustomerId(newCustomerId);
     }
-
+    
     // Reload payment methods
     try {
       console.log('🔄 Fetching payment methods for customer:', customerIdToUse);
@@ -406,8 +442,20 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
       'diners': 'Diners Club',
       'jcb': 'JCB',
       'unionpay': 'UnionPay',
+      'unknown': 'Card'
     };
     return brandMap[brand] || brand.charAt(0).toUpperCase() + brand.slice(1);
+  };
+
+  const getBrandColor = (brand: string) => {
+    const colorMap: Record<string, string> = {
+      'visa': 'bg-blue-100 text-blue-800',
+      'mastercard': 'bg-red-100 text-red-800',
+      'amex': 'bg-green-100 text-green-800',
+      'discover': 'bg-orange-100 text-orange-800',
+      'unknown': 'bg-gray-100 text-gray-800'
+    };
+    return colorMap[brand] || 'bg-gray-100 text-gray-800';
   };
 
   if (!user) {
@@ -484,31 +532,43 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
                   <CreditCard className="w-5 h-5 text-gray-500" />
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{formatCardBrand(pm.card.brand)}</span>
-                      <span className="text-gray-600">•••• {pm.card.last4}</span>
+                      <span className="font-medium">
+                        {pm.friendlyName || `${formatCardBrand(pm.card.brand)} ending in ${pm.card.last4}`}
+                      </span>
+                      <Badge className={getBrandColor(pm.card.brand)}>
+                        {formatCardBrand(pm.card.brand)}
+                      </Badge>
                     </div>
                     <div className="text-sm text-gray-500">
-                      Expires {pm.card.exp_month}/{pm.card.exp_year}
+                      •••• {pm.card.last4} • Expires {pm.card.exp_month}/{pm.card.exp_year}
                     </div>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeletePaymentMethod(pm.id)}
-                  disabled={deletingId === pm.id}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                >
-                  {deletingId === pm.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeletePaymentMethod(pm.id)}
+                    disabled={deletingId === pm.id}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    {deletingId === pm.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
         )}
+
+        {/* Stripe branding footer */}
+        <div className="flex items-center justify-center gap-2 pt-4 border-t text-xs text-gray-500">
+          <Shield className="w-3 h-3" />
+          <span>Payment methods securely stored by Stripe</span>
+        </div>
       </CardContent>
     </Card>
   );
