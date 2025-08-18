@@ -49,7 +49,7 @@ const cardElementOptions = {
 
 // Add card form component
 const AddCardForm: React.FC<{
-  onSuccess: () => void;
+  onSuccess: (customerId?: string) => void;
   onCancel: () => void;
 }> = ({ onSuccess, onCancel }) => {
   const stripe = useStripeElements();
