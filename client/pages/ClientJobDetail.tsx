@@ -459,6 +459,20 @@ export default function ClientJobDetail() {
         throw new Error('You do not have access to this job');
       }
       
+      console.log('📊 Job data loaded:', {
+        jobId: jobData.id,
+        hasDocuments: !!jobData.documents,
+        documentsCount: jobData.documents?.length || 0,
+        hasAttachments: !!jobData.attachments,
+        attachmentsCount: jobData.attachments?.length || 0,
+        hasInvoices: !!jobData.invoices,
+        invoicesCount: jobData.invoices?.length || 0,
+        hasAffidavits: !!jobData.affidavits,
+        affidavitsCount: jobData.affidavits?.length || 0,
+        rawDataKeys: jobData.raw_data ? Object.keys(jobData.raw_data) : [],
+        allJobKeys: Object.keys(jobData)
+      });
+
       setJob(jobData);
 
       // Load affidavits for this job
