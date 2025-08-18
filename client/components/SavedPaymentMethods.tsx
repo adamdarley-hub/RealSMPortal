@@ -122,7 +122,7 @@ const AddCardForm: React.FC<{
         description: "Your payment method has been saved successfully.",
       });
 
-      onSuccess();
+      onSuccess(setupData.customerId);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save payment method';
       setError(errorMessage);
