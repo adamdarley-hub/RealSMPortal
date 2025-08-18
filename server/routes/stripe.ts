@@ -466,44 +466,42 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
     // ServeManager expects form data, not JSON:API format (based on HTML form analysis)
     const endpoint = `invoices/${invoiceId}/payments`;
 
-    if (status === 'paid') {
-      // For testing, use a small amount - in real payments this would come from Stripe
-      const paymentAmount = "0.5";
-
-      // Create form data exactly like the ServeManager form
-      const formData = new URLSearchParams();
-      formData.append('payment[amount]', paymentAmount);
-      formData.append('payment[applied_on]', new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })); // "August 18, 2025" format
-      formData.append('payment[description]', 'Test payment via Stripe integration');
-
-      console.log(`📝 Creating payment record for invoice ${invoiceId} with amount: $${paymentAmount}`);
-
-      const response = await makeServeManagerRequest(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData.toString(),
-      });
-
-      console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
-      console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
-      updateSuccessful = true;
-    } else {
-      // For failed payments, we don't create a payment record
-      throw new Error('Cannot create payment record for failed payment');
-    }
-
     let updateSuccessful = false;
     let lastError: any = null;
 
     try {
-      console.log(`📝 Creating payment record for invoice ${invoiceId} via ServeManager API: ${endpoint}`);
-      console.log(`📝 Form data:`, formData.toString());
+      if (status === 'paid') {
+        // For testing, use a small amount - in real payments this would come from Stripe
+        const paymentAmount = "0.5";
+
+        // Create form data exactly like the ServeManager form
+        const formData = new URLSearchParams();
+        formData.append('payment[amount]', paymentAmount);
+        formData.append('payment[applied_on]', new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })); // "August 18, 2025" format
+        formData.append('payment[description]', 'Test payment via Stripe integration');
+
+        console.log(`📝 Creating payment record for invoice ${invoiceId} with amount: $${paymentAmount}`);
+        console.log(`📝 Form data:`, formData.toString());
+
+        const response = await makeServeManagerRequest(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData.toString(),
+        });
+
+        console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
+        console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
+        updateSuccessful = true;
+      } else {
+        // For failed payments, we don't create a payment record
+        throw new Error('Cannot create payment record for failed payment');
+      }
 
       console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
       console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
@@ -568,7 +566,7 @@ export const handleWebhook: RequestHandler = async (req, res) => {
         // Verify webhook signature
         event = stripe.webhooks.constructEvent(req.body, sig, config.webhookSecret);
       } catch (err) {
-        console.error('⚠️ Webhook signature verification failed:', err);
+        console.error('���️ Webhook signature verification failed:', err);
         return res.status(400).send(`Webhook Error: ${err}`);
       }
     } else {
