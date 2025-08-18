@@ -126,10 +126,14 @@ const AddCardForm: React.FC<{
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save payment method';
       setError(errorMessage);
-      
+
+      const isStripeNotConfigured = errorMessage.includes('Stripe is not configured');
+
       toast({
         title: "Error",
-        description: errorMessage,
+        description: isStripeNotConfigured
+          ? "Stripe payments are not configured. Please contact your administrator to set up Stripe integration."
+          : errorMessage,
         variant: "destructive",
       });
     } finally {
