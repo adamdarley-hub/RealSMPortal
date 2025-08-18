@@ -924,8 +924,6 @@ export default function ClientJobDetail() {
                 <CardContent>
                   <div className="space-y-4">
                     {(() => {
-                      const serviceAttempts = extractServiceAttempts(job);
-
                       if (serviceAttempts.length === 0) {
                         return (
                           <div className="text-center py-8 text-gray-500">
