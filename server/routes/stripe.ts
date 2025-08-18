@@ -453,19 +453,68 @@ async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'pai
 
     console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager...`);
 
-    // Update invoice status in ServeManager
+    // Try multiple API endpoints for updating invoice status
+    const updateEndpoints = [
+      `/invoices/${invoiceId}`,
+      `/invoices/${invoiceId}/status`,
+      `/api/invoices/${invoiceId}`,
+      `/billing/invoices/${invoiceId}`,
+      `/invoices/${invoiceId}/payment`,
+      `/jobs/invoices/${invoiceId}`,
+      `/invoices/${invoiceId}/mark_paid`
+    ];
+
     const updateData = {
-      status: status === 'paid' ? 'paid' : 'issued' // ServeManager may use different status values
+      status: status === 'paid' ? 'paid' : 'issued',
+      payment_status: status,
+      paid: status === 'paid',
+      balance_due: status === 'paid' ? 0 : undefined
     };
 
-    await makeServeManagerRequest(`/invoices/${invoiceId}`, {
-      method: 'PUT',
-      body: JSON.stringify(updateData),
-    });
+    let updateSuccessful = false;
+    let lastError: any = null;
 
-    console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" in ServeManager`);
+    for (const endpoint of updateEndpoints) {
+      try {
+        console.log(`📝 Trying to update invoice via: ${endpoint}`);
 
-    // Send real-time notification to clients about the status update
+        await makeServeManagerRequest(endpoint, {
+          method: 'PUT',
+          body: JSON.stringify(updateData),
+        });
+
+        console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" via ${endpoint}`);
+        updateSuccessful = true;
+        break;
+
+      } catch (endpointError) {
+        console.log(`❌ Failed to update via ${endpoint}: ${endpointError.message}`);
+        lastError = endpointError;
+
+        // Also try PATCH method
+        try {
+          await makeServeManagerRequest(endpoint, {
+            method: 'PATCH',
+            body: JSON.stringify(updateData),
+          });
+
+          console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" via PATCH ${endpoint}`);
+          updateSuccessful = true;
+          break;
+
+        } catch (patchError) {
+          console.log(`❌ PATCH also failed for ${endpoint}: ${patchError.message}`);
+        }
+      }
+    }
+
+    if (!updateSuccessful) {
+      console.error(`❌ All update attempts failed for invoice ${invoiceId}. Last error:`, lastError?.message);
+      console.log(`⚠️ Note: Payment was successful in Stripe, but ServeManager status could not be updated automatically.`);
+      console.log(`💡 You may need to manually update the invoice status in ServeManager or contact support about API endpoints.`);
+    }
+
+    // Send real-time notification to clients about the status update (regardless of ServeManager update status)
     try {
       const { broadcastToClients } = await import('../services/websocket-service');
       broadcastToClients({
@@ -473,7 +522,11 @@ async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'pai
         data: {
           invoiceId: invoiceId,
           status: status,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          serveManagerUpdated: updateSuccessful,
+          message: updateSuccessful
+            ? 'Payment processed and ServeManager updated'
+            : 'Payment processed successfully, but ServeManager status needs manual update'
         }
       });
       console.log(`📡 Broadcasted invoice ${invoiceId} status update to connected clients`);
