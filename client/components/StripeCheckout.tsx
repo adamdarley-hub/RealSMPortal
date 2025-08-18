@@ -301,8 +301,15 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
         );
 
         if (stripeError) {
-          console.error('Stripe payment error (saved card):', stripeError);
-          let errorMessage = stripeError.message || 'Payment failed';
+          console.error('Stripe payment error (saved card):', JSON.stringify(stripeError, null, 2));
+
+          // Extract error message properly from Stripe error object
+          let errorMessage = stripeError.message || stripeError.error?.message || 'Payment failed';
+
+          // Handle case where message might be an object
+          if (typeof errorMessage === 'object') {
+            errorMessage = JSON.stringify(errorMessage);
+          }
 
           // Provide more specific error messages for common issues
           if (stripeError.code === 'card_declined') {
@@ -311,8 +318,13 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
             errorMessage = 'Your card has insufficient funds. Please try a different payment method.';
           } else if (stripeError.code === 'generic_decline') {
             errorMessage = 'Your card was declined. This could be due to fraud protection. Please contact your bank or try a different payment method.';
+          } else if (stripeError.type === 'card_error') {
+            errorMessage = `Card error: ${errorMessage}`;
+          } else if (stripeError.type === 'validation_error') {
+            errorMessage = `Validation error: ${errorMessage}`;
           }
 
+          console.error('Final error message:', errorMessage);
           throw new Error(errorMessage);
         }
 
