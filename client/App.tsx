@@ -127,6 +127,7 @@ function AppRoutes() {
       <Route path="/client/invoices" element={<ProtectedRoute role="client"><StripeProvider><ClientInvoices /></StripeProvider></ProtectedRoute>} />
       <Route path="/client/invoices/:id" element={<ProtectedRoute role="client"><StripeProvider><ClientInvoiceDetail /></StripeProvider></ProtectedRoute>} />
       <Route path="/client/profile" element={<ProtectedRoute role="client"><StripeProvider><ClientProfile /></StripeProvider></ProtectedRoute>} />
+      <Route path="/client/settings" element={<ProtectedRoute role="client"><StripeProvider><ClientSettings /></StripeProvider></ProtectedRoute>} />
       <Route path="/client/jobs/:id" element={<ProtectedRoute role="client"><StripeProvider><ClientJobDetail /></StripeProvider></ProtectedRoute>} />
 
       {/* Catch-all */}
