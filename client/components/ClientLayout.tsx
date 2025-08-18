@@ -4,19 +4,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Menu, 
-  FileText, 
-  CreditCard, 
-  User, 
+import {
+  Menu,
+  FileText,
+  CreditCard,
+  User,
   LogOut,
-  Building
+  Building,
+  Settings
 } from "lucide-react";
 
 const navigation = [
   { name: "My Jobs", href: "/client", icon: FileText },
   { name: "Invoices", href: "/client/invoices", icon: CreditCard },
   { name: "Profile", href: "/client/profile", icon: User },
+  { name: "Settings", href: "/client/settings", icon: Settings },
 ];
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
