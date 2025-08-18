@@ -477,6 +477,10 @@ export default function ClientJobDetail() {
 
       setJob(jobData);
 
+      // Extract service attempts from job data
+      const attempts = extractServiceAttempts(jobData);
+      setServiceAttempts(attempts);
+
       // Load affidavits and invoices for this job
       loadJobAffidavits(id);
       loadJobInvoices(id);
