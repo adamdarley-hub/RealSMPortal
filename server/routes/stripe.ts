@@ -86,6 +86,16 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
         error: 'Amount must be greater than 0'
       });
     }
+
+    // Validate Stripe minimum amount (50 cents for USD)
+    const minAmount = currency.toLowerCase() === 'usd' ? 0.50 : 0.50; // Stripe minimums vary by currency
+    if (amount < minAmount) {
+      return res.status(400).json({
+        error: `Amount must be at least $${minAmount.toFixed(2)} ${currency.toUpperCase()}`,
+        type: 'StripeInvalidRequestError',
+        minimumAmount: minAmount
+      });
+    }
     
     const stripe = await getStripeInstance();
     let customerId: string | undefined;
