@@ -94,21 +94,23 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
         invoiceId: invoiceId.toString(),
         source: 'client-portal'
       },
-      automatic_payment_methods: {
-        enabled: true,
-      },
     };
-    
+
     // Add customer if available
     if (customerId) {
       paymentIntentData.customer = customerId;
     }
-    
+
     // Use existing payment method if specified
     if (useExistingPaymentMethod && paymentMethodId && customerId) {
       paymentIntentData.payment_method = paymentMethodId;
       paymentIntentData.confirmation_method = 'manual';
       paymentIntentData.confirm = true;
+    } else {
+      // Only use automatic payment methods if not using existing payment method
+      paymentIntentData.automatic_payment_methods = {
+        enabled: true,
+      };
     }
     
     // Create payment intent
