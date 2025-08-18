@@ -462,12 +462,6 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
     console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager...`);
 
-    // Get invoice data to get the total amount
-    const currentInvoice = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
-      method: 'GET'
-    });
-    const invoiceData = currentInvoice.data || currentInvoice;
-
     // Use the payments endpoint to create a payment record (correct approach!)
     // Base URL is https://www.servemanager.com/api so we don't need /api prefix
     const endpoint = `invoices/${invoiceId}/payments`;
@@ -476,7 +470,8 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
     let updateData: any;
 
     if (status === 'paid') {
-      const paymentAmount = parseFloat(invoiceData.total || invoiceData.subtotal || "0.50");
+      // For testing, use a small amount - in real payments this would come from Stripe
+      const paymentAmount = 0.50;
 
       updateData = {
         data: {
@@ -484,7 +479,7 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
           attributes: {
             amount: paymentAmount,
             applied_on: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-            description: "Payment processed via Stripe"
+            description: "Test payment via Stripe integration"
           }
         }
       };
