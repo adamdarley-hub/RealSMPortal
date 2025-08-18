@@ -240,12 +240,14 @@ export const getCustomerPaymentMethods: RequestHandler = async (req, res) => {
     const formattedPaymentMethods = paymentMethods.data.map(pm => ({
       id: pm.id,
       card: {
-        brand: pm.card?.brand,
-        last4: pm.card?.last4,
-        exp_month: pm.card?.exp_month,
-        exp_year: pm.card?.exp_year
+        brand: pm.card?.brand || 'unknown',
+        last4: pm.card?.last4 || '0000',
+        exp_month: pm.card?.exp_month || 12,
+        exp_year: pm.card?.exp_year || 2024
       },
-      created: pm.created
+      created: pm.created,
+      // Use metadata for friendly name, fallback to brand + last4
+      friendlyName: pm.metadata?.friendly_name || `${(pm.card?.brand || 'Card').charAt(0).toUpperCase() + (pm.card?.brand || 'Card').slice(1)} ending in ${pm.card?.last4 || '0000'}`
     }));
     
     res.json({
