@@ -484,12 +484,12 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
     try {
       if (status === 'paid') {
-        // Use correct ServeManager API format - must be 'job' type when updating job
+        // Use invoice update approach that was working (creating "Invoice Updated" entries)
         const updateData = {
           data: {
-            type: "job",
+            type: "invoice",
             attributes: {
-              invoice_status: "paid"
+              status: "paid"
             }
           }
         };
