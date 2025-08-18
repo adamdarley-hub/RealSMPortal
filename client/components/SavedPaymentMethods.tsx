@@ -336,10 +336,14 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
   };
 
   const handleAddSuccess = async (newCustomerId?: string) => {
+    console.log('🔄 handleAddSuccess called with customer ID:', newCustomerId);
     setShowAddForm(false);
 
     // Use the provided customer ID or the existing one
     const customerIdToUse = newCustomerId || customerId;
+
+    console.log('🔄 Customer ID to use for reload:', customerIdToUse);
+    console.log('🔄 Current customerId state:', customerId);
 
     if (!customerIdToUse) {
       console.error('No customer ID available to reload payment methods');
@@ -348,11 +352,13 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
 
     // Update customer ID if we got a new one
     if (newCustomerId && newCustomerId !== customerId) {
+      console.log('🔄 Updating customer ID from', customerId, 'to', newCustomerId);
       setCustomerId(newCustomerId);
     }
 
     // Reload payment methods
     try {
+      console.log('🔄 Fetching payment methods for customer:', customerIdToUse);
       const pmResponse = await fetch(`/api/stripe/customers/${customerIdToUse}/payment-methods`);
 
       if (!pmResponse.ok) {
@@ -368,10 +374,14 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
       }
 
       const pmData = await pmResponse.json();
+      console.log('🔄 Received payment methods data:', pmData);
 
       if (pmData.paymentMethods) {
+        console.log('🔄 Setting payment methods:', pmData.paymentMethods);
         setPaymentMethods(pmData.paymentMethods);
         onPaymentMethodAdded?.();
+      } else {
+        console.log('🔄 No payment methods in response');
       }
     } catch (error) {
       console.error('Error reloading payment methods:', error);
