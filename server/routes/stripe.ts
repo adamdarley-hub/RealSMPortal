@@ -112,15 +112,13 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
     if (useExistingPaymentMethod && paymentMethodId && customerId) {
       console.log(`💳 Using existing payment method ${paymentMethodId} for customer ${customerId}`);
 
-      // For existing payment methods, create payment intent with manual confirmation
+      // For existing payment methods, create payment intent without auto-confirmation
       paymentIntentData = {
         amount: Math.round(amount * 100),
         currency: currency.toLowerCase(),
         customer: customerId,
         payment_method: paymentMethodId,
         confirmation_method: 'manual',
-        confirm: true,
-        return_url: `${req.headers.origin || 'https://localhost:5173'}/client/invoices?payment=success`,
         metadata: {
           invoiceId: invoiceId.toString(),
           source: 'client-portal'
