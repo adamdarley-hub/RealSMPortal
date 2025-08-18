@@ -567,7 +567,10 @@ export default function ClientJobDetail() {
           serveType: attempt.serve_type || attempt.service_type || 'Personal',
           serviceStatus: attempt.status || attempt.result || 'Unknown',
           recipient: attempt.recipient || attempt.served_to || 'Unknown',
-          address: attempt.address || attempt.service_address || 'N/A',
+          address: typeof attempt.address === 'string' ? attempt.address :
+                 typeof attempt.service_address === 'string' ? attempt.service_address :
+                 attempt.address?.street || attempt.service_address?.street ||
+                 attempt.address?.address1 || attempt.service_address?.address1 || 'N/A',
           description: attempt.description || attempt.notes || '',
           photos: attempt.photos || attempt.images || [],
           gps: attempt.gps || attempt.location || {}
