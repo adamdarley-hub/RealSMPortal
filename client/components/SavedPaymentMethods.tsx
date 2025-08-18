@@ -256,11 +256,14 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
         }
 
         const customerData = await customerResponse.json();
+        console.log('💳 Customer data received:', customerData);
 
         if (customerData.customer) {
+          console.log('💳 Setting customer ID:', customerData.customer.id);
           setCustomerId(customerData.customer.id);
 
           // Load saved payment methods
+          console.log('💳 Loading payment methods for customer:', customerData.customer.id);
           const pmResponse = await fetch(`/api/stripe/customers/${customerData.customer.id}/payment-methods`);
 
           if (!pmResponse.ok) {
@@ -275,10 +278,16 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
           }
 
           const pmData = await pmResponse.json();
+          console.log('💳 Payment methods data received:', pmData);
 
           if (pmData.paymentMethods) {
+            console.log('💳 Setting payment methods:', pmData.paymentMethods);
             setPaymentMethods(pmData.paymentMethods);
+          } else {
+            console.log('💳 No payment methods found');
           }
+        } else {
+          console.log('💳 No customer found for email:', user?.email);
         }
       } catch (error) {
         console.error('Error loading payment methods:', error);
