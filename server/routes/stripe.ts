@@ -464,7 +464,10 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
     // Use the payments endpoint to create a payment record
     // ServeManager expects form data, not JSON:API format (based on HTML form analysis)
+    // The form action="/invoices/10060442/payments" suggests main site, not API endpoint
     const endpoint = `invoices/${invoiceId}/payments`;
+
+    console.log(`🎯 Will attempt ServeManager payment creation at endpoint: ${endpoint}`);
 
     let updateSuccessful = false;
     let lastError: any = null;
@@ -566,7 +569,7 @@ export const handleWebhook: RequestHandler = async (req, res) => {
         // Verify webhook signature
         event = stripe.webhooks.constructEvent(req.body, sig, config.webhookSecret);
       } catch (err) {
-        console.error('���️ Webhook signature verification failed:', err);
+        console.error('⚠️ Webhook signature verification failed:', err);
         return res.status(400).send(`Webhook Error: ${err}`);
       }
     } else {
