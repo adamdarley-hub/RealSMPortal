@@ -530,7 +530,7 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
           body: JSON.stringify(updateData),
         });
 
-        console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" via PATCH`);
+        console.log(`�� Successfully updated invoice ${invoiceId} status to "${status}" via PATCH`);
         updateSuccessful = true;
 
       } catch (patchError) {
@@ -542,7 +542,8 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
     if (!updateSuccessful) {
       console.error(`❌ All update attempts failed for invoice ${invoiceId}. Last error:`, lastError?.message);
       console.log(`⚠️ Note: Payment was successful in Stripe, but ServeManager status could not be updated automatically.`);
-      console.log(`💡 You may need to manually update the invoice status in ServeManager or contact support about API endpoints.`);
+      console.log(`💡 MANUAL ACTION NEEDED: Please manually mark invoice ${invoiceId} as paid in ServeManager for $${updateData.data.total_paid}`);
+      console.log(`📧 Payment Details - Invoice: ${invoiceId}, Amount: $${updateData.data.total_paid}, Date: ${updateData.data.paid_on}`);
     }
 
     // Send real-time notification to clients about the status update (regardless of ServeManager update status)
