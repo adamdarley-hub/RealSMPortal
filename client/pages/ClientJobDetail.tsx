@@ -237,7 +237,7 @@ const getMethodDisplay = (attempt: any) => {
   return {
     name: isMobile ? "Mobile App" : "Manual Entry",
     color: isMobile ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-700 border-gray-200",
-    icon: isMobile ? "📱" : "���"
+    icon: isMobile ? "📱" : "💻"
   };
 };
 
@@ -1195,10 +1195,54 @@ export default function ClientJobDetail() {
           <TabsContent value="invoices">
             <Card>
               <CardContent className="pt-6">
-                <div className="text-center py-8 text-gray-500">
-                  <DollarSign className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>Invoice information will be displayed here when available</p>
-                </div>
+                {(() => {
+                  // Get invoices from job data
+                  const invoices = job?.invoices || job?.raw_data?.invoices || [];
+
+                  if (invoices.length === 0) {
+                    return (
+                      <div className="text-center py-8 text-gray-500">
+                        <DollarSign className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                        <p className="text-lg font-medium">No Invoices Available</p>
+                        <p className="text-sm mt-2">
+                          No invoices have been generated for this job yet.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-4">
+                      {invoices.map((invoice: any, index: number) => (
+                        <div key={invoice.id || index} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h3 className="font-semibold">
+                                Invoice #{invoice.number || invoice.id}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {invoice.description || 'Service Invoice'}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-lg">
+                                ${invoice.amount || invoice.total || '0.00'}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {invoice.status || 'Pending'}
+                              </p>
+                            </div>
+                          </div>
+                          {invoice.date && (
+                            <p className="text-sm text-muted-foreground">
+                              Date: {new Date(invoice.date).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
