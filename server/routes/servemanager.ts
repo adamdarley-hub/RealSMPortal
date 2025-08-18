@@ -69,7 +69,8 @@ export async function makeServeManagerRequest(endpoint: string, options: Request
     ...options,
     headers: {
       'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/vnd.api+json',
+      'Accept': 'application/vnd.api+json',
       ...options.headers,
     },
   });
