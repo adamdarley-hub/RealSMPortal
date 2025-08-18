@@ -964,15 +964,15 @@ export default function ClientJobDetail() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Serve Type</label>
-                                <p className="text-sm text-gray-900">{attempt.details.serveType}</p>
+                                <p className="text-sm text-gray-900">{attempt.details?.serveType || 'N/A'}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Service Status</label>
-                                <p className="text-sm text-gray-900">{attempt.details.serviceStatus}</p>
+                                <p className="text-sm text-gray-900">{attempt.details?.serviceStatus || attempt.status || 'N/A'}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Recipient</label>
-                                <p className="text-sm text-gray-900">{attempt.details.recipient}</p>
+                                <p className="text-sm text-gray-900">{attempt.details?.recipient || 'N/A'}</p>
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Address</label>
