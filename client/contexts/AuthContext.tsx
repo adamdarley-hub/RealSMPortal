@@ -102,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('serveportal_user');
+    localStorage.setItem('serveportal_logged_out', 'true');
   };
 
   return (
