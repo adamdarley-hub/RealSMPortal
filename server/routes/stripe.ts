@@ -499,38 +499,21 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
     let lastError: any = null;
 
     try {
-      console.log(`📝 Updating invoice ${invoiceId} via ServeManager API: ${endpoint}`);
-      console.log(`📝 Request data:`, JSON.stringify(updateData, null, 2));
+      console.log(`📝 Creating payment record for invoice ${invoiceId} via ServeManager API: ${endpoint}`);
+      console.log(`📝 Payment data:`, JSON.stringify(updateData, null, 2));
 
       const response = await makeServeManagerRequest(endpoint, {
-        method: 'PUT',
+        method: 'POST',
         body: JSON.stringify(updateData),
       });
 
-      console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" in ServeManager`);
+      console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
       console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
       updateSuccessful = true;
 
     } catch (apiError) {
-      console.log(`❌ Failed to update invoice ${invoiceId}: ${apiError.message}`);
+      console.log(`❌ Failed to create payment record for invoice ${invoiceId}: ${apiError.message}`);
       lastError = apiError;
-
-      // Also try PATCH method
-      try {
-        console.log(`📝 Trying PATCH method for ${endpoint}`);
-
-        await makeServeManagerRequest(endpoint, {
-          method: 'PATCH',
-          body: JSON.stringify(updateData),
-        });
-
-        console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" via PATCH`);
-        updateSuccessful = true;
-
-      } catch (patchError) {
-        console.log(`❌ PATCH method also failed: ${patchError.message}`);
-        lastError = patchError;
-      }
     }
 
     if (!updateSuccessful) {
