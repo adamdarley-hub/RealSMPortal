@@ -153,6 +153,19 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
 
   // Create payment intent when component mounts or payment method changes
   useEffect(() => {
+    // Validate amount
+    if (!amount || amount <= 0) {
+      setError('Invalid payment amount');
+      return;
+    }
+
+    // Check Stripe minimum amount requirement
+    const minAmount = currency === 'usd' || currency === 'USD' ? 0.50 : 0.50;
+    if (amount < minAmount) {
+      setError(`Payment amount must be at least $${minAmount.toFixed(2)} ${currency?.toUpperCase() || 'USD'}. Current amount: $${amount.toFixed(2)}`);
+      return;
+    }
+
     const createPaymentIntent = async () => {
       try {
         const requestBody: any = {
