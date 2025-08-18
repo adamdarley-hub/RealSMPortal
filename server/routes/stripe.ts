@@ -130,8 +130,7 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
         automatic_payment_methods: {
           enabled: true,
           allow_redirects: 'never'
-        },
-        return_url: `${req.headers.origin || 'https://localhost:5173'}/client/invoices?payment=success`
+        }
       };
 
       // Add customer if available
