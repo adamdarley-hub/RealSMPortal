@@ -521,6 +521,34 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
         console.log(`��� Successfully created payment record for invoice ${invoiceId} in ServeManager`);
         console.log(`📝 API Response:`, JSON.stringify(responseData, null, 2));
+
+        // Now update the invoice status to "paid"
+        console.log(`📝 Now updating invoice ${invoiceId} status to "paid"...`);
+
+        const statusUpdateUrl = `${mainSiteUrl}/invoices/${invoiceId}`;
+        const statusFormData = new URLSearchParams();
+        statusFormData.append('invoice[status]', 'paid');
+
+        console.log(`🌐 Updating invoice status at: ${statusUpdateUrl}`);
+        console.log(`📝 Status form data:`, statusFormData.toString());
+
+        const statusResponse = await fetch(statusUpdateUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: statusFormData.toString(),
+        });
+
+        if (!statusResponse.ok) {
+          console.log(`⚠️ Status update failed: ${statusResponse.status} ${statusResponse.statusText}`);
+          const statusError = await statusResponse.text();
+          console.log(`⚠️ Status error details:`, statusError);
+        } else {
+          console.log(`✅ Successfully updated invoice ${invoiceId} status to "paid"`);
+        }
+
         updateSuccessful = true;
       } else {
         // For failed payments, we don't create a payment record
