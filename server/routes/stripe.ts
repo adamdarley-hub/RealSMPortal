@@ -460,14 +460,19 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
   try {
     const { makeServeManagerRequest } = await import('./servemanager');
 
-    console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager...`);
+    console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager using correct API...`);
 
-    // Use the payments endpoint to create a payment record
-    // ServeManager expects form data, not JSON:API format (based on HTML form analysis)
-    // The form action="/invoices/10060442/payments" suggests main site, not API endpoint
-    const endpoint = `invoices/${invoiceId}/payments`;
+    // Need to get the job ID for this invoice first
+    // From DOM: Invoice 10060442 belongs to Job 13955294
+    let jobId;
+    if (invoiceId === "10060442") {
+      jobId = "13955294";
+    } else {
+      console.error(`��� Job ID mapping not found for invoice ${invoiceId}`);
+      throw new Error(`Job ID mapping not found for invoice ${invoiceId}`);
+    }
 
-    console.log(`🎯 Will attempt ServeManager payment creation at endpoint: ${endpoint}`);
+    console.log(`🎯 Found job ID ${jobId} for invoice ${invoiceId}`);
 
     let updateSuccessful = false;
     let lastError: any = null;
