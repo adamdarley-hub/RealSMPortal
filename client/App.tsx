@@ -33,7 +33,6 @@ import ClientJobDetail from "./pages/ClientJobDetail";
 import NotFound from "./pages/NotFound";
 import ApiTest from "./pages/ApiTest";
 import StripeIntegrationExample from "./pages/StripeIntegrationExample";
-import BuilderPage from "./pages/BuilderPage";
 
 const queryClient = new QueryClient();
 
