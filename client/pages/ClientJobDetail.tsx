@@ -971,20 +971,36 @@ export default function ClientJobDetail() {
             <Card>
               <CardContent className="pt-6">
                 {(() => {
-                  // Handle multiple possible data structures from cache vs fresh API
-                  let documentsToBeServed = 
-                    job.raw_data?.documents_to_be_served ||
-                    job.documents_to_be_served ||
-                    job.data?.documents_to_be_served ||
-                    (job as any).attachments ||
-                    (job as any).documents ||
-                    (job as any).files ||
-                    [];
+                  // Extract documents from all possible sources (same as admin view)
+                  let documentsToBeServed = [];
 
-                  // Ensure it's an array
-                  if (!Array.isArray(documentsToBeServed)) {
-                    documentsToBeServed = [];
+                  // Check all document sources to match admin view behavior
+                  if (job.documents && Array.isArray(job.documents)) {
+                    documentsToBeServed.push(...job.documents);
                   }
+                  if (job.attachments && Array.isArray(job.attachments)) {
+                    documentsToBeServed.push(...job.attachments);
+                  }
+                  if (job.documents_to_be_served && Array.isArray(job.documents_to_be_served)) {
+                    documentsToBeServed.push(...job.documents_to_be_served);
+                  }
+                  if (job.raw_data?.documents_to_be_served && Array.isArray(job.raw_data.documents_to_be_served)) {
+                    documentsToBeServed.push(...job.raw_data.documents_to_be_served);
+                  }
+                  if ((job as any).files && Array.isArray((job as any).files)) {
+                    documentsToBeServed.push(...(job as any).files);
+                  }
+
+                  console.log('📄 Client documents found:', {
+                    total: documentsToBeServed.length,
+                    sources: {
+                      documents: job.documents?.length || 0,
+                      attachments: job.attachments?.length || 0,
+                      documents_to_be_served: job.documents_to_be_served?.length || 0,
+                      raw_documents: job.raw_data?.documents_to_be_served?.length || 0,
+                      files: (job as any).files?.length || 0
+                    }
+                  });
 
                   // Filter out documents that have null/empty URLs
                   documentsToBeServed = documentsToBeServed.filter((document: any) => {
