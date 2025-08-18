@@ -96,34 +96,45 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
       customerId = customer.id;
     }
     
-    const paymentIntentData: any = {
-      amount: Math.round(amount * 100), // Convert to cents
-      currency: currency.toLowerCase(),
-      metadata: {
-        invoiceId: invoiceId.toString(),
-        source: 'client-portal'
-      },
-    };
-
-    // Add customer if available
-    if (customerId) {
-      paymentIntentData.customer = customerId;
-    }
+    let paymentIntentData: any;
 
     // Use existing payment method if specified
     if (useExistingPaymentMethod && paymentMethodId && customerId) {
       console.log(`💳 Using existing payment method ${paymentMethodId} for customer ${customerId}`);
-      paymentIntentData.payment_method = paymentMethodId;
-      paymentIntentData.confirmation_method = 'manual';
-      paymentIntentData.confirm = true;
-      // Do NOT add automatic_payment_methods when using existing payment method
+
+      // For existing payment methods, create payment intent with manual confirmation
+      paymentIntentData = {
+        amount: Math.round(amount * 100),
+        currency: currency.toLowerCase(),
+        customer: customerId,
+        payment_method: paymentMethodId,
+        confirmation_method: 'manual',
+        confirm: true,
+        metadata: {
+          invoiceId: invoiceId.toString(),
+          source: 'client-portal'
+        }
+      };
     } else {
       console.log(`💳 Creating payment intent for new payment method`);
-      // Only use automatic payment methods if not using existing payment method
-      paymentIntentData.automatic_payment_methods = {
-        enabled: true,
+
+      // For new payment methods, create payment intent with automatic payment methods
+      paymentIntentData = {
+        amount: Math.round(amount * 100),
+        currency: currency.toLowerCase(),
+        metadata: {
+          invoiceId: invoiceId.toString(),
+          source: 'client-portal'
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        }
       };
-      // Do NOT add confirmation_method when using automatic payment methods
+
+      // Add customer if available
+      if (customerId) {
+        paymentIntentData.customer = customerId;
+      }
     }
     
     console.log('💳 Final payment intent data:', JSON.stringify(paymentIntentData, null, 2));
