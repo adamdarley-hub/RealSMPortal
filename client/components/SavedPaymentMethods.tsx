@@ -87,11 +87,12 @@ const AddCardForm: React.FC<{
         }),
       });
 
-      const setupData = await setupResponse.json();
-      
       if (!setupResponse.ok) {
-        throw new Error(setupData.error || 'Failed to create setup intent');
+        const errorData = await setupResponse.json();
+        throw new Error(errorData.error || 'Failed to create setup intent');
       }
+
+      const setupData = await setupResponse.json();
 
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) {
