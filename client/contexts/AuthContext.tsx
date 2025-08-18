@@ -57,6 +57,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Check if user has explicitly logged out
+    const hasLoggedOut = localStorage.getItem('serveportal_logged_out');
+    if (hasLoggedOut) {
+      setIsLoading(false);
+      return;
+    }
+
     // Auto-login admin user in Builder.io preview environment
     const isBuilderPreview = window.location.search.includes('builder.preview=') ||
                             window.location.hostname.includes('builder.io') ||
