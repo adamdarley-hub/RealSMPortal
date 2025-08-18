@@ -107,7 +107,7 @@ const AddCardForm: React.FC<{
       }
 
       // Confirm setup intent
-      const { error: stripeError } = await stripe.confirmCardSetup(setupData.clientSecret, {
+      const { error: stripeError, setupIntent } = await stripe.confirmCardSetup(setupData.clientSecret, {
         payment_method: {
           card: cardElement,
         }
@@ -116,6 +116,9 @@ const AddCardForm: React.FC<{
       if (stripeError) {
         throw new Error(stripeError.message || 'Failed to save payment method');
       }
+
+      console.log('💳 Setup intent confirmed successfully:', setupIntent?.id);
+      console.log('💳 Customer ID for reload:', setupData.customerId);
 
       toast({
         title: "Payment Method Saved",
