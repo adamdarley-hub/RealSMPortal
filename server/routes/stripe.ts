@@ -406,8 +406,17 @@ export const confirmPayment: RequestHandler = async (req, res) => {
     
     console.log(`✅ Payment confirmed for invoice ${invoiceId}: ${paymentIntentId}`);
 
-    // Update invoice status in ServeManager
+    // Update invoice status in ServeManager immediately
     await updateInvoiceStatusInServeManager(invoiceId.toString(), 'paid');
+
+    // Also trigger a cache refresh to ensure the data is up-to-date
+    try {
+      const { refreshInvoicesCache } = await import('../services/cache-service');
+      await refreshInvoicesCache();
+      console.log(`🔄 Refreshed invoices cache after payment confirmation`);
+    } catch (cacheError) {
+      console.error('Failed to refresh invoices cache:', cacheError);
+    }
     
     res.json({
       success: true,
