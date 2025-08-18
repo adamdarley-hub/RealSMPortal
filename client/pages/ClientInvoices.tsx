@@ -464,19 +464,19 @@ export default function ClientInvoices() {
                               <DollarSign className="w-3 h-3" />
                               Pay
                             </Button>
-                            {/* Temporary test button for invoice 10060442 */}
-                            {invoice.id === 10060442 && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => handleTestServeManagerUpdate(invoice, e)}
-                                className="gap-1"
-                              >
-                                <TestTube className="w-3 h-3" />
-                                Test SM
-                              </Button>
-                            )}
                           </>
+                        )}
+                        {/* Temporary test button for invoice 10060442 - show regardless of status */}
+                        {invoice.id === 10060442 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => handleTestServeManagerUpdate(invoice, e)}
+                            className="gap-1"
+                          >
+                            <TestTube className="w-3 h-3" />
+                            Test SM
+                          </Button>
                         )}
                       </div>
                     </TableCell>
