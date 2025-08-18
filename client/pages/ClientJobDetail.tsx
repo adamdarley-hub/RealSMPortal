@@ -476,8 +476,9 @@ export default function ClientJobDetail() {
 
       setJob(jobData);
 
-      // Load affidavits for this job
+      // Load affidavits and invoices for this job
       loadJobAffidavits(id);
+      loadJobInvoices(id);
     } catch (error) {
       console.error("Error loading job:", error);
       toast({
