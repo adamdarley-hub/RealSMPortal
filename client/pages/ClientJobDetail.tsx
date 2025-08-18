@@ -972,7 +972,7 @@ export default function ClientJobDetail() {
                             <div className="text-right">
                               <p className="text-sm text-gray-500">{attempt.date}</p>
                               <div className="flex items-center text-sm text-gray-600">
-                                {attempt.server}
+                                {typeof attempt.server === 'string' ? attempt.server : 'Unknown Server'}
                               </div>
                             </div>
                           </div>
