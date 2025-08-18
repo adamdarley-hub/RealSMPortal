@@ -97,14 +97,24 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
         // Get customer by email
         const customerResponse = await fetch(`/api/stripe/customers/by-email/${encodeURIComponent(user.email)}`);
         const customerData = await customerResponse.json();
-        
+
+        if (!customerResponse.ok) {
+          console.error('Failed to load customer:', customerData.error);
+          return;
+        }
+
         if (customerData.customer) {
           setCustomerId(customerData.customer.id);
-          
+
           // Load saved payment methods
           const pmResponse = await fetch(`/api/stripe/customers/${customerData.customer.id}/payment-methods`);
           const pmData = await pmResponse.json();
-          
+
+          if (!pmResponse.ok) {
+            console.error('Failed to load payment methods:', pmData.error);
+            return;
+          }
+
           if (pmData.paymentMethods) {
             setSavedPaymentMethods(pmData.paymentMethods);
             // If user has saved cards, default to using them
