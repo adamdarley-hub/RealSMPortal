@@ -141,105 +141,28 @@ export async function createServer() {
   app.get("/api/stripe/publishable-key", stripeRoutes.getPublishableKey);
   app.get("/api/stripe/payment-status/:invoiceId", stripeRoutes.getPaymentStatus);
 
-  // Comprehensive ServeManager invoice testing endpoint
-  app.post('/api/invoices/:id/test-update', async (req, res) => {
-    const { id } = req.params;
-    const results = [];
-
+  // Manual invoice update endpoint (for testing)
+  app.post('/api/invoices/:id/mark-paid', async (req, res) => {
     try {
-      console.log(`🧪 Testing ServeManager invoice ${id} update with multiple approaches...`);
+      const { id } = req.params;
+      console.log(`🧪 Manual request to mark invoice ${id} as paid`);
 
-      const { makeServeManagerRequest } = await import('./routes/servemanager');
+      // Use the updated ServeManager update logic
+      const { updateInvoiceStatusInServeManager } = await import('./routes/stripe');
 
-      // Test different data formats and endpoints
-      const testCases = [
-        {
-          name: 'JSON:API format with /invoices',
-          endpoint: `/invoices/${id}`,
-          method: 'PUT',
-          data: {
-            data: {
-              type: "invoice",
-              paid_on: new Date().toISOString()
-            }
-          }
-        },
-        {
-          name: 'JSON:API format with /invoices (PATCH)',
-          endpoint: `/invoices/${id}`,
-          method: 'PATCH',
-          data: {
-            data: {
-              type: "invoice",
-              paid_on: new Date().toISOString()
-            }
-          }
-        },
-        {
-          name: 'Simple paid_on field',
-          endpoint: `/invoices/${id}`,
-          method: 'PUT',
-          data: {
-            paid_on: new Date().toISOString()
-          }
-        },
-        {
-          name: 'Status and paid_on fields',
-          endpoint: `/invoices/${id}`,
-          method: 'PUT',
-          data: {
-            status: 'paid',
-            paid_on: new Date().toISOString(),
-            total_paid: "0.5"
-          }
-        }
-      ];
-
-      for (const testCase of testCases) {
-        try {
-          console.log(`📝 Testing: ${testCase.name}`);
-          console.log(`📝 Endpoint: ${testCase.endpoint}`);
-          console.log(`📝 Data: ${JSON.stringify(testCase.data, null, 2)}`);
-
-          const response = await makeServeManagerRequest(testCase.endpoint, {
-            method: testCase.method,
-            body: JSON.stringify(testCase.data),
-          });
-
-          results.push({
-            test: testCase.name,
-            success: true,
-            response: response
-          });
-
-          console.log(`✅ ${testCase.name} - SUCCESS`);
-          break; // Stop at first success
-
-        } catch (error) {
-          results.push({
-            test: testCase.name,
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          });
-
-          console.log(`❌ ${testCase.name} - FAILED: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }
+      await updateInvoiceStatusInServeManager(id, 'paid');
 
       res.json({
-        success: results.some(r => r.success),
-        message: `Tested ${results.length} approaches`,
-        invoiceId: id,
-        results: results
+        success: true,
+        message: `Invoice ${id} marked as paid`,
+        invoiceId: id
       });
 
     } catch (error) {
-      console.error(`Failed to test invoice ${id} updates:`, error);
+      console.error(`Failed to mark invoice ${req.params.id} as paid:`, error);
       res.status(500).json({
-        error: 'Failed to test invoice updates',
-        message: error instanceof Error ? error.message : 'Unknown error',
-        invoiceId: id,
-        results: results
+        error: 'Failed to update invoice status',
+        message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
