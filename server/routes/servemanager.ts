@@ -70,12 +70,20 @@ export async function makeServeManagerRequest(endpoint: string, options: Request
   console.log(`🔑 Base URL: ${config.baseUrl}`);
   console.log(`📍 Endpoint: ${endpoint}`);
 
+  const defaultHeaders: Record<string, string> = {
+    'Authorization': `Basic ${credentials}`,
+    'Accept': 'application/vnd.api+json',
+  };
+
+  // Only add JSON Content-Type if not already specified (allows form data)
+  if (!options.headers || !Object.keys(options.headers).some(key => key.toLowerCase() === 'content-type')) {
+    defaultHeaders['Content-Type'] = 'application/vnd.api+json';
+  }
+
   const response = await fetch(fullUrl, {
     ...options,
     headers: {
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/vnd.api+json',
-      'Accept': 'application/vnd.api+json',
+      ...defaultHeaders,
       ...options.headers,
     },
   });
