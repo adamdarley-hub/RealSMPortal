@@ -558,10 +558,6 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
         throw new Error('Cannot create payment record for failed payment');
       }
 
-      console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
-      console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
-      updateSuccessful = true;
-
     } catch (apiError) {
       console.log(`❌ Failed to create payment record for invoice ${invoiceId}: ${apiError.message}`);
       lastError = apiError;
