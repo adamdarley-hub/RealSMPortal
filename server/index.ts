@@ -61,8 +61,34 @@ import { createSetupIntent, confirmSetupIntent, processAffidavitPayment, getJobP
 export async function createServer() {
   const app = express();
 
-  // Middleware
-  app.use(cors());
+  // Enhanced CORS configuration for Builder.io preview
+  app.use(cors({
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://*.builder.io',
+      'https://builder.io',
+      /\.vercel\.app$/,
+      /\.netlify\.app$/,
+      /\.builder\.io$/
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  }));
+
+  // Additional CORS headers for assets
+  app.use('*', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(200);
+    } else {
+      next();
+    }
+  });
 
   // Add compression for better performance
   app.use((req, res, next) => {
