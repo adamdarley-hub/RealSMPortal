@@ -228,22 +228,26 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
       try {
         // Get customer by email
         const customerResponse = await fetch(`/api/stripe/customers/by-email/${encodeURIComponent(user.email)}`);
-        const customerData = await customerResponse.json();
 
         if (!customerResponse.ok) {
-          throw new Error(customerData.error || 'Failed to load customer');
+          const errorData = await customerResponse.json();
+          throw new Error(errorData.error || 'Failed to load customer');
         }
+
+        const customerData = await customerResponse.json();
 
         if (customerData.customer) {
           setCustomerId(customerData.customer.id);
 
           // Load saved payment methods
           const pmResponse = await fetch(`/api/stripe/customers/${customerData.customer.id}/payment-methods`);
-          const pmData = await pmResponse.json();
 
           if (!pmResponse.ok) {
-            throw new Error(pmData.error || 'Failed to load payment methods');
+            const errorData = await pmResponse.json();
+            throw new Error(errorData.error || 'Failed to load payment methods');
           }
+
+          const pmData = await pmResponse.json();
 
           if (pmData.paymentMethods) {
             setPaymentMethods(pmData.paymentMethods);
@@ -272,11 +276,12 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
         method: 'DELETE',
       });
 
-      const responseData = await response.json();
-
       if (!response.ok) {
-        throw new Error(responseData.error || 'Failed to delete payment method');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete payment method');
       }
+
+      const responseData = await response.json();
 
       setPaymentMethods(prev => prev.filter(pm => pm.id !== paymentMethodId));
 
@@ -304,12 +309,14 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
     if (customerId) {
       try {
         const pmResponse = await fetch(`/api/stripe/customers/${customerId}/payment-methods`);
-        const pmData = await pmResponse.json();
 
         if (!pmResponse.ok) {
-          console.error('Failed to reload payment methods:', pmData.error);
+          const errorData = await pmResponse.json();
+          console.error('Failed to reload payment methods:', errorData.error);
           return;
         }
+
+        const pmData = await pmResponse.json();
 
         if (pmData.paymentMethods) {
           setPaymentMethods(pmData.paymentMethods);
