@@ -467,7 +467,7 @@ export default function ClientInvoices() {
                           </>
                         )}
                         {/* Temporary test button for invoice 10060442 - show regardless of status */}
-                        {invoice.id === 10060442 && (
+                        {(invoice.id === 10060442 || invoice.id === "10060442" || String(invoice.id) === "10060442") && (
                           <Button
                             size="sm"
                             variant="outline"
