@@ -98,8 +98,14 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
         const customerResponse = await fetch(`/api/stripe/customers/by-email/${encodeURIComponent(user.email)}`);
 
         if (!customerResponse.ok) {
-          const errorData = await customerResponse.json();
-          console.error('Failed to load customer:', errorData.error);
+          let errorMessage = 'Failed to load customer';
+          try {
+            const errorData = await customerResponse.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            errorMessage = `${errorMessage} (${customerResponse.status})`;
+          }
+          console.error('Failed to load customer:', errorMessage);
           return;
         }
 
@@ -112,8 +118,14 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
           const pmResponse = await fetch(`/api/stripe/customers/${customerData.customer.id}/payment-methods`);
 
           if (!pmResponse.ok) {
-            const errorData = await pmResponse.json();
-            console.error('Failed to load payment methods:', errorData.error);
+            let errorMessage = 'Failed to load payment methods';
+            try {
+              const errorData = await pmResponse.json();
+              errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+              errorMessage = `${errorMessage} (${pmResponse.status})`;
+            }
+            console.error('Failed to load payment methods:', errorMessage);
             return;
           }
 
@@ -308,8 +320,14 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete payment method');
+        let errorMessage = 'Failed to delete payment method';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `${errorMessage} (${response.status})`;
+        }
+        throw new Error(errorMessage);
       }
 
       const responseData = await response.json();
@@ -354,8 +372,14 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create setup intent');
+        let errorMessage = 'Failed to create setup intent';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `${errorMessage} (${response.status})`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -381,8 +405,14 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
           const pmResponse = await fetch(`/api/stripe/customers/${data.customerId}/payment-methods`);
 
           if (!pmResponse.ok) {
-            const errorData = await pmResponse.json();
-            console.error('Failed to reload payment methods:', errorData.error);
+            let errorMessage = 'Failed to reload payment methods';
+            try {
+              const errorData = await pmResponse.json();
+              errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+              errorMessage = `${errorMessage} (${pmResponse.status})`;
+            }
+            console.error('Failed to reload payment methods:', errorMessage);
             return;
           }
 
