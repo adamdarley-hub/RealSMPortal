@@ -129,6 +129,12 @@ export async function createServer() {
   app.post("/api/stripe/create-payment-intent", stripeRoutes.createPaymentIntent);
   app.post("/api/stripe/confirm-payment", stripeRoutes.confirmPayment);
 
+  // Stripe customer and payment method management routes
+  app.post("/api/stripe/create-setup-intent", stripeRoutes.createSetupIntent);
+  app.get("/api/stripe/customers/:customerId/payment-methods", stripeRoutes.getCustomerPaymentMethods);
+  app.delete("/api/stripe/payment-methods/:paymentMethodId", stripeRoutes.deletePaymentMethod);
+  app.get("/api/stripe/customers/by-email/:email", stripeRoutes.getCustomerByEmail);
+
   // Stripe webhook needs raw body data
   app.post("/api/stripe/webhook", express.raw({ type: 'application/json' }), stripeRoutes.handleWebhook);
 
