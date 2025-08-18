@@ -462,49 +462,41 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
     console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager...`);
 
-    // Use the correct ServeManager API format with all required fields
-    const endpoint = `/invoices/${invoiceId}`; // Use fallback endpoint that worked
+    // Get invoice data first to find the associated job_id
+    const currentInvoice = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
+      method: 'GET'
+    });
+    const invoiceData = currentInvoice.data || currentInvoice;
 
-    // ServeManager requires multiple fields to be updated together for paid status
+    if (!invoiceData.job_id) {
+      throw new Error(`Invoice ${invoiceId} does not have an associated job_id`);
+    }
+
+    const jobId = invoiceData.job_id;
+    const endpoint = `/jobs/${jobId}`; // Use job endpoint as shown in your example
+
+    // ServeManager requires updating invoice through the job endpoint
     let updateData: any;
 
     if (status === 'paid') {
-      // Get the current invoice data to set the correct total_paid amount
-      try {
-        const currentInvoice = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
-          method: 'GET'
-        });
-        const invoiceData = currentInvoice.data || currentInvoice;
+      updateData = {
+        data: {
+          type: "invoice",
+          paid_on: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+          balance_due: "0.0",
+          total_paid: invoiceData.total || invoiceData.subtotal || "0.50"
+        }
+      };
 
-        updateData = {
-          data: {
-            type: "invoice",
-            id: parseInt(invoiceId),
-            paid_on: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-            balance_due: "0.0",
-            total_paid: invoiceData.total || invoiceData.subtotal || "0.50" // Use actual invoice amount
-          }
-        };
+      console.log(`📝 Updating invoice ${invoiceId} via job ${jobId} with total_paid: ${updateData.data.total_paid}`);
 
-        console.log(`📝 Setting total_paid to ${updateData.data.total_paid} based on invoice data`);
-
-      } catch (getError) {
-        console.log(`⚠️ Could not get current invoice data: ${getError.message}`);
-        updateData = {
-          data: {
-            type: "invoice",
-            id: parseInt(invoiceId),
-            paid_on: new Date().toISOString().split('T')[0],
-            balance_due: "0.0",
-            total_paid: "0.50" // Fallback amount
-          }
-        };
-      }
     } else {
       updateData = {
         data: {
           type: "invoice",
-          paid_on: null
+          paid_on: null,
+          balance_due: invoiceData.balance_due,
+          total_paid: "0.0"
         }
       };
     }
