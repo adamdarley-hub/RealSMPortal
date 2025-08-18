@@ -141,6 +141,64 @@ export async function createServer() {
   app.get("/api/stripe/publishable-key", stripeRoutes.getPublishableKey);
   app.get("/api/stripe/payment-status/:invoiceId", stripeRoutes.getPaymentStatus);
 
+  // Manual invoice update endpoint (for testing ServeManager integration)
+  app.post('/api/invoices/:id/mark-paid', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`🧪 Manual request to mark invoice ${id} as paid`);
+
+      // Use the ServeManager update logic from stripe routes
+      const { makeServeManagerRequest } = await import('./routes/servemanager');
+
+      const updateData = {
+        data: {
+          type: "invoice",
+          paid_on: new Date().toISOString()
+        }
+      };
+
+      console.log(`📝 Trying to update invoice ${id} in ServeManager...`);
+
+      try {
+        await makeServeManagerRequest(`/api/invoices/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(updateData),
+        });
+        console.log(`✅ Successfully marked invoice ${id} as paid in ServeManager`);
+
+        res.json({
+          success: true,
+          message: `Invoice ${id} marked as paid in ServeManager`,
+          invoiceId: id
+        });
+
+      } catch (apiError) {
+        console.log(`❌ /api/invoices/${id} failed, trying /invoices/${id}`);
+
+        await makeServeManagerRequest(`/invoices/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(updateData),
+        });
+
+        console.log(`✅ Successfully marked invoice ${id} as paid via fallback endpoint`);
+
+        res.json({
+          success: true,
+          message: `Invoice ${id} marked as paid in ServeManager (via fallback)`,
+          invoiceId: id
+        });
+      }
+
+    } catch (error) {
+      console.error(`Failed to mark invoice ${req.params.id} as paid:`, error);
+      res.status(500).json({
+        error: 'Failed to update invoice status in ServeManager',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        invoiceId: req.params.id
+      });
+    }
+  });
+
   // Root route - redirect to frontend
   app.get("/", (req, res) => {
     res.redirect("http://localhost:5173/");
