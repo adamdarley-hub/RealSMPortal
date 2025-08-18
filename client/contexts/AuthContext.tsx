@@ -82,20 +82,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
+    console.log('🔐 Login attempt:', { email, password });
     setIsLoading(true);
-    
+
     // Mock authentication - in production this would be an API call
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-    
+
     const foundUser = mockUsers.find(u => u.email === email);
+    console.log('👤 Found user:', foundUser);
+
     if (foundUser && password === 'password') { // Simple mock password
+      console.log('✅ Login successful, setting user');
       setUser(foundUser);
       localStorage.setItem('serveportal_user', JSON.stringify(foundUser));
       localStorage.removeItem('serveportal_logged_out'); // Clear logout flag
       setIsLoading(false);
       return true;
     }
-    
+
+    console.log('❌ Login failed');
     setIsLoading(false);
     return false;
   };
