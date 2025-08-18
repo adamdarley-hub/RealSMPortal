@@ -456,6 +456,22 @@ async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'pai
 
     console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" in ServeManager`);
 
+    // Send real-time notification to clients about the status update
+    try {
+      const { broadcastToClients } = await import('../services/websocket-service');
+      broadcastToClients({
+        type: 'invoice_payment_status_updated',
+        data: {
+          invoiceId: invoiceId,
+          status: status,
+          timestamp: new Date().toISOString()
+        }
+      });
+      console.log(`📡 Broadcasted invoice ${invoiceId} status update to connected clients`);
+    } catch (wsError) {
+      console.error('Failed to broadcast status update:', wsError);
+    }
+
   } catch (error) {
     console.error(`❌ Failed to update invoice ${invoiceId} status in ServeManager:`, error);
     // Don't throw error - we don't want to fail the webhook if this update fails
