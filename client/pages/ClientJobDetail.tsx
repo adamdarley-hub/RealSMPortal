@@ -1291,45 +1291,62 @@ export default function ClientJobDetail() {
                   }
 
                   return (
-                    <div className="space-y-4">
-                      {invoices.map((invoice: any, index: number) => (
-                        <div key={invoice.id || index} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="font-semibold">
-                                Invoice #{invoice.id}
-                              </h3>
-                              <p className="text-sm text-muted-foreground">
-                                Status: {invoice.status}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg">
-                                ${invoice.total || '0.00'}
-                              </p>
-                              {invoice.balance_due && invoice.balance_due !== '0.0' && (
-                                <p className="text-sm text-red-600">
-                                  Balance Due: ${invoice.balance_due}
+                    <div className="space-y-6">
+                      {/* Invoice List */}
+                      <div className="space-y-4">
+                        {invoices.map((invoice: any, index: number) => (
+                          <div key={invoice.id || index} className="border rounded-lg p-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="font-semibold">
+                                  Invoice #{invoice.id}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                  Status: {invoice.status}
                                 </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold text-lg">
+                                  ${invoice.total || '0.00'}
+                                </p>
+                                {invoice.balance_due && invoice.balance_due !== '0.0' && (
+                                  <p className="text-sm text-red-600">
+                                    Balance Due: ${invoice.balance_due}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground mb-3">
+                              {invoice.issued_on && (
+                                <p>Issued: {new Date(invoice.issued_on).toLocaleDateString()}</p>
+                              )}
+                              {invoice.paid_on && (
+                                <p>Paid: {new Date(invoice.paid_on).toLocaleDateString()}</p>
+                              )}
+                              {invoice.subtotal && (
+                                <p>Subtotal: ${invoice.subtotal}</p>
+                              )}
+                              {invoice.total_paid && invoice.total_paid !== '0.0' && (
+                                <p>Paid: ${invoice.total_paid}</p>
                               )}
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                            {invoice.issued_on && (
-                              <p>Issued: {new Date(invoice.issued_on).toLocaleDateString()}</p>
-                            )}
-                            {invoice.paid_on && (
-                              <p>Paid: {new Date(invoice.paid_on).toLocaleDateString()}</p>
-                            )}
-                            {invoice.subtotal && (
-                              <p>Subtotal: ${invoice.subtotal}</p>
-                            )}
-                            {invoice.total_paid && invoice.total_paid !== '0.0' && (
-                              <p>Paid: ${invoice.total_paid}</p>
-                            )}
+                        ))}
+                      </div>
+
+                      {/* Invoice Preview */}
+                      {invoices.length > 0 && (
+                        <div className="border-t pt-6">
+                          <h3 className="text-lg font-semibold mb-4">Invoice Preview</h3>
+                          <div className="bg-gray-100 rounded-lg p-2 h-96">
+                            <iframe
+                              src={`/api/jobs/${job?.id}/invoices/${invoices[0].id}/preview#navpanes=0`}
+                              className="w-full h-full border-0 rounded"
+                              title="Invoice Preview"
+                            />
                           </div>
                         </div>
-                      ))}
+                      )}
                     </div>
                   );
                 })()}
