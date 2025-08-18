@@ -1046,7 +1046,7 @@ export default function ClientJobDetail() {
                             )}
 
                             {/* GPS Information */}
-                            {(attempt.details.gps.latitude || attempt.details.gps.longitude) && (
+                            {(attempt.details?.gps?.latitude || attempt.details?.gps?.longitude) && (
                               <div>
                                 <label className="text-sm font-medium text-gray-700 mb-3 block">Location</label>
                                 <div className="grid grid-cols-2 gap-6">
