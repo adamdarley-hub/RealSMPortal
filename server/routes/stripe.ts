@@ -227,8 +227,13 @@ export const handleWebhook: RequestHandler = async (req, res) => {
       case 'payment_intent.payment_failed':
         const failedPayment = event.data.object;
         console.log(`❌ Payment failed: ${failedPayment.id} for invoice ${failedPayment.metadata.invoiceId}`);
-        
-        // TODO: Handle failed payment (notify user, etc.)
+
+        // Keep invoice status as "issued" for failed payments
+        if (failedPayment.metadata.invoiceId) {
+          console.log(`📝 Payment failed for invoice ${failedPayment.metadata.invoiceId}, keeping status as "issued"`);
+        }
+
+        // TODO: Send payment failure notification email
         break;
         
       default:
