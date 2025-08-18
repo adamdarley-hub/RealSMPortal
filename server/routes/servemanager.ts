@@ -1075,16 +1075,28 @@ export const getCourtCases: RequestHandler = async (req, res) => {
 export const createJob: RequestHandler = async (req, res) => {
   try {
     const jobData = req.body;
-    
+
     const data = await makeServeManagerRequest('/jobs', {
       method: 'POST',
       body: JSON.stringify(jobData),
     });
-    
+
+    // Sync new job to Supabase for persistence
+    if (data && data.data && data.data.id) {
+      try {
+        console.log(`🔄 Syncing new job ${data.data.id} to Supabase for persistence`);
+        await supabaseSyncService.syncSingleJob(data.data.id);
+        console.log(`✅ New job ${data.data.id} synced to Supabase successfully`);
+      } catch (syncError) {
+        console.error(`⚠️ Failed to sync new job ${data.data.id} to Supabase:`, syncError);
+        // Don't fail the request if Supabase sync fails - just log the warning
+      }
+    }
+
     res.status(201).json(data);
   } catch (error) {
     console.error('Error creating job:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create job in ServeManager',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
