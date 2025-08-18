@@ -91,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (foundUser && password === 'password') { // Simple mock password
       setUser(foundUser);
       localStorage.setItem('serveportal_user', JSON.stringify(foundUser));
+      localStorage.removeItem('serveportal_logged_out'); // Clear logout flag
       setIsLoading(false);
       return true;
     }
