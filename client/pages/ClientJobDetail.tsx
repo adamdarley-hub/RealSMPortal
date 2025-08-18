@@ -555,6 +555,8 @@ export default function ClientJobDetail() {
         serveType: attempt.serve_type || attempt.service_type || 'Personal',
         serviceStatus: attempt.status || attempt.result || 'Unknown',
         recipient: attempt.recipient || attempt.served_to || 'Unknown',
+        address: attempt.address || attempt.service_address || 'N/A',
+        description: attempt.description || attempt.notes || '',
         photos: attempt.photos || attempt.images || [],
         gps: attempt.gps || attempt.location || {}
       },
