@@ -303,22 +303,24 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
         method: 'DELETE',
       });
 
-      if (response.ok) {
-        setSavedPaymentMethods(prev => prev.filter(pm => pm.id !== paymentMethodId));
-        
-        // If we deleted the selected method, switch to new card
-        if (selectedPaymentMethod === paymentMethodId) {
-          setUseNewCard(true);
-          setSelectedPaymentMethod(null);
-        }
+      const responseData = await response.json();
 
-        toast({
-          title: "Payment Method Deleted",
-          description: "The payment method has been removed successfully.",
-        });
-      } else {
-        throw new Error('Failed to delete payment method');
+      if (!response.ok) {
+        throw new Error(responseData.error || 'Failed to delete payment method');
       }
+
+      setSavedPaymentMethods(prev => prev.filter(pm => pm.id !== paymentMethodId));
+
+      // If we deleted the selected method, switch to new card
+      if (selectedPaymentMethod === paymentMethodId) {
+        setUseNewCard(true);
+        setSelectedPaymentMethod(null);
+      }
+
+      toast({
+        title: "Payment Method Deleted",
+        description: "The payment method has been removed successfully.",
+      });
     } catch (error) {
       toast({
         title: "Error",
