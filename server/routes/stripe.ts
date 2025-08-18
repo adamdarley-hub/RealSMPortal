@@ -490,13 +490,32 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
         console.log(`📝 Creating payment record for invoice ${invoiceId} with amount: $${paymentAmount}`);
         console.log(`📝 Form data:`, formData.toString());
 
-        const response = await makeServeManagerRequest(endpoint, {
+        // For payments, use main ServeManager site, not API endpoint
+        // The form action="/invoices/10060442/payments" suggests main site
+        const { getServeManagerConfig } = await import('./servemanager');
+        const config = await getServeManagerConfig();
+
+        // Use main site URL instead of API URL for payments
+        const mainSiteUrl = config.baseUrl.replace('/api', '');
+        const paymentUrl = `${mainSiteUrl}/${endpoint}`;
+
+        console.log(`🌐 Attempting payment at: ${paymentUrl}`);
+
+        const credentials = Buffer.from(`${config.apiKey.split(':')[0]}:x`).toString('base64');
+
+        const response = await fetch(paymentUrl, {
           method: 'POST',
           headers: {
+            'Authorization': `Basic ${credentials}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: formData.toString(),
         });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Payment API error: ${response.status} ${response.statusText} - ${errorText}`);
+        }
 
         console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
         console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
