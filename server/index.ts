@@ -349,6 +349,17 @@ export async function createServer() {
     }
   }, 5000); // Start after 5 seconds
 
+  // SPA fallback route - must be LAST to catch all non-API routes
+  if (process.env.NODE_ENV === 'production') {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const distPath = path.resolve(__dirname, '../dist/spa');
+
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
   return app;
 }
 
