@@ -149,14 +149,23 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
 export const createSetupIntent: RequestHandler = async (req, res) => {
   try {
     const { userInfo } = req.body;
-    
+
     if (!userInfo || !userInfo.email) {
       return res.status(400).json({
         error: 'User information is required to save payment methods'
       });
     }
-    
-    const stripe = await getStripeInstance();
+
+    let stripe;
+    try {
+      stripe = await getStripeInstance();
+    } catch (configError) {
+      console.error('Stripe configuration error:', configError);
+      return res.status(503).json({
+        error: 'Stripe is not configured. Please configure Stripe in the admin settings.',
+        code: 'STRIPE_NOT_CONFIGURED'
+      });
+    }
     
     // Get or create customer
     const customer = await getOrCreateStripeCustomer(userInfo);
