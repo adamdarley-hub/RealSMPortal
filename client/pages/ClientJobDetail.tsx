@@ -427,7 +427,21 @@ export default function ClientJobDetail() {
       const jobData = await response.json();
       
       // Verify client has access to this job
-      if (user?.client_id && jobData.client_id !== user.client_id) {
+      console.log('🔍 Access control check:', {
+        userClientId: user?.client_id,
+        jobClientId: jobData.client_id,
+        userClientIdType: typeof user?.client_id,
+        jobClientIdType: typeof jobData.client_id,
+        match: user?.client_id == jobData.client_id,
+        strictMatch: user?.client_id === jobData.client_id,
+        jobData: {
+          id: jobData.id,
+          client_name: jobData.client_name,
+          company: jobData.company
+        }
+      });
+
+      if (user?.client_id && jobData.client_id && String(user.client_id) !== String(jobData.client_id)) {
         throw new Error('You do not have access to this job');
       }
       
