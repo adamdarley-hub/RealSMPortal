@@ -544,24 +544,32 @@ export default function ClientJobDetail() {
       }
     });
 
-    return attempts.map((attempt: any, index: number) => ({
-      id: attempt.id || index,
-      date: attempt.date || attempt.attempt_date || attempt.created_at,
-      status: attempt.status || attempt.result || 'Unknown',
-      notes: attempt.notes || attempt.description || '',
-      server: attempt.server || attempt.process_server || 'Unknown Server',
-      success: attempt.success || attempt.status === 'Served',
-      details: {
-        serveType: attempt.serve_type || attempt.service_type || 'Personal',
-        serviceStatus: attempt.status || attempt.result || 'Unknown',
-        recipient: attempt.recipient || attempt.served_to || 'Unknown',
-        address: attempt.address || attempt.service_address || 'N/A',
-        description: attempt.description || attempt.notes || '',
-        photos: attempt.photos || attempt.images || [],
-        gps: attempt.gps || attempt.location || {}
-      },
-      raw: attempt
-    }));
+    return attempts.map((attempt: any, index: number) => {
+      const isSuccessful = attempt.success || attempt.status === 'Served';
+      return {
+        id: attempt.id || index,
+        number: index + 1,
+        date: attempt.date || attempt.attempt_date || attempt.created_at,
+        status: attempt.status || attempt.result || 'Unknown',
+        statusColor: isSuccessful ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
+        method: 'Personal Service',
+        methodColor: 'bg-blue-50 text-blue-700',
+        methodIcon: '👤',
+        notes: attempt.notes || attempt.description || '',
+        server: attempt.server || attempt.process_server || 'Unknown Server',
+        success: isSuccessful,
+        details: {
+          serveType: attempt.serve_type || attempt.service_type || 'Personal',
+          serviceStatus: attempt.status || attempt.result || 'Unknown',
+          recipient: attempt.recipient || attempt.served_to || 'Unknown',
+          address: attempt.address || attempt.service_address || 'N/A',
+          description: attempt.description || attempt.notes || '',
+          photos: attempt.photos || attempt.images || [],
+          gps: attempt.gps || attempt.location || {}
+        },
+        raw: attempt
+      };
+    });
   };
 
   const loadJobInvoices = async (jobId: string) => {
