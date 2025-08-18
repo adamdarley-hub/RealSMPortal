@@ -332,35 +332,46 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
     }
   };
 
-  const handleAddSuccess = async () => {
+  const handleAddSuccess = async (newCustomerId?: string) => {
     setShowAddForm(false);
-    
+
+    // Use the provided customer ID or the existing one
+    const customerIdToUse = newCustomerId || customerId;
+
+    if (!customerIdToUse) {
+      console.error('No customer ID available to reload payment methods');
+      return;
+    }
+
+    // Update customer ID if we got a new one
+    if (newCustomerId && newCustomerId !== customerId) {
+      setCustomerId(newCustomerId);
+    }
+
     // Reload payment methods
-    if (customerId) {
-      try {
-        const pmResponse = await fetch(`/api/stripe/customers/${customerId}/payment-methods`);
+    try {
+      const pmResponse = await fetch(`/api/stripe/customers/${customerIdToUse}/payment-methods`);
 
-        if (!pmResponse.ok) {
-          let errorMessage = 'Failed to reload payment methods';
-          try {
-            const errorData = await pmResponse.json();
-            errorMessage = errorData.error || errorMessage;
-          } catch (e) {
-            errorMessage = `${errorMessage} (${pmResponse.status})`;
-          }
-          console.error('Failed to reload payment methods:', errorMessage);
-          return;
+      if (!pmResponse.ok) {
+        let errorMessage = 'Failed to reload payment methods';
+        try {
+          const errorData = await pmResponse.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `${errorMessage} (${pmResponse.status})`;
         }
-
-        const pmData = await pmResponse.json();
-
-        if (pmData.paymentMethods) {
-          setPaymentMethods(pmData.paymentMethods);
-          onPaymentMethodAdded?.();
-        }
-      } catch (error) {
-        console.error('Error reloading payment methods:', error);
+        console.error('Failed to reload payment methods:', errorMessage);
+        return;
       }
+
+      const pmData = await pmResponse.json();
+
+      if (pmData.paymentMethods) {
+        setPaymentMethods(pmData.paymentMethods);
+        onPaymentMethodAdded?.();
+      }
+    } catch (error) {
+      console.error('Error reloading payment methods:', error);
     }
   };
 
