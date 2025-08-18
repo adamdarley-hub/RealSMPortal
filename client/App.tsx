@@ -1,12 +1,5 @@
 import "./global.css";
 
-// Builder.io fix utilities - load first to prevent issues
-import "./utils/safeStorage";
-import "./utils/oauthGuard";
-import "./utils/fontManager";
-import "./utils/warningSuppressor";
-import "./utils/resourceManager";
-
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -15,10 +8,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { StripeProvider } from "./contexts/StripeContext";
-import { BuilderProvider } from "./contexts/BuilderContext";
-import "./utils/mcpGuard"; // Initialize MCP guard to prevent OAuth refresh loops
-import "./utils/fontProxy"; // Initialize font proxy to handle CORS issues
-import "./utils/builderConfig"; // Initialize Builder.io config to eliminate warnings
 import "./utils/scriptManager"; // Initialize script manager to disable third-party scripts in preview
 
 // Admin pages
