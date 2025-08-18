@@ -16,6 +16,11 @@ export default function Login() {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Clear the logout flag when the login page loads
+  useEffect(() => {
+    localStorage.removeItem('serveportal_logged_out');
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
