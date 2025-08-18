@@ -945,7 +945,7 @@ export default function ClientJobDetail() {
                                 <span className="mr-1">{attempt.methodIcon}</span>
                                 {attempt.method}
                               </Badge>
-                              {attempt.details.photos.length > 0 && (
+                              {attempt.details?.photos?.length > 0 && (
                                 <Badge variant="outline" className="bg-purple-50 text-purple-700">
                                   <img className="w-3 h-3 mr-1" alt="" />
                                   {attempt.details.photos.length} photo{attempt.details.photos.length > 1 ? 's' : ''}
