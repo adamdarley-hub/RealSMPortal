@@ -88,8 +88,15 @@ const AddCardForm: React.FC<{
       });
 
       if (!setupResponse.ok) {
-        const errorData = await setupResponse.json();
-        throw new Error(errorData.error || 'Failed to create setup intent');
+        let errorMessage = 'Failed to create setup intent';
+        try {
+          const errorData = await setupResponse.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // Response might not be JSON (e.g., 404 HTML page)
+          errorMessage = `${errorMessage} (${setupResponse.status})`;
+        }
+        throw new Error(errorMessage);
       }
 
       const setupData = await setupResponse.json();
@@ -231,8 +238,14 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
         const customerResponse = await fetch(`/api/stripe/customers/by-email/${encodeURIComponent(user.email)}`);
 
         if (!customerResponse.ok) {
-          const errorData = await customerResponse.json();
-          throw new Error(errorData.error || 'Failed to load customer');
+          let errorMessage = 'Failed to load customer';
+          try {
+            const errorData = await customerResponse.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            errorMessage = `${errorMessage} (${customerResponse.status})`;
+          }
+          throw new Error(errorMessage);
         }
 
         const customerData = await customerResponse.json();
@@ -244,8 +257,14 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
           const pmResponse = await fetch(`/api/stripe/customers/${customerData.customer.id}/payment-methods`);
 
           if (!pmResponse.ok) {
-            const errorData = await pmResponse.json();
-            throw new Error(errorData.error || 'Failed to load payment methods');
+            let errorMessage = 'Failed to load payment methods';
+            try {
+              const errorData = await pmResponse.json();
+              errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+              errorMessage = `${errorMessage} (${pmResponse.status})`;
+            }
+            throw new Error(errorMessage);
           }
 
           const pmData = await pmResponse.json();
@@ -278,8 +297,14 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete payment method');
+        let errorMessage = 'Failed to delete payment method';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `${errorMessage} (${response.status})`;
+        }
+        throw new Error(errorMessage);
       }
 
       const responseData = await response.json();
@@ -312,8 +337,14 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
         const pmResponse = await fetch(`/api/stripe/customers/${customerId}/payment-methods`);
 
         if (!pmResponse.ok) {
-          const errorData = await pmResponse.json();
-          console.error('Failed to reload payment methods:', errorData.error);
+          let errorMessage = 'Failed to reload payment methods';
+          try {
+            const errorData = await pmResponse.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            errorMessage = `${errorMessage} (${pmResponse.status})`;
+          }
+          console.error('Failed to reload payment methods:', errorMessage);
           return;
         }
 
