@@ -110,6 +110,7 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
         payment_method: paymentMethodId,
         confirmation_method: 'manual',
         confirm: true,
+        return_url: `${req.headers.origin || 'https://localhost:5173'}/client/invoices?payment=success`,
         metadata: {
           invoiceId: invoiceId.toString(),
           source: 'client-portal'
