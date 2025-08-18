@@ -250,7 +250,19 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
         );
 
         if (stripeError) {
-          throw new Error(stripeError.message || 'Payment failed');
+          console.error('Stripe payment error (new card):', stripeError);
+          let errorMessage = stripeError.message || 'Payment failed';
+
+          // Provide more specific error messages for common issues
+          if (stripeError.code === 'card_declined') {
+            errorMessage = 'Your card was declined. Please check with your bank or try a different payment method.';
+          } else if (stripeError.code === 'insufficient_funds') {
+            errorMessage = 'Your card has insufficient funds. Please try a different payment method.';
+          } else if (stripeError.code === 'generic_decline') {
+            errorMessage = 'Your card was declined. This could be due to fraud protection. Please contact your bank or try a different payment method.';
+          }
+
+          throw new Error(errorMessage);
         }
 
         confirmedPayment = payment;
@@ -264,7 +276,19 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
         );
 
         if (stripeError) {
-          throw new Error(stripeError.message || 'Payment failed');
+          console.error('Stripe payment error (saved card):', stripeError);
+          let errorMessage = stripeError.message || 'Payment failed';
+
+          // Provide more specific error messages for common issues
+          if (stripeError.code === 'card_declined') {
+            errorMessage = 'Your card was declined. Please check with your bank or try a different payment method.';
+          } else if (stripeError.code === 'insufficient_funds') {
+            errorMessage = 'Your card has insufficient funds. Please try a different payment method.';
+          } else if (stripeError.code === 'generic_decline') {
+            errorMessage = 'Your card was declined. This could be due to fraud protection. Please contact your bank or try a different payment method.';
+          }
+
+          throw new Error(errorMessage);
         }
 
         confirmedPayment = payment;
