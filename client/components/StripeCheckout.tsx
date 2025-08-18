@@ -590,7 +590,7 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
                     className="w-4 h-4"
                   />
                   <label htmlFor="save-card" className="text-sm text-gray-600">
-                    Save this card for future payments
+                    Save this card to Stripe for future payments
                   </label>
                 </div>
               )}
