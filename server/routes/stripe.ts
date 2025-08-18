@@ -460,6 +460,10 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
   try {
     const { makeServeManagerRequest } = await import('./servemanager');
 
+    // Simple approach: just update the invoice status directly
+    // Use the same pattern that successfully fetches invoices
+    console.log(`🎯 Attempting simple status update using working API pattern...`);
+
     console.log(`📝 Starting ServeManager integration for invoice ${invoiceId} with status "${status}" using proper API...`);
 
     if (status !== 'paid') {
