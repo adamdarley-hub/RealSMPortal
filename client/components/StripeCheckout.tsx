@@ -41,6 +41,7 @@ interface SavedPaymentMethod {
     exp_year: number;
   };
   created: number;
+  friendlyName?: string;
 }
 
 // Card element styling
