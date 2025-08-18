@@ -49,22 +49,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Check if user has explicitly logged out - this takes highest priority
+    const hasLoggedOut = localStorage.getItem('serveportal_logged_out');
+    if (hasLoggedOut) {
+      console.log('🚪 User has logged out, skipping auto-login');
+      setIsLoading(false);
+      return;
+    }
+
     // Check for stored auth on startup
     const storedUser = localStorage.getItem('serveportal_user');
     if (storedUser) {
+      console.log('💾 Found stored user, logging in');
       setUser(JSON.parse(storedUser));
       setIsLoading(false);
       return;
     }
 
-    // Check if user has explicitly logged out
-    const hasLoggedOut = localStorage.getItem('serveportal_logged_out');
-    if (hasLoggedOut) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Auto-login admin user in Builder.io preview environment
+    // Auto-login admin user in Builder.io preview environment (only if not logged out)
     const isBuilderPreview = window.location.search.includes('builder.preview=') ||
                             window.location.hostname.includes('builder.io') ||
                             window.parent !== window;
