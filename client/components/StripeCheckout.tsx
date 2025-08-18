@@ -606,9 +606,13 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
           )}
 
           {/* Security notice */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Shield className="w-4 h-4" />
-            <span>Secured by Stripe. Your payment information is encrypted.</span>
+          <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+            <Shield className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-blue-800">
+              <strong>Secured by Stripe</strong>
+              <br />
+              Your payment information is encrypted and securely stored by Stripe, not on our servers.
+            </div>
           </div>
 
           {/* Action buttons */}
