@@ -983,19 +983,19 @@ export default function ClientJobDetail() {
                               </div>
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Address</label>
-                                <p className="text-sm text-gray-900">{attempt.details.address}</p>
+                                <p className="text-sm text-gray-900">{attempt.details?.address || 'N/A'}</p>
                               </div>
                             </div>
 
                             <div>
                               <label className="text-sm font-medium text-gray-700">Service Description</label>
                               <div className="text-sm text-gray-900 mt-1 p-3 bg-gray-50 rounded-md">
-                                {attempt.details.description}
+                                {attempt.details?.description || attempt.notes || 'No description available'}
                               </div>
                             </div>
 
                             {/* Attempt Photos - only in expanded view */}
-                            {attempt.details.photos && attempt.details.photos.length > 0 && (
+                            {attempt.details?.photos && attempt.details.photos.length > 0 && (
                               <div>
                                 <label className="text-sm font-medium text-gray-700 mb-2 block">Attempt Photos</label>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
