@@ -1231,8 +1231,8 @@ export default function ClientJobDetail() {
             <Card>
               <CardContent className="pt-6">
                 {(() => {
-                  // Get invoices from job data
-                  const invoices = job?.invoices || job?.raw_data?.invoices || [];
+                  // Use fetched job-specific invoices
+                  const invoices = jobInvoices;
 
                   if (invoices.length === 0) {
                     return (
