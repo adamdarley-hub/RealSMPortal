@@ -520,43 +520,16 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
         const responseData = await response.json().catch(() => ({ success: true }));
 
         console.log(`��� Successfully created payment record for invoice ${invoiceId} in ServeManager`);
-        console.log(`📝 Payment API Response:`, JSON.stringify(responseData, null, 2));
-
-        // Now update the invoice status to "paid"
-        console.log(`📝 Now updating invoice ${invoiceId} status to "paid"...`);
-
-        const statusUpdateEndpoint = `invoices/${invoiceId}`;
-        const statusUpdateUrl = `${config.baseUrl}/${statusUpdateEndpoint}`;
-
-        const statusFormData = new URLSearchParams();
-        statusFormData.append('invoice[status]', 'paid');
-
-        console.log(`🌐 Updating invoice status at: ${statusUpdateUrl}`);
-        console.log(`📝 Status form data:`, statusFormData.toString());
-
-        const statusResponse = await fetch(statusUpdateUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: statusFormData.toString(),
-        });
-
-        if (!statusResponse.ok) {
-          console.log(`⚠️ Status update failed: ${statusResponse.status} ${statusResponse.statusText}`);
-          // Don't throw error - payment was successful even if status update failed
-        } else {
-          const statusResponseData = await statusResponse.json().catch(() => ({ success: true }));
-          console.log(`✅ Successfully updated invoice ${invoiceId} status to "paid"`);
-          console.log(`📝 Status API Response:`, JSON.stringify(statusResponseData, null, 2));
-        }
-
+        console.log(`📝 API Response:`, JSON.stringify(responseData, null, 2));
         updateSuccessful = true;
       } else {
         // For failed payments, we don't create a payment record
         throw new Error('Cannot create payment record for failed payment');
       }
+
+      console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
+      console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
+      updateSuccessful = true;
 
     } catch (apiError) {
       console.log(`❌ Failed to create payment record for invoice ${invoiceId}: ${apiError.message}`);
