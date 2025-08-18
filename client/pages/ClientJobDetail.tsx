@@ -1052,19 +1052,19 @@ export default function ClientJobDetail() {
                                 <div className="grid grid-cols-2 gap-6">
                                   <div>
                                     <label className="text-sm font-medium text-gray-700">Latitude</label>
-                                    <p className="text-sm text-gray-900">{attempt.details.gps.latitude || 'N/A'}</p>
+                                    <p className="text-sm text-gray-900">{attempt.details?.gps?.latitude || 'N/A'}</p>
                                   </div>
                                   <div>
                                     <label className="text-sm font-medium text-gray-700">Longitude</label>
-                                    <p className="text-sm text-gray-900">{attempt.details.gps.longitude || 'N/A'}</p>
+                                    <p className="text-sm text-gray-900">{attempt.details?.gps?.longitude || 'N/A'}</p>
                                   </div>
                                   <div>
                                     <label className="text-sm font-medium text-gray-700">GPS Accuracy</label>
-                                    <p className="text-sm text-gray-900">{attempt.details.gps.accuracy || 'N/A'}</p>
+                                    <p className="text-sm text-gray-900">{attempt.details?.gps?.accuracy || 'N/A'}</p>
                                   </div>
                                   <div>
                                     <label className="text-sm font-medium text-gray-700">GPS Time</label>
-                                    <p className="text-sm text-gray-900">{attempt.details.gps.time ? formatDateTime(attempt.details.gps.time) : 'N/A'}</p>
+                                    <p className="text-sm text-gray-900">{attempt.details?.gps?.time ? formatDateTime(attempt.details.gps.time) : 'N/A'}</p>
                                   </div>
                                 </div>
                               </div>
