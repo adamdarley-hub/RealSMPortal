@@ -517,8 +517,10 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
           throw new Error(`Payment API error: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
-        console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
-        console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
+        const responseData = await response.json().catch(() => ({ success: true }));
+
+        console.log(`��� Successfully created payment record for invoice ${invoiceId} in ServeManager`);
+        console.log(`📝 API Response:`, JSON.stringify(responseData, null, 2));
         updateSuccessful = true;
       } else {
         // For failed payments, we don't create a payment record
