@@ -413,7 +413,20 @@ export default function ClientJobDetail() {
 
   const loadJob = async (refresh = false) => {
     if (!id) return;
-    
+
+    console.log('🔍 Client job detail - loadJob called:', {
+      jobId: id,
+      user: {
+        id: user?.id,
+        name: user?.name,
+        email: user?.email,
+        role: user?.role,
+        client_id: user?.client_id,
+        company: user?.company
+      },
+      refresh
+    });
+
     setLoading(true);
 
     try {
