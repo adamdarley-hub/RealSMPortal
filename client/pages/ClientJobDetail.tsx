@@ -1253,26 +1253,37 @@ export default function ClientJobDetail() {
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <h3 className="font-semibold">
-                                Invoice #{invoice.number || invoice.id}
+                                Invoice #{invoice.id}
                               </h3>
                               <p className="text-sm text-muted-foreground">
-                                {invoice.description || 'Service Invoice'}
+                                Status: {invoice.status}
                               </p>
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-lg">
-                                ${invoice.amount || invoice.total || '0.00'}
+                                ${invoice.total || '0.00'}
                               </p>
-                              <p className="text-sm text-muted-foreground">
-                                {invoice.status || 'Pending'}
-                              </p>
+                              {invoice.balance_due && invoice.balance_due !== '0.0' && (
+                                <p className="text-sm text-red-600">
+                                  Balance Due: ${invoice.balance_due}
+                                </p>
+                              )}
                             </div>
                           </div>
-                          {invoice.date && (
-                            <p className="text-sm text-muted-foreground">
-                              Date: {new Date(invoice.date).toLocaleDateString()}
-                            </p>
-                          )}
+                          <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                            {invoice.issued_on && (
+                              <p>Issued: {new Date(invoice.issued_on).toLocaleDateString()}</p>
+                            )}
+                            {invoice.paid_on && (
+                              <p>Paid: {new Date(invoice.paid_on).toLocaleDateString()}</p>
+                            )}
+                            {invoice.subtotal && (
+                              <p>Subtotal: ${invoice.subtotal}</p>
+                            )}
+                            {invoice.total_paid && invoice.total_paid !== '0.0' && (
+                              <p>Paid: ${invoice.total_paid}</p>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
