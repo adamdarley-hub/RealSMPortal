@@ -469,7 +469,8 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
     const invoiceData = currentInvoice.data || currentInvoice;
 
     // Use the payments endpoint to create a payment record (correct approach!)
-    const endpoint = `/invoices/${invoiceId}/payments`;
+    // Base URL is https://www.servemanager.com/api so we don't need /api prefix
+    const endpoint = `invoices/${invoiceId}/payments`;
 
     // Create payment record using ServeManager's payments API
     let updateData: any;
