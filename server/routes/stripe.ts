@@ -156,6 +156,31 @@ export const confirmPayment: RequestHandler = async (req, res) => {
   }
 };
 
+// Update invoice status in ServeManager
+async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'paid' | 'failed'): Promise<void> {
+  try {
+    const { makeServeManagerRequest } = await import('./servemanager');
+
+    console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager...`);
+
+    // Update invoice status in ServeManager
+    const updateData = {
+      status: status === 'paid' ? 'paid' : 'issued' // ServeManager may use different status values
+    };
+
+    await makeServeManagerRequest(`/invoices/${invoiceId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+
+    console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" in ServeManager`);
+
+  } catch (error) {
+    console.error(`❌ Failed to update invoice ${invoiceId} status in ServeManager:`, error);
+    // Don't throw error - we don't want to fail the webhook if this update fails
+  }
+}
+
 // Handle Stripe webhooks for payment events
 export const handleWebhook: RequestHandler = async (req, res) => {
   try {
