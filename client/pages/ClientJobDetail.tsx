@@ -411,6 +411,7 @@ export default function ClientJobDetail() {
   const [currentAffidavitIndex, setCurrentAffidavitIndex] = useState(0);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [jobInvoices, setJobInvoices] = useState<any[]>([]);
+  const [serviceAttempts, setServiceAttempts] = useState<any[]>([]);
 
   const loadJob = async (refresh = false) => {
     if (!id) return;
