@@ -551,6 +551,13 @@ export default function ClientJobDetail() {
       notes: attempt.notes || attempt.description || '',
       server: attempt.server || attempt.process_server || 'Unknown Server',
       success: attempt.success || attempt.status === 'Served',
+      details: {
+        serveType: attempt.serve_type || attempt.service_type || 'Personal',
+        serviceStatus: attempt.status || attempt.result || 'Unknown',
+        recipient: attempt.recipient || attempt.served_to || 'Unknown',
+        photos: attempt.photos || attempt.images || [],
+        gps: attempt.gps || attempt.location || {}
+      },
       raw: attempt
     }));
   };
