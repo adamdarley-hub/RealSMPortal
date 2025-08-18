@@ -466,18 +466,17 @@ export default function ClientInvoices() {
                             </Button>
                           </>
                         )}
-                        {/* Temporary test button for invoice 10060442 - show regardless of status */}
-                        {(invoice.id === 10060442 || invoice.id === "10060442" || String(invoice.id) === "10060442") && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => handleTestServeManagerUpdate(invoice, e)}
-                            className="gap-1"
-                          >
-                            <TestTube className="w-3 h-3" />
-                            Test SM
-                          </Button>
-                        )}
+                        {/* Temporary test button - showing for all invoices to debug */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => handleTestServeManagerUpdate(invoice, e)}
+                          className="gap-1"
+                          title={`Test button for invoice ${invoice.id} (type: ${typeof invoice.id})`}
+                        >
+                          <TestTube className="w-3 h-3" />
+                          Test {invoice.id}
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
