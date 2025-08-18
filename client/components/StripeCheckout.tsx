@@ -368,10 +368,27 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
         throw new Error('Payment was not successful');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
+      console.error('Payment processing error:', err);
+
+      let errorMessage: string;
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'object' && err !== null) {
+        // Handle error objects that aren't Error instances
+        errorMessage = (err as any).message || (err as any).error || JSON.stringify(err);
+      } else {
+        errorMessage = 'Payment processing failed';
+      }
+
+      // Ensure we don't show [object Object]
+      if (errorMessage === '[object Object]') {
+        errorMessage = 'An unexpected error occurred during payment processing';
+      }
+
       setError(errorMessage);
       onError?.(errorMessage);
-      
+
       toast({
         title: "Payment Failed",
         description: errorMessage,
