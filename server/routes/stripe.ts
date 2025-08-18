@@ -460,7 +460,7 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
   try {
     const { makeServeManagerRequest } = await import('./servemanager');
 
-    console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager using correct API...`);
+    console.log(`��� Updating invoice ${invoiceId} status to "${status}" in ServeManager using correct API...`);
 
     // Need to get the job ID for this invoice first
     // From DOM: Invoice 10060442 belongs to Job 13955294
@@ -491,37 +491,14 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
         console.log(`📝 Updating job ${jobId} invoice status to "paid"...`);
         console.log(`📝 Update payload:`, JSON.stringify(updateData, null, 2));
 
-        console.log(`📝 Creating payment record for invoice ${invoiceId} with amount: $${paymentAmount}`);
-        console.log(`📝 Form data:`, formData.toString());
-
-        // For payments, use main ServeManager site, not API endpoint
-        // The form action="/invoices/10060442/payments" suggests main site
-        const { getServeManagerConfig } = await import('./servemanager');
-        const config = await getServeManagerConfig();
-
-        // Use main site URL instead of API URL for payments
-        const mainSiteUrl = config.baseUrl.replace('/api', '');
-        const paymentUrl = `${mainSiteUrl}/${endpoint}`;
-
-        console.log(`🌐 Attempting payment at: ${paymentUrl}`);
-
-        const credentials = Buffer.from(`${config.apiKey.split(':')[0]}:x`).toString('base64');
-
-        const response = await fetch(paymentUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: formData.toString(),
+        // Use correct job-based endpoint from API documentation
+        const response = await makeServeManagerRequest(`/jobs/${jobId}`, {
+          method: 'PUT',
+          body: JSON.stringify(updateData)
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Payment API error: ${response.status} ${response.statusText} - ${errorText}`);
-        }
-
-        const responseData = await response.json().catch(() => ({ success: true }));
+        console.log(`✅ SUCCESS! Invoice ${invoiceId} in job ${jobId} marked as paid`);
+        console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
 
         console.log(`��� Successfully created payment record for invoice ${invoiceId} in ServeManager`);
         console.log(`📝 API Response:`, JSON.stringify(responseData, null, 2));
