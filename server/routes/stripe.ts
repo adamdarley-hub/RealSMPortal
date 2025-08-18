@@ -464,14 +464,40 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
     // Use the same pattern that successfully fetches invoices
     console.log(`🎯 Attempting simple status update using working API pattern...`);
 
-    console.log(`📝 Starting ServeManager integration for invoice ${invoiceId} with status "${status}" using proper API...`);
+    console.log(`📝 SIMPLE APPROACH: Directly updating invoice ${invoiceId} status to "${status}" using working endpoint...`);
 
     if (status !== 'paid') {
       console.log(`⚠️ Only "paid" status updates are supported, skipping status "${status}"`);
       return;
     }
 
-    // Use proper JSON:API format for ServeManager integration
+    // Use the same endpoint pattern that successfully fetches invoices
+    const updateData = {
+      data: {
+        type: "invoices",
+        id: invoiceId.toString(),
+        attributes: {
+          status: "paid"
+        }
+      }
+    };
+
+    console.log(`📝 Attempting PATCH request to /invoices/${invoiceId} with data:`, JSON.stringify(updateData, null, 2));
+
+    try {
+      const response = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updateData)
+      });
+
+      console.log(`✅ SUCCESS! Invoice ${invoiceId} status updated to paid`);
+      console.log(`📝 Response:`, JSON.stringify(response, null, 2));
+      return;
+
+    } catch (error) {
+      console.error(`❌ Direct status update failed:`, error);
+      throw error;
+    }
     // ServeManager expects form data, not JSON:API format (based on HTML form analysis)
     // The form action="/invoices/10060442/payments" suggests main site, not API endpoint
     const endpoint = `invoices/${invoiceId}/payments`;
