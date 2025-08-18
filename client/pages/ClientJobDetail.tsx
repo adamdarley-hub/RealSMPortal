@@ -512,6 +512,45 @@ export default function ClientJobDetail() {
     }
   };
 
+  // Extract service attempts from job data (same logic as admin)
+  const extractServiceAttempts = (job: any) => {
+    let attempts = [];
+
+    // Check all possible attempt sources
+    if (job.attempts && Array.isArray(job.attempts)) {
+      attempts.push(...job.attempts);
+    }
+    if (job.service_attempts && Array.isArray(job.service_attempts)) {
+      attempts.push(...job.service_attempts);
+    }
+    if (job.job_attempts && Array.isArray(job.job_attempts)) {
+      attempts.push(...job.job_attempts);
+    }
+    if (job.raw_data?.attempts && Array.isArray(job.raw_data.attempts)) {
+      attempts.push(...job.raw_data.attempts);
+    }
+
+    console.log('🎯 Service attempts extracted:', {
+      total: attempts.length,
+      sources: {
+        attempts: job.attempts?.length || 0,
+        service_attempts: job.service_attempts?.length || 0,
+        job_attempts: job.job_attempts?.length || 0,
+        raw_attempts: job.raw_data?.attempts?.length || 0
+      }
+    });
+
+    return attempts.map((attempt: any, index: number) => ({
+      id: attempt.id || index,
+      date: attempt.date || attempt.attempt_date || attempt.created_at,
+      status: attempt.status || attempt.result || 'Unknown',
+      notes: attempt.notes || attempt.description || '',
+      server: attempt.server || attempt.process_server || 'Unknown Server',
+      success: attempt.success || attempt.status === 'Served',
+      raw: attempt
+    }));
+  };
+
   const loadJobInvoices = async (jobId: string) => {
     if (!jobId) return;
 
