@@ -8,7 +8,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { StripeProvider } from "./contexts/StripeContext";
-import "./utils/scriptManager"; // Initialize script manager to disable third-party scripts in preview
 
 // Admin pages
 import Index from "./pages/Index";
