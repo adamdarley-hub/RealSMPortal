@@ -462,17 +462,23 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
     console.log(`��� Updating invoice ${invoiceId} status to "${status}" in ServeManager using correct API...`);
 
-    // Need to get the job ID for this invoice first
-    // From DOM: Invoice 10060442 belongs to Job 13955294
-    let jobId;
-    if (invoiceId === "10060442") {
-      jobId = "13955294";
-    } else {
-      console.error(`❌ Job ID mapping not found for invoice ${invoiceId}`);
-      throw new Error(`Job ID mapping not found for invoice ${invoiceId}`);
+    // Need to find the correct job ID for this invoice by looking it up
+    console.log(`🔍 Looking up job ID for invoice ${invoiceId}...`);
+
+    // Get all invoices to find which job contains invoice 10060442
+    const allInvoicesResponse = await makeServeManagerRequest('/invoices?per_page=100');
+    const allInvoices = allInvoicesResponse.data || allInvoicesResponse.invoices || allInvoicesResponse;
+
+    console.log(`📋 Found ${allInvoices.length} invoices, searching for invoice ${invoiceId}...`);
+
+    const targetInvoice = allInvoices.find((inv: any) => inv.id.toString() === invoiceId.toString());
+
+    if (!targetInvoice) {
+      throw new Error(`Invoice ${invoiceId} not found in ServeManager`);
     }
 
-    console.log(`🎯 Found job ID ${jobId} for invoice ${invoiceId}`);
+    const jobId = targetInvoice.job_id;
+    console.log(`🎯 Found invoice ${invoiceId} belongs to job ID ${jobId}`);
 
     let updateSuccessful = false;
 
