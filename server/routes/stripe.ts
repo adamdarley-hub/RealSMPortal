@@ -64,7 +64,16 @@ async function getOrCreateStripeCustomer(userInfo: { email: string; name: string
 export const createPaymentIntent: RequestHandler = async (req, res) => {
   try {
     const { invoiceId, amount, currency = 'usd', userInfo, useExistingPaymentMethod, paymentMethodId } = req.body;
-    
+
+    console.log('💳 Payment intent request body:', {
+      invoiceId,
+      amount,
+      currency,
+      useExistingPaymentMethod,
+      paymentMethodId,
+      userInfo: userInfo ? { email: userInfo.email, name: userInfo.name } : null
+    });
+
     if (!invoiceId || !amount) {
       return res.status(400).json({
         error: 'Missing required fields: invoiceId and amount'
