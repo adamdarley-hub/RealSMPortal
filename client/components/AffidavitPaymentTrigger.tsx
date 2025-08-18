@@ -96,8 +96,14 @@ export default function AffidavitPaymentTrigger({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Payment processing failed');
+        let errorMessage = 'Payment processing failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          errorMessage = `${errorMessage} (${response.status})`;
+        }
+        throw new Error(errorMessage);
       }
 
       const responseData = await response.json();
