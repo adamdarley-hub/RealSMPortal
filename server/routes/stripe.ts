@@ -517,20 +517,22 @@ async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'pai
 
     // Send real-time notification to clients about the status update (regardless of ServeManager update status)
     try {
-      const { broadcastToClients } = await import('../services/websocket-service');
-      broadcastToClients({
-        type: 'invoice_payment_status_updated',
-        data: {
-          invoiceId: invoiceId,
-          status: status,
-          timestamp: new Date().toISOString(),
-          serveManagerUpdated: updateSuccessful,
-          message: updateSuccessful
-            ? 'Payment processed and ServeManager updated'
-            : 'Payment processed successfully, but ServeManager status needs manual update'
-        }
-      });
-      console.log(`📡 Broadcasted invoice ${invoiceId} status update to connected clients`);
+      const wsService = await import('../services/websocket-service');
+      if (wsService.broadcastToClients) {
+        wsService.broadcastToClients({
+          type: 'invoice_payment_status_updated',
+          data: {
+            invoiceId: invoiceId,
+            status: status,
+            timestamp: new Date().toISOString(),
+            serveManagerUpdated: updateSuccessful,
+            message: updateSuccessful
+              ? 'Payment processed and ServeManager updated'
+              : 'Payment processed successfully, but ServeManager status needs manual update'
+          }
+        });
+        console.log(`📡 Broadcasted invoice ${invoiceId} status update to connected clients`);
+      }
     } catch (wsError) {
       console.error('Failed to broadcast status update:', wsError);
     }
