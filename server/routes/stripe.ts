@@ -215,8 +215,12 @@ export const handleWebhook: RequestHandler = async (req, res) => {
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object;
         console.log(`💰 Payment succeeded: ${paymentIntent.id} for invoice ${paymentIntent.metadata.invoiceId}`);
-        
-        // TODO: Update invoice status in ServeManager
+
+        // Update invoice status in ServeManager
+        if (paymentIntent.metadata.invoiceId) {
+          await updateInvoiceStatusInServeManager(paymentIntent.metadata.invoiceId, 'paid');
+        }
+
         // TODO: Send payment confirmation email
         break;
         
