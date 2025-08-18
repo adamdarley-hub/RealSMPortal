@@ -53,7 +53,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem('serveportal_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+      setIsLoading(false);
+      return;
     }
+
+    // Auto-login admin user in Builder.io preview environment
+    const isBuilderPreview = window.location.search.includes('builder.preview=') ||
+                            window.location.hostname.includes('builder.io') ||
+                            window.parent !== window;
+
+    if (isBuilderPreview) {
+      console.log('🔧 Builder.io preview detected - auto-logging in admin user');
+      const adminUser = mockUsers.find(u => u.role === 'admin');
+      if (adminUser) {
+        setUser(adminUser);
+        localStorage.setItem('serveportal_user', JSON.stringify(adminUser));
+      }
+    }
+
     setIsLoading(false);
   }, []);
 
