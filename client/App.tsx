@@ -97,10 +97,6 @@ function AppRoutes() {
       <Route path="/client/profile" element={<ProtectedRoute role="client"><StripeProvider><ClientProfile /></StripeProvider></ProtectedRoute>} />
       <Route path="/client/jobs/:id" element={<ProtectedRoute role="client"><StripeProvider><ClientJobDetail /></StripeProvider></ProtectedRoute>} />
 
-      {/* Builder.io pages */}
-      <Route path="/builder" element={<BuilderPage />} />
-      <Route path="/builder/:slug" element={<BuilderPage />} />
-
       {/* Catch-all */}
       <Route path="*" element={<NotFound />} />
     </Routes>
