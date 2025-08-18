@@ -229,14 +229,22 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
         // Get customer by email
         const customerResponse = await fetch(`/api/stripe/customers/by-email/${encodeURIComponent(user.email)}`);
         const customerData = await customerResponse.json();
-        
+
+        if (!customerResponse.ok) {
+          throw new Error(customerData.error || 'Failed to load customer');
+        }
+
         if (customerData.customer) {
           setCustomerId(customerData.customer.id);
-          
+
           // Load saved payment methods
           const pmResponse = await fetch(`/api/stripe/customers/${customerData.customer.id}/payment-methods`);
           const pmData = await pmResponse.json();
-          
+
+          if (!pmResponse.ok) {
+            throw new Error(pmData.error || 'Failed to load payment methods');
+          }
+
           if (pmData.paymentMethods) {
             setPaymentMethods(pmData.paymentMethods);
           }
@@ -258,24 +266,26 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
 
   const handleDeletePaymentMethod = async (paymentMethodId: string) => {
     setDeletingId(paymentMethodId);
-    
+
     try {
       const response = await fetch(`/api/stripe/payment-methods/${paymentMethodId}`, {
         method: 'DELETE',
       });
 
-      if (response.ok) {
-        setPaymentMethods(prev => prev.filter(pm => pm.id !== paymentMethodId));
-        
-        toast({
-          title: "Payment Method Deleted",
-          description: "The payment method has been removed successfully.",
-        });
+      const responseData = await response.json();
 
-        onPaymentMethodRemoved?.();
-      } else {
-        throw new Error('Failed to delete payment method');
+      if (!response.ok) {
+        throw new Error(responseData.error || 'Failed to delete payment method');
       }
+
+      setPaymentMethods(prev => prev.filter(pm => pm.id !== paymentMethodId));
+
+      toast({
+        title: "Payment Method Deleted",
+        description: "The payment method has been removed successfully.",
+      });
+
+      onPaymentMethodRemoved?.();
     } catch (error) {
       toast({
         title: "Error",
@@ -295,7 +305,12 @@ const SavedPaymentMethodsContent: React.FC<SavedPaymentMethodsProps> = ({
       try {
         const pmResponse = await fetch(`/api/stripe/customers/${customerId}/payment-methods`);
         const pmData = await pmResponse.json();
-        
+
+        if (!pmResponse.ok) {
+          console.error('Failed to reload payment methods:', pmData.error);
+          return;
+        }
+
         if (pmData.paymentMethods) {
           setPaymentMethods(pmData.paymentMethods);
           onPaymentMethodAdded?.();
