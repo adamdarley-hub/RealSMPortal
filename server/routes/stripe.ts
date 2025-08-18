@@ -482,6 +482,17 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
       console.log(`📝 Creating payment record for invoice ${invoiceId} with amount: $${paymentAmount}`);
 
+      const response = await makeServeManagerRequest(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+      });
+
+      console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
+      console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
+      updateSuccessful = true;
     } else {
       // For failed payments, we don't create a payment record
       throw new Error('Cannot create payment record for failed payment');
@@ -492,12 +503,7 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
     try {
       console.log(`📝 Creating payment record for invoice ${invoiceId} via ServeManager API: ${endpoint}`);
-      console.log(`📝 Payment data:`, JSON.stringify(updateData, null, 2));
-
-      const response = await makeServeManagerRequest(endpoint, {
-        method: 'POST',
-        body: JSON.stringify(updateData),
-      });
+      console.log(`📝 Form data:`, formData.toString());
 
       console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
       console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
@@ -549,7 +555,7 @@ export const handleWebhook: RequestHandler = async (req, res) => {
     const config = await getStripeConfig();
     
     if (!config.webhookSecret) {
-      console.warn('⚠️ Stripe webhook secret not configured, skipping signature verification');
+      console.warn('��️ Stripe webhook secret not configured, skipping signature verification');
     }
     
     const stripe = await getStripeInstance();
