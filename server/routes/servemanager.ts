@@ -1108,16 +1108,28 @@ export const updateJob: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const jobData = req.body;
-    
+
     const data = await makeServeManagerRequest(`/jobs/${id}`, {
       method: 'PUT',
       body: JSON.stringify(jobData),
     });
-    
+
+    // Sync updated job to Supabase for persistence
+    if (data && id) {
+      try {
+        console.log(`🔄 Syncing updated job ${id} to Supabase for persistence`);
+        await supabaseSyncService.syncSingleJob(parseInt(id));
+        console.log(`✅ Updated job ${id} synced to Supabase successfully`);
+      } catch (syncError) {
+        console.error(`⚠️ Failed to sync updated job ${id} to Supabase:`, syncError);
+        // Don't fail the request if Supabase sync fails - just log the warning
+      }
+    }
+
     res.json(data);
   } catch (error) {
     console.error('Error updating job:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to update job in ServeManager',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
