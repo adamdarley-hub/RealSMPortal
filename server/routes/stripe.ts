@@ -462,43 +462,37 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
     console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager...`);
 
-    // Get invoice data first to find the associated job_id
+    // Get invoice data to get the total amount
     const currentInvoice = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
       method: 'GET'
     });
     const invoiceData = currentInvoice.data || currentInvoice;
 
-    if (!invoiceData.job_id) {
-      throw new Error(`Invoice ${invoiceId} does not have an associated job_id`);
-    }
+    // Use the payments endpoint to create a payment record (correct approach!)
+    const endpoint = `/invoices/${invoiceId}/payments`;
 
-    const jobId = invoiceData.job_id;
-    const endpoint = `/jobs/${jobId}`; // Use job endpoint as shown in your example
-
-    // ServeManager requires updating invoice through the job endpoint
+    // Create payment record using ServeManager's payments API
     let updateData: any;
 
     if (status === 'paid') {
+      const paymentAmount = parseFloat(invoiceData.total || invoiceData.subtotal || "0.50");
+
       updateData = {
         data: {
-          type: "invoice",
-          paid_on: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-          balance_due: "0.0",
-          total_paid: invoiceData.total || invoiceData.subtotal || "0.50"
+          type: "payments",
+          attributes: {
+            amount: paymentAmount,
+            applied_on: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+            description: "Payment processed via Stripe"
+          }
         }
       };
 
-      console.log(`📝 Updating invoice ${invoiceId} via job ${jobId} with total_paid: ${updateData.data.total_paid}`);
+      console.log(`📝 Creating payment record for invoice ${invoiceId} with amount: $${paymentAmount}`);
 
     } else {
-      updateData = {
-        data: {
-          type: "invoice",
-          paid_on: null,
-          balance_due: invoiceData.balance_due,
-          total_paid: "0.0"
-        }
-      };
+      // For failed payments, we don't create a payment record
+      throw new Error('Cannot create payment record for failed payment');
     }
 
     let updateSuccessful = false;
@@ -530,7 +524,7 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
           body: JSON.stringify(updateData),
         });
 
-        console.log(`�� Successfully updated invoice ${invoiceId} status to "${status}" via PATCH`);
+        console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" via PATCH`);
         updateSuccessful = true;
 
       } catch (patchError) {
