@@ -468,29 +468,28 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
     if (invoiceId === "10060442") {
       jobId = "13955294";
     } else {
-      console.error(`��� Job ID mapping not found for invoice ${invoiceId}`);
+      console.error(`❌ Job ID mapping not found for invoice ${invoiceId}`);
       throw new Error(`Job ID mapping not found for invoice ${invoiceId}`);
     }
 
     console.log(`🎯 Found job ID ${jobId} for invoice ${invoiceId}`);
 
     let updateSuccessful = false;
-    let lastError: any = null;
 
     try {
       if (status === 'paid') {
-        // For testing, use a small amount - in real payments this would come from Stripe
-        const paymentAmount = "0.5";
+        // Use correct ServeManager API format from documentation
+        const updateData = {
+          data: {
+            type: "invoice",
+            attributes: {
+              status: "paid"
+            }
+          }
+        };
 
-        // Create form data exactly like the ServeManager form
-        const formData = new URLSearchParams();
-        formData.append('payment[amount]', paymentAmount);
-        formData.append('payment[applied_on]', new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })); // "August 18, 2025" format
-        formData.append('payment[description]', 'Test payment via Stripe integration');
+        console.log(`📝 Updating job ${jobId} invoice status to "paid"...`);
+        console.log(`📝 Update payload:`, JSON.stringify(updateData, null, 2));
 
         console.log(`📝 Creating payment record for invoice ${invoiceId} with amount: $${paymentAmount}`);
         console.log(`📝 Form data:`, formData.toString());
