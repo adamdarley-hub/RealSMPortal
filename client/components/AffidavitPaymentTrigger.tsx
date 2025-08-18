@@ -95,12 +95,13 @@ export default function AffidavitPaymentTrigger({
         }),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Payment processing failed');
+        throw new Error(responseData.message || 'Payment processing failed');
       }
 
-      const data = await response.json();
+      const data = responseData;
       console.log('💳 Payment processed successfully:', data);
 
       toast({
