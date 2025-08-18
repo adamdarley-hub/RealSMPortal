@@ -126,6 +126,8 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
       // Do NOT add confirmation_method when using automatic payment methods
     }
     
+    console.log('💳 Final payment intent data:', JSON.stringify(paymentIntentData, null, 2));
+
     // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
     
