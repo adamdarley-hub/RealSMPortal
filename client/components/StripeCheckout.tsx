@@ -183,11 +183,18 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
           body: JSON.stringify(requestBody),
         });
 
-        const responseData = await response.json();
-
         if (!response.ok) {
-          throw new Error(responseData.error || 'Failed to create payment intent');
+          let errorMessage = 'Failed to create payment intent';
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (e) {
+            errorMessage = `${errorMessage} (${response.status})`;
+          }
+          throw new Error(errorMessage);
         }
+
+        const responseData = await response.json();
 
         const { clientSecret, customerId: returnedCustomerId } = responseData;
         setPaymentIntent(clientSecret);
