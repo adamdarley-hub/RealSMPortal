@@ -31,10 +31,39 @@ async function getStripeInstance() {
   });
 }
 
+// Create or get existing Stripe customer
+async function getOrCreateStripeCustomer(userInfo: { email: string; name: string; clientId?: string }) {
+  const stripe = await getStripeInstance();
+  
+  // Search for existing customer by email
+  const existingCustomers = await stripe.customers.list({
+    email: userInfo.email,
+    limit: 1
+  });
+  
+  if (existingCustomers.data.length > 0) {
+    console.log(`💳 Found existing Stripe customer: ${existingCustomers.data[0].id}`);
+    return existingCustomers.data[0];
+  }
+  
+  // Create new customer
+  const customer = await stripe.customers.create({
+    email: userInfo.email,
+    name: userInfo.name,
+    metadata: {
+      client_id: userInfo.clientId || '',
+      source: 'client-portal'
+    }
+  });
+  
+  console.log(`💳 Created new Stripe customer: ${customer.id}`);
+  return customer;
+}
+
 // Create payment intent for invoice payment
 export const createPaymentIntent: RequestHandler = async (req, res) => {
   try {
-    const { invoiceId, amount, currency = 'usd' } = req.body;
+    const { invoiceId, amount, currency = 'usd', userInfo, useExistingPaymentMethod, paymentMethodId } = req.body;
     
     if (!invoiceId || !amount) {
       return res.status(400).json({
@@ -50,9 +79,15 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
     }
     
     const stripe = await getStripeInstance();
+    let customerId: string | undefined;
     
-    // Create payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
+    // Get or create customer if user info is provided
+    if (userInfo && userInfo.email) {
+      const customer = await getOrCreateStripeCustomer(userInfo);
+      customerId = customer.id;
+    }
+    
+    const paymentIntentData: any = {
       amount: Math.round(amount * 100), // Convert to cents
       currency: currency.toLowerCase(),
       metadata: {
@@ -62,7 +97,22 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
       automatic_payment_methods: {
         enabled: true,
       },
-    });
+    };
+    
+    // Add customer if available
+    if (customerId) {
+      paymentIntentData.customer = customerId;
+    }
+    
+    // Use existing payment method if specified
+    if (useExistingPaymentMethod && paymentMethodId && customerId) {
+      paymentIntentData.payment_method = paymentMethodId;
+      paymentIntentData.confirmation_method = 'manual';
+      paymentIntentData.confirm = true;
+    }
+    
+    // Create payment intent
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
     
     console.log(`💳 Created payment intent for invoice ${invoiceId}: ${paymentIntent.id}`);
     
@@ -70,7 +120,9 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
       amount: paymentIntent.amount,
-      currency: paymentIntent.currency
+      currency: paymentIntent.currency,
+      customerId,
+      requiresAction: paymentIntent.status === 'requires_action'
     });
     
   } catch (error) {
@@ -89,6 +141,176 @@ export const createPaymentIntent: RequestHandler = async (req, res) => {
     
     res.status(500).json({
       error: 'Failed to create payment intent'
+    });
+  }
+};
+
+// Create setup intent for saving payment methods
+export const createSetupIntent: RequestHandler = async (req, res) => {
+  try {
+    const { userInfo } = req.body;
+    
+    if (!userInfo || !userInfo.email) {
+      return res.status(400).json({
+        error: 'User information is required to save payment methods'
+      });
+    }
+    
+    const stripe = await getStripeInstance();
+    
+    // Get or create customer
+    const customer = await getOrCreateStripeCustomer(userInfo);
+    
+    // Create setup intent
+    const setupIntent = await stripe.setupIntents.create({
+      customer: customer.id,
+      payment_method_types: ['card'],
+      usage: 'off_session',
+      metadata: {
+        source: 'client-portal'
+      }
+    });
+    
+    console.log(`💳 Created setup intent for customer ${customer.id}: ${setupIntent.id}`);
+    
+    res.json({
+      clientSecret: setupIntent.client_secret,
+      setupIntentId: setupIntent.id,
+      customerId: customer.id
+    });
+    
+  } catch (error) {
+    console.error('Error creating setup intent:', error);
+    
+    if (error instanceof Error) {
+      const stripeError = error as any;
+      if (stripeError.type) {
+        return res.status(400).json({
+          error: stripeError.message,
+          type: stripeError.type
+        });
+      }
+    }
+    
+    res.status(500).json({
+      error: 'Failed to create setup intent'
+    });
+  }
+};
+
+// Get customer's saved payment methods
+export const getCustomerPaymentMethods: RequestHandler = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    
+    if (!customerId) {
+      return res.status(400).json({
+        error: 'Customer ID is required'
+      });
+    }
+    
+    const stripe = await getStripeInstance();
+    
+    // Get customer's payment methods
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: customerId,
+      type: 'card',
+    });
+    
+    const formattedPaymentMethods = paymentMethods.data.map(pm => ({
+      id: pm.id,
+      card: {
+        brand: pm.card?.brand,
+        last4: pm.card?.last4,
+        exp_month: pm.card?.exp_month,
+        exp_year: pm.card?.exp_year
+      },
+      created: pm.created
+    }));
+    
+    res.json({
+      paymentMethods: formattedPaymentMethods
+    });
+    
+  } catch (error) {
+    console.error('Error getting customer payment methods:', error);
+    res.status(500).json({
+      error: 'Failed to get payment methods'
+    });
+  }
+};
+
+// Delete a saved payment method
+export const deletePaymentMethod: RequestHandler = async (req, res) => {
+  try {
+    const { paymentMethodId } = req.params;
+    
+    if (!paymentMethodId) {
+      return res.status(400).json({
+        error: 'Payment method ID is required'
+      });
+    }
+    
+    const stripe = await getStripeInstance();
+    
+    // Detach payment method from customer
+    await stripe.paymentMethods.detach(paymentMethodId);
+    
+    console.log(`💳 Deleted payment method: ${paymentMethodId}`);
+    
+    res.json({
+      success: true,
+      message: 'Payment method deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error deleting payment method:', error);
+    res.status(500).json({
+      error: 'Failed to delete payment method'
+    });
+  }
+};
+
+// Get customer by email
+export const getCustomerByEmail: RequestHandler = async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    if (!email) {
+      return res.status(400).json({
+        error: 'Email is required'
+      });
+    }
+    
+    const stripe = await getStripeInstance();
+    
+    // Search for customer by email
+    const customers = await stripe.customers.list({
+      email: email,
+      limit: 1
+    });
+    
+    if (customers.data.length === 0) {
+      return res.json({
+        customer: null
+      });
+    }
+    
+    const customer = customers.data[0];
+    
+    res.json({
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        name: customer.name,
+        created: customer.created
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error getting customer by email:', error);
+    res.status(500).json({
+      error: 'Failed to get customer'
     });
   }
 };
@@ -234,6 +456,12 @@ export const handleWebhook: RequestHandler = async (req, res) => {
         }
 
         // TODO: Send payment failure notification email
+        break;
+
+      case 'setup_intent.succeeded':
+        const setupIntent = event.data.object;
+        console.log(`💳 Setup intent succeeded: ${setupIntent.id} for customer ${setupIntent.customer}`);
+        // Payment method has been successfully saved
         break;
         
       default:
