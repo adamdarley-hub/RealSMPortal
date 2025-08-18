@@ -83,12 +83,13 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
           }),
         });
 
+        const responseData = await response.json();
+
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create payment intent');
+          throw new Error(responseData.error || 'Failed to create payment intent');
         }
 
-        const { clientSecret } = await response.json();
+        const { clientSecret } = responseData;
         setPaymentIntent(clientSecret);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to initialize payment';
