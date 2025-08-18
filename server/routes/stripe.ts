@@ -460,44 +460,9 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
   try {
     const { makeServeManagerRequest } = await import('./servemanager');
 
-    // Simple approach: just update the invoice status directly
-    // Use the same pattern that successfully fetches invoices
-    console.log(`🎯 Attempting simple status update using working API pattern...`);
+    console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager...`);
 
-    console.log(`📝 SIMPLE APPROACH: Directly updating invoice ${invoiceId} status to "${status}" using working endpoint...`);
-
-    if (status !== 'paid') {
-      console.log(`⚠️ Only "paid" status updates are supported, skipping status "${status}"`);
-      return;
-    }
-
-    // Use the same endpoint pattern that successfully fetches invoices
-    const updateData = {
-      data: {
-        type: "invoices",
-        id: invoiceId.toString(),
-        attributes: {
-          status: "paid"
-        }
-      }
-    };
-
-    console.log(`📝 Attempting PATCH request to /invoices/${invoiceId} with data:`, JSON.stringify(updateData, null, 2));
-
-    try {
-      const response = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
-        method: 'PATCH',
-        body: JSON.stringify(updateData)
-      });
-
-      console.log(`✅ SUCCESS! Invoice ${invoiceId} status updated to paid`);
-      console.log(`📝 Response:`, JSON.stringify(response, null, 2));
-      return;
-
-    } catch (error) {
-      console.error(`❌ Direct status update failed:`, error);
-      throw error;
-    }
+    // Use the payments endpoint to create a payment record
     // ServeManager expects form data, not JSON:API format (based on HTML form analysis)
     // The form action="/invoices/10060442/payments" suggests main site, not API endpoint
     const endpoint = `invoices/${invoiceId}/payments`;
@@ -556,34 +521,6 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
         console.log(`��� Successfully created payment record for invoice ${invoiceId} in ServeManager`);
         console.log(`📝 API Response:`, JSON.stringify(responseData, null, 2));
-
-        // Now update the invoice status to "paid"
-        console.log(`📝 Now updating invoice ${invoiceId} status to "paid"...`);
-
-        const statusUpdateUrl = `${mainSiteUrl}/invoices/${invoiceId}`;
-        const statusFormData = new URLSearchParams();
-        statusFormData.append('invoice[status]', 'paid');
-
-        console.log(`🌐 Updating invoice status at: ${statusUpdateUrl}`);
-        console.log(`📝 Status form data:`, statusFormData.toString());
-
-        const statusResponse = await fetch(statusUpdateUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: statusFormData.toString(),
-        });
-
-        if (!statusResponse.ok) {
-          console.log(`⚠️ Status update failed: ${statusResponse.status} ${statusResponse.statusText}`);
-          const statusError = await statusResponse.text();
-          console.log(`⚠️ Status error details:`, statusError);
-        } else {
-          console.log(`✅ Successfully updated invoice ${invoiceId} status to "paid"`);
-        }
-
         updateSuccessful = true;
       } else {
         // For failed payments, we don't create a payment record
