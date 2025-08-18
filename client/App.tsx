@@ -74,6 +74,9 @@ function AppRoutes() {
       {/* Public routes */}
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
 
+      {/* Demo route for Builder.io - auto-login admin */}
+      <Route path="/demo" element={<DemoRoute><Index /></DemoRoute>} />
+
       {/* Admin routes */}
       <Route path="/" element={<ProtectedRoute role="admin"><Index /></ProtectedRoute>} />
       <Route path="/jobs" element={<ProtectedRoute role="admin"><Jobs /></ProtectedRoute>} />
