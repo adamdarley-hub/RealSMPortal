@@ -121,6 +121,44 @@ export default function ClientInvoices() {
     });
   };
 
+  // Temporary test function for ServeManager integration
+  const handleTestServeManagerUpdate = async (invoice: any, event: React.MouseEvent) => {
+    event.stopPropagation();
+
+    try {
+      const response = await fetch(`/api/invoices/${invoice.id}/mark-paid`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to test ServeManager update');
+      }
+
+      const result = await response.json();
+
+      toast({
+        title: "Test Update Sent",
+        description: `Attempted to mark invoice ${invoice.id} as paid in ServeManager. Check logs for details.`,
+      });
+
+      // Refresh invoices to see if status changed
+      setTimeout(() => {
+        loadInvoices();
+      }, 2000);
+
+    } catch (error) {
+      console.error('Test update failed:', error);
+      toast({
+        title: "Test Failed",
+        description: error instanceof Error ? error.message : 'Test update failed',
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     loadInvoices();
   }, [user?.client_id, statusFilter]);
