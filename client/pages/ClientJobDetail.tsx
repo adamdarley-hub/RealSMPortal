@@ -556,7 +556,12 @@ export default function ClientJobDetail() {
         methodColor: 'bg-blue-50 text-blue-700',
         methodIcon: '👤',
         notes: attempt.notes || attempt.description || '',
-        server: attempt.server || attempt.process_server || 'Unknown Server',
+        server: typeof attempt.server === 'string' ? attempt.server :
+                typeof attempt.process_server === 'string' ? attempt.process_server :
+                attempt.server?.name || attempt.process_server?.name ||
+                attempt.server?.first_name && attempt.server?.last_name ?
+                  `${attempt.server.first_name} ${attempt.server.last_name}` :
+                'Unknown Server',
         success: isSuccessful,
         details: {
           serveType: attempt.serve_type || attempt.service_type || 'Personal',
