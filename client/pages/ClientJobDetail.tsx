@@ -510,6 +510,25 @@ export default function ClientJobDetail() {
     }
   };
 
+  const loadJobInvoices = async (jobId: string) => {
+    if (!jobId) return;
+
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/invoices`);
+      if (response.ok) {
+        const data = await response.json();
+        setJobInvoices(data.invoices || []);
+        console.log('🧾 Job invoices loaded:', data.invoices?.length || 0);
+      } else {
+        console.warn('🧾 Job invoices fetch failed:', response.status);
+        setJobInvoices([]);
+      }
+    } catch (error) {
+      console.warn('🧾 Job invoices fetch error:', error);
+      setJobInvoices([]);
+    }
+  };
+
   useEffect(() => {
     loadJob();
   }, [id, user?.client_id]);
