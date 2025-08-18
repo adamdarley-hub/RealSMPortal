@@ -211,14 +211,23 @@ export const createSetupIntent: RequestHandler = async (req, res) => {
 export const getCustomerPaymentMethods: RequestHandler = async (req, res) => {
   try {
     const { customerId } = req.params;
-    
+
     if (!customerId) {
       return res.status(400).json({
         error: 'Customer ID is required'
       });
     }
-    
-    const stripe = await getStripeInstance();
+
+    let stripe;
+    try {
+      stripe = await getStripeInstance();
+    } catch (configError) {
+      console.error('Stripe configuration error:', configError);
+      return res.status(503).json({
+        error: 'Stripe is not configured. Please configure Stripe in the admin settings.',
+        code: 'STRIPE_NOT_CONFIGURED'
+      });
+    }
     
     // Get customer's payment methods
     const paymentMethods = await stripe.paymentMethods.list({
