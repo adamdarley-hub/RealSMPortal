@@ -460,9 +460,14 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
   try {
     const { makeServeManagerRequest } = await import('./servemanager');
 
-    console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager...`);
+    console.log(`📝 Starting ServeManager integration for invoice ${invoiceId} with status "${status}" using proper API...`);
 
-    // Use the payments endpoint to create a payment record
+    if (status !== 'paid') {
+      console.log(`⚠️ Only "paid" status updates are supported, skipping status "${status}"`);
+      return;
+    }
+
+    // Use proper JSON:API format for ServeManager integration
     // ServeManager expects form data, not JSON:API format (based on HTML form analysis)
     // The form action="/invoices/10060442/payments" suggests main site, not API endpoint
     const endpoint = `invoices/${invoiceId}/payments`;
