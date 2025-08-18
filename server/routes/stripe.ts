@@ -516,34 +516,34 @@ async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'pai
       console.log(`📝 Updating invoice ${invoiceId} via ServeManager API: ${endpoint}`);
       console.log(`📝 Request data:`, JSON.stringify(updateData, null, 2));
 
-      await makeServeManagerRequest(endpoint, {
+      const response = await makeServeManagerRequest(endpoint, {
         method: 'PUT',
         body: JSON.stringify(updateData),
       });
 
       console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" in ServeManager`);
+      console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
       updateSuccessful = true;
 
     } catch (apiError) {
       console.log(`❌ Failed to update invoice ${invoiceId}: ${apiError.message}`);
       lastError = apiError;
 
-      // Also try without the /api prefix in case the base URL already includes it
+      // Also try PATCH method
       try {
-        const fallbackEndpoint = `/invoices/${invoiceId}`;
-        console.log(`📝 Trying fallback endpoint: ${fallbackEndpoint}`);
+        console.log(`📝 Trying PATCH method for ${endpoint}`);
 
-        await makeServeManagerRequest(fallbackEndpoint, {
-          method: 'PUT',
+        await makeServeManagerRequest(endpoint, {
+          method: 'PATCH',
           body: JSON.stringify(updateData),
         });
 
-        console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" via fallback endpoint`);
+        console.log(`✅ Successfully updated invoice ${invoiceId} status to "${status}" via PATCH`);
         updateSuccessful = true;
 
-      } catch (fallbackError) {
-        console.log(`❌ Fallback endpoint also failed: ${fallbackError.message}`);
-        lastError = fallbackError;
+      } catch (patchError) {
+        console.log(`❌ PATCH method also failed: ${patchError.message}`);
+        lastError = patchError;
       }
     }
 
