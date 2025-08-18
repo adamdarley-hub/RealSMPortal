@@ -68,6 +68,34 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function DemoRoute({ children }: { children: React.ReactNode }) {
+  const { user, login } = useAuth();
+  const [isAutoLoggingIn, setIsAutoLoggingIn] = useState(false);
+
+  useEffect(() => {
+    if (!user && !isAutoLoggingIn) {
+      setIsAutoLoggingIn(true);
+      // Auto-login admin user for demo
+      login('admin@serveportal.com', 'password').then(() => {
+        setIsAutoLoggingIn(false);
+      });
+    }
+  }, [user, login, isAutoLoggingIn]);
+
+  if (!user || isAutoLoggingIn) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Loading demo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   return (
     <Routes>
