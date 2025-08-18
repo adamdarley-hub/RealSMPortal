@@ -237,7 +237,7 @@ const getMethodDisplay = (attempt: any) => {
   return {
     name: isMobile ? "Mobile App" : "Manual Entry",
     color: isMobile ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-50 text-gray-700 border-gray-200",
-    icon: isMobile ? "📱" : "💻"
+    icon: isMobile ? "📱" : "���"
   };
 };
 
@@ -430,7 +430,8 @@ export default function ClientJobDetail() {
     setLoading(true);
 
     try {
-      const url = refresh ? `/api/jobs/${id}?refresh=true` : `/api/jobs/${id}`;
+      // Always get fresh data for client detail view to ensure documents, invoices, affidavits are loaded
+      const url = `/api/jobs/${id}?refresh=true`;
       const response = await fetch(url);
       
       if (!response.ok) {
