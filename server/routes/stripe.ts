@@ -462,27 +462,23 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
     console.log(`📝 Updating invoice ${invoiceId} status to "${status}" in ServeManager...`);
 
-    // Use the payments endpoint to create a payment record (correct approach!)
-    // Base URL is https://www.servemanager.com/api so we don't need /api prefix
+    // Use the payments endpoint to create a payment record
+    // ServeManager expects form data, not JSON:API format (based on HTML form analysis)
     const endpoint = `invoices/${invoiceId}/payments`;
-
-    // Create payment record using ServeManager's payments API
-    let updateData: any;
 
     if (status === 'paid') {
       // For testing, use a small amount - in real payments this would come from Stripe
-      const paymentAmount = 0.50;
+      const paymentAmount = "0.5";
 
-      updateData = {
-        data: {
-          type: "payments",
-          attributes: {
-            amount: paymentAmount,
-            applied_on: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-            description: "Test payment via Stripe integration"
-          }
-        }
-      };
+      // Create form data exactly like the ServeManager form
+      const formData = new URLSearchParams();
+      formData.append('payment[amount]', paymentAmount);
+      formData.append('payment[applied_on]', new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })); // "August 18, 2025" format
+      formData.append('payment[description]', 'Test payment via Stripe integration');
 
       console.log(`📝 Creating payment record for invoice ${invoiceId} with amount: $${paymentAmount}`);
 
