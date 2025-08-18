@@ -453,16 +453,32 @@ export default function ClientInvoices() {
                       {invoice.due_date ? formatDate(invoice.due_date) : 'No due date'}
                     </TableCell>
                     <TableCell>
-                      {(invoice.status.toLowerCase() === 'sent' || invoice.status.toLowerCase() === 'issued') && (
-                        <Button
-                          size="sm"
-                          onClick={(e) => handlePaymentClick(invoice, e)}
-                          className="gap-1"
-                        >
-                          <DollarSign className="w-3 h-3" />
-                          Pay
-                        </Button>
-                      )}
+                      <div className="flex gap-2">
+                        {(invoice.status.toLowerCase() === 'sent' || invoice.status.toLowerCase() === 'issued') && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={(e) => handlePaymentClick(invoice, e)}
+                              className="gap-1"
+                            >
+                              <DollarSign className="w-3 h-3" />
+                              Pay
+                            </Button>
+                            {/* Temporary test button for invoice 10060442 */}
+                            {invoice.id === 10060442 && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => handleTestServeManagerUpdate(invoice, e)}
+                                className="gap-1"
+                              >
+                                <TestTube className="w-3 h-3" />
+                                Test SM
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
