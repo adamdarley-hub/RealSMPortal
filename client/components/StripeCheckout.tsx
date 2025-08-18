@@ -349,8 +349,12 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
       });
 
       const data = await response.json();
-      
-      if (response.ok && data.clientSecret) {
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create setup intent');
+      }
+
+      if (data.clientSecret) {
         const cardElement = elements?.getElement(CardElement);
         if (!cardElement) {
           throw new Error('Card element not found');
@@ -370,7 +374,12 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
         if (data.customerId) {
           const pmResponse = await fetch(`/api/stripe/customers/${data.customerId}/payment-methods`);
           const pmData = await pmResponse.json();
-          
+
+          if (!pmResponse.ok) {
+            console.error('Failed to reload payment methods:', pmData.error);
+            return;
+          }
+
           if (pmData.paymentMethods) {
             setSavedPaymentMethods(pmData.paymentMethods);
           }
