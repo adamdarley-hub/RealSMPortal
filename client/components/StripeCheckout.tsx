@@ -147,12 +147,13 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
           }),
         });
 
+        const confirmResponseData = await confirmResponse.json();
+
         if (!confirmResponse.ok) {
-          const errorData = await confirmResponse.json();
-          throw new Error(errorData.error || 'Failed to confirm payment');
+          throw new Error(confirmResponseData.error || 'Failed to confirm payment');
         }
 
-        const confirmResult = await confirmResponse.json();
+        const confirmResult = confirmResponseData;
 
         toast({
           title: "Payment Successful",
