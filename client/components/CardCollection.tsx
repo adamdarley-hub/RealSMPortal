@@ -69,12 +69,13 @@ function CardCollectionForm({ jobId, onCardSaved, onCancel }: CardCollectionForm
         }),
       });
 
+      const setupResponseData = await setupResponse.json();
+
       if (!setupResponse.ok) {
-        const errorData = await setupResponse.json();
-        throw new Error(errorData.message || 'Failed to create Setup Intent');
+        throw new Error(setupResponseData.message || 'Failed to create Setup Intent');
       }
 
-      const { setup_intent } = await setupResponse.json();
+      const { setup_intent } = setupResponseData;
       console.log('💳 Setup Intent created:', setup_intent.id);
 
       // Confirm the Setup Intent with the card
