@@ -100,7 +100,7 @@ export default function Login() {
 
           <div className="mt-6 pt-4 border-t">
             <p className="text-sm text-muted-foreground text-center mb-3">
-              Demo Accounts:
+              Demo Access:
             </p>
             <div className="space-y-2 text-xs">
               <div className="bg-muted p-2 rounded">
@@ -108,15 +108,16 @@ export default function Login() {
                 <br />
                 <strong>Password:</strong> password
               </div>
-              <div className="bg-muted p-2 rounded">
-                <strong>Client:</strong> kelly@kerrcivilprocess.com
+              <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                <strong>Any Client:</strong> Use any client email from database
+                <br />
+                <strong>Examples:</strong> service@wyattprocess.com, kelly@kerrcivilprocess.com
                 <br />
                 <strong>Password:</strong> password
               </div>
-              <div className="bg-muted p-2 rounded">
-                <strong>Client:</strong> office@prontoprocess.com
-                <br />
-                <strong>Password:</strong> password
+              <div className="bg-yellow-50 p-2 rounded border border-yellow-200 text-xs">
+                <strong>Note:</strong> All accounts use "password" for development.
+                Clients can set custom passwords later.
               </div>
             </div>
           </div>
