@@ -1108,8 +1108,8 @@ export default function ClientJobDetail() {
                               <Badge className={attempt.statusColor}>
                                 {attempt.status}
                               </Badge>
-                              <Badge variant="outline" className={attempt.methodColor}>
-                                {attempt.method}
+                              <Badge variant="outline" className={attempt.isMobileAttempt ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'}>
+                                {attempt.isMobileAttempt ? 'Mobile' : 'Computer'}
                               </Badge>
                             </div>
                             <div className="text-right">
