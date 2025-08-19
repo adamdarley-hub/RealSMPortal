@@ -93,18 +93,37 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           method: 'GET',
           signal: controller.signal,
           // Add cache-busting to prevent cached responses from hiding real issues
-          cache: 'no-cache'
+          cache: 'no-cache',
+          // Add timeout to prevent hanging requests
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
         });
+
+        // Only treat 5xx errors as serious issues, 4xx might be auth/permissions
         if (!healthCheck.ok && healthCheck.status >= 500) {
           console.warn('⚠️ Server returned error status:', healthCheck.status);
-          throw new Error('Server unavailable');
+          throw new Error(`Server unavailable (${healthCheck.status})`);
         }
       } catch (healthError) {
-        console.warn('⚠️ Server health check failed, skipping sync:', {
-          error: healthError.message,
-          name: healthError.name,
-          cause: healthError.cause
-        });
+        // Check if this is a network/fetch error vs server error
+        const isNetworkError = healthError.name === 'TypeError' ||
+                              healthError.message.includes('Failed to fetch') ||
+                              healthError.message.includes('NetworkError') ||
+                              healthError.message.includes('fetch');
+
+        if (isNetworkError) {
+          console.warn('⚠️ Network connectivity issue, skipping auto-sync:', {
+            error: healthError.message,
+            type: 'network_error'
+          });
+        } else {
+          console.warn('⚠️ Server health check failed, skipping sync:', {
+            error: healthError.message,
+            name: healthError.name,
+            cause: healthError.cause
+          });
+        }
 
         // Don't throw, just skip sync and continue with cached data
         if (mountedRef.current) {
