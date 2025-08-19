@@ -373,56 +373,53 @@ export default function ClientDashboard() {
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <MapPin className="w-3 h-3" />
                           {(() => {
-                            const addressObj = job.service_address || job.address;
+                            // Use the same comprehensive address lookup as JobDetail.tsx
+                            const getServiceAddressString = (job: any) => {
+                              // Check all possible address sources in priority order
+                              const possibleAddresses = [
+                                job.service_address,
+                                job.address,
+                                job.defendant_address,
+                                // Check raw data sources that ServeManager uses
+                                job.raw_data?.addresses?.[0],
+                                (job as any).addresses?.[0],
+                                // Check nested raw data
+                                job.raw_data?.service_address,
+                                job.raw_data?.defendant_address,
+                                job.raw_data?.address
+                              ];
 
-                            // Debug logging for address data
-                            console.log(`🏠 Job ${job.job_number} address debug:`, {
-                              service_address: job.service_address,
-                              address: job.address,
-                              defendant_address: job.defendant_address,
-                              addressObj: addressObj
-                            });
+                              for (const address of possibleAddresses) {
+                                if (!address) continue;
 
-                            if (addressObj && typeof addressObj === 'object') {
-                              // Build full address using the exact field names from the mapper
-                              const parts = [];
+                                // If address is a string, return it directly
+                                if (typeof address === 'string' && address.trim()) {
+                                  return address.trim();
+                                }
 
-                              // Add street address (try all possible field names)
-                              const street = addressObj.street ||
-                                            addressObj.street1 ||
-                                            addressObj.address ||
-                                            addressObj.line1 ||
-                                            addressObj.address_line_1 ||
-                                            addressObj.street_address ||
-                                            addressObj.address1;
+                                // If address is an object, format it
+                                if (typeof address === 'object' && address) {
+                                  const parts = [
+                                    address.street || address.address1 || address.street1,
+                                    address.street2 || address.address2
+                                  ].filter(Boolean);
 
-                              if (street) parts.push(street);
+                                  const street = parts.join(' ');
+                                  const cityState = [address.city, address.state].filter(Boolean).join(', ');
+                                  const zip = address.zip || address.postal_code;
 
-                              // Add street2 if it exists
-                              const street2 = addressObj.street2 ||
-                                             addressObj.line2 ||
-                                             addressObj.address_line_2 ||
-                                             addressObj.address2;
-                              if (street2) parts.push(street2);
+                                  const formattedAddress = [street, cityState, zip].filter(Boolean).join(', ');
 
-                              // Add city
-                              const city = addressObj.city || addressObj.locality || addressObj.town;
-                              if (city) parts.push(city);
-
-                              // Add state
-                              const state = addressObj.state || addressObj.province || addressObj.region;
-                              if (state) parts.push(state);
-
-                              // Add zip
-                              const zip = addressObj.zip || addressObj.postal_code || addressObj.zipcode;
-                              if (zip) parts.push(zip);
-
-                              if (parts.length > 0) {
-                                return parts.join(', ');
+                                  if (formattedAddress.trim()) {
+                                    return formattedAddress;
+                                  }
+                                }
                               }
-                            }
 
-                            return 'Address pending';
+                              return 'Address pending';
+                            };
+
+                            return getServiceAddressString(job);
                           })()}
                         </div>
                       </div>
