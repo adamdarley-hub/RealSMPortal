@@ -711,6 +711,15 @@ export default function ClientJobDetail() {
   const recipientName = getRecipientName(job);
   const recipientInfo = getRecipientInfo(job);
 
+  // DEBUG: Log recipientInfo to understand the structure
+  console.log('🐛 CLIENT: recipientInfo debug:', {
+    recipientInfo,
+    recipientInfoType: typeof recipientInfo,
+    recipientInfoKeys: Object.keys(recipientInfo),
+    recipientInfoEntries: Object.entries(recipientInfo),
+    rawRecipient: job.raw_data?.recipient || (job as any).recipient
+  });
+
   return (
     <ClientLayout>
       <div className="container mx-auto p-6 space-y-6">
