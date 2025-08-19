@@ -595,7 +595,7 @@ export const handleWebhook: RequestHandler = async (req, res) => {
 
         // Update invoice status in ServeManager
         if (paymentIntent.metadata.invoiceId) {
-          await updateInvoiceStatusInServeManager(paymentIntent.metadata.invoiceId, 'paid');
+          await updateInvoiceStatusInServeManager(paymentIntent.metadata.invoiceId, 'paid', paymentIntent.id, paymentIntent.amount / 100);
         }
 
         // TODO: Send payment confirmation email
