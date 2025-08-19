@@ -457,7 +457,7 @@ export async function createServer() {
     // In development, redirect non-API routes to frontend
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api')) return next();
-      res.redirect(`http://localhost:5173${req.path}`);
+      res.redirect(`http://localhost:4000${req.path}`);
     });
   }
 
