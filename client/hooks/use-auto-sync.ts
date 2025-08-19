@@ -142,9 +142,10 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
                               healthError.message.includes('fetch');
 
         if (isNetworkError) {
-          console.warn('⚠️ Network connectivity issue, skipping auto-sync:', {
+          console.warn('⚠️ Network connectivity issue, will retry with exponential backoff:', {
             error: healthError.message,
-            type: 'network_error'
+            type: 'network_error',
+            consecutiveFailures: status.consecutiveFailures + 1
           });
         } else {
           console.warn('⚠️ Server health check failed, skipping sync:', {
@@ -421,7 +422,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
   // Handle online/offline events
   useEffect(() => {
     const handleOnline = () => {
-      console.log('�� Back online - resuming auto-sync');
+      console.log('🌐 Back online - resuming auto-sync');
       if (mountedRef.current) {
         setStatus(prev => ({ ...prev, isOnline: true, error: null }));
         // Trigger a sync when coming back online and restart normal polling
