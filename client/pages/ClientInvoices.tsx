@@ -137,11 +137,11 @@ export default function ClientInvoices() {
         },
       });
 
+      // Clone response IMMEDIATELY after fetch, before any logging or processing
+      const responseClone = response.clone();
+
       console.log(`🧪 Frontend: Response status: ${response.status}`);
       console.log(`🧪 Frontend: Response ok: ${response.ok}`);
-
-      // Clone response for reading body multiple times if needed
-      const responseClone = response.clone();
 
       let result;
       let errorMessage = '';
