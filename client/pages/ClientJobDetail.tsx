@@ -616,13 +616,39 @@ export default function ClientJobDetail() {
     });
 
     return attempts.map((attempt: any, index: number) => {
-      const isSuccessful = attempt.success || attempt.status === 'Served';
+      // Use same logic as main extractServiceAttempts function
+      const serveType = attempt.serve_type || attempt.service_type || '';
+      const successfulServeTypes = [
+        "Authorized", "Business", "Corporation", "Government Agency", "Mail",
+        "Personal/Individual", "Posted", "Registered Agent", "Secretary of State",
+        "Substitute Service - Abode", "Substitute Service - Business", "Substitute Service - Personal"
+      ];
+      const unsuccessfulServeTypes = ["Bad Address", "Non-Service", "Unsuccessful Attempt"];
+
+      let isSuccessful = false;
+
+      if (successfulServeTypes.includes(serveType)) {
+        isSuccessful = true;
+      } else if (unsuccessfulServeTypes.includes(serveType)) {
+        isSuccessful = false;
+      } else {
+        // Fallback to other detection methods if serve_type is not available
+        isSuccessful = (
+          attempt.success === true ||
+          attempt.service_status === 'Served' ||
+          attempt.served_at !== null && attempt.served_at !== undefined ||
+          attempt.served === true ||
+          attempt.status === 'served' ||
+          attempt.status === 'Served'
+        );
+      }
+
       return {
         id: attempt.id || index,
         number: index + 1,
         date: attempt.date || attempt.attempt_date || attempt.created_at,
-        status: attempt.status || attempt.result || 'Unknown',
-        statusColor: isSuccessful ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
+        status: isSuccessful ? "Successful" : (serveType || "Unsuccessful Attempt"),
+        statusColor: isSuccessful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
         method: 'Personal Service',
         methodColor: 'bg-blue-50 text-blue-700',
         methodIcon: '����',
