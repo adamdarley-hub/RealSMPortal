@@ -141,14 +141,22 @@ export default function ClientInvoices() {
       console.log(`🧪 Frontend: Response ok: ${response.ok}`);
       console.log(`🧪 Frontend: Response headers:`, [...response.headers.entries()]);
 
-      if (!response.ok) {
+      // Read the response body once and handle both success/error cases
+      let result;
+      try {
+        result = await response.json();
+        console.log(`🧪 Frontend: Response data:`, result);
+      } catch (jsonError) {
+        // If JSON parsing fails, try to get as text
         const errorText = await response.text();
-        console.log(`🧪 Frontend: Error response text:`, errorText);
-        throw new Error(`Failed to test ServeManager update: ${response.status} ${errorText}`);
+        console.log(`🧪 Frontend: Non-JSON response:`, errorText);
+        throw new Error(`Failed to parse response: ${response.status} ${errorText}`);
       }
 
-      const result = await response.json();
-      console.log(`🧪 Frontend: Success response:`, result);
+      if (!response.ok) {
+        console.log(`🧪 Frontend: Error response:`, result);
+        throw new Error(`Failed to test ServeManager update: ${response.status} ${result.error || result.message || 'Unknown error'}`);
+      }
 
       toast({
         title: "Test Update Success",
