@@ -535,8 +535,10 @@ export default function ClientJobDetail() {
         hasAttempts: !!jobData.attempts,
         attemptsLength: jobData.attempts?.length,
         attemptsRaw: jobData.attempts,
+        attemptsHaveMiscAttachments: jobData.attempts?.some((a: any) => a.misc_attachments?.length > 0),
         jobKeys: Object.keys(jobData),
-        fullJobData: jobData
+        responseType: jobData.cached ? 'cached' : 'fresh',
+        url
       });
 
       // Extract service attempts from job data
