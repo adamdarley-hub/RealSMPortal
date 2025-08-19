@@ -650,7 +650,7 @@ export default function ClientJobDetail() {
         status: isSuccessful ? "Successful" : (serveType || "Unsuccessful Attempt"),
         statusColor: isSuccessful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
         isMobileAttempt: isMobileAttempt(attempt),
-        method: isMobileAttempt(attempt) ? 'Mobile' : 'Computer',
+        method: isMobileAttempt(attempt) ? 'via Mobile' : 'via Desktop',
         methodColor: isMobileAttempt(attempt) ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700',
         notes: attempt.notes || attempt.description || '',
         server: typeof attempt.server === 'string' ? attempt.server :
