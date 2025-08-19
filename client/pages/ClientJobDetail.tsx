@@ -301,7 +301,15 @@ const extractServiceAttempts = (job: Job) => {
     }
   }
 
-  return job.attempts.map((attempt: any, index: number) => {
+  // Sort attempts by date to assign proper chronological numbers
+  const sortedAttempts = [...job.attempts].sort((a, b) => {
+    const dateA = new Date(a.attempted_at || a.date || a.created_at || 0);
+    const dateB = new Date(b.attempted_at || b.date || b.created_at || 0);
+    return dateA.getTime() - dateB.getTime(); // Earliest first
+  });
+
+  // Map with chronological numbering
+  const attemptsWithNumbers = sortedAttempts.map((attempt: any, index: number) => {
     // ServeManager attempt success detection based on serve_type field
     const serveType = attempt.serve_type || attempt.service_type || '';
     const successfulServeTypes = [
