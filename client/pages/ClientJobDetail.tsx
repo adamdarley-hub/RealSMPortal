@@ -490,6 +490,20 @@ export default function ClientJobDetail() {
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [jobInvoices, setJobInvoices] = useState<any[]>([]);
   const [serviceAttempts, setServiceAttempts] = useState<any[]>([]);
+  const [expandedAttempts, setExpandedAttempts] = useState<Set<number>>(new Set());
+
+  // Toggle expanded state for service attempts
+  const toggleAttemptExpansion = (attemptId: number) => {
+    setExpandedAttempts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(attemptId)) {
+        newSet.delete(attemptId);
+      } else {
+        newSet.add(attemptId);
+      }
+      return newSet;
+    });
+  };
 
   const loadJob = async (refresh = false) => {
     if (!id) return;
