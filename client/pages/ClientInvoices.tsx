@@ -165,8 +165,7 @@ export default function ClientInvoices() {
       }
 
       if (!response.ok) {
-        const finalError = result?.message || result?.error || errorMessage || `HTTP ${response.status}`;
-        throw new Error(finalError);
+        throw new Error(errorMessage || `HTTP ${response.status}`);
       }
 
       toast({
