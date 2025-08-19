@@ -478,6 +478,19 @@ export default function ClientJobDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Toggle expanded state for service attempts
+  const toggleAttemptExpansion = (attemptId: number) => {
+    setExpandedAttempts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(attemptId)) {
+        newSet.delete(attemptId);
+      } else {
+        newSet.add(attemptId);
+      }
+      return newSet;
+    });
+  };
   const { toast } = useToast();
   
   const [job, setJob] = useState<Job | null>(null);
