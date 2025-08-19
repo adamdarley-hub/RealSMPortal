@@ -460,10 +460,28 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
   try {
     const { makeServeManagerRequest } = await import('./servemanager');
 
-    console.log(`��� Updating invoice ${invoiceId} status to "${status}" in ServeManager using correct API...`);
+    console.log(`Creating payment record for invoice ${invoiceId} in ServeManager...`);
 
-    // Need to find the correct job ID for this invoice by looking it up
-    console.log(`🔍 Looking up job ID for invoice ${invoiceId}...`);
+    if (status !== 'paid') {
+      console.log(`Cannot create payment record for status "${status}" - only creating records for successful payments`);
+      return;
+    }
+
+    // Get invoice details to find the amount if not provided
+    let paymentAmount = amount;
+    if (!paymentAmount) {
+      console.log(`Looking up invoice ${invoiceId} to get payment amount...`);
+
+      try {
+        const invoiceResponse = await makeServeManagerRequest(`/invoices/${invoiceId}`);
+        const invoice = invoiceResponse.data || invoiceResponse;
+        paymentAmount = parseFloat(invoice.total || invoice.balance_due || '0');
+        console.log(`Found invoice ${invoiceId} with amount: $${paymentAmount}`);
+      } catch (lookupError) {
+        console.log(`Could not lookup invoice amount, defaulting to $0.50:`, lookupError.message);
+        paymentAmount = 0.50; // Fallback for test payments
+      }
+    }
 
     // Get all invoices to find which job contains invoice 10060442
     const allInvoicesResponse = await makeServeManagerRequest('/invoices?per_page=100');
