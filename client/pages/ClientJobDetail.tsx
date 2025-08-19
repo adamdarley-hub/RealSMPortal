@@ -991,109 +991,53 @@ export default function ClientJobDetail() {
                             </div>
 
                             {/* Attempt Photos - only in expanded view */}
-            {(() => {
-              const miscAttachments = attempt.misc_attachments || attempt.attachments || [];
-              const photos = miscAttachments
-                .filter((attachment: any) => {
-                  // Check if it's an image attachment
-                  const isImage = attachment.upload?.content_type?.startsWith('image/') ||
-                                 attachment.upload?.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i) ||
-                                 attachment.content_type?.startsWith('image/') ||
-                                 attachment.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
-
-                  const hasValidStructure = attachment.id &&
-                                           (attachment.upload?.links?.download_url || attachment.download_url);
-
-                  return isImage && hasValidStructure;
-                })
-                .map((photo: any, photoIndex: number) => ({
-                  id: photo.id,
-                  name: photo.title || photo.name || `Photo ${photoIndex + 1}`,
-                  url: `/api/proxy/photo/${job.id}/${attempt.id}/${photo.id}`,
-                  size: photo.upload?.size || photo.size || 0,
-                  mimeType: photo.upload?.content_type || photo.content_type || 'image/jpeg'
-                }));
-
-              console.log(`🖼️ Attempt ${attempt.number} photos:`, {
-                miscAttachmentsCount: miscAttachments.length,
-                photoCount: photos.length,
-                miscAttachments: miscAttachments,
-                filteredPhotos: photos
-              });
-
-              return photos.length > 0;
-            })() && (
+            {attempt.details?.photos && attempt.details.photos.length > 0 && (
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Attempt Photos</label>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                  {(() => {
-                                    const miscAttachments = attempt.misc_attachments || attempt.attachments || [];
-                                    return miscAttachments
-                                      .filter((attachment: any) => {
-                                        const isImage = attachment.upload?.content_type?.startsWith('image/') ||
-                                                       attachment.upload?.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i) ||
-                                                       attachment.content_type?.startsWith('image/') ||
-                                                       attachment.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
-
-                                        const hasValidStructure = attachment.id &&
-                                                                 (attachment.upload?.links?.download_url || attachment.download_url);
-
-                                        return isImage && hasValidStructure;
-                                      })
-                                      .map((photo: any, photoIndex: number) => {
-                                        const mappedPhoto = {
-                                          id: photo.id,
-                                          name: photo.title || photo.name || `Photo ${photoIndex + 1}`,
-                                          url: `/api/proxy/photo/${job.id}/${attempt.id}/${photo.id}`,
-                                          size: photo.upload?.size || photo.size || 0,
-                                          mimeType: photo.upload?.content_type || photo.content_type || 'image/jpeg'
-                                        };
-
-                                        return (
-                                          <div key={photo.id} className="border rounded-lg overflow-hidden group">
-                                            <div
-                                              className="relative cursor-pointer bg-gray-100"
-                                              onClick={() => setSelectedPhoto(mappedPhoto)}
-                                            >
-                                              <img
-                                                src={mappedPhoto.url}
-                                                alt={mappedPhoto.name}
-                                                loading="lazy"
-                                                className="w-full h-24 object-cover transition-transform group-hover:scale-105"
-                                                onLoad={(e) => {
-                                                  // Remove loading background once image loads
-                                                  const parent = e.currentTarget.parentElement;
-                                                  if (parent) {
-                                                    parent.classList.remove('bg-gray-100');
-                                                  }
-                                                }}
-                                                onError={(e) => {
-                                                  // Hide broken images and their container
-                                                  const container = e.currentTarget.closest('.border');
-                                                  if (container) {
-                                                    container.style.display = 'none';
-                                                  }
-                                                }}
-                                              />
-                                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
-                                                <Eye className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                                              </div>
-                                            </div>
-                                            <div className="p-2">
-                                              <p className="text-xs font-medium truncate" title={mappedPhoto.name}>
-                                                {mappedPhoto.name}
-                                              </p>
-                                              {mappedPhoto.size && (
-                                                <p className="text-xs text-muted-foreground">
-                                                  {formatFileSize(mappedPhoto.size)}
-                                                </p>
-                                              )}
-                                            </div>
-                                          </div>
-                                        );
-                                      });
-                                  })()}
-                                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {attempt.details.photos.map((photo: any) => (
+                    <div key={photo.id} className="border rounded-lg overflow-hidden group">
+                      <div
+                        className="relative cursor-pointer bg-gray-100"
+                        onClick={() => setSelectedPhoto(photo)}
+                      >
+                        <img
+                          src={photo.url}
+                          alt={photo.name}
+                          loading="lazy"
+                          className="w-full h-24 object-cover transition-transform group-hover:scale-105"
+                          onLoad={(e) => {
+                            // Remove loading background once image loads
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              parent.classList.remove('bg-gray-100');
+                            }
+                          }}
+                          onError={(e) => {
+                            // Hide broken images and their container
+                            const container = e.currentTarget.closest('.border');
+                            if (container) {
+                              container.style.display = 'none';
+                            }
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                          <Eye className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                        </div>
+                      </div>
+                      <div className="p-2">
+                        <p className="text-xs font-medium truncate" title={photo.name}>
+                          {photo.name}
+                        </p>
+                        {photo.size && (
+                          <p className="text-xs text-muted-foreground">
+                            {formatFileSize(photo.size)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
