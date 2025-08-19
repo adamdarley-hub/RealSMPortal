@@ -873,7 +873,7 @@ export default function ClientJobDetail() {
                       {Object.entries(recipientInfo).map(([key, value]) => (
                         <div key={key}>
                           <label className="text-sm font-medium text-gray-500">{key}</label>
-                          <p className="text-sm">{value}</p>
+                          <p className="text-sm">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</p>
                         </div>
                       ))}
                     </div>
