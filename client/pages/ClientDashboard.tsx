@@ -375,6 +375,14 @@ export default function ClientDashboard() {
                           {(() => {
                             const addressObj = job.service_address || job.address;
 
+                            // Debug logging for address data
+                            console.log(`🏠 Job ${job.job_number} address debug:`, {
+                              service_address: job.service_address,
+                              address: job.address,
+                              defendant_address: job.defendant_address,
+                              addressObj: addressObj
+                            });
+
                             if (addressObj && typeof addressObj === 'object') {
                               // Build full address using the exact field names from the mapper
                               const parts = [];
