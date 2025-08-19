@@ -373,8 +373,7 @@ const extractServiceAttempts = (job: Job) => {
                              attachment.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
 
               const hasValidStructure = attachment.id &&
-                                      (attachment.title || attachment.name) &&
-                                      (attachment.upload?.links?.download_url || attachment.download_url || attachment.url);
+                                       (attachment.title || attachment.name);
 
               console.log(`📷 CLIENT: Attachment ${attachment.id} check:`, {
                 attachment,
