@@ -484,9 +484,14 @@ export default function ClientJobDetail() {
     setLoading(true);
 
     try {
-      // Always get fresh data for client detail view to ensure documents, invoices, affidavits are loaded
-      const url = `/api/jobs/${id}?refresh=true`;
-      const response = await fetch(url);
+      // Use direct ServeManager API like admin view to get full photo data
+      let response = await fetch(`/api/servemanager/jobs/${id}`);
+
+      // Fallback to cached API if ServeManager direct fails
+      if (!response.ok) {
+        console.log('📡 ServeManager direct API failed, falling back to cached API');
+        response = await fetch(`/api/jobs/${id}?refresh=true`);
+      }
       
       if (!response.ok) {
         throw new Error(`Failed to load job: ${response.statusText}`);
