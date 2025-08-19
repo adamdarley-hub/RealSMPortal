@@ -171,7 +171,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
         },
         signal: controller.signal,
         // Add retry logic by disabling cache
@@ -420,7 +421,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
   // Handle online/offline events
   useEffect(() => {
     const handleOnline = () => {
-      console.log('🌐 Back online - resuming auto-sync');
+      console.log('�� Back online - resuming auto-sync');
       if (mountedRef.current) {
         setStatus(prev => ({ ...prev, isOnline: true, error: null }));
         // Trigger a sync when coming back online and restart normal polling
