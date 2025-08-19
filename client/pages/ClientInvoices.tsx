@@ -67,31 +67,54 @@ export default function ClientInvoices() {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-  const loadInvoices = async () => {
+  const loadInvoices = async (forceSync = false) => {
     if (!user?.client_id) return;
-    
+
     setLoading(true);
     setError(null);
 
     try {
+      // If forceSync is true, trigger a full data refresh first
+      if (forceSync) {
+        console.log('🔄 Forcing invoice sync from ServeManager...');
+        try {
+          await fetch('/api/sync/legacy', { method: 'POST' });
+          console.log('✅ Invoice sync completed');
+        } catch (syncError) {
+          console.warn('⚠️ Invoice sync failed, continuing with cache:', syncError);
+        }
+      }
+
       const params = new URLSearchParams();
       params.append('client_id', user.client_id);
       if (statusFilter && statusFilter !== 'all') {
         params.append('status', statusFilter);
       }
 
+      // Add cache busting for forced refresh
+      if (forceSync) {
+        params.append('t', Date.now().toString());
+      }
+
       const response = await fetch(`/api/invoices?${params.toString()}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to load invoices');
       }
 
       const data = await response.json();
       // Filter invoices for this client
-      const clientInvoices = (data.invoices || []).filter((invoice: any) => 
+      const clientInvoices = (data.invoices || []).filter((invoice: any) =>
         invoice.client?.id === user.client_id
       );
       setInvoices(clientInvoices);
+
+      if (forceSync) {
+        toast({
+          title: "Invoices Refreshed",
+          description: "Invoices have been updated from ServeManager",
+        });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load invoices';
       setError(errorMessage);
