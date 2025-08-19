@@ -247,7 +247,9 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           lastSync: new Date(),
           nextSync: new Date(Date.now() + interval),
           isSyncing: false,
-          error: null
+          error: null,
+          consecutiveFailures: 0, // Reset failure count on success
+          circuitBreakerOpen: false // Close circuit breaker on success
         }));
       }
 
