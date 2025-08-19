@@ -300,7 +300,7 @@ export default function Jobs() {
       console.log('Loading ALL clients...');
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.log('⏰ Clients request timeout after 10 seconds');
+        console.log('�� Clients request timeout after 10 seconds');
         controller.abort();
       }, 10000); // Increased to 10 seconds
 
@@ -1146,9 +1146,10 @@ export default function Jobs() {
 
                                 // If address is an object, format it
                                 if (typeof address === 'object' && address) {
+                                  // Handle ServeManager addresses_attributes format
                                   const parts = [
-                                    address.street || address.address1 || address.street1,
-                                    address.street2 || address.address2
+                                    address.address1 || address.street || address.street1, // ServeManager uses address1
+                                    address.address2 || address.street2
                                   ].filter(Boolean);
 
                                   const street = parts.join(' ');
