@@ -6,7 +6,7 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 5174,
+    port: 8080,
     strictPort: true,
     fs: {
       allow: ["./client", "./shared"],
