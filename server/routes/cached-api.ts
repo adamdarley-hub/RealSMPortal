@@ -72,7 +72,19 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
       attempt_count: job.attempt_count,
       case_number: job.case_number,
       plaintiff: job.plaintiff,
-      // Exclude heavy fields like raw_data, attempts, documents for list view
+      // Include address fields for display
+      service_address: job.service_address,
+      defendant_address: job.defendant_address,
+      address: job.address,
+      addresses_attributes: job.addresses_attributes,
+      raw_data: job.raw_data ? {
+        addresses_attributes: job.raw_data.addresses_attributes,
+        addresses: job.raw_data.addresses,
+        service_address: job.raw_data.service_address,
+        defendant_address: job.raw_data.defendant_address,
+        address: job.raw_data.address
+      } : undefined,
+      // Exclude heavy fields like attempts, documents for list view (but keep raw_data.addresses)
       _cached: job._cached,
       _last_synced: job._last_synced
     }));
