@@ -245,21 +245,6 @@ const formatDateTime = (dateString: string | null) => {
   return date.toLocaleString('en-US', options);
 };
 
-// Helper function to format date only (no time)
-const formatDate = (dateString: string | null) => {
-  if (!dateString) return "No date";
-
-  const date = new Date(dateString);
-
-  // Format: "August 19, 2025"
-  const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'long',
-    day: '2-digit'
-  };
-
-  return date.toLocaleString('en-US', options);
-};
 
 // Helper function to format file sizes
 const formatFileSize = (bytes: number): string => {
