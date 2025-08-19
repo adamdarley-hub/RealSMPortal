@@ -143,6 +143,11 @@ export async function createServer() {
 
   // Manual invoice update endpoint (for testing)
   app.post('/api/invoices/:id/mark-paid', async (req, res) => {
+    console.log(`🧪🧪🧪 TEST ENDPOINT HIT: /api/invoices/${req.params.id}/mark-paid`);
+    console.log(`🧪 Request method: ${req.method}`);
+    console.log(`🧪 Request headers:`, req.headers);
+    console.log(`🧪 Request body:`, req.body);
+
     try {
       const { id } = req.params;
       console.log(`🧪 Manual request to mark invoice ${id} as paid`);
@@ -150,10 +155,12 @@ export async function createServer() {
       // Use the updated ServeManager update logic with test parameters
       const { updateInvoiceStatusInServeManager } = await import('./routes/stripe');
 
+      console.log(`🧪 About to call updateInvoiceStatusInServeManager for invoice ${id}`);
+
       // Pass test payment intent and amount for testing
       await updateInvoiceStatusInServeManager(id, 'paid', `test_${Date.now()}`, 0.50);
 
-      console.log(`✅ Test update completed for invoice ${id}`);
+      console.log(`�� Test update completed for invoice ${id}`);
 
       res.json({
         success: true,
@@ -163,6 +170,7 @@ export async function createServer() {
 
     } catch (error) {
       console.error(`❌ Failed to mark invoice ${req.params.id} as paid:`, error);
+      console.error(`❌ Error stack:`, error.stack);
       res.status(500).json({
         error: 'Failed to update invoice status',
         message: error instanceof Error ? error.message : 'Unknown error'
