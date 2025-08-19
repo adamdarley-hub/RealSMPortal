@@ -487,7 +487,9 @@ export async function updateInvoiceStatusInServeManager(
 
     try {
       // Fallback: search in invoice list (with client filter to reduce results)
+      console.log(`ServeManager: FALLBACK - fetching invoice list...`);
       const listResp = await makeServeManagerRequest('/invoices?per_page=100&client_id=1457038');
+      console.log(`ServeManager: FALLBACK - got list response, type: ${typeof listResp}`);
       const invoices = listResp?.data ?? listResp?.invoices ?? listResp;
 
       if (Array.isArray(invoices)) {
