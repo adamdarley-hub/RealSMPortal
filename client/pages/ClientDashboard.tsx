@@ -380,8 +380,15 @@ export default function ClientDashboard() {
                                 job.service_address,
                                 job.address,
                                 job.defendant_address,
+                                // Check ServeManager addresses_attributes array for primary address
+                                job.addresses_attributes?.find((addr: any) => addr.primary === true),
+                                job.addresses_attributes?.[0], // Fallback to first if no primary
+                                job.raw_data?.addresses_attributes?.find((addr: any) => addr.primary === true),
+                                job.raw_data?.addresses_attributes?.[0],
                                 // Check raw data sources that ServeManager uses
+                                job.raw_data?.addresses?.find((addr: any) => addr.primary === true),
                                 job.raw_data?.addresses?.[0],
+                                (job as any).addresses?.find((addr: any) => addr.primary === true),
                                 (job as any).addresses?.[0],
                                 // Check nested raw data
                                 job.raw_data?.service_address,
