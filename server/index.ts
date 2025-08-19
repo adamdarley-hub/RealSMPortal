@@ -141,6 +141,12 @@ export async function createServer() {
   app.get("/api/stripe/publishable-key", stripeRoutes.getPublishableKey);
   app.get("/api/stripe/payment-status/:invoiceId", stripeRoutes.getPaymentStatus);
 
+  // Simple test endpoint to verify proxy is working
+  app.get('/api/test', (req, res) => {
+    console.log(`🧪 TEST ENDPOINT HIT: /api/test`);
+    res.json({ message: 'Backend connection working!', timestamp: new Date().toISOString() });
+  });
+
   // Manual invoice update endpoint (for testing)
   app.post('/api/invoices/:id/mark-paid', async (req, res) => {
     console.log(`🧪🧪🧪 TEST ENDPOINT HIT: /api/invoices/${req.params.id}/mark-paid`);
@@ -160,7 +166,7 @@ export async function createServer() {
       // Pass test payment intent and amount for testing
       await updateInvoiceStatusInServeManager(id, 'paid', `test_${Date.now()}`, 0.50);
 
-      console.log(`�� Test update completed for invoice ${id}`);
+      console.log(`✅ Test update completed for invoice ${id}`);
 
       res.json({
         success: true,
