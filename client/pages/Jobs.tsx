@@ -1167,19 +1167,7 @@ export default function Jobs() {
                               return 'Address pending';
                             };
 
-                            const result = getServiceAddressString(job);
-                            if (result === 'Address pending') {
-                              console.log('🔍 Address debugging for job:', job.id, {
-                                service_address: job.service_address,
-                                address: job.address,
-                                defendant_address: job.defendant_address,
-                                addresses_attributes: job.addresses_attributes,
-                                raw_data_addresses_attributes: job.raw_data?.addresses_attributes,
-                                raw_data_addresses: job.raw_data?.addresses,
-                                addresses: (job as any).addresses
-                              });
-                            }
-                            return result;
+                            return getServiceAddressString(job);
                           })()}
                         </p>
                       </div>
