@@ -119,8 +119,12 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           cache: 'no-cache',
           // Add timeout to prevent hanging requests
           headers: {
-            'Cache-Control': 'no-cache'
-          }
+            'Cache-Control': 'no-cache',
+            'Accept': 'application/json'
+          },
+          // Ensure fetch uses standard implementation, not FullStory intercepted version
+          redirect: 'follow',
+          mode: 'cors'
         });
 
         clearTimeout(healthTimeoutId);
