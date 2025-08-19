@@ -73,6 +73,19 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       intervalRef.current = null;
     }
 
+    // Check circuit breaker
+    if (status.circuitBreakerOpen) {
+      console.log('🚫 Circuit breaker is open, skipping auto-sync');
+      if (mountedRef.current) {
+        setStatus(prev => ({
+          ...prev,
+          error: 'Auto-sync temporarily disabled due to repeated failures',
+          nextSync: new Date(Date.now() + interval * 2) // Double the interval when circuit breaker is open
+        }));
+      }
+      return;
+    }
+
     if (showLoading && mountedRef.current) {
       setStatus(prev => ({ ...prev, isSyncing: true, error: null }));
     }
