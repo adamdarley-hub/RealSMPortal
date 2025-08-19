@@ -636,7 +636,16 @@ export default function ClientJobDetail() {
         details: {
           serveType: attempt.serve_type || attempt.service_type || 'Personal',
           serviceStatus: attempt.status || attempt.result || 'Unknown',
-          recipient: attempt.recipient || attempt.served_to || 'Unknown',
+          recipient: (() => {
+            if (attempt.recipient) {
+              if (typeof attempt.recipient === 'string') return attempt.recipient;
+              if (typeof attempt.recipient === 'object' && attempt.recipient.name) return attempt.recipient.name;
+              // If it's an object but no name, convert to string safely
+              if (typeof attempt.recipient === 'object') return JSON.stringify(attempt.recipient);
+            }
+            if (attempt.served_to && typeof attempt.served_to === 'string') return attempt.served_to;
+            return 'Unknown';
+          })(),
           address: typeof attempt.address === 'string' ? attempt.address :
                  typeof attempt.service_address === 'string' ? attempt.service_address :
                  attempt.address?.street || attempt.service_address?.street ||
