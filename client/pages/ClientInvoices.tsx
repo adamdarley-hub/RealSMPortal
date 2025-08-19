@@ -155,10 +155,20 @@ export default function ClientInvoices() {
         description: `Invoice ${invoice.id} test completed successfully. Message: ${result.message}`,
       });
 
-      // Refresh invoices to see if status changed
+      // Refresh invoices to see if status changed - with cache busting
       setTimeout(() => {
-        loadInvoices();
-      }, 2000);
+        console.log(`🧪 Frontend: Refreshing invoices after payment test`);
+        // Clear any invoice cache and force refresh
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              caches.delete(name);
+            });
+          });
+        }
+        // Force reload invoices
+        window.location.reload();
+      }, 3000);
 
     } catch (error) {
       console.error('🧪 Frontend: Test update failed:', error);
