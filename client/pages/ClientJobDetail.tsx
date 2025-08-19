@@ -642,7 +642,15 @@ export default function ClientJobDetail() {
       }
     });
 
-    return attempts.map((attempt: any, index: number) => {
+    // Sort attempts by date to assign proper chronological numbers
+    const sortedAttempts = [...attempts].sort((a, b) => {
+      const dateA = new Date(a.date || a.attempt_date || a.created_at || 0);
+      const dateB = new Date(b.date || b.attempt_date || b.created_at || 0);
+      return dateA.getTime() - dateB.getTime(); // Earliest first
+    });
+
+    // Map with chronological numbering
+    const attemptsWithNumbers = sortedAttempts.map((attempt: any, index: number) => {
       // Use same logic as main extractServiceAttempts function
       const serveType = attempt.serve_type || attempt.service_type || '';
       const successfulServeTypes = [
