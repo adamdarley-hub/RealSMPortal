@@ -91,21 +91,41 @@ export default function ClientDashboard() {
     return { totalJobs, activeJobs, completedJobs, overdueJobs };
   }, [jobs]);
 
-  const loadJobs = async () => {
+  const loadJobs = async (forceSync = false) => {
     if (!user?.client_id) return;
-    
+
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/jobs?client_id=${user.client_id}&limit=1000`);
-      
+      // If forceSync is true, trigger a full data refresh first
+      if (forceSync) {
+        console.log('🔄 Forcing data sync from ServeManager...');
+        try {
+          await fetch('/api/sync/legacy', { method: 'POST' });
+          console.log('✅ Data sync completed');
+        } catch (syncError) {
+          console.warn('⚠️ Sync failed, continuing with cache:', syncError);
+        }
+      }
+
+      // Add cache busting timestamp to force fresh data
+      const cacheBuster = forceSync ? `&t=${Date.now()}` : '';
+      const response = await fetch(`/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`);
+
       if (!response.ok) {
         throw new Error('Failed to load jobs');
       }
 
       const data = await response.json();
       setJobs(data.jobs || []);
+
+      if (forceSync) {
+        toast({
+          title: "Data Refreshed",
+          description: "Jobs have been updated from ServeManager",
+        });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load jobs';
       setError(errorMessage);
