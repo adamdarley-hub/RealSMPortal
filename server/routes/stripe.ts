@@ -456,7 +456,7 @@ export const confirmPayment: RequestHandler = async (req, res) => {
 };
 
 // Update invoice status in ServeManager
-export async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'paid' | 'failed'): Promise<void> {
+export async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'paid' | 'failed', paymentIntentId?: string, amount?: number): Promise<void> {
   try {
     const { makeServeManagerRequest } = await import('./servemanager');
 
