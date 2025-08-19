@@ -595,15 +595,10 @@ export async function updateInvoiceStatusInServeManager(
 
   console.log(`ServeManager: payment created for invoice ${invoiceId}.`, payResp);
 
-  // 5) Re-fetch to verify it flipped to paid / updated balance
-  const verify = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
-    method: 'GET',
-    headers: { Accept: 'application/json' }
-  });
-  const updated = verify?.data ?? verify;
-
+  // Payment creation was successful - the payment API already returns the updated invoice
+  const updated = payResp?.data ?? payResp;
   console.log(
-    `ServeManager: verification - status="${updated?.status}" balance_due="${updated?.balance_due}" total_paid="${updated?.total_paid}"`
+    `ServeManager: payment successful - status="${updated?.status}" balance_due="${updated?.balance_due}" total_paid="${updated?.total_paid}"`
   );
 }
 
