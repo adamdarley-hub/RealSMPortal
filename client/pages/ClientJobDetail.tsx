@@ -92,9 +92,17 @@ const getRecipientInfo = (job: Job) => {
   const recipient = job.raw_data?.recipient || (job as any).recipient || {};
   const info: { [key: string]: string } = {};
 
+  console.log('🔍 getRecipientInfo processing:', {
+    recipient,
+    recipientType: typeof recipient,
+    recipientKeys: Object.keys(recipient)
+  });
+
   // Add all fields that have non-null, non-empty values
   if (recipient.name && recipient.name.trim()) {
-    info['Recipient Name'] = recipient.name.trim();
+    const value = recipient.name.trim();
+    info['Recipient Name'] = value;
+    console.log('✅ Added Recipient Name:', value, typeof value);
   }
   if (recipient.description && recipient.description.trim()) {
     info['Description'] = recipient.description.trim();
