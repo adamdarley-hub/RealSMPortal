@@ -497,8 +497,26 @@ export default function ClientJobDetail() {
 
       setJob(jobData);
 
+      // CLIENT DEBUG: Log raw job data before processing
+      console.log('🔍 CLIENT: Raw job data received:', {
+        jobId: jobData.id,
+        hasAttempts: !!jobData.attempts,
+        attemptsLength: jobData.attempts?.length,
+        attemptsRaw: jobData.attempts,
+        jobKeys: Object.keys(jobData),
+        fullJobData: jobData
+      });
+
       // Extract service attempts from job data
       const attempts = extractServiceAttempts(jobData);
+
+      // CLIENT DEBUG: Log processed attempts
+      console.log('🔍 CLIENT: Processed service attempts:', {
+        attemptsCount: attempts.length,
+        attempts: attempts,
+        attemptsWithPhotos: attempts.filter(a => a.details?.photos?.length > 0)
+      });
+
       setServiceAttempts(attempts);
 
       // Load affidavits and invoices for this job
@@ -574,7 +592,7 @@ export default function ClientJobDetail() {
         statusColor: isSuccessful ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
         method: 'Personal Service',
         methodColor: 'bg-blue-50 text-blue-700',
-        methodIcon: '👤',
+        methodIcon: '����',
         notes: attempt.notes || attempt.description || '',
         server: typeof attempt.server === 'string' ? attempt.server :
                 typeof attempt.process_server === 'string' ? attempt.process_server :
