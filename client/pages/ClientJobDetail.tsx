@@ -434,6 +434,9 @@ const extractServiceAttempts = (job: Job) => {
       }
     };
   });
+
+  // Return in reverse chronological order for display (latest first, but with correct numbers)
+  return attemptsWithNumbers.reverse();
 };
 
 // Helper function to get preview URL for inline viewing using fresh document fetch
