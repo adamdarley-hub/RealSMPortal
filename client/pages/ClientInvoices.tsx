@@ -125,23 +125,34 @@ export default function ClientInvoices() {
   const handleTestServeManagerUpdate = async (invoice: any, event: React.MouseEvent) => {
     event.stopPropagation();
 
+    console.log(`🧪 Frontend: Testing invoice ${invoice.id}`);
+    const url = `/api/invoices/${invoice.id}/mark-paid`;
+    console.log(`🧪 Frontend: Calling ${url}`);
+
     try {
-      const response = await fetch(`/api/invoices/${invoice.id}/mark-paid`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
+      console.log(`🧪 Frontend: Response status: ${response.status}`);
+      console.log(`🧪 Frontend: Response ok: ${response.ok}`);
+      console.log(`🧪 Frontend: Response headers:`, [...response.headers.entries()]);
+
       if (!response.ok) {
-        throw new Error('Failed to test ServeManager update');
+        const errorText = await response.text();
+        console.log(`🧪 Frontend: Error response text:`, errorText);
+        throw new Error(`Failed to test ServeManager update: ${response.status} ${errorText}`);
       }
 
       const result = await response.json();
+      console.log(`🧪 Frontend: Success response:`, result);
 
       toast({
-        title: "Test Update Sent",
-        description: `Attempted to mark invoice ${invoice.id} as paid in ServeManager. Check logs for details.`,
+        title: "Test Update Success",
+        description: `Invoice ${invoice.id} test completed successfully. Message: ${result.message}`,
       });
 
       // Refresh invoices to see if status changed
@@ -150,7 +161,7 @@ export default function ClientInvoices() {
       }, 2000);
 
     } catch (error) {
-      console.error('Test update failed:', error);
+      console.error('🧪 Frontend: Test update failed:', error);
       toast({
         title: "Test Failed",
         description: error instanceof Error ? error.message : 'Test update failed',
