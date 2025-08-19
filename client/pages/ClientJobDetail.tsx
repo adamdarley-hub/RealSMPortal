@@ -593,6 +593,11 @@ export default function ClientJobDetail() {
 
       setServiceAttempts(attempts);
 
+      // Auto-expand the latest attempt (first in the array since they're in reverse chronological order)
+      if (attempts.length > 0) {
+        setExpandedAttempts(new Set([attempts[0].id]));
+      }
+
       // Load affidavits and invoices for this job
       loadJobAffidavits(id);
       loadJobInvoices(id);
