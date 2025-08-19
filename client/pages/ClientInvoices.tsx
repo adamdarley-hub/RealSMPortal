@@ -141,16 +141,17 @@ export default function ClientInvoices() {
       console.log(`🧪 Frontend: Response ok: ${response.ok}`);
       console.log(`🧪 Frontend: Response headers:`, [...response.headers.entries()]);
 
-      // Read the response body once and handle both success/error cases
+      // Read the response body once as text first, then parse
+      const responseText = await response.text();
+      console.log(`🧪 Frontend: Raw response:`, responseText);
+
       let result;
       try {
-        result = await response.json();
-        console.log(`🧪 Frontend: Response data:`, result);
+        result = JSON.parse(responseText);
+        console.log(`🧪 Frontend: Parsed JSON:`, result);
       } catch (jsonError) {
-        // If JSON parsing fails, try to get as text
-        const errorText = await response.text();
-        console.log(`🧪 Frontend: Non-JSON response:`, errorText);
-        throw new Error(`Failed to parse response: ${response.status} ${errorText}`);
+        console.log(`🧪 Frontend: Failed to parse as JSON:`, jsonError);
+        throw new Error(`Failed to parse response: ${response.status} ${responseText}`);
       }
 
       if (!response.ok) {
