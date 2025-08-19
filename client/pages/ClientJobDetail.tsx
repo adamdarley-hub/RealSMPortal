@@ -133,6 +133,18 @@ const getRecipientInfo = (job: Job) => {
     info['Relationship'] = recipient.relationship.trim();
   }
 
+  console.log('🔍 getRecipientInfo returning:', {
+    info,
+    infoKeys: Object.keys(info),
+    infoEntries: Object.entries(info),
+    infoEntriesDetailed: Object.entries(info).map(([k, v]) => ({
+      key: k,
+      value: v,
+      valueType: typeof v,
+      isObject: typeof v === 'object'
+    }))
+  });
+
   return info;
 };
 
