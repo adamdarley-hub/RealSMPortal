@@ -242,7 +242,7 @@ export default function ClientDashboard() {
                 <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
                 <h3 className="text-lg font-semibold">Unable to Load Jobs</h3>
                 <p className="text-muted-foreground">{error}</p>
-                <Button onClick={loadJobs} className="gap-2">
+                <Button onClick={() => loadJobs(true)} className="gap-2">
                   <RefreshCw className="w-4 h-4" />
                   Retry
                 </Button>
@@ -265,9 +265,9 @@ export default function ClientDashboard() {
               Track your process service requests
             </p>
           </div>
-          <Button onClick={loadJobs} variant="outline" className="gap-2">
+          <Button onClick={() => loadJobs(true)} variant="outline" className="gap-2">
             <RefreshCw className="w-4 h-4" />
-            Refresh
+            Force Refresh
           </Button>
         </div>
 
