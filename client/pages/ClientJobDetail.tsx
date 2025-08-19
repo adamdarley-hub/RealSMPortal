@@ -245,6 +245,22 @@ const formatDateTime = (dateString: string | null) => {
   return date.toLocaleString('en-US', options);
 };
 
+// Helper function to format date only (no time)
+const formatDate = (dateString: string | null) => {
+  if (!dateString) return "No date";
+
+  const date = new Date(dateString);
+
+  // Format: "August 19, 2025"
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: '2-digit'
+  };
+
+  return date.toLocaleString('en-US', options);
+};
+
 // Helper function to format file sizes
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
@@ -390,7 +406,7 @@ const extractServiceAttempts = (job: Job) => {
               const hasValidStructure = attachment.id &&
                                        (attachment.title || attachment.name);
 
-              console.log(`�� CLIENT: Attachment ${attachment.id} check:`, {
+              console.log(`📷 CLIENT: Attachment ${attachment.id} check:`, {
                 attachment,
                 isImage,
                 hasValidStructure,
