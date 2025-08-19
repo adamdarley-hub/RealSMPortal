@@ -414,7 +414,7 @@ export const confirmPayment: RequestHandler = async (req, res) => {
     console.log(`✅ Payment confirmed for invoice ${invoiceId}: ${paymentIntentId}`);
 
     // Update invoice status in ServeManager immediately
-    await updateInvoiceStatusInServeManager(invoiceId.toString(), 'paid', paymentIntentId, paymentIntent.amount / 100);
+    await updateInvoiceStatusInServeManager(invoiceId.toString(), 'paid');
 
     // Also trigger a cache refresh to ensure the data is up-to-date
     try {
@@ -456,48 +456,29 @@ export const confirmPayment: RequestHandler = async (req, res) => {
 };
 
 // Update invoice status in ServeManager
-export async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'paid' | 'failed', paymentIntentId?: string, amount?: number): Promise<void> {
+export async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'paid' | 'failed'): Promise<void> {
   try {
     const { makeServeManagerRequest } = await import('./servemanager');
 
-    console.log(`Creating payment record for invoice ${invoiceId} in ServeManager...`);
+    console.log(`��� Updating invoice ${invoiceId} status to "${status}" in ServeManager using correct API...`);
 
-    if (status !== 'paid') {
-      console.log(`Cannot create payment record for status "${status}" - only creating records for successful payments`);
-      return;
+    // Need to find the correct job ID for this invoice by looking it up
+    console.log(`🔍 Looking up job ID for invoice ${invoiceId}...`);
+
+    // Get all invoices to find which job contains invoice 10060442
+    const allInvoicesResponse = await makeServeManagerRequest('/invoices?per_page=100');
+    const allInvoices = allInvoicesResponse.data || allInvoicesResponse.invoices || allInvoicesResponse;
+
+    console.log(`📋 Found ${allInvoices.length} invoices, searching for invoice ${invoiceId}...`);
+
+    const targetInvoice = allInvoices.find((inv: any) => inv.id.toString() === invoiceId.toString());
+
+    if (!targetInvoice) {
+      throw new Error(`Invoice ${invoiceId} not found in ServeManager`);
     }
 
-    // Get invoice details to find the amount if not provided
-    let paymentAmount = amount;
-    if (!paymentAmount) {
-      console.log(`Looking up invoice ${invoiceId} to get payment amount...`);
-
-      try {
-        const invoiceResponse = await makeServeManagerRequest(`/invoices/${invoiceId}`);
-        const invoice = invoiceResponse.data || invoiceResponse;
-        paymentAmount = parseFloat(invoice.total || invoice.balance_due || '0');
-        console.log(`Found invoice ${invoiceId} with amount: $${paymentAmount}`);
-      } catch (lookupError) {
-        console.log(`Could not lookup invoice amount, defaulting to $0.50:`, lookupError.message);
-        paymentAmount = 0.50; // Fallback for test payments
-      }
-    }
-
-    // Create payment record using ServeManager payments API
-    const paymentData = {
-      data: {
-        type: "payment",
-        attributes: {
-          amount: paymentAmount.toString(),
-          payment_method: "stripe",
-          payment_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-          reference_number: paymentIntentId || `stripe_${Date.now()}`,
-          notes: `Payment processed via Stripe (${paymentIntentId || 'manual'})`
-        }
-      }
-    };
-
-    console.log(`Creating payment record for invoice ${invoiceId}:`, JSON.stringify(paymentData, null, 2));
+    const jobId = targetInvoice.job_id;
+    console.log(`🎯 Found invoice ${invoiceId} belongs to job ID ${jobId}`);
 
     let updateSuccessful = false;
 
@@ -614,7 +595,7 @@ export const handleWebhook: RequestHandler = async (req, res) => {
 
         // Update invoice status in ServeManager
         if (paymentIntent.metadata.invoiceId) {
-          await updateInvoiceStatusInServeManager(paymentIntent.metadata.invoiceId, 'paid', paymentIntent.id, paymentIntent.amount / 100);
+          await updateInvoiceStatusInServeManager(paymentIntent.metadata.invoiceId, 'paid');
         }
 
         // TODO: Send payment confirmation email
