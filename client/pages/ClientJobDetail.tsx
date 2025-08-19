@@ -490,6 +490,7 @@ export default function ClientJobDetail() {
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [jobInvoices, setJobInvoices] = useState<any[]>([]);
   const [serviceAttempts, setServiceAttempts] = useState<any[]>([]);
+  const [expandedAttempts, setExpandedAttempts] = useState<Set<number>>(new Set());
 
   const loadJob = async (refresh = false) => {
     if (!id) return;
