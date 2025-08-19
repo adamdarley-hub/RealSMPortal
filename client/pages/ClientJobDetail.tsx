@@ -321,6 +321,17 @@ const extractServiceAttempts = (job: Job) => {
           // ServeManager stores photos in misc_attachments array
           const miscAttachments = attempt.misc_attachments || attempt.attachments || [];
 
+          // CLIENT VIEW DEBUG: Log photo processing details
+          console.log(`🖼️ CLIENT: Attempt ${index + 1} photo processing:`, {
+            attemptId: attempt.id,
+            attemptKeys: Object.keys(attempt),
+            hasMiscAttachments: !!attempt.misc_attachments,
+            hasAttachments: !!attempt.attachments,
+            miscAttachmentsLength: miscAttachments.length,
+            miscAttachmentsRaw: miscAttachments,
+            rawAttemptData: attempt
+          });
+
           return miscAttachments
             .filter((attachment: any) => {
               // Check if it's an image attachment
@@ -332,6 +343,15 @@ const extractServiceAttempts = (job: Job) => {
               const hasValidStructure = attachment.id &&
                                       (attachment.title || attachment.name) &&
                                       (attachment.upload?.links?.download_url || attachment.download_url || attachment.url);
+
+              console.log(`📷 CLIENT: Attachment ${attachment.id} check:`, {
+                attachment,
+                isImage,
+                hasValidStructure,
+                contentType: attachment.upload?.content_type || attachment.content_type,
+                fileName: attachment.upload?.file_name || attachment.file_name,
+                downloadUrl: attachment.upload?.links?.download_url || attachment.download_url || attachment.url
+              });
 
               return isImage && hasValidStructure;
             })
