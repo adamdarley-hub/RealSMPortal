@@ -991,9 +991,20 @@ export default function ClientJobDetail() {
                             </div>
 
                             {/* Attempt Photos - only in expanded view */}
-                            {attempt.details?.photos && attempt.details.photos.length > 0 && (
-                              <div>
-                                <label className="text-sm font-medium text-gray-700 mb-2 block">Attempt Photos</label>
+            {(() => {
+              console.log(`🖼️ Checking photos for attempt ${attempt.number}:`, {
+                hasDetails: !!attempt.details,
+                photos: attempt.details?.photos,
+                photosLength: attempt.details?.photos?.length,
+                rawPhotos: attempt.raw?.photos,
+                rawImages: attempt.raw?.images,
+                rawPhotoUrls: attempt.raw?.photo_urls,
+                rawAttemptPhotos: attempt.raw?.attempt_photos
+              });
+              return attempt.details?.photos && attempt.details.photos.length > 0;
+            })() && (
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Attempt Photos</label>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                   {attempt.details.photos.map((photo: any) => (
                                     <div key={photo.id} className="border rounded-lg overflow-hidden group">
