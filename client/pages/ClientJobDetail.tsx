@@ -740,8 +740,13 @@ export default function ClientJobDetail() {
     }
   };
 
-  const recipientName = getRecipientName(job);
+  const recipientName = String(getRecipientName(job) || 'Unknown Recipient');
   const recipientInfo = getRecipientInfo(job);
+
+  // SAFEGUARD: Ensure recipientName is never an object
+  if (typeof recipientName === 'object') {
+    console.error('⚠️ recipientName is an object:', recipientName);
+  }
 
   // DEBUG: Log recipientInfo to understand the structure
   console.log('🐛 CLIENT: recipientInfo debug:', {
