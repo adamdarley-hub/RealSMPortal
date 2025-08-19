@@ -735,6 +735,9 @@ export default function ClientJobDetail() {
         raw: attempt
       };
     });
+
+    // Return in reverse chronological order for display (latest first, but with correct numbers)
+    return attemptsWithNumbers.reverse();
   };
 
   const loadJobInvoices = async (jobId: string) => {
