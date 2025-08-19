@@ -137,7 +137,7 @@ export default function ClientInvoices() {
   const handlePaymentSuccess = () => {
     setIsPaymentModalOpen(false);
     setSelectedInvoice(null);
-    loadInvoices(); // Reload invoices to show updated payment status
+    loadInvoices(true); // Force reload invoices to show updated payment status
     toast({
       title: "Payment Successful",
       description: "Your payment has been processed successfully.",
@@ -320,7 +320,7 @@ export default function ClientInvoices() {
                 <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
                 <h3 className="text-lg font-semibold">Unable to Load Invoices</h3>
                 <p className="text-muted-foreground">{error}</p>
-                <Button onClick={loadInvoices} className="gap-2">
+                <Button onClick={() => loadInvoices(true)} className="gap-2">
                   <RefreshCw className="w-4 h-4" />
                   Retry
                 </Button>
@@ -346,9 +346,9 @@ export default function ClientInvoices() {
               View and manage your billing information
             </p>
           </div>
-          <Button onClick={loadInvoices} variant="outline" className="gap-2">
+          <Button onClick={() => loadInvoices(true)} variant="outline" className="gap-2">
             <RefreshCw className="w-4 h-4" />
-            Refresh
+            Force Refresh
           </Button>
         </div>
 
