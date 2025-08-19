@@ -913,28 +913,6 @@ export default function ClientJobDetail() {
           <TabsContent value="overview">
             <div className="space-y-6">
               {/* Job Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Job Summary</CardTitle>
-                  <CardDescription>Complete overview of this service job</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-6 md:grid-cols-3">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-500">Client</label>
-                      <p className="font-medium">{job.client_name || 'N/A'}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-500">Recipient</label>
-                      <p className="font-medium">{recipientName}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-500">Amount</label>
-                      <p className="font-medium text-green-600">{formatCurrency(job.amount || job.price || job.total)}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
 
               {/* Service Attempts */}
               <Card>
