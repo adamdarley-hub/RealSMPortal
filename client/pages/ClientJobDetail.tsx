@@ -1142,9 +1142,9 @@ export default function ClientJobDetail() {
                               </Badge>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm text-gray-500">{attempt.date}</p>
+                              <p className="text-sm text-gray-500">{formatDateTime(attempt.date)}</p>
                               <div className="flex items-center text-sm text-gray-600">
-                                {typeof attempt.server === 'string' ? attempt.server : 'Unknown Server'}
+                                {attempt.server || 'Unknown Server'}
                               </div>
                             </div>
                           </div>
