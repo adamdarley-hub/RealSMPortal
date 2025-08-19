@@ -46,7 +46,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Job } from "@shared/servemanager";
-import { CollapsibleServiceAttempts } from "../../components/CollapsibleServiceAttempts";
 
 // Helper function to safely extract string values
 const safeString = (value: any, fallback: string = ''): string => {
@@ -93,7 +92,7 @@ const getRecipientInfo = (job: Job) => {
   const recipient = job.raw_data?.recipient || (job as any).recipient || {};
   const info: { [key: string]: string } = {};
 
-  console.log('🔍 getRecipientInfo processing:', {
+  console.log('��� getRecipientInfo processing:', {
     recipient,
     recipientType: typeof recipient,
     recipientKeys: Object.keys(recipient)
