@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Job } from "@shared/servemanager";
+import { CollapsibleServiceAttempts } from "../../components/CollapsibleServiceAttempts";
 
 // Helper function to safely extract string values
 const safeString = (value: any, fallback: string = ''): string => {
