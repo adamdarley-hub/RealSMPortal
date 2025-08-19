@@ -149,10 +149,11 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
     defendant_name: safeString(rawJob.defendant_name || rawJob.recipient?.name || rawJob.recipient_name),
     defendant_first_name: safeString(rawJob.defendant_first_name || rawJob.first_name),
     defendant_last_name: safeString(rawJob.defendant_last_name || rawJob.last_name),
-    // Address - ServeManager stores addresses in addresses array
-    defendant_address: rawJob.addresses?.[0] || rawJob.defendant_address || rawJob.service_address || rawJob.address,
-    service_address: rawJob.addresses?.[0] || rawJob.service_address || rawJob.defendant_address || rawJob.address,
-    address: rawJob.addresses?.[0] || rawJob.address || rawJob.service_address || rawJob.defendant_address,
+    // Address - ServeManager stores addresses in addresses_attributes array
+    defendant_address: rawJob.addresses_attributes?.[0] || rawJob.addresses?.[0] || rawJob.defendant_address || rawJob.service_address || rawJob.address,
+    service_address: rawJob.addresses_attributes?.[0] || rawJob.addresses?.[0] || rawJob.service_address || rawJob.defendant_address || rawJob.address,
+    address: rawJob.addresses_attributes?.[0] || rawJob.addresses?.[0] || rawJob.address || rawJob.service_address || rawJob.defendant_address,
+    addresses_attributes: rawJob.addresses_attributes || rawJob.addresses,
     
     // Server information - ServeManager uses employee_process_server
     server_id: safeString(rawJob.employee_process_server?.id || rawJob.server_id || rawJob.assigned_server_id),
