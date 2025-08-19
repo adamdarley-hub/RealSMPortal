@@ -147,6 +147,36 @@ export async function createServer() {
     res.json({ message: 'Backend connection working!', timestamp: new Date().toISOString() });
   });
 
+  // Check invoice status directly from ServeManager
+  app.get('/api/invoices/:id/status', async (req, res) => {
+    console.log(`🧪 CHECKING INVOICE STATUS: ${req.params.id}`);
+    try {
+      const { makeServeManagerRequest } = await import('./routes/servemanager');
+
+      const invoice = await makeServeManagerRequest(`/invoices/${req.params.id}`);
+      const invoiceData = invoice.data || invoice;
+
+      console.log(`🧪 Invoice ${req.params.id} status check:`, {
+        id: invoiceData.id,
+        status: invoiceData.status,
+        balance_due: invoiceData.balance_due,
+        total_paid: invoiceData.total_paid,
+        payments: invoiceData.payments?.length || 0
+      });
+
+      res.json({
+        id: invoiceData.id,
+        status: invoiceData.status,
+        balance_due: invoiceData.balance_due,
+        total_paid: invoiceData.total_paid,
+        payments: invoiceData.payments || []
+      });
+    } catch (error) {
+      console.error(`❌ Failed to check invoice ${req.params.id}:`, error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Manual invoice update endpoint (for testing)
   app.post('/api/invoices/:id/mark-paid', async (req, res) => {
     console.log(`🧪🧪🧪 TEST ENDPOINT HIT: /api/invoices/${req.params.id}/mark-paid`);
