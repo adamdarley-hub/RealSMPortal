@@ -1297,7 +1297,20 @@ export default function ClientJobDetail() {
                       {/* Invoice Preview */}
                       {invoices.length > 0 && (
                         <div className="border-t pt-6">
-                          <h3 className="text-lg font-semibold mb-4">Invoice Preview</h3>
+                          <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold">Invoice Preview</h3>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/invoices/${invoices[0].id}`)}
+                              className="flex items-center gap-2"
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M9 18l6-6-6-6"/>
+                              </svg>
+                              View Invoice
+                            </Button>
+                          </div>
                           <div className="bg-gray-100 rounded-lg p-2 h-96">
                             <iframe
                               src={`/api/jobs/${job?.id}/invoices/${invoices[0].id}/preview#navpanes=0`}
