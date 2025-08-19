@@ -478,9 +478,12 @@ export async function updateInvoiceStatusInServeManager(
       method: 'GET',
       headers: { Accept: 'application/json' }
     });
+    console.log(`ServeManager: direct lookup SUCCESS, got response:`, typeof invResp);
     invoice = invResp?.data ?? invResp;
   } catch (directError) {
-    console.log(`ServeManager: direct lookup failed (${directError.message}), searching in invoice list...`);
+    console.log(`ServeManager: direct lookup failed, error type: ${directError.constructor.name}`);
+    console.log(`ServeManager: direct lookup failed message: ${directError.message}`);
+    console.log(`ServeManager: starting fallback search in invoice list...`);
 
     try {
       // Fallback: search in invoice list (with client filter to reduce results)
