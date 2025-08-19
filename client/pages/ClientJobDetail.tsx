@@ -478,19 +478,6 @@ export default function ClientJobDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-
-  // Toggle expanded state for service attempts
-  const toggleAttemptExpansion = (attemptId: number) => {
-    setExpandedAttempts(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(attemptId)) {
-        newSet.delete(attemptId);
-      } else {
-        newSet.add(attemptId);
-      }
-      return newSet;
-    });
-  };
   const { toast } = useToast();
   
   const [job, setJob] = useState<Job | null>(null);
@@ -503,7 +490,6 @@ export default function ClientJobDetail() {
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [jobInvoices, setJobInvoices] = useState<any[]>([]);
   const [serviceAttempts, setServiceAttempts] = useState<any[]>([]);
-  const [expandedAttempts, setExpandedAttempts] = useState<Set<number>>(new Set());
 
   const loadJob = async (refresh = false) => {
     if (!id) return;
@@ -592,11 +578,6 @@ export default function ClientJobDetail() {
       });
 
       setServiceAttempts(attempts);
-
-      // Auto-expand the latest attempt (first in the array since they're in reverse chronological order)
-      if (attempts.length > 0) {
-        setExpandedAttempts(new Set([attempts[0].id]));
-      }
 
       // Load affidavits and invoices for this job
       loadJobAffidavits(id);
