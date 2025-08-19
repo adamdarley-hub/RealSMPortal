@@ -483,20 +483,21 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
       }
     }
 
-    // Get all invoices to find which job contains invoice 10060442
-    const allInvoicesResponse = await makeServeManagerRequest('/invoices?per_page=100');
-    const allInvoices = allInvoicesResponse.data || allInvoicesResponse.invoices || allInvoicesResponse;
+    // Create payment record using ServeManager payments API
+    const paymentData = {
+      data: {
+        type: "payment",
+        attributes: {
+          amount: paymentAmount.toString(),
+          payment_method: "stripe",
+          payment_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+          reference_number: paymentIntentId || `stripe_${Date.now()}`,
+          notes: `Payment processed via Stripe (${paymentIntentId || 'manual'})`
+        }
+      }
+    };
 
-    console.log(`📋 Found ${allInvoices.length} invoices, searching for invoice ${invoiceId}...`);
-
-    const targetInvoice = allInvoices.find((inv: any) => inv.id.toString() === invoiceId.toString());
-
-    if (!targetInvoice) {
-      throw new Error(`Invoice ${invoiceId} not found in ServeManager`);
-    }
-
-    const jobId = targetInvoice.job_id;
-    console.log(`🎯 Found invoice ${invoiceId} belongs to job ID ${jobId}`);
+    console.log(`Creating payment record for invoice ${invoiceId}:`, JSON.stringify(paymentData, null, 2));
 
     let updateSuccessful = false;
 
