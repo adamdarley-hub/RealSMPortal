@@ -1154,24 +1154,34 @@ export default function ClientJobDetail() {
                         );
                       }
 
-                      return serviceAttempts.map((attempt: any) => (
-                        <div key={attempt.id} className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center space-x-3">
-                              <h4 className="font-medium text-lg">Attempt #{attempt.number}</h4>
-                              <Badge className={attempt.statusColor}>
-                                {attempt.status}
-                              </Badge>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-sm text-gray-500">{formatDateTime(attempt.date)}</p>
-                              <div className="flex items-center text-sm text-gray-600">
-                                {attempt.server || 'Unknown Server'}
+                      return serviceAttempts.map((attempt: any) => {
+                        const isExpanded = expandedAttempts.has(attempt.id);
+
+                        return (
+                          <div key={attempt.id} className="border rounded-lg p-4">
+                            <div
+                              className="flex items-center justify-between cursor-pointer hover:bg-gray-50 -m-4 p-4 rounded-lg"
+                              onClick={() => toggleAttemptExpansion(attempt.id)}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className="text-gray-500">
+                                  {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                </div>
+                                <h4 className="font-medium text-lg">Attempt #{attempt.number}</h4>
+                                <Badge className={attempt.statusColor}>
+                                  {attempt.status}
+                                </Badge>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm text-gray-500">{formatDateTime(attempt.date)}</p>
+                                <div className="flex items-center text-sm text-gray-600">
+                                  {attempt.server || 'Unknown Server'}
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          <div className="space-y-4 border-t pt-4">
+                            {isExpanded && (
+                              <div className="space-y-4 border-t pt-4 mt-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <label className="text-sm font-medium text-gray-700">Serve Type</label>
@@ -1273,9 +1283,11 @@ export default function ClientJobDetail() {
                                 </div>
                               </div>
                             )}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ));
+                        );
+                      });
                     })()}
                   </div>
                 </CardContent>
