@@ -684,12 +684,7 @@ export default function ClientJobDetail() {
         method: isMobileAttempt(attempt) ? 'via Mobile' : 'via Desktop',
         methodColor: isMobileAttempt(attempt) ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700',
         notes: attempt.notes || attempt.description || '',
-        server: typeof attempt.server === 'string' ? attempt.server :
-                typeof attempt.process_server === 'string' ? attempt.process_server :
-                attempt.server?.name || attempt.process_server?.name ||
-                attempt.server?.first_name && attempt.server?.last_name ?
-                  `${attempt.server.first_name} ${attempt.server.last_name}` :
-                'Unknown Server',
+        server: attempt.server_name || attempt.process_server || attempt.employee_name || "Unknown Server",
         success: isSuccessful,
         details: {
           serveType: attempt.serve_type || attempt.service_type || 'Personal',
