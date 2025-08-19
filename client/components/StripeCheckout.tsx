@@ -344,10 +344,22 @@ const PaymentForm: React.FC<StripeCheckoutProps> = ({
           }),
         });
 
-        const confirmResponseData = await confirmResponse.json();
-
-        if (!confirmResponse.ok) {
-          throw new Error(confirmResponseData.error || 'Failed to confirm payment');
+        // Handle response properly to avoid body stream errors
+        let confirmResponseData;
+        if (confirmResponse.ok) {
+          try {
+            confirmResponseData = await confirmResponse.json();
+          } catch (jsonError) {
+            console.warn('Could not parse payment confirmation response as JSON:', jsonError);
+            confirmResponseData = { success: true };
+          }
+        } else {
+          try {
+            confirmResponseData = await confirmResponse.json();
+            throw new Error(confirmResponseData.error || 'Failed to confirm payment');
+          } catch (jsonError) {
+            throw new Error(`Payment confirmation failed: HTTP ${confirmResponse.status}`);
+          }
         }
 
         toast({
