@@ -649,8 +649,9 @@ export default function ClientJobDetail() {
         date: attempt.date || attempt.attempt_date || attempt.created_at,
         status: isSuccessful ? "Successful" : (serveType || "Unsuccessful Attempt"),
         statusColor: isSuccessful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
-        method: 'Personal Service',
-        methodColor: 'bg-blue-50 text-blue-700',
+        isMobileAttempt: isMobileAttempt(attempt),
+        method: isMobileAttempt(attempt) ? 'Mobile' : 'Computer',
+        methodColor: isMobileAttempt(attempt) ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700',
         notes: attempt.notes || attempt.description || '',
         server: typeof attempt.server === 'string' ? attempt.server :
                 typeof attempt.process_server === 'string' ? attempt.process_server :
