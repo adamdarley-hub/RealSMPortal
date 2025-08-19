@@ -305,11 +305,18 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       }
 
       if (mountedRef.current) {
-        setStatus(prev => ({
-          ...prev,
-          isSyncing: false,
-          error: errorMessage
-        }));
+        setStatus(prev => {
+          const newFailures = prev.consecutiveFailures + 1;
+          const shouldOpenCircuitBreaker = newFailures >= 3; // Open circuit after 3 consecutive failures
+
+          return {
+            ...prev,
+            isSyncing: false,
+            error: errorMessage,
+            consecutiveFailures: newFailures,
+            circuitBreakerOpen: shouldOpenCircuitBreaker
+          };
+        });
       }
 
       // Restart polling if it was paused during background sync (even on error)
