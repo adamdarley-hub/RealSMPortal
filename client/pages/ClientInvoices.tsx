@@ -137,29 +137,30 @@ export default function ClientInvoices() {
         },
       });
 
-      // Clone response IMMEDIATELY after fetch, before any logging or processing
-      const responseClone = response.clone();
-
       console.log(`🧪 Frontend: Response status: ${response.status}`);
       console.log(`🧪 Frontend: Response ok: ${response.ok}`);
 
       let result;
       let errorMessage = '';
 
-      try {
-        // Always try JSON first
-        result = await response.json();
-        console.log(`🧪 Frontend: Parsed JSON response:`, result);
-      } catch (jsonError) {
-        console.log(`🧪 Frontend: JSON parse failed, trying text...`);
+      // Only try to read the response body once, and handle both success and error cases
+      if (response.status === 200) {
         try {
-          // Use the cloned response for text reading
-          const textContent = await responseClone.text();
-          console.log(`🧪 Frontend: Text response:`, textContent.substring(0, 200));
-          errorMessage = textContent.substring(0, 200);
-        } catch (textError) {
-          console.log(`🧪 Frontend: Could not read response at all:`, textError);
-          errorMessage = `Cannot read response body`;
+          result = await response.json();
+          console.log(`🧪 Frontend: Success response:`, result);
+        } catch (jsonError) {
+          console.log(`🧪 Frontend: Could not parse success response as JSON:`, jsonError);
+          result = { message: 'Request completed but response format unexpected' };
+        }
+      } else {
+        // For error responses, try to get error details but don't fail if we can't
+        try {
+          const errorData = await response.json();
+          console.log(`🧪 Frontend: Error response:`, errorData);
+          errorMessage = errorData.message || errorData.error || `HTTP ${response.status}`;
+        } catch (jsonError) {
+          console.log(`🧪 Frontend: Could not parse error response as JSON`);
+          errorMessage = `HTTP ${response.status} - Response not readable`;
         }
       }
 
