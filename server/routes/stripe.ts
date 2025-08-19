@@ -470,14 +470,33 @@ export async function updateInvoiceStatusInServeManager(
     return;
   }
 
-  // 1) Fetch invoice once (includes job_id, totals, payments, etc.)
-  const invResp = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
-    method: 'GET',
-    headers: { Accept: 'application/json' }
-  });
+  // 1) Fetch invoice once - try direct endpoint first, then fallback to search
+  let invoice;
+  try {
+    console.log(`ServeManager: trying direct invoice lookup /invoices/${invoiceId}`);
+    const invResp = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
+      method: 'GET',
+      headers: { Accept: 'application/json' }
+    });
+    invoice = invResp?.data ?? invResp;
+  } catch (directError) {
+    console.log(`ServeManager: direct lookup failed, searching in invoice list...`);
 
-  // API returns either { data: {...} } or the object itself depending on your wrapper
-  const invoice = invResp?.data ?? invResp;
+    // Fallback: search in invoice list
+    const listResp = await makeServeManagerRequest('/invoices?per_page=100');
+    const invoices = listResp?.data ?? listResp?.invoices ?? listResp;
+
+    if (Array.isArray(invoices)) {
+      invoice = invoices.find((inv: any) => String(inv.id) === String(invoiceId));
+      if (!invoice) {
+        throw new Error(`ServeManager invoice ${invoiceId} not found in invoice list`);
+      }
+      console.log(`ServeManager: found invoice ${invoiceId} in list search`);
+    } else {
+      throw new Error(`ServeManager invoice list request failed`);
+    }
+  }
+
   if (!invoice || String(invoice.id) !== String(invoiceId)) {
     throw new Error(`ServeManager invoice ${invoiceId} not found or malformed response`);
   }
