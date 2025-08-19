@@ -717,6 +717,13 @@ export default function ClientJobDetail() {
     recipientInfoType: typeof recipientInfo,
     recipientInfoKeys: Object.keys(recipientInfo),
     recipientInfoEntries: Object.entries(recipientInfo),
+    recipientInfoEntriesDetailed: Object.entries(recipientInfo).map(([key, value]) => ({
+      key,
+      value,
+      valueType: typeof value,
+      isObject: typeof value === 'object',
+      valueKeys: typeof value === 'object' ? Object.keys(value) : null
+    })),
     rawRecipient: job.raw_data?.recipient || (job as any).recipient
   });
 
