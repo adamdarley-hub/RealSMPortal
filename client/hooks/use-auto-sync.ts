@@ -7,6 +7,8 @@ interface SyncStatus {
   isSyncing: boolean;
   error: string | null;
   isOnline: boolean;
+  consecutiveFailures: number;
+  circuitBreakerOpen: boolean;
 }
 
 interface UseAutoSyncOptions {
