@@ -652,7 +652,28 @@ export default function ClientJobDetail() {
                  attempt.address?.street || attempt.service_address?.street ||
                  attempt.address?.address1 || attempt.service_address?.address1 || 'N/A',
           description: attempt.description || attempt.notes || '',
-          photos: attempt.photos || attempt.images || [],
+          photos: (() => {
+            const attachments = attempt.misc_attachments || attempt.attachments || [];
+            return attachments
+              .filter((attachment: any) => {
+                const isImage = attachment.upload?.content_type?.startsWith('image/') ||
+                               attachment.upload?.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i) ||
+                               attachment.content_type?.startsWith('image/') ||
+                               attachment.file_name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
+
+                const hasValidStructure = attachment.id &&
+                                         (attachment.title || attachment.name);
+
+                return isImage && hasValidStructure;
+              })
+              .map((photo: any, photoIndex: number) => ({
+                id: photo.id,
+                name: photo.title || photo.name || `Photo ${photoIndex + 1}`,
+                url: `/api/proxy/photo/${job.id}/${attempt.id}/${photo.id}`,
+                size: photo.upload?.size || photo.size || 0,
+                mimeType: photo.upload?.content_type || photo.content_type || 'image/jpeg'
+              }));
+          })(),
           gps: attempt.gps || attempt.location || {}
         },
         raw: attempt
