@@ -456,118 +456,105 @@ export const confirmPayment: RequestHandler = async (req, res) => {
 };
 
 // Update invoice status in ServeManager
-export async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'paid' | 'failed', paymentIntentId?: string, amount?: number): Promise<void> {
-  try {
-    const { makeServeManagerRequest } = await import('./servemanager');
+export async function updateInvoiceStatusInServeManager(
+  invoiceId: string,
+  status: 'paid' | 'failed',
+  paymentIntentId?: string,
+  amount?: number
+): Promise<void> {
+  const { makeServeManagerRequest } = await import('./servemanager');
 
-    console.log(`��� Updating invoice ${invoiceId} status to "${status}" in ServeManager using correct API...`);
-
-    // Need to find the correct job ID for this invoice by looking it up
-    console.log(`🔍 Looking up job ID for invoice ${invoiceId}...`);
-
-    // Get all invoices to find which job contains invoice 10060442
-    const allInvoicesResponse = await makeServeManagerRequest('/invoices?per_page=100');
-    const allInvoices = allInvoicesResponse.data || allInvoicesResponse.invoices || allInvoicesResponse;
-
-    console.log(`📋 Found ${allInvoices.length} invoices, searching for invoice ${invoiceId}...`);
-
-    const targetInvoice = allInvoices.find((inv: any) => inv.id.toString() === invoiceId.toString());
-
-    if (!targetInvoice) {
-      throw new Error(`Invoice ${invoiceId} not found in ServeManager`);
-    }
-
-    const jobId = targetInvoice.job_id;
-    console.log(`🎯 Found invoice ${invoiceId} belongs to job ID ${jobId}`);
-
-    let updateSuccessful = false;
-
-    try {
-      if (status === 'paid') {
-        // Get invoice amount if not provided
-        let paymentAmount = amount;
-        if (!paymentAmount) {
-          try {
-            const invoiceResponse = await makeServeManagerRequest(`/invoices/${invoiceId}`);
-            const invoice = invoiceResponse.data || invoiceResponse;
-            paymentAmount = parseFloat(invoice.total || invoice.balance_due || '0.50');
-          } catch (error) {
-            paymentAmount = 0.50; // Fallback
-          }
-        }
-
-        // Create payment record using ServeManager payments API
-        const paymentData = {
-          data: {
-            type: "payment",
-            attributes: {
-              amount: paymentAmount.toString(),
-              payment_method: "stripe",
-              payment_date: new Date().toISOString().split('T')[0],
-              reference_number: paymentIntentId || `stripe_${Date.now()}`,
-              notes: `Payment processed via Stripe (${paymentIntentId || 'manual'})`
-            }
-          }
-        };
-
-        console.log(`📝 Creating payment record for invoice ${invoiceId}:`, JSON.stringify(paymentData, null, 2));
-
-        // Use ServeManager payments API endpoint
-        const response = await makeServeManagerRequest(`/invoices/${invoiceId}/payments`, {
-          method: 'POST',
-          body: JSON.stringify(paymentData)
-        });
-
-        console.log(`✅ SUCCESS! Payment record created for invoice ${invoiceId}`);
-        console.log(`📝 ServeManager API Response:`, JSON.stringify(response, null, 2));
-        updateSuccessful = true;
-      } else {
-        // For failed payments, we don't create a payment record
-        throw new Error('Cannot create payment record for failed payment');
-      }
-
-      console.log(`✅ Successfully created payment record for invoice ${invoiceId} in ServeManager`);
-      console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
-      updateSuccessful = true;
-
-    } catch (apiError) {
-      console.log(`❌ Failed to create payment record for invoice ${invoiceId}: ${apiError.message}`);
-      lastError = apiError;
-    }
-
-    if (!updateSuccessful) {
-      console.error(`❌ All update attempts failed for invoice ${invoiceId}. Last error:`, lastError?.message);
-      console.log(`⚠️ Note: Payment was successful in Stripe, but ServeManager status could not be updated automatically.`);
-      console.log(`💡 MANUAL ACTION NEEDED: Please manually mark invoice ${invoiceId} as paid in ServeManager for $${updateData.data.total_paid}`);
-      console.log(`📧 Payment Details - Invoice: ${invoiceId}, Amount: $${updateData.data.total_paid}, Date: ${updateData.data.paid_on}`);
-    }
-
-    // Send real-time notification to clients about the status update (regardless of ServeManager update status)
-    try {
-      const wsService = await import('../services/websocket-service');
-      if (wsService.broadcastToClients) {
-        wsService.broadcastToClients({
-          type: 'invoice_payment_status_updated',
-          data: {
-            invoiceId: invoiceId,
-            status: status,
-            timestamp: new Date().toISOString(),
-            serveManagerUpdated: updateSuccessful,
-            message: updateSuccessful
-              ? 'Payment processed and ServeManager updated'
-              : 'Payment processed successfully, but ServeManager status needs manual update'
-          }
-        });
-        console.log(`📡 Broadcasted invoice ${invoiceId} status update to connected clients`);
-      }
-    } catch (wsError) {
-      console.error('Failed to broadcast status update:', wsError);
-    }
-
-  } catch (error) {
-    console.error(`❌ Failed to update invoice ${invoiceId} status in ServeManager:`, error);
-    // Don't throw error - we don't want to fail the webhook if this update fails
+  // Only "paid" creates a payment; for "failed" we simply no-op (or add a note if you want).
+  if (status !== 'paid') {
+    console.log(`ServeManager: not creating a payment for status="${status}"`);
+    return;
   }
+
+  // 1) Fetch invoice once (includes job_id, totals, payments, etc.)
+  const invResp = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
+    method: 'GET',
+    headers: { Accept: 'application/json' }
+  });
+
+  // API returns either { data: {...} } or the object itself depending on your wrapper
+  const invoice = invResp?.data ?? invResp;
+  if (!invoice || String(invoice.id) !== String(invoiceId)) {
+    throw new Error(`ServeManager invoice ${invoiceId} not found or malformed response`);
+  }
+
+  // 2) Guard against duplicates by Stripe intent in description
+  const duplicateTag = paymentIntentId ? `Stripe ${paymentIntentId}` : undefined;
+  if (duplicateTag && Array.isArray(invoice.payments)) {
+    const alreadyApplied = invoice.payments.some((p: any) =>
+      typeof p?.description === 'string' && p.description.includes(duplicateTag)
+    );
+    if (alreadyApplied) {
+      console.log(`ServeManager: payment with "${duplicateTag}" already exists, skipping.`);
+      return;
+    }
+  }
+
+  // 3) Determine payment amount: prefer caller amount, then balance_due, then total
+  let paymentAmount =
+    typeof amount === 'number' && !Number.isNaN(amount)
+      ? amount
+      : parseFloat(invoice.balance_due || invoice.total || '0');
+
+  // Normalize to 2 decimals (string is safest for their parser)
+  paymentAmount = Math.max(0, Number(paymentAmount.toFixed(2)));
+  if (paymentAmount <= 0) {
+    throw new Error(
+      `ServeManager: calculated payment amount <= 0 (balance_due="${invoice.balance_due}", total="${invoice.total}")`
+    );
+  }
+
+  const appliedOn = new Date().toISOString().slice(0, 10);
+  const description =
+    duplicateTag ?? `Payment processed via Stripe (${paymentIntentId ?? 'manual'})`;
+
+  const paymentPayload = {
+    data: {
+      type: 'payment',
+      attributes: {
+        amount: paymentAmount.toFixed(2), // pass as string with 2 decimals
+        applied_on: appliedOn,            // YYYY-MM-DD
+        description
+      }
+    }
+  };
+
+  console.log(
+    `ServeManager: creating payment for invoice ${invoiceId}:`,
+    JSON.stringify(paymentPayload)
+  );
+
+  // 4) Create payment (201 Created or 200 OK are success states per docs)
+  const payResp = await makeServeManagerRequest(`/invoices/${invoiceId}/payments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify(paymentPayload)
+  });
+
+  // Optional: handle typical JSON:API error shape
+  if (payResp?.errors) {
+    throw new Error(`ServeManager payment failed: ${JSON.stringify(payResp.errors)}`);
+  }
+
+  console.log(`ServeManager: payment created for invoice ${invoiceId}.`, payResp);
+
+  // 5) Re-fetch to verify it flipped to paid / updated balance
+  const verify = await makeServeManagerRequest(`/invoices/${invoiceId}`, {
+    method: 'GET',
+    headers: { Accept: 'application/json' }
+  });
+  const updated = verify?.data ?? verify;
+
+  console.log(
+    `ServeManager: verification - status="${updated?.status}" balance_due="${updated?.balance_due}" total_paid="${updated?.total_paid}"`
+  );
 }
 
 // Handle Stripe webhooks for payment events
