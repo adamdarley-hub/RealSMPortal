@@ -133,11 +133,23 @@ const getRecipientInfo = (job: Job) => {
     info['Relationship'] = recipient.relationship.trim();
   }
 
+  // SAFEGUARD: Ensure all values are strings, never objects
+  const safeInfo: { [key: string]: string } = {};
+  Object.entries(info).forEach(([key, value]) => {
+    if (typeof value === 'object' && value !== null) {
+      console.warn(`⚠️ Object found in recipientInfo for key "${key}":`, value);
+      safeInfo[key] = JSON.stringify(value);
+    } else {
+      safeInfo[key] = String(value || '');
+    }
+  });
+
   console.log('🔍 getRecipientInfo returning:', {
-    info,
-    infoKeys: Object.keys(info),
-    infoEntries: Object.entries(info),
-    infoEntriesDetailed: Object.entries(info).map(([k, v]) => ({
+    originalInfo: info,
+    safeInfo,
+    infoKeys: Object.keys(safeInfo),
+    infoEntries: Object.entries(safeInfo),
+    infoEntriesDetailed: Object.entries(safeInfo).map(([k, v]) => ({
       key: k,
       value: v,
       valueType: typeof v,
@@ -145,7 +157,7 @@ const getRecipientInfo = (job: Job) => {
     }))
   });
 
-  return info;
+  return safeInfo;
 };
 
 // Helper function to format court case with line breaks
