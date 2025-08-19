@@ -414,7 +414,7 @@ export const confirmPayment: RequestHandler = async (req, res) => {
     console.log(`✅ Payment confirmed for invoice ${invoiceId}: ${paymentIntentId}`);
 
     // Update invoice status in ServeManager immediately
-    await updateInvoiceStatusInServeManager(invoiceId.toString(), 'paid');
+    await updateInvoiceStatusInServeManager(invoiceId.toString(), 'paid', paymentIntentId, paymentIntent.amount / 100);
 
     // Also trigger a cache refresh to ensure the data is up-to-date
     try {
@@ -456,7 +456,7 @@ export const confirmPayment: RequestHandler = async (req, res) => {
 };
 
 // Update invoice status in ServeManager
-export async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'paid' | 'failed'): Promise<void> {
+export async function updateInvoiceStatusInServeManager(invoiceId: string, status: 'paid' | 'failed', paymentIntentId?: string, amount?: number): Promise<void> {
   try {
     const { makeServeManagerRequest } = await import('./servemanager');
 
@@ -484,30 +484,42 @@ export async function updateInvoiceStatusInServeManager(invoiceId: string, statu
 
     try {
       if (status === 'paid') {
-        // Use invoice update approach that was working (creating "Invoice Updated" entries)
-        const updateData = {
+        // Get invoice amount if not provided
+        let paymentAmount = amount;
+        if (!paymentAmount) {
+          try {
+            const invoiceResponse = await makeServeManagerRequest(`/invoices/${invoiceId}`);
+            const invoice = invoiceResponse.data || invoiceResponse;
+            paymentAmount = parseFloat(invoice.total || invoice.balance_due || '0.50');
+          } catch (error) {
+            paymentAmount = 0.50; // Fallback
+          }
+        }
+
+        // Create payment record using ServeManager payments API
+        const paymentData = {
           data: {
-            type: "invoice",
+            type: "payment",
             attributes: {
-              status: "paid"
+              amount: paymentAmount.toString(),
+              payment_method: "stripe",
+              payment_date: new Date().toISOString().split('T')[0],
+              reference_number: paymentIntentId || `stripe_${Date.now()}`,
+              notes: `Payment processed via Stripe (${paymentIntentId || 'manual'})`
             }
           }
         };
 
-        console.log(`📝 Updating job ${jobId} invoice status to "paid"...`);
-        console.log(`📝 Update payload:`, JSON.stringify(updateData, null, 2));
+        console.log(`📝 Creating payment record for invoice ${invoiceId}:`, JSON.stringify(paymentData, null, 2));
 
-        // Use correct job-based endpoint from API documentation
-        const response = await makeServeManagerRequest(`/jobs/${jobId}`, {
-          method: 'PUT',
-          body: JSON.stringify(updateData)
+        // Use ServeManager payments API endpoint
+        const response = await makeServeManagerRequest(`/invoices/${invoiceId}/payments`, {
+          method: 'POST',
+          body: JSON.stringify(paymentData)
         });
 
-        console.log(`✅ SUCCESS! Invoice ${invoiceId} in job ${jobId} marked as paid`);
-        console.log(`📝 API Response:`, JSON.stringify(response, null, 2));
-
-        console.log(`��� Successfully created payment record for invoice ${invoiceId} in ServeManager`);
-        console.log(`📝 API Response:`, JSON.stringify(responseData, null, 2));
+        console.log(`✅ SUCCESS! Payment record created for invoice ${invoiceId}`);
+        console.log(`📝 ServeManager API Response:`, JSON.stringify(response, null, 2));
         updateSuccessful = true;
       } else {
         // For failed payments, we don't create a payment record
@@ -595,7 +607,7 @@ export const handleWebhook: RequestHandler = async (req, res) => {
 
         // Update invoice status in ServeManager
         if (paymentIntent.metadata.invoiceId) {
-          await updateInvoiceStatusInServeManager(paymentIntent.metadata.invoiceId, 'paid');
+          await updateInvoiceStatusInServeManager(paymentIntent.metadata.invoiceId, 'paid', paymentIntent.id, paymentIntent.amount / 100);
         }
 
         // TODO: Send payment confirmation email
