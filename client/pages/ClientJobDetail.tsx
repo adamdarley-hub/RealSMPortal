@@ -944,7 +944,7 @@ export default function ClientJobDetail() {
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500">Due Date</label>
-                        <p className="text-sm">{formatDateTime(job.due_date)}</p>
+                        <p className="text-sm">{formatDate(job.due_date)}</p>
                       </div>
                     </div>
                     
