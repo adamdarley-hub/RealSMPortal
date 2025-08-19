@@ -89,9 +89,15 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
       // Quick health check to see if server is reachable
       try {
+        // Create a separate shorter timeout for health check
+        const healthController = new AbortController();
+        const healthTimeoutId = setTimeout(() => {
+          healthController.abort(new Error('Health check timeout after 10 seconds'));
+        }, 10000); // 10 second timeout for health check
+
         const healthCheck = await fetch('/api/jobs?limit=1', {
           method: 'GET',
-          signal: controller.signal,
+          signal: healthController.signal,
           // Add cache-busting to prevent cached responses from hiding real issues
           cache: 'no-cache',
           // Add timeout to prevent hanging requests
@@ -99,6 +105,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
             'Cache-Control': 'no-cache'
           }
         });
+
+        clearTimeout(healthTimeoutId);
 
         // Only treat 5xx errors as serious issues, 4xx might be auth/permissions
         if (!healthCheck.ok && healthCheck.status >= 500) {
