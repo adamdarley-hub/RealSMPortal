@@ -480,20 +480,46 @@ export async function updateInvoiceStatusInServeManager(
     });
     invoice = invResp?.data ?? invResp;
   } catch (directError) {
-    console.log(`ServeManager: direct lookup failed, searching in invoice list...`);
+    console.log(`ServeManager: direct lookup failed (${directError.message}), searching in invoice list...`);
 
-    // Fallback: search in invoice list
-    const listResp = await makeServeManagerRequest('/invoices?per_page=100');
-    const invoices = listResp?.data ?? listResp?.invoices ?? listResp;
+    try {
+      // Fallback: search in invoice list (with client filter to reduce results)
+      const listResp = await makeServeManagerRequest('/invoices?per_page=100&client_id=1457038');
+      const invoices = listResp?.data ?? listResp?.invoices ?? listResp;
 
-    if (Array.isArray(invoices)) {
-      invoice = invoices.find((inv: any) => String(inv.id) === String(invoiceId));
-      if (!invoice) {
-        throw new Error(`ServeManager invoice ${invoiceId} not found in invoice list`);
+      if (Array.isArray(invoices)) {
+        console.log(`ServeManager: searching ${invoices.length} invoices for ID ${invoiceId}`);
+        invoice = invoices.find((inv: any) => String(inv.id) === String(invoiceId));
+
+        if (!invoice) {
+          // Try searching more pages if not found in first 100
+          console.log(`ServeManager: not found in first page, searching more...`);
+          for (let page = 2; page <= 5; page++) {
+            const pageResp = await makeServeManagerRequest(`/invoices?per_page=100&page=${page}&client_id=1457038`);
+            const pageInvoices = pageResp?.data ?? pageResp?.invoices ?? pageResp;
+
+            if (Array.isArray(pageInvoices) && pageInvoices.length > 0) {
+              invoice = pageInvoices.find((inv: any) => String(inv.id) === String(invoiceId));
+              if (invoice) {
+                console.log(`ServeManager: found invoice ${invoiceId} on page ${page}`);
+                break;
+              }
+            } else {
+              break; // No more invoices
+            }
+          }
+        } else {
+          console.log(`ServeManager: found invoice ${invoiceId} in first page of list search`);
+        }
+
+        if (!invoice) {
+          throw new Error(`ServeManager invoice ${invoiceId} not found in any searched pages`);
+        }
+      } else {
+        throw new Error(`ServeManager invoice list request failed - not an array`);
       }
-      console.log(`ServeManager: found invoice ${invoiceId} in list search`);
-    } else {
-      throw new Error(`ServeManager invoice list request failed`);
+    } catch (listError) {
+      throw new Error(`ServeManager fallback search failed: ${listError.message}`);
     }
   }
 
