@@ -1113,37 +1113,53 @@ export default function Jobs() {
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
                           {(() => {
-                            // Safely extract address from ServeManager format
-                            const getAddressString = (addr: any) => {
-                              if (typeof addr === 'string') return addr;
-                              if (typeof addr === 'object' && addr) {
-                                // ServeManager format: { street1, street2, city, state, zip }
-                                const parts = [
-                                  addr.street1,
-                                  addr.street2,
-                                  addr.street,
-                                  addr.address
-                                ].filter(Boolean);
+                            // Use the same comprehensive address lookup as JobDetail.tsx
+                            const getServiceAddressString = (job: any) => {
+                              // Check all possible address sources in priority order
+                              const possibleAddresses = [
+                                job.service_address,
+                                job.address,
+                                job.defendant_address,
+                                // Check raw data sources that ServeManager uses
+                                job.raw_data?.addresses?.[0],
+                                (job as any).addresses?.[0],
+                                // Check nested raw data
+                                job.raw_data?.service_address,
+                                job.raw_data?.defendant_address,
+                                job.raw_data?.address
+                              ];
 
-                                const street = parts.join(' ');
-                                const cityState = [addr.city, addr.state].filter(Boolean).join(', ');
-                                const zip = addr.zip || addr.postal_code;
+                              for (const address of possibleAddresses) {
+                                if (!address) continue;
 
-                                const fullAddr = [street, cityState, zip].filter(Boolean).join(', ');
+                                // If address is a string, return it directly
+                                if (typeof address === 'string' && address.trim()) {
+                                  return address.trim();
+                                }
 
-                                // Fallback to other formats
-                                return fullAddr || addr.full_address || addr.formatted_address ||
-                                       `${addr.street || ''} ${addr.city || ''} ${addr.state || ''} ${addr.zip || ''}`.trim();
+                                // If address is an object, format it
+                                if (typeof address === 'object' && address) {
+                                  const parts = [
+                                    address.street || address.address1 || address.street1,
+                                    address.street2 || address.address2
+                                  ].filter(Boolean);
+
+                                  const street = parts.join(' ');
+                                  const cityState = [address.city, address.state].filter(Boolean).join(', ');
+                                  const zip = address.zip || address.postal_code;
+
+                                  const formattedAddress = [street, cityState, zip].filter(Boolean).join(', ');
+
+                                  if (formattedAddress.trim()) {
+                                    return formattedAddress;
+                                  }
+                                }
                               }
-                              return '';
+
+                              return 'Address pending';
                             };
 
-                            const address = getAddressString(job.service_address) ||
-                                          getAddressString(job.defendant_address) ||
-                                          getAddressString(job.address) ||
-                                          getAddressString(job.recipient?.address);
-
-                            return address || 'Address not available';
+                            return getServiceAddressString(job);
                           })()}
                         </p>
                       </div>
