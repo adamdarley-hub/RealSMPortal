@@ -924,23 +924,25 @@ export default function ClientJobDetail() {
                   {Object.keys(recipientInfo).length > 0 && (
                     <div className="grid grid-cols-2 gap-4">
                       {Object.entries(recipientInfo).map(([key, value]) => {
-                        console.log(`🔍 Rendering recipient field "${key}":`, {
-                          key,
-                          value,
-                          valueType: typeof value,
-                          isObject: typeof value === 'object',
-                          valueKeys: typeof value === 'object' ? Object.keys(value) : null
-                        });
+                        // Ultra-safe rendering - convert everything to string
+                        let safeValue: string;
+                        try {
+                          if (value === null || value === undefined) {
+                            safeValue = '';
+                          } else if (typeof value === 'object') {
+                            safeValue = JSON.stringify(value);
+                          } else {
+                            safeValue = String(value);
+                          }
+                        } catch (error) {
+                          console.error('Error converting value to string:', error);
+                          safeValue = '[Error displaying value]';
+                        }
 
                         return (
-                          <div key={key}>
-                            <label className="text-sm font-medium text-gray-500">{key}</label>
-                            <p className="text-sm">
-                              {typeof value === 'object' && value !== null ?
-                                JSON.stringify(value) :
-                                String(value || '')
-                              }
-                            </p>
+                          <div key={String(key)}>
+                            <label className="text-sm font-medium text-gray-500">{String(key)}</label>
+                            <p className="text-sm">{safeValue}</p>
                           </div>
                         );
                       })}
