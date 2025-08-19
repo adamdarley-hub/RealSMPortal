@@ -378,7 +378,7 @@ const extractServiceAttempts = (job: Job) => {
           const miscAttachments = attempt.misc_attachments || attempt.attachments || [];
 
           // CLIENT VIEW DEBUG: Log photo processing details
-          console.log(`🖼️ CLIENT: Attempt ${index + 1} photo processing:`, {
+          console.log(`🖼��� CLIENT: Attempt ${index + 1} photo processing:`, {
             attemptId: attempt.id,
             attemptKeys: Object.keys(attempt),
             hasMiscAttachments: !!attempt.misc_attachments,
@@ -593,6 +593,11 @@ export default function ClientJobDetail() {
 
       setServiceAttempts(attempts);
 
+      // Auto-expand the latest attempt (first in the array since they're in reverse chronological order)
+      if (attempts.length > 0) {
+        setExpandedAttempts(new Set([attempts[0].id]));
+      }
+
       // Load affidavits and invoices for this job
       loadJobAffidavits(id);
       loadJobInvoices(id);
@@ -619,7 +624,7 @@ export default function ClientJobDetail() {
         setCurrentAffidavitIndex(0);
         console.log('📜 Affidavits loaded:', data.affidavits?.length || 0);
       } else {
-        console.warn('📜 Affidavits fetch failed:', response.status);
+        console.warn('��� Affidavits fetch failed:', response.status);
         setJobAffidavits([]);
       }
     } catch (error) {
