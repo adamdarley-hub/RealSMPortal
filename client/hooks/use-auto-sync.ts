@@ -30,7 +30,9 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
     nextSync: null,
     isSyncing: false,
     error: null,
-    isOnline: navigator.onLine
+    isOnline: navigator.onLine,
+    consecutiveFailures: 0,
+    circuitBreakerOpen: false
   });
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
