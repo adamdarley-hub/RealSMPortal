@@ -147,19 +147,22 @@ export async function createServer() {
       const { id } = req.params;
       console.log(`🧪 Manual request to mark invoice ${id} as paid`);
 
-      // Use the updated ServeManager update logic
+      // Use the updated ServeManager update logic with test parameters
       const { updateInvoiceStatusInServeManager } = await import('./routes/stripe');
 
-      await updateInvoiceStatusInServeManager(id, 'paid');
+      // Pass test payment intent and amount for testing
+      await updateInvoiceStatusInServeManager(id, 'paid', `test_${Date.now()}`, 0.50);
+
+      console.log(`✅ Test update completed for invoice ${id}`);
 
       res.json({
         success: true,
-        message: `Invoice ${id} marked as paid`,
+        message: `Invoice ${id} marked as paid via test`,
         invoiceId: id
       });
 
     } catch (error) {
-      console.error(`Failed to mark invoice ${req.params.id} as paid:`, error);
+      console.error(`❌ Failed to mark invoice ${req.params.id} as paid:`, error);
       res.status(500).json({
         error: 'Failed to update invoice status',
         message: error instanceof Error ? error.message : 'Unknown error'
