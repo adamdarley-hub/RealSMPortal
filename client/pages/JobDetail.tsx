@@ -343,9 +343,10 @@ const getServiceAddressString = (job: Job) => {
 
     // If address is an object, format it
     if (typeof address === 'object' && address) {
+      // Handle ServeManager addresses_attributes format
       const parts = [
-        address.street || address.address1 || address.street1,
-        address.street2 || address.address2
+        address.address1 || address.street || address.street1, // ServeManager uses address1
+        address.address2 || address.street2
       ].filter(Boolean);
 
       const street = parts.join(' ');
