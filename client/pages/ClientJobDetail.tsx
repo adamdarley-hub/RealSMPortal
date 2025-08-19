@@ -651,7 +651,6 @@ export default function ClientJobDetail() {
         statusColor: isSuccessful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800',
         method: 'Personal Service',
         methodColor: 'bg-blue-50 text-blue-700',
-        methodIcon: '����',
         notes: attempt.notes || attempt.description || '',
         server: typeof attempt.server === 'string' ? attempt.server :
                 typeof attempt.process_server === 'string' ? attempt.process_server :
