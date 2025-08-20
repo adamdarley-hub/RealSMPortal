@@ -1,5 +1,6 @@
 {
   "name": "fusion-starter",
+  "description": "VERCEL FIX - Node 22.x serverless deployment",
   "private": true,
   "type": "module",
   "engines": {
