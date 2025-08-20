@@ -28,6 +28,37 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Component to fetch and count actual attempts for each job
+function AttemptCount({ jobId }: { jobId: string }) {
+  const [count, setCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchAttemptCount = async () => {
+      try {
+        const response = await fetch(`/api/jobs/${jobId}?refresh=true`);
+        if (response.ok) {
+          const jobData = await response.json();
+          const attempts = jobData.attempts || [];
+          setCount(attempts.length);
+        } else {
+          setCount(0);
+        }
+      } catch (error) {
+        console.error(`Failed to fetch attempts for job ${jobId}:`, error);
+        setCount(0);
+      }
+    };
+
+    fetchAttemptCount();
+  }, [jobId]);
+
+  if (count === null) {
+    return <span className="text-xs text-muted-foreground">...</span>;
+  }
+
+  return <span>{count}</span>;
+}
+
 interface ClientJob {
   id: string;
   job_number: string;
