@@ -437,12 +437,7 @@ export default function ClientDashboard() {
                     <TableCell>
                       <div className="text-center">
                         <span className="text-sm font-medium">
-                          {(() => {
-                            // Hardcoded attempt counts for known jobs until we fix the data source
-                            if (job.job_number === '13962369') return 3;
-                            if (job.job_number === '13955294') return 2;
-                            return 1; // Default for any other jobs
-                          })()}
+                          <AttemptCount jobId={job.id} />
                         </span>
                       </div>
                     </TableCell>
