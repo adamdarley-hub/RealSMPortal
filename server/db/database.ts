@@ -14,28 +14,41 @@ try {
   console.log('SQLite not available in production environment - using in-memory fallback');
 }
 
-// Database file path
+// Database file path - only used in development
 const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'servemanager.db');
 
-// Ensure data directory exists
-const dataDir = path.dirname(DB_PATH);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+let sqlite: any = null;
+export let db: any = null;
+
+// Initialize SQLite only if available (development environment)
+if (Database && drizzle) {
+  try {
+    // Ensure data directory exists
+    const dataDir = path.dirname(DB_PATH);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    // Create SQLite database connection
+    sqlite = new Database(DB_PATH);
+
+    // Enable foreign keys and performance optimizations
+    sqlite.pragma('foreign_keys = ON');
+    sqlite.pragma('journal_mode = WAL');
+    sqlite.pragma('synchronous = NORMAL');
+    sqlite.pragma('cache_size = 1000000');
+    sqlite.pragma('temp_store = memory');
+    sqlite.pragma('mmap_size = 268435456'); // 256MB
+
+    // Create Drizzle instance
+    db = drizzle(sqlite, { schema });
+    console.log('SQLite database initialized for development');
+  } catch (error) {
+    console.log('Failed to initialize SQLite, running without local database:', error.message);
+  }
+} else {
+  console.log('Running in production mode without local SQLite database');
 }
-
-// Create SQLite database connection
-const sqlite = new Database(DB_PATH);
-
-// Enable foreign keys and performance optimizations
-sqlite.pragma('foreign_keys = ON');
-sqlite.pragma('journal_mode = WAL');
-sqlite.pragma('synchronous = NORMAL');
-sqlite.pragma('cache_size = 1000000');
-sqlite.pragma('temp_store = memory');
-sqlite.pragma('mmap_size = 268435456'); // 256MB
-
-// Create Drizzle instance
-export const db = drizzle(sqlite, { schema });
 
 // Initialize database (create tables if they don't exist)
 export function initializeDatabase() {
