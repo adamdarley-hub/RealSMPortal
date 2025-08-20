@@ -1264,20 +1264,23 @@ export const updateClient: RequestHandler = async (req, res) => {
       address_update: addressResult ? 'success' : 'failed'
     };
 
-    console.log(`📡 Updating company ${id}:`, JSON.stringify(updateData, null, 2));
+    console.log(`📊 Update results:`, updateData);
 
-    const result = await makeServeManagerRequest(`/companies/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(updateData),
-    });
-
-    console.log(`✅ Company updated successfully:`, result);
-
-    res.json({
-      success: true,
-      message: 'Contact information updated successfully in ServeManager',
-      result: result
-    });
+    if (updateData.contact_update === 'success' || updateData.address_update === 'success') {
+      res.json({
+        success: true,
+        message: 'Contact information updated successfully in ServeManager',
+        contact_update: updateData.contact_update,
+        address_update: updateData.address_update
+      });
+    } else {
+      res.status(500).json({
+        error: 'Failed to update contact information',
+        message: 'Neither contact nor address could be updated',
+        contact_update: updateData.contact_update,
+        address_update: updateData.address_update
+      });
+    }
 
   } catch (error) {
     console.error('❌ Error updating client contact:', error);
