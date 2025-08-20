@@ -622,7 +622,7 @@ export default function ClientJobDetail() {
         const data = await response.json();
         setJobAffidavits(data.affidavits || []);
         setCurrentAffidavitIndex(0);
-        console.log('��� Affidavits loaded:', data.affidavits?.length || 0);
+        console.log('📜 Affidavits loaded:', data.affidavits?.length || 0);
       } else {
         console.warn('��� Affidavits fetch failed:', response.status);
         setJobAffidavits([]);
@@ -1206,6 +1206,65 @@ export default function ClientJobDetail() {
                                 {attempt.details?.description || attempt.notes || 'No description available'}
                               </div>
                             </div>
+
+                            {/* Recipient Description - only for successful serves */}
+                            {(() => {
+                              // Only show for successful attempts
+                              const isSuccessful = attempt.status === "Successful";
+                              if (!isSuccessful) return null;
+
+                              // Get recipient data from the raw attempt data
+                              const recipient = attempt.raw?.recipient || {};
+
+                              // Build recipient info object with only populated fields
+                              const recipientFields: { [key: string]: string } = {};
+
+                              if (recipient.description && recipient.description.trim()) {
+                                recipientFields['Description'] = recipient.description.trim();
+                              }
+                              if (recipient.age && recipient.age.toString().trim()) {
+                                recipientFields['Age'] = recipient.age.toString();
+                              }
+                              if (recipient.ethnicity && recipient.ethnicity.trim()) {
+                                recipientFields['Ethnicity'] = recipient.ethnicity.trim();
+                              }
+                              if (recipient.gender && recipient.gender.trim()) {
+                                recipientFields['Gender'] = recipient.gender.trim();
+                              }
+                              if (recipient.weight && recipient.weight.toString().trim()) {
+                                recipientFields['Weight'] = recipient.weight.toString();
+                              }
+                              if (recipient.height1 || recipient.height2) {
+                                const height = [recipient.height1, recipient.height2].filter(Boolean).join("") || '';
+                                if (height) recipientFields['Height'] = height;
+                              }
+                              if (recipient.hair && recipient.hair.trim()) {
+                                recipientFields['Hair'] = recipient.hair.trim();
+                              }
+                              if (recipient.eyes && recipient.eyes.trim()) {
+                                recipientFields['Eyes'] = recipient.eyes.trim();
+                              }
+                              if (recipient.relationship && recipient.relationship.trim()) {
+                                recipientFields['Relationship'] = recipient.relationship.trim();
+                              }
+
+                              // Only show the section if there are populated fields
+                              if (Object.keys(recipientFields).length === 0) return null;
+
+                              return (
+                                <div>
+                                  <label className="text-sm font-medium text-gray-700 mb-2 block">Recipient Description</label>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {Object.entries(recipientFields).map(([key, value]) => (
+                                      <div key={key}>
+                                        <label className="text-sm font-medium text-gray-600">{key}</label>
+                                        <p className="text-sm text-gray-900">{value}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })()}
 
                             {/* Attempt Photos - only in expanded view */}
             {attempt.details?.photos && attempt.details.photos.length > 0 && (
