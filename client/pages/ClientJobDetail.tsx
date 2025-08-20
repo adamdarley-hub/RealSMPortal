@@ -900,73 +900,60 @@ export default function ClientJobDetail() {
         </div>
 
 
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="job-info" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="job-info">Job Information</TabsTrigger>
-            <TabsTrigger value="recipient">Recipient Information</TabsTrigger>
-            <TabsTrigger value="court-timeline">Court Case & Timeline</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="job-info">
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Job Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <FileText className="w-5 h-5 mr-2" />
-                    Job Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Job ID</label>
-                        <p className="text-sm">{job.job_number || job.id}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Status</label>
-                        <p className="text-sm">{job.status?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Priority</label>
-                        <p className="text-sm">{job.priority?.replace(/\b\w/g, l => l.toUpperCase()) || 'Normal'}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Service Type</label>
-                        <p className="text-sm">{job.service_type || 'Process Service'}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Created</label>
-                        <p className="text-sm">{formatDateTime(job.created_at)}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Due Date</label>
-                        <p className="text-sm">{formatDate(job.due_date)}</p>
-                      </div>
-                    </div>
-                    
-                    {job.description && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Description</label>
-                        <p className="text-sm mt-1">{job.description}</p>
-                      </div>
-                    )}
+        {/* Main Content - Two Card Layout */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Left Card: Job Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FileText className="w-5 h-5 mr-2" />
+                Job Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Priority</label>
+                    <p className="text-sm">{job.priority?.replace(/\b\w/g, l => l.toUpperCase()) || 'Normal'}</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Received Date</label>
+                    <p className="text-sm">{formatDateTime(job.created_at)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Due Date</label>
+                    <p className="text-sm">{formatDate(job.due_date)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Case Caption</label>
+                    <div className="text-sm">
+                      {getCourtCaseDisplay(job)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-              {/* Service Address */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <MapPin className="w-5 h-5 mr-2" />
-                    Service Address
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
+          {/* Right Card: Service Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <User className="w-5 h-5 mr-2" />
+                Service Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Recipient Name</label>
+                  <p className="text-lg font-medium">{recipientName}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Full Address</label>
+                  <div className="text-sm mt-1">
                     {(() => {
                       const address = job.service_address || job.address || job.defendant_address;
                       if (address && typeof address === 'object') {
@@ -976,10 +963,10 @@ export default function ClientJobDetail() {
                         if (address.city) parts.push(address.city);
                         if (address.state) parts.push(address.state);
                         if (address.zip) parts.push(address.zip);
-                        
+
                         return parts.length > 0 ? (
                           <div>
-                            {address.street && <p className="font-medium">{address.street}</p>}
+                            {address.street && <p>{address.street}</p>}
                             {address.street2 && <p>{address.street2}</p>}
                             <p>{[address.city, address.state, address.zip].filter(Boolean).join(', ')}</p>
                           </div>
@@ -988,113 +975,18 @@ export default function ClientJobDetail() {
                       return <p className="text-gray-500">Address not available</p>;
                     })()}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="recipient">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <User className="w-5 h-5 mr-2" />
-                  Recipient Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Name</label>
-                    <p className="text-lg font-medium">{recipientName}</p>
-                  </div>
-                  
-                  {Object.keys(recipientInfo).length > 0 && (
-                    <div className="grid grid-cols-2 gap-4">
-                      {Object.entries(recipientInfo).map(([key, value]) => {
-                        // Ultra-safe rendering - convert everything to string
-                        let safeValue: string;
-                        try {
-                          if (value === null || value === undefined) {
-                            safeValue = '';
-                          } else if (typeof value === 'object') {
-                            safeValue = JSON.stringify(value);
-                          } else {
-                            safeValue = String(value);
-                          }
-                        } catch (error) {
-                          console.error('Error converting value to string:', error);
-                          safeValue = '[Error displaying value]';
-                        }
-
-                        return (
-                          <div key={String(key)}>
-                            <label className="text-sm font-medium text-gray-500">{String(key)}</label>
-                            <p className="text-sm">{safeValue}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          <TabsContent value="court-timeline">
-            <div className="space-y-6">
-              {/* Court Case Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Building className="w-5 h-5 mr-2" />
-                    Court Case Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Case Details</label>
-                      <div className="mt-1">
-                        {getCourtCaseDisplay(job)}
-                      </div>
-                    </div>
+                {job.description && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Description</label>
+                    <p className="text-sm mt-1">{job.description}</p>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Timeline - Simple version for Court Case tab */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Clock className="w-5 h-5 mr-2" />
-                    Job Timeline
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                      <Calendar className="w-5 h-5 text-gray-500" />
-                      <div>
-                        <p className="font-medium">Job Created</p>
-                        <p className="text-sm text-gray-500">{formatDateTime(job.created_at)}</p>
-                      </div>
-                    </div>
-
-                    {job.updated_at && job.updated_at !== job.created_at && (
-                      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <Clock className="w-5 h-5 text-gray-500" />
-                        <div>
-                          <p className="font-medium">Last Updated</p>
-                          <p className="text-sm text-gray-500">{formatDateTime(job.updated_at)}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Secondary Tabs for Documents, etc. */}
         <Tabs defaultValue="overview" className="space-y-6">
