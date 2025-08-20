@@ -955,22 +955,41 @@ export default function ClientJobDetail() {
                   <label className="text-sm font-medium text-gray-500">Full Address</label>
                   <div className="text-sm mt-1">
                     {(() => {
-                      const address = job.service_address || job.address || job.defendant_address;
-                      if (address && typeof address === 'object') {
-                        const parts = [];
-                        if (address.street) parts.push(address.street);
-                        if (address.street2) parts.push(address.street2);
-                        if (address.city) parts.push(address.city);
-                        if (address.state) parts.push(address.state);
-                        if (address.zip) parts.push(address.zip);
+                      // Look for primary address in ServeManager format
+                      let address = null;
 
-                        return parts.length > 0 ? (
-                          <div>
-                            {address.street && <p>{address.street}</p>}
-                            {address.street2 && <p>{address.street2}</p>}
-                            <p>{[address.city, address.state, address.zip].filter(Boolean).join(', ')}</p>
-                          </div>
-                        ) : <p className="text-gray-500">Address not available</p>;
+                      // Check if job has addresses array and find primary
+                      if (job.addresses && Array.isArray(job.addresses)) {
+                        address = job.addresses.find(addr => addr.primary) || job.addresses[0];
+                      }
+                      // Fallback to direct address fields
+                      else if (job.address) {
+                        address = job.address;
+                      }
+                      else if (job.service_address) {
+                        address = job.service_address;
+                      }
+                      else if (job.defendant_address) {
+                        address = job.defendant_address;
+                      }
+
+                      if (address && typeof address === 'object') {
+                        // Handle ServeManager address format (address1, postal_code)
+                        const address1 = address.address1 || address.street || address.street1;
+                        const address2 = address.address2 || address.street2;
+                        const city = address.city;
+                        const state = address.state;
+                        const zip = address.postal_code || address.zip;
+
+                        if (address1 || city || state || zip) {
+                          return (
+                            <div>
+                              {address1 && <p>{address1}</p>}
+                              {address2 && <p>{address2}</p>}
+                              <p>{[city, state, zip].filter(Boolean).join(', ')}</p>
+                            </div>
+                          );
+                        }
                       }
                       return <p className="text-gray-500">Address not available</p>;
                     })()}
