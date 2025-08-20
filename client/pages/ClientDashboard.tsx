@@ -437,7 +437,7 @@ export default function ClientDashboard() {
                     <TableCell>
                       <div className="text-center">
                         <span className="text-sm font-medium">
-                          {Object.keys(job).filter(key => key.toLowerCase().includes('attempt')).map(key => `${key}:${(job as any)[key]}`).join(', ') || 'No attempt fields found'}
+                          {job.attempt_count || 0}
                         </span>
                       </div>
                     </TableCell>
