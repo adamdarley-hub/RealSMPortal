@@ -478,7 +478,7 @@ export default function ClientDashboard() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {job.due_date ? formatDate(job.due_date) : 'No deadline'}
+                      <FreshDueDate jobId={job.id} fallbackDate={job.due_date} />
                     </TableCell>
                   </TableRow>
                 ))}
