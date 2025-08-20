@@ -353,7 +353,7 @@ export default function ClientDashboard() {
                 <TableRow>
                   <TableHead>Recipient</TableHead>
                   <TableHead>Case</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Attempts</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Due Date</TableHead>
                 </TableRow>
@@ -442,9 +442,11 @@ export default function ClientDashboard() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(job.status)}>
-                        {job.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </Badge>
+                      <div className="text-center">
+                        <span className="text-sm font-medium">
+                          {(job as any).attempt_count || (job as any).attempts?.length || 0}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={getPriorityColor(job.priority)}>
