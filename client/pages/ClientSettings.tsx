@@ -157,15 +157,28 @@ export default function ClientSettings() {
           description: "Your contact information has been successfully updated in ServeManager.",
         });
       } else {
-        throw new Error('Failed to update ServeManager client');
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.error?.includes('not supported')) {
+          throw new Error('Contact updates not supported by ServeManager API');
+        }
+        throw new Error(errorData.message || 'Failed to update ServeManager client');
       }
     } catch (error) {
       console.error('Error updating contact info:', error);
-      toast({
-        title: "Update Failed",
-        description: "There was an error updating your contact information. Please try again.",
-        variant: "destructive"
-      });
+
+      if (error instanceof Error && error.message.includes('not supported')) {
+        toast({
+          title: "Update Not Supported",
+          description: "Contact information updates are not supported via the ServeManager API. Please contact your administrator to update this information directly in ServeManager.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Update Failed",
+          description: "There was an error updating your contact information. Please try again.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsSaving(false);
     }
