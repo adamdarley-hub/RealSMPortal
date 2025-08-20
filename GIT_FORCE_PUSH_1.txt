@@ -1,0 +1,4 @@
+FORCE GIT PUSH - FILE 1
+Node 22.x
+No SQLite
+Ready for Vercel
