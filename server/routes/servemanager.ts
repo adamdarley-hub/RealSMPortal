@@ -1176,92 +1176,64 @@ export const updateClient: RequestHandler = async (req, res) => {
     console.log(`👤 Found primary contact:`, primaryContact);
     console.log(`🏠 Found primary address:`, primaryAddress);
 
-    // Step 2: Try updating individual contact and address records directly
-    let contactResult = null;
-    let addressResult = null;
+    // Step 2: Update the company using the exact format from ServeManager API
+    const updatedPhoneNumbers = company.phone_numbers || [];
+    const updatedAddresses = [...(company.addresses || [])];
+    const updatedContacts = [...(company.contacts || [])];
 
-    // Update contact phone number
-    if (contactData.phone && primaryContact) {
-      try {
-        const contactUpdateData = {
-          data: {
-            type: 'contact',
-            id: primaryContact.id,
-            attributes: {
-              phone: contactData.phone
-            }
-          }
+    // Update or add phone number
+    if (contactData.phone) {
+      if (updatedPhoneNumbers.length > 0) {
+        // Update existing phone number
+        updatedPhoneNumbers[0] = {
+          ...updatedPhoneNumbers[0],
+          number: contactData.phone
         };
-
-        console.log(`📞 Updating contact ${primaryContact.id}:`, contactUpdateData);
-        contactResult = await makeServeManagerRequest(`/contacts/${primaryContact.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify(contactUpdateData),
+      } else {
+        // Add new phone number
+        updatedPhoneNumbers.push({
+          type: 'phone_number',
+          label: 'Office',
+          number: contactData.phone
         });
-        console.log(`✅ Contact updated:`, contactResult);
-      } catch (contactError) {
-        console.log(`❌ Contact update failed, trying phone_numbers array:`, contactError);
-
-        // Fallback: Try updating the company's phone_numbers array
-        try {
-          const phoneUpdateData = {
-            data: {
-              type: 'company',
-              id: parseInt(id),
-              attributes: {
-                phone_numbers: [
-                  {
-                    label: 'Primary',
-                    number: contactData.phone,
-                    primary: true
-                  }
-                ]
-              }
-            }
-          };
-
-          console.log(`📞 Updating company phone numbers:`, phoneUpdateData);
-          contactResult = await makeServeManagerRequest(`/companies/${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(phoneUpdateData),
-          });
-          console.log(`✅ Company phone updated:`, contactResult);
-        } catch (phoneError) {
-          console.error(`❌ Phone update failed:`, phoneError);
-        }
       }
     }
 
     // Update address
-    if (contactData.address && primaryAddress) {
-      try {
-        const addressUpdateData = {
-          data: {
-            type: 'address',
-            id: primaryAddress.id,
-            attributes: {
-              address1: contactData.address,
-              city: contactData.city,
-              state: contactData.state,
-              postal_code: contactData.zip
-            }
-          }
+    if (primaryAddress && (contactData.address || contactData.city || contactData.state || contactData.zip)) {
+      const addressIndex = updatedAddresses.findIndex(addr => addr.id === primaryAddress.id);
+      if (addressIndex >= 0) {
+        updatedAddresses[addressIndex] = {
+          ...updatedAddresses[addressIndex],
+          address1: contactData.address || updatedAddresses[addressIndex].address1,
+          city: contactData.city || updatedAddresses[addressIndex].city,
+          state: contactData.state || updatedAddresses[addressIndex].state,
+          postal_code: contactData.zip || updatedAddresses[addressIndex].postal_code
         };
+      }
+    }
 
-        console.log(`🏠 Updating address ${primaryAddress.id}:`, addressUpdateData);
-        addressResult = await makeServeManagerRequest(`/addresses/${primaryAddress.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify(addressUpdateData),
-        });
-        console.log(`✅ Address updated:`, addressResult);
-      } catch (addressError) {
-        console.log(`❌ Address update failed:`, addressError);
+    // Update contact phone number
+    if (primaryContact && contactData.phone) {
+      const contactIndex = updatedContacts.findIndex(contact => contact.id === primaryContact.id);
+      if (contactIndex >= 0) {
+        updatedContacts[contactIndex] = {
+          ...updatedContacts[contactIndex],
+          phone: contactData.phone
+        };
       }
     }
 
     const updateData = {
-      contact_update: contactResult ? 'success' : 'failed',
-      address_update: addressResult ? 'success' : 'failed'
+      data: {
+        type: 'company',
+        id: parseInt(id),
+        attributes: {
+          phone_numbers: updatedPhoneNumbers,
+          addresses: updatedAddresses,
+          contacts: updatedContacts
+        }
+      }
     };
 
     console.log(`📊 Update results:`, updateData);
