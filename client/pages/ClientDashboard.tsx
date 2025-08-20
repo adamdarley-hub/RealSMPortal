@@ -142,9 +142,8 @@ export default function ClientDashboard() {
         }
       }
 
-      // Add cache busting timestamp to force fresh data
-      const cacheBuster = forceSync ? `&t=${Date.now()}` : '';
-      const response = await fetch(`/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`);
+      // Use Supabase for real-time data (no caching needed)
+      const response = await fetch(`/api/v2/jobs?client_id=${user.client_id}`);
 
       if (!response.ok) {
         throw new Error('Failed to load jobs');
