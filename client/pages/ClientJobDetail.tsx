@@ -982,53 +982,50 @@ export default function ClientJobDetail() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Recipient Name</label>
-                  <p className="text-lg font-medium">{recipientName}</p>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Full Address</label>
-                  <div className="text-sm mt-1">
-                    {(() => {
-                      // Look for primary address in ServeManager format
-                      let address = null;
-
-                      // Check if job has addresses array and find primary
-                      if (job.addresses && Array.isArray(job.addresses)) {
-                        address = job.addresses.find(addr => addr.primary) || job.addresses[0];
-                      }
-                      // Fallback to direct address fields
-                      else if (job.address) {
-                        address = job.address;
-                      }
-                      else if (job.service_address) {
-                        address = job.service_address;
-                      }
-                      else if (job.defendant_address) {
-                        address = job.defendant_address;
-                      }
-
-                      if (address && typeof address === 'object') {
-                        // Handle ServeManager address format (address1, postal_code)
-                        const address1 = address.address1 || address.street || address.street1;
-                        const address2 = address.address2 || address.street2;
-                        const city = address.city;
-                        const state = address.state;
-                        const zip = address.postal_code || address.zip;
-
-                        if (address1 || city || state || zip) {
-                          return (
-                            <div>
-                              {address1 && <p>{address1}</p>}
-                              {address2 && <p>{address2}</p>}
-                              <p>{[city, state, zip].filter(Boolean).join(', ')}</p>
-                            </div>
-                          );
-                        }
-                      }
-                      return <p className="text-gray-500">Address not available</p>;
-                    })()}
+                  <label className="text-sm font-medium text-gray-500">Recipient</label>
+                  <div>
+                    <div className="text-sm mt-1"></div>
                   </div>
+                  <p className="text-lg font-medium">{recipientName}</p>
+                  {(() => {
+                    // Look for primary address in ServeManager format
+                    let address = null;
+
+                    // Check if job has addresses array and find primary
+                    if (job.addresses && Array.isArray(job.addresses)) {
+                      address = job.addresses.find(addr => addr.primary) || job.addresses[0];
+                    }
+                    // Fallback to direct address fields
+                    else if (job.address) {
+                      address = job.address;
+                    }
+                    else if (job.service_address) {
+                      address = job.service_address;
+                    }
+                    else if (job.defendant_address) {
+                      address = job.defendant_address;
+                    }
+
+                    if (address && typeof address === 'object') {
+                      // Handle ServeManager address format (address1, postal_code)
+                      const address1 = address.address1 || address.street || address.street1;
+                      const address2 = address.address2 || address.street2;
+                      const city = address.city;
+                      const state = address.state;
+                      const zip = address.postal_code || address.zip;
+
+                      if (address1 || city || state || zip) {
+                        return (
+                          <>
+                            {address1 && <p>{address1}</p>}
+                            {address2 && <p>{address2}</p>}
+                            <p>{[city, state, zip].filter(Boolean).join(', ')}</p>
+                          </>
+                        );
+                      }
+                    }
+                    return <p className="text-gray-500">Address not available</p>;
+                  })()}
                 </div>
 
                 {job.description && (
