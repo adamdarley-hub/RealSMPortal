@@ -50,12 +50,14 @@ export default function ClientSettings() {
   // Load user contact info on mount
   useEffect(() => {
     if (user) {
+      // Contact info comes from client_contact object
+      const clientContact = (user as any).client_contact || {};
       setContactInfo({
-        phone: user.phone || '',
-        address: user.address || '',
-        city: user.city || '',
-        state: user.state || '',
-        zip: user.zip || ''
+        phone: clientContact.phone || '',
+        address: clientContact.address || '',
+        city: clientContact.city || '',
+        state: clientContact.state || '',
+        zip: clientContact.zip || ''
       });
     }
   }, [user]);
