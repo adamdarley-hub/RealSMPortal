@@ -157,7 +157,7 @@ export async function createServer() {
       const invoice = await makeServeManagerRequest(`/invoices/${req.params.id}`);
       const invoiceData = invoice.data || invoice;
 
-      console.log(`🧪 Invoice ${req.params.id} status check:`, {
+      console.log(`�� Invoice ${req.params.id} status check:`, {
         id: invoiceData.id,
         status: invoiceData.status,
         balance_due: invoiceData.balance_due,
@@ -379,7 +379,7 @@ export async function createServer() {
   const { getDocumentPreview, getDocumentDownload } = await import("./routes/fresh-documents.js");
   app.get("/api/proxy/document/:jobId/:documentId/:type?", getDocumentProxy);      // 📄 Proxy for documents
   app.get("/api/proxy/photo/:jobId/:attemptId/:photoId", getAttemptPhotoProxy);   // 📸 Proxy for attempt photos
-  app.get("/api/proxy", genericProxy);                                            // 🔗 Generic proxy for any URL
+  app.get("/api/proxy", genericProxy);                                            // ��� Generic proxy for any URL
 
   // Fresh document endpoints (fetch fresh URLs from ServeManager on-demand)
   app.get("/api/jobs/:jobId/documents/:documentId/preview", getDocumentPreview);   // 📄 Fresh document preview
@@ -399,6 +399,7 @@ export async function createServer() {
   app.post("/api/servemanager/jobs", createJob);
   app.put("/api/servemanager/jobs/:id", updateJob);
   app.get("/api/servemanager/clients", getClients);
+  app.put("/api/servemanager/clients/:id", updateClient);
   app.get("/api/servemanager/servers", getServers);
   app.get("/api/servemanager/invoices", getInvoices);
   app.get("/api/servemanager/contacts", getContacts);
