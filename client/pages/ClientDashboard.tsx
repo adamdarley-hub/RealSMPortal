@@ -59,6 +59,44 @@ function AttemptCount({ jobId }: { jobId: string }) {
   return <span>{count}</span>;
 }
 
+// Component to fetch fresh due date for each job
+function FreshDueDate({ jobId, fallbackDate }: { jobId: string; fallbackDate?: string }) {
+  const [dueDate, setDueDate] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDueDate = async () => {
+      try {
+        const response = await fetch(`/api/jobs/${jobId}?refresh=true`);
+        if (response.ok) {
+          const jobData = await response.json();
+          setDueDate(jobData.due_date || null);
+        } else {
+          setDueDate(fallbackDate || null);
+        }
+      } catch (error) {
+        console.error(`Failed to fetch due date for job ${jobId}:`, error);
+        setDueDate(fallbackDate || null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDueDate();
+  }, [jobId, fallbackDate]);
+
+  if (loading) {
+    return <span className="text-xs text-muted-foreground">...</span>;
+  }
+
+  return <span>{dueDate ? formatDate(dueDate) : 'No deadline'}</span>;
+}
+
+function formatDate(dateString: string): string {
+  if (!dateString) return 'No date';
+  return new Date(dateString).toLocaleDateString();
+}
+
 interface ClientJob {
   id: string;
   job_number: string;
