@@ -919,7 +919,19 @@ export default function ClientJobDetail() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Received Date</label>
-                    <p className="text-sm">{formatDateTime(job.created_at)}</p>
+                    <p className="text-sm">
+                      {(() => {
+                        // Look for documents received date
+                        if (job.documents && Array.isArray(job.documents) && job.documents.length > 0) {
+                          const firstDoc = job.documents[0];
+                          if (firstDoc.received_at || firstDoc.received_date || firstDoc.date_received) {
+                            return formatDateTime(firstDoc.received_at || firstDoc.received_date || firstDoc.date_received);
+                          }
+                        }
+                        // Fallback to job created date if no documents received date
+                        return formatDateTime(job.created_at);
+                      })()}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Due Date</label>
