@@ -213,7 +213,7 @@ export class CacheService {
     let recordsSynced = 0;
 
     try {
-      console.log('�� Starting jobs sync from ServeManager...');
+      console.log('🔄 Starting jobs sync from ServeManager...');
       
       const config = await getServeManagerConfig();
       let allJobs: any[] = [];
@@ -680,6 +680,11 @@ export class CacheService {
   // =================== CLIENTS ===================
   
   async getClientsFromCache(): Promise<any[]> {
+    if (!this.isDatabaseAvailable()) {
+      console.log('Database not available, returning empty array for clients cache');
+      return [];
+    }
+
     try {
       const cachedClients = await db.select().from(clients).orderBy(desc(clients.company));
       
@@ -823,7 +828,7 @@ export class CacheService {
       }
       
       const duration = Date.now() - startTime;
-      console.log(`✅ Clients sync completed: ${recordsSynced} records in ${duration}ms`);
+      console.log(`��� Clients sync completed: ${recordsSynced} records in ${duration}ms`);
       
       return {
         success: true,
@@ -1090,7 +1095,7 @@ export class CacheService {
           db.insert(servers).values(serverData).onConflictDoNothing().run();
           recordsSynced++;
         } catch (insertError) {
-          console.warn(`��️ Skipping server ${serverData.id} due to insertion error:`, insertError.message);
+          console.warn(`⚠️ Skipping server ${serverData.id} due to insertion error:`, insertError.message);
         }
       }
 
