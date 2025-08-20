@@ -440,7 +440,7 @@ export default function ClientDashboard() {
                     <TableCell>
                       <div className="text-center">
                         <span className="text-sm font-medium">
-                          {job.attempt_count}
+                          {job.attempts?.length || 0}
                         </span>
                       </div>
                     </TableCell>
