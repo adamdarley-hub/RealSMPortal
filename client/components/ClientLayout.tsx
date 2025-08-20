@@ -36,7 +36,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto">
           <div className="flex items-center flex-shrink-0 px-6">
-            <h1 className="text-xl font-bold text-gray-900">ServePortal</h1>
+            <h1 className="text-xl font-bold text-gray-900">Allegiance Legal Solutions</h1>
             <Badge variant="secondary" className="ml-2">
               Client
             </Badge>
