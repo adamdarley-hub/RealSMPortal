@@ -41,9 +41,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               alt="Allegiance Legal Solutions"
               className="h-8 w-auto"
             />
-            <Badge variant="secondary" className="ml-2">
-              Client
-            </Badge>
           </div>
           <div className="mt-6 flex flex-col flex-grow">
             <nav className="flex-1 px-4 space-y-2">
