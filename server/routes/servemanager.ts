@@ -1154,45 +1154,88 @@ export const updateJob: RequestHandler = async (req, res) => {
 export const updateClient: RequestHandler = async (req, res) => {
   try {
     const { id } = req.params;
-    const clientData = req.body;
+    const contactData = req.body;
 
-    console.log(`🔄 Attempting to update client ${id} contact information:`, clientData);
-    console.log(`📡 Testing ServeManager API call: PUT /clients/${id}`);
+    console.log(`🔄 Updating client ${id} contact information:`, contactData);
 
-    // First, let's check if we can even GET this specific client to verify the endpoint exists
-    try {
-      console.log(`🔍 First checking if client ${id} exists with GET /clients/${id}`);
-      const getClientData = await makeServeManagerRequest(`/clients/${id}`);
-      console.log(`✅ Client ${id} found:`, getClientData);
-    } catch (getError) {
-      console.error(`❌ Could not GET client ${id}:`, getError);
-      throw new Error(`Client ${id} not found or endpoint not supported`);
+    // Step 1: Get the company/client data to find the primary contact
+    console.log(`🔍 Getting company data for client ${id}`);
+    const companyData = await makeServeManagerRequest(`/companies/${id}`);
+    console.log(`📋 Company data retrieved:`, JSON.stringify(companyData, null, 2));
+
+    // Step 2: Find the primary contact
+    const contacts = companyData.data?.contacts || companyData.contacts || [];
+    const primaryContact = contacts.find((contact: any) => contact.primary) || contacts[0];
+
+    if (!primaryContact) {
+      throw new Error('No contact found for this company');
     }
 
-    // Now try the update
-    const data = await makeServeManagerRequest(`/clients/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(clientData),
+    console.log(`👤 Found primary contact:`, primaryContact);
+
+    // Step 3: Update the contact record
+    const contactUpdateData = {
+      data: {
+        type: 'contact',
+        id: primaryContact.id,
+        attributes: {
+          phone: contactData.phone || primaryContact.phone,
+          // Note: address data might be in a separate addresses array
+          // We'll update what we can in the contact record
+        }
+      }
+    };
+
+    // Check if the company has addresses and update the primary address
+    const addresses = companyData.data?.addresses || companyData.addresses || [];
+    const primaryAddress = addresses.find((addr: any) => addr.primary) || addresses[0];
+
+    if (primaryAddress) {
+      console.log(`🏠 Found primary address:`, primaryAddress);
+
+      // Update the primary address
+      const addressUpdateData = {
+        data: {
+          type: 'address',
+          id: primaryAddress.id,
+          attributes: {
+            address1: contactData.address || primaryAddress.address1,
+            city: contactData.city || primaryAddress.city,
+            state: contactData.state || primaryAddress.state,
+            postal_code: contactData.zip || primaryAddress.postal_code,
+          }
+        }
+      };
+
+      console.log(`📍 Updating address ${primaryAddress.id}:`, addressUpdateData);
+      const addressResult = await makeServeManagerRequest(`/addresses/${primaryAddress.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(addressUpdateData),
+      });
+      console.log(`✅ Address updated:`, addressResult);
+    }
+
+    // Update the contact phone number
+    console.log(`📞 Updating contact ${primaryContact.id}:`, contactUpdateData);
+    const contactResult = await makeServeManagerRequest(`/contacts/${primaryContact.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(contactUpdateData),
     });
 
-    console.log(`✅ Client ${id} updated successfully:`, data);
-    res.json(data);
+    console.log(`✅ Contact updated successfully:`, contactResult);
+
+    res.json({
+      success: true,
+      message: 'Contact information updated successfully',
+      contact: contactResult,
+      address: primaryAddress ? 'Address updated' : 'No address found'
+    });
+
   } catch (error) {
-    console.error('❌ Error updating client - Full error details:', error);
-
-    // If it's a ServeManager API error, let's see the specific error message
-    if (error instanceof Error) {
-      console.error('❌ Error message:', error.message);
-      if (error.message.includes('ServeManager API error')) {
-        console.error('❌ ServeManager API error - likely the endpoint does not support updates');
-      }
-    }
-
-    // For now, return a more informative error
+    console.error('❌ Error updating client contact:', error);
     res.status(500).json({
-      error: 'Client contact updates not supported',
-      message: 'ServeManager API does not appear to support client contact updates via API. Contact information may need to be updated directly in ServeManager.',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Failed to update client contact information',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 };
