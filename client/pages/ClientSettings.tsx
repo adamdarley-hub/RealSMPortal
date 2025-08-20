@@ -376,8 +376,18 @@ export default function ClientSettings() {
               Contact Information
             </CardTitle>
             <CardDescription>
-              Update your contact details. Note: Contact information updates may require administrator approval in ServeManager.
+              Update your contact details. Changes will be saved locally and synchronized with ServeManager when possible.
             </CardDescription>
+            {user?.client_id && localStorage.getItem(`contact_info_${user.client_id}`) && (
+              <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="text-blue-600">
+                  <Settings className="w-4 h-4" />
+                </div>
+                <div className="text-sm text-blue-800">
+                  <strong>Local Changes:</strong> Your contact information has been updated locally. Contact your administrator to sync with ServeManager.
+                </div>
+              </div>
+            )}
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
