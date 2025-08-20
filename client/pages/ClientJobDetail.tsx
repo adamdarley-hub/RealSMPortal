@@ -921,9 +921,14 @@ export default function ClientJobDetail() {
                     <label className="text-sm font-medium text-gray-500">Received Date</label>
                     <p className="text-sm">
                       {(() => {
+                        console.log('🔍 Job data for received date:', job);
+                        console.log('🔍 documents_to_be_served_attributes:', job.documents_to_be_served_attributes);
+                        console.log('🔍 All job keys:', Object.keys(job));
+
                         // Look for documents_to_be_served_attributes received date
                         if (job.documents_to_be_served_attributes && Array.isArray(job.documents_to_be_served_attributes) && job.documents_to_be_served_attributes.length > 0) {
                           const firstDoc = job.documents_to_be_served_attributes[0];
+                          console.log('🔍 First document:', firstDoc);
                           if (firstDoc.received_at) {
                             return formatDateTime(firstDoc.received_at);
                           }
