@@ -198,11 +198,22 @@ export class CacheService {
   }
 
   async syncJobsFromServeManager(): Promise<SyncResult> {
+    if (!this.isDatabaseAvailable()) {
+      console.log('Database not available, skipping jobs sync');
+      return {
+        success: false,
+        recordsSynced: 0,
+        totalRecords: 0,
+        duration: 0,
+        error: 'Database not available'
+      };
+    }
+
     const startTime = Date.now();
     let recordsSynced = 0;
-    
+
     try {
-      console.log('🔄 Starting jobs sync from ServeManager...');
+      console.log('�� Starting jobs sync from ServeManager...');
       
       const config = await getServeManagerConfig();
       let allJobs: any[] = [];
@@ -1079,7 +1090,7 @@ export class CacheService {
           db.insert(servers).values(serverData).onConflictDoNothing().run();
           recordsSynced++;
         } catch (insertError) {
-          console.warn(`⚠️ Skipping server ${serverData.id} due to insertion error:`, insertError.message);
+          console.warn(`��️ Skipping server ${serverData.id} due to insertion error:`, insertError.message);
         }
       }
 
