@@ -27,6 +27,9 @@ import { useToast } from "@/hooks/use-toast";
 export default function ClientSettings() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
+
+  // Debug current stored user data
+  console.log('📝 Current stored user:', localStorage.getItem('serveportal_user'));
   
   // Contact info state
   const [contactInfo, setContactInfo] = useState({
