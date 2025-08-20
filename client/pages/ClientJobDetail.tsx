@@ -1058,11 +1058,6 @@ export default function ClientJobDetail() {
                               <p className="text-sm font-medium">
                                 {doc.title || doc.name || doc.document_type || doc.type || `Document ${index + 1}`}
                               </p>
-                              {(doc.received_at || doc.received_date || doc.date_received) && (
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Received: {formatDateTime(doc.received_at || doc.received_date || doc.date_received)}
-                                </p>
-                              )}
                               {(doc.file_name || doc.filename) && (
                                 <p className="text-xs text-gray-500">
                                   File: {doc.file_name || doc.filename}
