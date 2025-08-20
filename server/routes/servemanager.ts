@@ -1176,39 +1176,92 @@ export const updateClient: RequestHandler = async (req, res) => {
     console.log(`👤 Found primary contact:`, primaryContact);
     console.log(`🏠 Found primary address:`, primaryAddress);
 
-    // Step 2: Update the company using proper JSON:API format
-    const updatedContacts = currentContacts.map((contact: any) => {
-      if (contact.id === primaryContact.id) {
-        return {
-          ...contact,
-          phone: contactData.phone || contact.phone
-        };
-      }
-      return contact;
-    });
+    // Step 2: Try updating individual contact and address records directly
+    let contactResult = null;
+    let addressResult = null;
 
-    const updatedAddresses = currentAddresses.map((address: any) => {
-      if (address.id === primaryAddress?.id) {
-        return {
-          ...address,
-          address1: contactData.address || address.address1,
-          city: contactData.city || address.city,
-          state: contactData.state || address.state,
-          postal_code: contactData.zip || address.postal_code
+    // Update contact phone number
+    if (contactData.phone && primaryContact) {
+      try {
+        const contactUpdateData = {
+          data: {
+            type: 'contact',
+            id: primaryContact.id,
+            attributes: {
+              phone: contactData.phone
+            }
+          }
         };
-      }
-      return address;
-    });
 
-    const updateData = {
-      data: {
-        type: 'company',
-        id: parseInt(id),
-        attributes: {
-          contacts: updatedContacts,
-          addresses: updatedAddresses
+        console.log(`📞 Updating contact ${primaryContact.id}:`, contactUpdateData);
+        contactResult = await makeServeManagerRequest(`/contacts/${primaryContact.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(contactUpdateData),
+        });
+        console.log(`✅ Contact updated:`, contactResult);
+      } catch (contactError) {
+        console.log(`❌ Contact update failed, trying phone_numbers array:`, contactError);
+
+        // Fallback: Try updating the company's phone_numbers array
+        try {
+          const phoneUpdateData = {
+            data: {
+              type: 'company',
+              id: parseInt(id),
+              attributes: {
+                phone_numbers: [
+                  {
+                    label: 'Primary',
+                    number: contactData.phone,
+                    primary: true
+                  }
+                ]
+              }
+            }
+          };
+
+          console.log(`📞 Updating company phone numbers:`, phoneUpdateData);
+          contactResult = await makeServeManagerRequest(`/companies/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(phoneUpdateData),
+          });
+          console.log(`✅ Company phone updated:`, contactResult);
+        } catch (phoneError) {
+          console.error(`❌ Phone update failed:`, phoneError);
         }
       }
+    }
+
+    // Update address
+    if (contactData.address && primaryAddress) {
+      try {
+        const addressUpdateData = {
+          data: {
+            type: 'address',
+            id: primaryAddress.id,
+            attributes: {
+              address1: contactData.address,
+              city: contactData.city,
+              state: contactData.state,
+              postal_code: contactData.zip
+            }
+          }
+        };
+
+        console.log(`🏠 Updating address ${primaryAddress.id}:`, addressUpdateData);
+        addressResult = await makeServeManagerRequest(`/addresses/${primaryAddress.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(addressUpdateData),
+        });
+        console.log(`✅ Address updated:`, addressResult);
+      } catch (addressError) {
+        console.log(`❌ Address update failed:`, addressError);
+      }
+    }
+
+    const updateData = {
+      contact_update: contactResult ? 'success' : 'failed',
+      address_update: addressResult ? 'success' : 'failed'
     };
 
     console.log(`📡 Updating company ${id}:`, JSON.stringify(updateData, null, 2));
