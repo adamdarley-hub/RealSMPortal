@@ -260,10 +260,6 @@ export default function ClientDashboard() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'No date';
-    return new Date(dateString).toLocaleDateString();
-  };
 
   if (loading) {
     return (
