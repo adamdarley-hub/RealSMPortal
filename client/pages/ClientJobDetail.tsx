@@ -921,7 +921,7 @@ export default function ClientJobDetail() {
                     <label className="text-sm font-medium text-gray-500">Received Date</label>
                     <p className="text-sm">
                       {(() => {
-                        // Use the same logic as the documents section to find received date
+                        // Find the MAXIMUM (latest) received date from all documents
                         const possibleDocFields = [
                           'documents_to_be_served_attributes',
                           'documents_to_be_served',
@@ -933,18 +933,26 @@ export default function ClientJobDetail() {
                           'files'
                         ];
 
+                        let maxReceivedDate = null;
+
                         for (const fieldName of possibleDocFields) {
                           const field = (job as any)[fieldName];
                           if (field && Array.isArray(field) && field.length > 0) {
-                            const firstDoc = field[0];
-                            if (firstDoc.received_at || firstDoc.received_date || firstDoc.date_received) {
-                              return formatDateTime(firstDoc.received_at || firstDoc.received_date || firstDoc.date_received);
-                            }
+                            // Check all documents and find the latest received date
+                            field.forEach((doc: any) => {
+                              const receivedDate = doc.received_at || doc.received_date || doc.date_received;
+                              if (receivedDate) {
+                                const date = new Date(receivedDate);
+                                if (!maxReceivedDate || date > maxReceivedDate) {
+                                  maxReceivedDate = date;
+                                }
+                              }
+                            });
                           }
                         }
 
-                        // Fallback to job created date if no documents received date
-                        return formatDateTime(job.created_at);
+                        // Use max received date if found, otherwise fallback to job created date
+                        return maxReceivedDate ? formatDateTime(maxReceivedDate.toISOString()) : formatDateTime(job.created_at);
                       })()}
                     </p>
                   </div>
