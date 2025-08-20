@@ -34,7 +34,11 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Allegiance Legal Solutions</CardTitle>
+          <img
+            src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=300"
+            alt="Allegiance Legal Solutions"
+            className="h-12 w-auto mx-auto mb-4"
+          />
           <CardDescription>
             Access your process service management portal
           </CardDescription>
