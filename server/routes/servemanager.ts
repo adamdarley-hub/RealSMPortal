@@ -1149,3 +1149,27 @@ export const updateJob: RequestHandler = async (req, res) => {
     });
   }
 };
+
+// Update client contact information
+export const updateClient: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clientData = req.body;
+
+    console.log(`🔄 Updating client ${id} contact information:`, clientData);
+
+    const data = await makeServeManagerRequest(`/clients/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(clientData),
+    });
+
+    console.log(`✅ Client ${id} updated successfully`);
+    res.json(data);
+  } catch (error) {
+    console.error('Error updating client:', error);
+    res.status(500).json({
+      error: 'Failed to update client in ServeManager',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
