@@ -66,14 +66,25 @@ export default function ClientSettings() {
 
         if (foundClient) {
           console.log('🔄 Refreshed client data from API:', foundClient);
-          // Update contact info from fresh API data
-          setContactInfo({
-            phone: foundClient.phone || '',
-            address: foundClient.address?.street || '',
-            city: foundClient.address?.city || '',
-            state: foundClient.address?.state || '',
-            zip: foundClient.address?.zip || ''
-          });
+
+          // Check if we have locally stored contact info that overrides API data
+          const localContactKey = `contact_info_${user.client_id}`;
+          const localContactInfo = localStorage.getItem(localContactKey);
+
+          if (localContactInfo) {
+            console.log('📱 Using locally stored contact info');
+            const localContact = JSON.parse(localContactInfo);
+            setContactInfo(localContact);
+          } else {
+            // Use API data
+            setContactInfo({
+              phone: foundClient.phone || '',
+              address: foundClient.address?.street || '',
+              city: foundClient.address?.city || '',
+              state: foundClient.address?.state || '',
+              zip: foundClient.address?.zip || ''
+            });
+          }
         }
       }
     } catch (error) {
