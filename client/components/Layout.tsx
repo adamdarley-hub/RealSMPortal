@@ -83,7 +83,11 @@ export default function Layout({ children }: LayoutProps) {
               <Scale className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-bold text-lg text-sidebar-foreground">Allegiance Legal Solutions</h1>
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=200"
+                alt="Allegiance Legal Solutions"
+                className="h-8 w-auto mb-1"
+              />
               <p className="text-xs text-muted-foreground">Process Service Hub</p>
             </div>
           </div>
