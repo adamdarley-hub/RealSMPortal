@@ -1025,30 +1025,59 @@ export default function ClientJobDetail() {
                   <label className="text-sm font-medium text-gray-500">Documents to be Served</label>
                   <div className="mt-2 space-y-2">
                     {(() => {
-                      console.log('🔍 Checking documents...');
-                      console.log('🔍 documents_to_be_served_attributes:', job.documents_to_be_served_attributes);
-                      console.log('🔍 documents:', job.documents);
-                      console.log('🔍 Looking for any field with "document" in name:', Object.keys(job).filter(key => key.toLowerCase().includes('document')));
+                      // Try ALL possible document field variations
+                      const possibleDocFields = [
+                        'documents_to_be_served_attributes',
+                        'documents_to_be_served',
+                        'documents',
+                        'docs_to_be_served',
+                        'service_documents',
+                        'court_documents',
+                        'attachments',
+                        'files'
+                      ];
 
-                      if (job.documents_to_be_served_attributes && Array.isArray(job.documents_to_be_served_attributes) && job.documents_to_be_served_attributes.length > 0) {
-                        return job.documents_to_be_served_attributes.map((doc: any, index: number) => (
-                          <div key={doc.reference_number || index} className="border-l-4 border-blue-200 pl-3 py-2 bg-gray-50 rounded-r">
-                            <p className="text-sm font-medium">{doc.title || `Document ${index + 1}`}</p>
-                            {doc.received_at && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                Received: {formatDateTime(doc.received_at)}
+                      console.log('🔍 COMPLETE JOB OBJECT:', JSON.stringify(job, null, 2));
+
+                      for (const fieldName of possibleDocFields) {
+                        const field = (job as any)[fieldName];
+                        if (field && Array.isArray(field) && field.length > 0) {
+                          console.log(`✅ Found documents in field: ${fieldName}`, field);
+                          return field.map((doc: any, index: number) => (
+                            <div key={doc.id || doc.reference_number || index} className="border-l-4 border-blue-200 pl-3 py-2 bg-gray-50 rounded-r">
+                              <p className="text-sm font-medium">
+                                {doc.title || doc.name || doc.document_type || doc.type || `Document ${index + 1}`}
                               </p>
-                            )}
-                            {doc.file_name && (
-                              <p className="text-xs text-gray-500">
-                                File: {doc.file_name}
-                              </p>
-                            )}
-                          </div>
-                        ));
-                      } else {
-                        return <p className="text-sm text-gray-500">No documents found in job data</p>;
+                              {(doc.received_at || doc.received_date || doc.date_received) && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Received: {formatDateTime(doc.received_at || doc.received_date || doc.date_received)}
+                                </p>
+                              )}
+                              {(doc.file_name || doc.filename) && (
+                                <p className="text-xs text-gray-500">
+                                  File: {doc.file_name || doc.filename}
+                                </p>
+                              )}
+                            </div>
+                          ));
+                        }
                       }
+
+                      // Show available keys for debugging
+                      const allKeys = Object.keys(job);
+                      console.log('🔍 All available job keys:', allKeys);
+                      const docRelatedKeys = allKeys.filter(key =>
+                        key.toLowerCase().includes('doc') ||
+                        key.toLowerCase().includes('file') ||
+                        key.toLowerCase().includes('attach')
+                      );
+
+                      return (
+                        <div className="text-sm text-gray-500">
+                          <p>No documents found</p>
+                          <p className="text-xs mt-1">Available doc-related keys: {docRelatedKeys.join(', ') || 'none'}</p>
+                        </div>
+                      );
                     })()}
                   </div>
                 </div>
