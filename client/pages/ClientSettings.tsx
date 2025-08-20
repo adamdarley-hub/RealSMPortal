@@ -176,7 +176,7 @@ export default function ClientSettings() {
       });
 
       const responseData = await response.json();
-      console.log('📡 ServeManager response:', responseData);
+      console.log('��� ServeManager response:', responseData);
 
       if (response.ok && responseData.success) {
         // ServeManager update successful
@@ -389,7 +389,7 @@ export default function ClientSettings() {
               Contact Information
             </CardTitle>
             <CardDescription>
-              Update your contact details. Changes will be saved to ServeManager and synchronized across the system.
+              Your contact information on file. Contact information cannot be changed from the client portal.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -401,7 +401,8 @@ export default function ClientSettings() {
                   <Input
                     id="phone"
                     value={contactInfo.phone}
-                    onChange={(e) => handleContactInfoChange('phone', e.target.value)}
+                    disabled
+                    className="bg-muted"
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -414,7 +415,8 @@ export default function ClientSettings() {
                   <Input
                     id="address"
                     value={contactInfo.address}
-                    onChange={(e) => handleContactInfoChange('address', e.target.value)}
+                    disabled
+                    className="bg-muted"
                     placeholder="123 Main Street"
                   />
                 </div>
@@ -423,48 +425,46 @@ export default function ClientSettings() {
               <div className="space-y-2">
                 <Label htmlFor="city">City</Label>
                 <Input
-                  id="city"
-                  value={contactInfo.city}
-                  onChange={(e) => handleContactInfoChange('city', e.target.value)}
-                  placeholder="New York"
-                />
+                id="city"
+                value={contactInfo.city}
+                disabled
+                className="bg-muted"
+                placeholder="New York"
+              />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="state">State</Label>
                 <Input
-                  id="state"
-                  value={contactInfo.state}
-                  onChange={(e) => handleContactInfoChange('state', e.target.value)}
-                  placeholder="NY"
-                />
+                id="state"
+                value={contactInfo.state}
+                disabled
+                className="bg-muted"
+                placeholder="NY"
+              />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="zip">ZIP Code</Label>
                 <Input
-                  id="zip"
-                  value={contactInfo.zip}
-                  onChange={(e) => handleContactInfoChange('zip', e.target.value)}
-                  placeholder="10001"
-                />
+                id="zip"
+                value={contactInfo.zip}
+                disabled
+                className="bg-muted"
+                placeholder="10001"
+              />
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <Button onClick={saveContactInfo} disabled={isSaving}>
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Contact Info
-                  </>
-                )}
-              </Button>
+            <div className="flex items-center gap-2 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="text-gray-600">
+                <Phone className="w-5 h-5" />
+              </div>
+              <div className="text-sm text-gray-800">
+                <strong>Contact Information:</strong> Read-only display from ServeManager.
+                <br />
+                Contact your account administrator or update directly in ServeManager to make changes.
+              </div>
             </div>
           </CardContent>
         </Card>
