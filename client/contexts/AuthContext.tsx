@@ -135,6 +135,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (foundClient) {
           console.log('✅ Database client login successful:', foundClient);
+          console.log('📞 Client contact data debug:', {
+            phone: foundClient.phone,
+            address: foundClient.address,
+            fullClient: foundClient
+          });
 
           // Create user object from client data
           const clientUser: User = {
@@ -152,6 +157,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               zip: foundClient.address?.zip || ''
             }
           };
+
+          console.log('👤 Created user object with contact info:', clientUser.client_contact);
 
           setUser(clientUser);
           localStorage.setItem('serveportal_user', JSON.stringify(clientUser));
