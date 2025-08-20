@@ -392,7 +392,7 @@ export default function ClientSettings() {
               Contact Information
             </CardTitle>
             <CardDescription>
-              Update your contact details. Changes will be synchronized with ServeManager.
+              Update your contact details. Phone number changes will be synchronized with ServeManager. Address changes may need to be updated directly in ServeManager.
             </CardDescription>
             {user?.client_id && localStorage.getItem(`contact_info_${user.client_id}`) && (
               <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
