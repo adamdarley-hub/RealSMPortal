@@ -921,18 +921,28 @@ export default function ClientJobDetail() {
                     <label className="text-sm font-medium text-gray-500">Received Date</label>
                     <p className="text-sm">
                       {(() => {
-                        console.log('🔍 Job data for received date:', job);
-                        console.log('🔍 documents_to_be_served_attributes:', job.documents_to_be_served_attributes);
-                        console.log('🔍 All job keys:', Object.keys(job));
+                        // Use the same logic as the documents section to find received date
+                        const possibleDocFields = [
+                          'documents_to_be_served_attributes',
+                          'documents_to_be_served',
+                          'documents',
+                          'docs_to_be_served',
+                          'service_documents',
+                          'court_documents',
+                          'attachments',
+                          'files'
+                        ];
 
-                        // Look for documents_to_be_served_attributes received date
-                        if (job.documents_to_be_served_attributes && Array.isArray(job.documents_to_be_served_attributes) && job.documents_to_be_served_attributes.length > 0) {
-                          const firstDoc = job.documents_to_be_served_attributes[0];
-                          console.log('🔍 First document:', firstDoc);
-                          if (firstDoc.received_at) {
-                            return formatDateTime(firstDoc.received_at);
+                        for (const fieldName of possibleDocFields) {
+                          const field = (job as any)[fieldName];
+                          if (field && Array.isArray(field) && field.length > 0) {
+                            const firstDoc = field[0];
+                            if (firstDoc.received_at || firstDoc.received_date || firstDoc.date_received) {
+                              return formatDateTime(firstDoc.received_at || firstDoc.received_date || firstDoc.date_received);
+                            }
                           }
                         }
+
                         // Fallback to job created date if no documents received date
                         return formatDateTime(job.created_at);
                       })()}
