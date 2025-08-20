@@ -244,11 +244,17 @@ export function initializeDatabase() {
 
 // Close database connection
 export function closeDatabase() {
-  sqlite.close();
+  if (sqlite) {
+    sqlite.close();
+  }
 }
 
 // Get database stats
 export function getDatabaseStats() {
+  if (!sqlite) {
+    return [];
+  }
+
   const stats = sqlite.prepare(`
     SELECT 
       'jobs' as table_name, COUNT(*) as count FROM jobs
