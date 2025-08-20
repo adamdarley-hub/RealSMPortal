@@ -8,4 +8,4 @@ export const invoices = null;
 export const contacts = null;
 export const sync_log = null;
 
-console.log('Schema module loaded in serverless mode (no local database)');
+console.log("Schema module loaded in serverless mode (no local database)");
