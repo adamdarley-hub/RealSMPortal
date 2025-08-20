@@ -136,7 +136,7 @@ export default function ClientSettings() {
 
     setIsSaving(true);
     try {
-      // Update ServeManager client record
+      // First try to update ServeManager client record
       const response = await fetch(`/api/servemanager/clients/${user.client_id}`, {
         method: 'PUT',
         headers: {
@@ -152,30 +152,67 @@ export default function ClientSettings() {
       });
 
       if (response.ok) {
+        // Update successful - update local user object
+        const updatedUser = {
+          ...user,
+          client_contact: {
+            ...contactInfo
+          }
+        };
+        localStorage.setItem('serveportal_user', JSON.stringify(updatedUser));
+
         toast({
           title: "Contact Information Updated",
           description: "Your contact information has been successfully updated in ServeManager.",
         });
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        if (errorData.error?.includes('not supported')) {
-          throw new Error('Contact updates not supported by ServeManager API');
-        }
-        throw new Error(errorData.message || 'Failed to update ServeManager client');
+        // ServeManager update failed - fall back to local storage
+        console.log('ServeManager update failed, storing locally');
+
+        // Store contact info locally
+        const localContactKey = `contact_info_${user.client_id}`;
+        localStorage.setItem(localContactKey, JSON.stringify(contactInfo));
+
+        // Update user object in localStorage
+        const updatedUser = {
+          ...user,
+          client_contact: {
+            ...contactInfo
+          }
+        };
+        localStorage.setItem('serveportal_user', JSON.stringify(updatedUser));
+
+        toast({
+          title: "Contact Information Saved Locally",
+          description: "Your contact information has been saved to your local profile. To update ServeManager, please contact your administrator.",
+          variant: "default"
+        });
       }
     } catch (error) {
       console.error('Error updating contact info:', error);
 
-      if (error instanceof Error && error.message.includes('not supported')) {
+      // Even if network fails, save locally
+      try {
+        const localContactKey = `contact_info_${user.client_id}`;
+        localStorage.setItem(localContactKey, JSON.stringify(contactInfo));
+
+        const updatedUser = {
+          ...user,
+          client_contact: {
+            ...contactInfo
+          }
+        };
+        localStorage.setItem('serveportal_user', JSON.stringify(updatedUser));
+
         toast({
-          title: "Update Not Supported",
-          description: "Contact information updates are not supported via the ServeManager API. Please contact your administrator to update this information directly in ServeManager.",
-          variant: "destructive"
+          title: "Contact Information Saved Locally",
+          description: "Your contact information has been saved to your local profile. Network issues prevented updating ServeManager.",
+          variant: "default"
         });
-      } else {
+      } catch (localError) {
         toast({
-          title: "Update Failed",
-          description: "There was an error updating your contact information. Please try again.",
+          title: "Save Failed",
+          description: "Unable to save contact information. Please try again.",
           variant: "destructive"
         });
       }
