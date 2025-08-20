@@ -5,8 +5,14 @@
   "framework": null,
   "functions": {
     "netlify/functions/api.ts": {
+      "runtime": "nodejs22.x",
       "memory": 1024,
       "maxDuration": 30
+    }
+  },
+  "build": {
+    "env": {
+      "NODE_VERSION": "22"
     }
   },
   "rewrites": [
