@@ -271,5 +271,7 @@ export function getDatabaseStats() {
   return stats;
 }
 
-// Initialize on import
-initializeDatabase();
+// Initialize database if SQLite is available
+if (sqlite) {
+  initializeDatabase();
+}
