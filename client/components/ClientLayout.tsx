@@ -17,7 +17,6 @@ import {
 const navigation = [
   { name: "My Jobs", href: "/client", icon: FileText },
   { name: "Invoices", href: "/client/invoices", icon: CreditCard },
-  { name: "Profile", href: "/client/profile", icon: User },
   { name: "Settings", href: "/client/settings", icon: Settings },
 ];
 
