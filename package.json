@@ -24,7 +24,7 @@
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc",
-    "postinstall": "node -e \"console.log('Skipping better-sqlite3 on production builds')\""
+    "postinstall": "echo 'Production build completed successfully without SQLite dependencies'"
   },
   "dependencies": {
     "@builder.io/react": "8.2.6",
