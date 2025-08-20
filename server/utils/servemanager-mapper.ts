@@ -177,8 +177,11 @@ export function mapJobFromServeManager(rawJob: any): ServeManagerJob {
     instructions: rawJob.service_instructions || rawJob.instructions || rawJob.special_instructions,
     
     // Attempts
-    attempts: rawJob.attempts || rawJob.service_attempts || [],
-    attempt_count: rawJob.attempt_count || rawJob.attempts?.length || 0,
+    attempts: rawJob.attempts || rawJob.service_attempts || rawJob.job_attempts || [],
+    attempt_count: (() => {
+      const attempts = rawJob.attempts || rawJob.service_attempts || rawJob.job_attempts || [];
+      return Array.isArray(attempts) ? attempts.length : (rawJob.attempt_count || 0);
+    })(),
     last_attempt: rawJob.last_attempt || rawJob.last_attempt_date,
     last_attempt_date: rawJob.last_attempt_date || rawJob.last_attempt,
     
