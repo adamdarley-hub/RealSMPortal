@@ -366,7 +366,26 @@ export default function ClientSettings() {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-between">
+              <Button
+                variant="outline"
+                onClick={reloadUserData}
+                disabled={isLoading}
+                className="flex items-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <Settings className="w-4 h-4" />
+                    Refresh from ServeManager
+                  </>
+                )}
+              </Button>
+
               <Button onClick={saveContactInfo} disabled={isSaving}>
                 {isSaving ? (
                   <>
