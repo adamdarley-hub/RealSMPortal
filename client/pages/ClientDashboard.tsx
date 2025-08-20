@@ -437,14 +437,7 @@ export default function ClientDashboard() {
                     <TableCell>
                       <div className="text-center">
                         <span className="text-sm font-medium">
-                          {(() => {
-                            // Temporary: Since the dashboard API doesn't have attempts data,
-                            // let's use a simple calculation based on job number to demonstrate
-                            // that the element works. Then we can fix the backend.
-                            const jobNum = parseInt(job.job_number) || 0;
-                            const attemptCount = jobNum % 5 + 1; // Will give 1-5 attempts
-                            return attemptCount;
-                          })()}
+                          {(job as any).attempt_count || 0}
                         </span>
                       </div>
                     </TableCell>
