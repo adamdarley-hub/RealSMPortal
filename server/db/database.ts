@@ -52,6 +52,11 @@ if (Database && drizzle) {
 
 // Initialize database (create tables if they don't exist)
 export function initializeDatabase() {
+  if (!sqlite) {
+    console.log('Skipping database initialization - SQLite not available');
+    return;
+  }
+
   try {
     console.log('Initializing database...');
     
