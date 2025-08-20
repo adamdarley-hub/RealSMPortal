@@ -899,28 +899,6 @@ export default function ClientJobDetail() {
           </div>
         </div>
 
-        {/* Job Overview Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FileText className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">{job.service_type || 'Process Service'}</CardTitle>
-                  <CardDescription>
-                    Created {formatDate(job.created_at)} • Due {formatDate(job.due_date)}
-                  </CardDescription>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(job.amount || job.price || job.total)}</p>
-                <p className="text-sm text-gray-500">Service Fee</p>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="job-info" className="space-y-6">
