@@ -161,7 +161,7 @@ export default function Layout({ children }: LayoutProps) {
               </Button>
               
               <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">ServePortal Admin</span>
+                <span className="font-medium text-foreground">Allegiance Admin</span>
                 <span>•</span>
                 <span className="capitalize">{user?.role} Portal</span>
               </div>
