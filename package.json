@@ -23,7 +23,8 @@
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "postinstall": "node -e \"console.log('Skipping better-sqlite3 on production builds')\""
   },
   "dependencies": {
     "@builder.io/react": "8.2.6",
