@@ -1200,12 +1200,23 @@ export default function ClientJobDetail() {
                               </div>
                             </div>
 
-                            <div>
-                              <label className="text-sm font-medium text-gray-700">Attempt Notes</label>
-                              <div className="text-sm text-gray-900 mt-1 p-3 bg-gray-50 rounded-md">
-                                {attempt.details?.description || attempt.notes || 'No description available'}
-                              </div>
-                            </div>
+                            {/* Attempt Notes - only show when there are actual notes */}
+                            {(() => {
+                              const notes = attempt.details?.description || attempt.notes || '';
+                              // Only show if there are actual notes and they're not the default "No additional details"
+                              if (!notes || notes === 'No additional details' || notes === 'No description available') {
+                                return null;
+                              }
+
+                              return (
+                                <div>
+                                  <label className="text-sm font-medium text-gray-700">Attempt Notes</label>
+                                  <div className="text-sm text-gray-900 mt-1 p-3 bg-gray-50 rounded-md">
+                                    {notes}
+                                  </div>
+                                </div>
+                              );
+                            })()}
 
                             {/* Recipient Description - only for successful serves */}
                             {(() => {
