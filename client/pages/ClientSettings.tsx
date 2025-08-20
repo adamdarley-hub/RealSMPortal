@@ -392,8 +392,16 @@ export default function ClientSettings() {
               Contact Information
             </CardTitle>
             <CardDescription>
-              Update your contact details. Phone number changes will be synchronized with ServeManager. Address changes may need to be updated directly in ServeManager.
+              Update your contact details for local use. To update ServeManager, please make changes directly in the ServeManager admin interface.
             </CardDescription>
+            <div className="flex items-center gap-2 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="text-amber-600">
+                <Settings className="w-4 h-4" />
+              </div>
+              <div className="text-sm text-amber-800">
+                <strong>ServeManager Limitation:</strong> Contact information updates via API are not supported by ServeManager. Changes are saved locally for portal use only.
+              </div>
+            </div>
             {user?.client_id && localStorage.getItem(`contact_info_${user.client_id}`) && (
               <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="text-blue-600">
