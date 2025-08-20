@@ -158,6 +158,8 @@ export default function ClientSettings() {
 
     setIsSaving(true);
     try {
+      console.log('💾 Attempting to save contact info to ServeManager...');
+
       // Try to update ServeManager using the proper API structure
       const response = await fetch(`/api/servemanager/clients/${user.client_id}`, {
         method: 'PUT',
@@ -173,8 +175,12 @@ export default function ClientSettings() {
         })
       });
 
-      if (response.ok) {
-        const responseData = await response.json();
+      const responseData = await response.json();
+      console.log('📡 ServeManager response:', responseData);
+
+      if (response.ok && responseData.success) {
+        // ServeManager update successful
+        console.log('✅ ServeManager update successful!');
 
         // Update local user object
         const updatedUser = {
@@ -185,20 +191,20 @@ export default function ClientSettings() {
         };
         localStorage.setItem('serveportal_user', JSON.stringify(updatedUser));
 
-        // Store contact info locally
+        // Clear any local override data since we're now synced
         const localContactKey = `contact_info_${user.client_id}`;
-        localStorage.setItem(localContactKey, JSON.stringify(contactInfo));
+        localStorage.removeItem(localContactKey);
 
         toast({
-          title: "Contact Information Saved",
-          description: "Your contact information has been saved locally. To update ServeManager, please use the ServeManager admin interface.",
+          title: "Contact Information Updated",
+          description: "Your contact information has been successfully updated in ServeManager.",
+          variant: "default"
         });
       } else {
         // ServeManager update failed - fall back to local storage
-        console.log('ServeManager update failed, storing locally');
-        const errorData = await response.json().catch(() => ({}));
+        console.log('⚠️ ServeManager update failed, storing locally');
 
-        // Store contact info locally
+        // Store contact info locally as fallback
         const localContactKey = `contact_info_${user.client_id}`;
         localStorage.setItem(localContactKey, JSON.stringify(contactInfo));
 
@@ -213,12 +219,12 @@ export default function ClientSettings() {
 
         toast({
           title: "Saved Locally",
-          description: `ServeManager update failed (${errorData.message || 'Unknown error'}). Contact information saved locally.`,
+          description: responseData.message || "ServeManager update failed. Contact information saved locally.",
           variant: "default"
         });
       }
     } catch (error) {
-      console.error('Error updating contact info:', error);
+      console.error('❌ Error updating contact info:', error);
 
       // Even if network fails, save locally
       try {
@@ -383,26 +389,8 @@ export default function ClientSettings() {
               Contact Information
             </CardTitle>
             <CardDescription>
-              Update your contact details for local use. To update ServeManager, please make changes directly in the ServeManager admin interface.
+              Update your contact details. Changes will be saved to ServeManager and synchronized across the system.
             </CardDescription>
-            <div className="flex items-center gap-2 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="text-amber-600">
-                <Settings className="w-4 h-4" />
-              </div>
-              <div className="text-sm text-amber-800">
-                <strong>ServeManager Limitation:</strong> Contact information updates via API are not supported by ServeManager. Changes are saved locally for portal use only.
-              </div>
-            </div>
-            {user?.client_id && localStorage.getItem(`contact_info_${user.client_id}`) && (
-              <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="text-blue-600">
-                  <Settings className="w-4 h-4" />
-                </div>
-                <div className="text-sm text-blue-800">
-                  <strong>Local Changes:</strong> Your contact information has local changes that haven't been synced to ServeManager yet.
-                </div>
-              </div>
-            )}
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -473,7 +461,7 @@ export default function ClientSettings() {
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    Save Locally
+                    Save Contact Info
                   </>
                 )}
               </Button>
