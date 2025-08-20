@@ -622,7 +622,7 @@ export default function ClientJobDetail() {
         const data = await response.json();
         setJobAffidavits(data.affidavits || []);
         setCurrentAffidavitIndex(0);
-        console.log('📜 Affidavits loaded:', data.affidavits?.length || 0);
+        console.log('��� Affidavits loaded:', data.affidavits?.length || 0);
       } else {
         console.warn('��� Affidavits fetch failed:', response.status);
         setJobAffidavits([]);
@@ -1201,7 +1201,7 @@ export default function ClientJobDetail() {
                             </div>
 
                             <div>
-                              <label className="text-sm font-medium text-gray-700">Service Description</label>
+                              <label className="text-sm font-medium text-gray-700">Attempt Notes</label>
                               <div className="text-sm text-gray-900 mt-1 p-3 bg-gray-50 rounded-md">
                                 {attempt.details?.description || attempt.notes || 'No description available'}
                               </div>
