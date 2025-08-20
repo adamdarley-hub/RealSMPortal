@@ -1157,19 +1157,30 @@ export const updateClient: RequestHandler = async (req, res) => {
     const clientData = req.body;
 
     console.log(`🔄 Updating client ${id} contact information:`, clientData);
+    console.log(`📡 Attempting ServeManager API call: PUT /clients/${id}`);
 
     const data = await makeServeManagerRequest(`/clients/${id}`, {
       method: 'PUT',
       body: JSON.stringify(clientData),
     });
 
-    console.log(`✅ Client ${id} updated successfully`);
+    console.log(`✅ Client ${id} updated successfully:`, data);
     res.json(data);
   } catch (error) {
-    console.error('Error updating client:', error);
+    console.error('❌ Error updating client - Full error details:', error);
+
+    // If it's a ServeManager API error, let's see the specific error message
+    if (error instanceof Error) {
+      console.error('❌ Error message:', error.message);
+      if (error.message.includes('ServeManager API error')) {
+        console.error('❌ This appears to be a ServeManager API error - the endpoint may not exist or the request format is incorrect');
+      }
+    }
+
     res.status(500).json({
       error: 'Failed to update client in ServeManager',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 };
