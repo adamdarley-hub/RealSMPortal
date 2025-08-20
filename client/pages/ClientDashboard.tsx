@@ -120,6 +120,17 @@ export default function ClientDashboard() {
       }
 
       const data = await response.json();
+      console.log('🔍 Raw API response:', data);
+      console.log('🔍 Jobs array:', data.jobs);
+      if (data.jobs && data.jobs.length > 0) {
+        const firstJob = data.jobs[0];
+        console.log('🔍 First job structure:', firstJob);
+        console.log('🔍 First job keys:', Object.keys(firstJob));
+        console.log('🔍 attempts field:', firstJob.attempts);
+        console.log('🔍 attempt_count field:', firstJob.attempt_count);
+        console.log('🔍 service_attempts field:', firstJob.service_attempts);
+        console.log('🔍 All fields containing "attempt":', Object.keys(firstJob).filter(key => key.toLowerCase().includes('attempt')));
+      }
       setJobs(data.jobs || []);
 
       if (forceSync) {
