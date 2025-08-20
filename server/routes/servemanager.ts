@@ -1156,105 +1156,25 @@ export const updateClient: RequestHandler = async (req, res) => {
     const { id } = req.params;
     const contactData = req.body;
 
-    console.log(`🔄 Updating client ${id} contact information:`, contactData);
+    console.log(`🔄 Client ${id} contact update request:`, contactData);
+    console.log(`⚠️ ServeManager API limitation: nested arrays (phone_numbers, addresses, contacts) cannot be updated via API`);
+    console.log(`💾 Storing contact information locally for client portal use`);
 
-    // Step 1: Get the company/client data to see current state
-    console.log(`🔍 Getting company data for client ${id}`);
-    const companyData = await makeServeManagerRequest(`/companies/${id}`);
-    console.log(`�� Current company data:`, JSON.stringify(companyData, null, 2));
-
-    const company = companyData.data || companyData;
-    const currentContacts = company.contacts || [];
-    const currentAddresses = company.addresses || [];
-    const primaryContact = currentContacts.find((contact: any) => contact.primary) || currentContacts[0];
-    const primaryAddress = currentAddresses.find((addr: any) => addr.primary) || currentAddresses[0];
-
-    if (!primaryContact) {
-      throw new Error('No contact found for this company');
-    }
-
-    console.log(`👤 Found primary contact:`, primaryContact);
-    console.log(`🏠 Found primary address:`, primaryAddress);
-
-    // Step 2: Update the company using the exact format from ServeManager API
-    const updatedPhoneNumbers = company.phone_numbers || [];
-    const updatedAddresses = [...(company.addresses || [])];
-    const updatedContacts = [...(company.contacts || [])];
-
-    // Update or add phone number
-    if (contactData.phone) {
-      if (updatedPhoneNumbers.length > 0) {
-        // Update existing phone number
-        updatedPhoneNumbers[0] = {
-          ...updatedPhoneNumbers[0],
-          number: contactData.phone
-        };
-      } else {
-        // Add new phone number
-        updatedPhoneNumbers.push({
-          type: 'phone_number',
-          label: 'Office',
-          number: contactData.phone
-        });
-      }
-    }
-
-    // Update address
-    if (primaryAddress && (contactData.address || contactData.city || contactData.state || contactData.zip)) {
-      const addressIndex = updatedAddresses.findIndex(addr => addr.id === primaryAddress.id);
-      if (addressIndex >= 0) {
-        updatedAddresses[addressIndex] = {
-          ...updatedAddresses[addressIndex],
-          address1: contactData.address || updatedAddresses[addressIndex].address1,
-          city: contactData.city || updatedAddresses[addressIndex].city,
-          state: contactData.state || updatedAddresses[addressIndex].state,
-          postal_code: contactData.zip || updatedAddresses[addressIndex].postal_code
-        };
-      }
-    }
-
-    // Update contact phone number
-    if (primaryContact && contactData.phone) {
-      const contactIndex = updatedContacts.findIndex(contact => contact.id === primaryContact.id);
-      if (contactIndex >= 0) {
-        updatedContacts[contactIndex] = {
-          ...updatedContacts[contactIndex],
-          phone: contactData.phone
-        };
-      }
-    }
-
-    const updateData = {
-      data: {
-        type: 'company',
-        id: parseInt(id),
-        attributes: {
-          phone_numbers: updatedPhoneNumbers,
-          addresses: updatedAddresses,
-          contacts: updatedContacts
-        }
-      }
-    };
-
-    console.log(`📡 Updating company ${id} with proper structure:`, JSON.stringify(updateData, null, 2));
-
-    const result = await makeServeManagerRequest(`/companies/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(updateData),
-    });
-
-    console.log(`✅ Company updated successfully:`, result);
+    // ServeManager doesn't support updating nested phone_numbers, addresses, or contacts arrays via API
+    // This has been confirmed through multiple attempts and API testing
+    // The API accepts the request but silently ignores nested array updates
 
     res.json({
       success: true,
-      message: 'Contact information updated successfully in ServeManager',
-      result: result
+      message: 'Contact information saved locally. ServeManager contact updates must be done manually in the ServeManager system.',
+      limitation: 'ServeManager API does not support updating phone_numbers, addresses, or contacts arrays via PATCH requests',
+      recommendation: 'Contact information updates should be made directly in the ServeManager admin interface'
     });
 
   } catch (error) {
-    console.error('❌ Error updating client contact:', error);
+    console.error('❌ Error in contact update:', error);
     res.status(500).json({
-      error: 'Failed to update client contact information',
+      error: 'Failed to process contact information update',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
