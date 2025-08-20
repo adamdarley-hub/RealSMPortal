@@ -7,6 +7,13 @@ export interface User {
   role: 'admin' | 'client';
   company?: string;
   client_id?: string;
+  client_contact?: {
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+  };
 }
 
 interface AuthContextType {
