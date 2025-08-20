@@ -109,6 +109,11 @@ export class CacheService {
   }
 
   async getJobFromCache(jobId: string): Promise<any | null> {
+    if (!this.isDatabaseAvailable()) {
+      console.log('Database not available, returning null for job cache');
+      return null;
+    }
+
     try {
       const cachedJobs = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
 
