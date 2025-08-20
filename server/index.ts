@@ -15,7 +15,8 @@ import {
   getContacts,
   getCourtCases,
   createJob,
-  updateJob
+  updateJob,
+  updateClient
 } from "./routes/servemanager";
 import {
   getJobInvoices,
