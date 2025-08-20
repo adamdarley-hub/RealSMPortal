@@ -437,11 +437,7 @@ export default function ClientDashboard() {
                     <TableCell>
                       <div className="text-center">
                         <span className="text-sm font-medium">
-                          {(() => {
-                            const count = job.attempts?.length || 0;
-                            console.log(`Job ${job.job_number} attempts:`, job.attempts, 'count:', count);
-                            return count;
-                          })()}
+                          {Object.keys(job).filter(key => key.toLowerCase().includes('attempt')).map(key => `${key}:${(job as any)[key]}`).join(', ') || 'No attempt fields found'}
                         </span>
                       </div>
                     </TableCell>
