@@ -111,18 +111,9 @@ export default function ClientDashboard() {
         }
       }
 
-      // Try ServeManager endpoint first for accurate attempt counts, fallback to cached
-      let response;
-      try {
-        response = await fetch(`/api/servemanager/jobs?client_id=${user.client_id}`);
-        if (!response.ok) {
-          throw new Error('ServeManager endpoint failed');
-        }
-      } catch (smError) {
-        console.log('ServeManager endpoint failed, using cached data:', smError);
-        const cacheBuster = forceSync ? `&t=${Date.now()}` : '';
-        response = await fetch(`/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`);
-      }
+      // Add cache busting timestamp to force fresh data
+      const cacheBuster = forceSync ? `&t=${Date.now()}` : '';
+      const response = await fetch(`/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`);
 
       if (!response.ok) {
         throw new Error('Failed to load jobs');
