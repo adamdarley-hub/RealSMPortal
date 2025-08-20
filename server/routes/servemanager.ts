@@ -1161,7 +1161,7 @@ export const updateClient: RequestHandler = async (req, res) => {
     // Step 1: Get the company/client data to see current state
     console.log(`🔍 Getting company data for client ${id}`);
     const companyData = await makeServeManagerRequest(`/companies/${id}`);
-    console.log(`📋 Current company data:`, JSON.stringify(companyData, null, 2));
+    console.log(`�� Current company data:`, JSON.stringify(companyData, null, 2));
 
     const company = companyData.data || companyData;
     const currentContacts = company.contacts || [];
@@ -1236,23 +1236,20 @@ export const updateClient: RequestHandler = async (req, res) => {
       }
     };
 
-    console.log(`📊 Update results:`, updateData);
+    console.log(`📡 Updating company ${id} with proper structure:`, JSON.stringify(updateData, null, 2));
 
-    if (updateData.contact_update === 'success' || updateData.address_update === 'success') {
-      res.json({
-        success: true,
-        message: 'Contact information updated successfully in ServeManager',
-        contact_update: updateData.contact_update,
-        address_update: updateData.address_update
-      });
-    } else {
-      res.status(500).json({
-        error: 'Failed to update contact information',
-        message: 'Neither contact nor address could be updated',
-        contact_update: updateData.contact_update,
-        address_update: updateData.address_update
-      });
-    }
+    const result = await makeServeManagerRequest(`/companies/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updateData),
+    });
+
+    console.log(`✅ Company updated successfully:`, result);
+
+    res.json({
+      success: true,
+      message: 'Contact information updated successfully in ServeManager',
+      result: result
+    });
 
   } catch (error) {
     console.error('❌ Error updating client contact:', error);
