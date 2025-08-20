@@ -74,9 +74,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <div className="flex flex-col h-full">
               <div className="p-6 border-b">
                 <img
-                  src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=200"
+                  src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=300"
                   alt="Allegiance Legal Solutions"
-                  className="h-6 w-auto"
+                  className="h-10 w-auto max-w-full"
                 />
               </div>
               <nav className="flex-1 px-4 py-6 space-y-2">
