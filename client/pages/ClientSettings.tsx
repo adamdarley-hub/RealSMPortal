@@ -50,6 +50,39 @@ export default function ClientSettings() {
     smsNotifications: false
   });
 
+  // Function to reload user data from API
+  const reloadUserData = async () => {
+    if (!user?.email) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/clients');
+      const data = await response.json();
+
+      if (data.clients) {
+        const foundClient = data.clients.find((client: any) =>
+          client.email?.toLowerCase() === user.email.toLowerCase()
+        );
+
+        if (foundClient) {
+          console.log('🔄 Refreshed client data from API:', foundClient);
+          // Update contact info from fresh API data
+          setContactInfo({
+            phone: foundClient.phone || '',
+            address: foundClient.address?.street || '',
+            city: foundClient.address?.city || '',
+            state: foundClient.address?.state || '',
+            zip: foundClient.address?.zip || ''
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error reloading user data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Load user contact info on mount
   useEffect(() => {
     if (user) {
@@ -58,13 +91,22 @@ export default function ClientSettings() {
       const clientContact = (user as any).client_contact || {};
       console.log('📞 Loading contact info from client_contact:', clientContact);
 
-      setContactInfo({
+      const contactFromUser = {
         phone: clientContact.phone || '',
         address: clientContact.address || '',
         city: clientContact.city || '',
         state: clientContact.state || '',
         zip: clientContact.zip || ''
-      });
+      };
+
+      // If contact info is empty, try to reload from API
+      const hasContactData = Object.values(contactFromUser).some(value => value.trim() !== '');
+      if (!hasContactData) {
+        console.log('⚠️ No contact data in user object, reloading from API...');
+        reloadUserData();
+      } else {
+        setContactInfo(contactFromUser);
+      }
     }
   }, [user]);
 
