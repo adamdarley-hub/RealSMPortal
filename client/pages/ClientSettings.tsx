@@ -77,11 +77,10 @@ export default function ClientSettings() {
   };
 
   const saveContactInfo = async () => {
-    const clientContact = (user as any)?.client_contact;
-    if (!clientContact?.id) {
+    if (!user?.client_id) {
       toast({
         title: "Error",
-        description: "Unable to update contact information. Client contact ID not found.",
+        description: "Unable to update contact information. Client ID not found.",
         variant: "destructive"
       });
       return;
@@ -89,9 +88,9 @@ export default function ClientSettings() {
 
     setIsSaving(true);
     try {
-      // Update ServeManager client contact record
-      const response = await fetch(`/api/servemanager/client_contacts/${clientContact.id}`, {
-        method: 'PATCH',
+      // Update ServeManager client record
+      const response = await fetch(`/api/servemanager/clients/${user.client_id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -110,7 +109,7 @@ export default function ClientSettings() {
           description: "Your contact information has been successfully updated in ServeManager.",
         });
       } else {
-        throw new Error('Failed to update ServeManager client contact');
+        throw new Error('Failed to update ServeManager client');
       }
     } catch (error) {
       console.error('Error updating contact info:', error);
