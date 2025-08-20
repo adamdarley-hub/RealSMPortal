@@ -135,7 +135,7 @@ export default function ClientDashboard() {
       if (forceSync) {
         console.log('🔄 Forcing data sync from ServeManager...');
         try {
-          await fetch('/api/v2/sync', { method: 'POST' });
+          await fetch('/api/sync/legacy', { method: 'POST' });
           console.log('✅ Data sync completed');
         } catch (syncError) {
           console.warn('⚠��� Sync failed, continuing with cache:', syncError);
