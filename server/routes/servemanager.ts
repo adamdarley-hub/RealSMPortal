@@ -1156,9 +1156,20 @@ export const updateClient: RequestHandler = async (req, res) => {
     const { id } = req.params;
     const clientData = req.body;
 
-    console.log(`🔄 Updating client ${id} contact information:`, clientData);
-    console.log(`📡 Attempting ServeManager API call: PUT /clients/${id}`);
+    console.log(`🔄 Attempting to update client ${id} contact information:`, clientData);
+    console.log(`📡 Testing ServeManager API call: PUT /clients/${id}`);
 
+    // First, let's check if we can even GET this specific client to verify the endpoint exists
+    try {
+      console.log(`🔍 First checking if client ${id} exists with GET /clients/${id}`);
+      const getClientData = await makeServeManagerRequest(`/clients/${id}`);
+      console.log(`✅ Client ${id} found:`, getClientData);
+    } catch (getError) {
+      console.error(`❌ Could not GET client ${id}:`, getError);
+      throw new Error(`Client ${id} not found or endpoint not supported`);
+    }
+
+    // Now try the update
     const data = await makeServeManagerRequest(`/clients/${id}`, {
       method: 'PUT',
       body: JSON.stringify(clientData),
@@ -1173,13 +1184,14 @@ export const updateClient: RequestHandler = async (req, res) => {
     if (error instanceof Error) {
       console.error('❌ Error message:', error.message);
       if (error.message.includes('ServeManager API error')) {
-        console.error('❌ This appears to be a ServeManager API error - the endpoint may not exist or the request format is incorrect');
+        console.error('❌ ServeManager API error - likely the endpoint does not support updates');
       }
     }
 
+    // For now, return a more informative error
     res.status(500).json({
-      error: 'Failed to update client in ServeManager',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      error: 'Client contact updates not supported',
+      message: 'ServeManager API does not appear to support client contact updates via API. Contact information may need to be updated directly in ServeManager.',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
