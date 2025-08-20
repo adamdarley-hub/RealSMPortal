@@ -15,10 +15,18 @@ interface SyncResult {
 }
 
 export class CacheService {
-  
+
+  private isDatabaseAvailable(): boolean {
+    return db !== null && db !== undefined;
+  }
+
   // =================== JOBS ===================
-  
+
   async getJobsFromCache(filters: any = {}): Promise<any[]> {
+    if (!this.isDatabaseAvailable()) {
+      console.log('Database not available, returning empty array for jobs cache');
+      return [];
+    }
     try {
       let query = db.select().from(jobs);
       
