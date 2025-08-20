@@ -86,9 +86,8 @@ export default function Layout({ children }: LayoutProps) {
               <img
                 src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=200"
                 alt="Allegiance Legal Solutions"
-                className="h-8 w-auto mb-1"
+                className="h-8 w-auto"
               />
-              <p className="text-xs text-muted-foreground">Process Service Hub</p>
             </div>
           </div>
 
