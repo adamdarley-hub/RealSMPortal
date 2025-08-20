@@ -25,7 +25,7 @@
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc",
-    "postinstall": "echo 'Production build completed successfully without SQLite dependencies'"
+    "postinstall": "echo 'VERCEL DEPLOYMENT - No SQLite dependencies - Node 22.x'"
   },
   "dependencies": {
     "@builder.io/react": "8.2.6",
