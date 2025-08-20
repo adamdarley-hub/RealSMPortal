@@ -120,6 +120,9 @@ export default function ClientDashboard() {
       }
 
       const data = await response.json();
+      console.log('🔍 First job data:', data.jobs?.[0]);
+      console.log('🔍 First job attempt_count:', data.jobs?.[0]?.attempt_count);
+      console.log('🔍 First job attempts:', data.jobs?.[0]?.attempts);
       setJobs(data.jobs || []);
 
       if (forceSync) {
