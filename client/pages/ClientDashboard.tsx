@@ -437,7 +437,11 @@ export default function ClientDashboard() {
                     <TableCell>
                       <div className="text-center">
                         <span className="text-sm font-medium">
-                          {job.attempts?.length || 0}
+                          {(() => {
+                            const count = job.attempts?.length || 0;
+                            console.log(`Job ${job.job_number} attempts:`, job.attempts, 'count:', count);
+                            return count;
+                          })()}
                         </span>
                       </div>
                     </TableCell>
