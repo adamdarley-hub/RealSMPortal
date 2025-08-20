@@ -6,6 +6,16 @@ import { cacheService } from '../services/cache-service';
 // Force a complete refresh - clear cache and resync everything
 export const forceRefresh: RequestHandler = async (req, res) => {
   try {
+    if (!db) {
+      console.log('Database not available, skipping force refresh');
+      return res.json({
+        success: true,
+        message: 'Database not available - running without cache',
+        results: {},
+        duration_ms: 0
+      });
+    }
+
     const startTime = Date.now();
     console.log('🔄 Force refresh requested - clearing cache and resyncing...');
     
