@@ -98,25 +98,36 @@ export default function ClientSettings() {
   useEffect(() => {
     if (user) {
       console.log('🔍 ClientSettings loading user data:', user);
-      // Contact info comes from client_contact object
-      const clientContact = (user as any).client_contact || {};
-      console.log('📞 Loading contact info from client_contact:', clientContact);
 
-      const contactFromUser = {
-        phone: clientContact.phone || '',
-        address: clientContact.address || '',
-        city: clientContact.city || '',
-        state: clientContact.state || '',
-        zip: clientContact.zip || ''
-      };
+      // First check for locally stored contact info
+      const localContactKey = `contact_info_${user.client_id}`;
+      const localContactInfo = localStorage.getItem(localContactKey);
 
-      // If contact info is empty, try to reload from API
-      const hasContactData = Object.values(contactFromUser).some(value => value.trim() !== '');
-      if (!hasContactData) {
-        console.log('⚠️ No contact data in user object, reloading from API...');
-        reloadUserData();
+      if (localContactInfo) {
+        console.log('📱 Loading contact info from local storage');
+        const localContact = JSON.parse(localContactInfo);
+        setContactInfo(localContact);
       } else {
-        setContactInfo(contactFromUser);
+        // Fall back to user object contact info
+        const clientContact = (user as any).client_contact || {};
+        console.log('📞 Loading contact info from client_contact:', clientContact);
+
+        const contactFromUser = {
+          phone: clientContact.phone || '',
+          address: clientContact.address || '',
+          city: clientContact.city || '',
+          state: clientContact.state || '',
+          zip: clientContact.zip || ''
+        };
+
+        // If contact info is empty, try to reload from API
+        const hasContactData = Object.values(contactFromUser).some(value => value.trim() !== '');
+        if (!hasContactData) {
+          console.log('⚠️ No contact data in user object, reloading from API...');
+          reloadUserData();
+        } else {
+          setContactInfo(contactFromUser);
+        }
       }
     }
   }, [user]);
