@@ -176,7 +176,7 @@ export default function ClientSettings() {
       if (response.ok) {
         const responseData = await response.json();
 
-        // Update successful - update local user object
+        // Update local user object
         const updatedUser = {
           ...user,
           client_contact: {
@@ -185,23 +185,14 @@ export default function ClientSettings() {
         };
         localStorage.setItem('serveportal_user', JSON.stringify(updatedUser));
 
-        // Clear any local-only storage since we successfully updated ServeManager
+        // Store contact info locally
         const localContactKey = `contact_info_${user.client_id}`;
-        localStorage.removeItem(localContactKey);
+        localStorage.setItem(localContactKey, JSON.stringify(contactInfo));
 
-        if (responseData.address_note) {
-          // Partial update - phone worked but address needs manual update
-          toast({
-            title: "Phone Number Updated",
-            description: "Your phone number has been updated in ServeManager. Address changes must be made directly in ServeManager.",
-          });
-        } else {
-          // Full update successful
-          toast({
-            title: "Contact Information Updated",
-            description: "Your contact information has been successfully updated in ServeManager.",
-          });
-        }
+        toast({
+          title: "Contact Information Saved",
+          description: "Your contact information has been saved locally. To update ServeManager, please use the ServeManager admin interface.",
+        });
       } else {
         // ServeManager update failed - fall back to local storage
         console.log('ServeManager update failed, storing locally');
