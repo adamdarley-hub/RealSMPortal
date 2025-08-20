@@ -242,12 +242,60 @@ export default function ClientDashboard() {
       }
     }
 
-    // Apply search filter
-    return filtered.filter(job =>
-      job.job_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.recipient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.court_case_number?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Apply search filter - search all visible information
+    return filtered.filter(job => {
+      const searchLower = searchTerm.toLowerCase();
+
+      // Basic job info
+      if (job.job_number?.toLowerCase().includes(searchLower)) return true;
+      if (job.recipient_name?.toLowerCase().includes(searchLower)) return true;
+      if (job.court_case_number?.toLowerCase().includes(searchLower)) return true;
+
+      // Case details (plaintiff vs defendant)
+      if (job.plaintiff?.toLowerCase().includes(searchLower)) return true;
+      if (job.defendant_name?.toLowerCase().includes(searchLower)) return true;
+
+      // Service address (check all possible address fields)
+      const addressFields = [
+        job.service_address?.street,
+        job.service_address?.street2,
+        job.service_address?.city,
+        job.service_address?.state,
+        job.service_address?.zip,
+        job.address?.street,
+        job.address?.street2,
+        job.address?.city,
+        job.address?.state,
+        job.address?.zip,
+        job.defendant_address?.street,
+        job.defendant_address?.city,
+        job.defendant_address?.state,
+        job.defendant_address?.zip
+      ];
+
+      for (const field of addressFields) {
+        if (field && field.toLowerCase().includes(searchLower)) return true;
+      }
+
+      // Check addresses array (ServeManager format)
+      if (job.addresses && Array.isArray(job.addresses)) {
+        for (const addr of job.addresses) {
+          if (addr.address1?.toLowerCase().includes(searchLower)) return true;
+          if (addr.address2?.toLowerCase().includes(searchLower)) return true;
+          if (addr.city?.toLowerCase().includes(searchLower)) return true;
+          if (addr.state?.toLowerCase().includes(searchLower)) return true;
+          if (addr.postal_code?.toLowerCase().includes(searchLower)) return true;
+        }
+      }
+
+      // Additional fields that might be displayed
+      if (job.description?.toLowerCase().includes(searchLower)) return true;
+      if (job.service_type?.toLowerCase().includes(searchLower)) return true;
+      if (job.status?.toLowerCase().includes(searchLower)) return true;
+      if (job.priority?.toLowerCase().includes(searchLower)) return true;
+
+      return false;
+    });
   }, [jobs, searchTerm, statusFilter]);
 
 
