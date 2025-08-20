@@ -83,7 +83,7 @@ export default function Layout({ children }: LayoutProps) {
               <Scale className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-bold text-lg text-sidebar-foreground">ServePortal</h1>
+              <h1 className="font-bold text-lg text-sidebar-foreground">Allegiance Legal Solutions</h1>
               <p className="text-xs text-muted-foreground">Process Service Hub</p>
             </div>
           </div>
