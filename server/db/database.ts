@@ -1,21 +1,25 @@
-import path from 'path';
-import fs from 'fs';
-import * as schema from './schema';
+import path from "path";
+import fs from "fs";
+import * as schema from "./schema";
 
 // Try to import better-sqlite3, but make it optional for production builds
 let Database: any = null;
 let drizzle: any = null;
 
 try {
-  Database = require('better-sqlite3');
-  const drizzleModule = require('drizzle-orm/better-sqlite3');
+  Database = require("better-sqlite3");
+  const drizzleModule = require("drizzle-orm/better-sqlite3");
   drizzle = drizzleModule.drizzle;
 } catch (error) {
-  console.log('SQLite not available in production environment - using in-memory fallback');
+  console.log(
+    "SQLite not available in production environment - using in-memory fallback",
+  );
 }
 
 // Database file path - only used in development
-const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'servemanager.db');
+const DB_PATH =
+  process.env.DATABASE_PATH ||
+  path.join(process.cwd(), "data", "servemanager.db");
 
 let sqlite: any = null;
 export let db: any = null;
@@ -33,33 +37,36 @@ if (Database && drizzle) {
     sqlite = new Database(DB_PATH);
 
     // Enable foreign keys and performance optimizations
-    sqlite.pragma('foreign_keys = ON');
-    sqlite.pragma('journal_mode = WAL');
-    sqlite.pragma('synchronous = NORMAL');
-    sqlite.pragma('cache_size = 1000000');
-    sqlite.pragma('temp_store = memory');
-    sqlite.pragma('mmap_size = 268435456'); // 256MB
+    sqlite.pragma("foreign_keys = ON");
+    sqlite.pragma("journal_mode = WAL");
+    sqlite.pragma("synchronous = NORMAL");
+    sqlite.pragma("cache_size = 1000000");
+    sqlite.pragma("temp_store = memory");
+    sqlite.pragma("mmap_size = 268435456"); // 256MB
 
     // Create Drizzle instance
     db = drizzle(sqlite, { schema });
-    console.log('SQLite database initialized for development');
+    console.log("SQLite database initialized for development");
   } catch (error) {
-    console.log('Failed to initialize SQLite, running without local database:', error.message);
+    console.log(
+      "Failed to initialize SQLite, running without local database:",
+      error.message,
+    );
   }
 } else {
-  console.log('Running in production mode without local SQLite database');
+  console.log("Running in production mode without local SQLite database");
 }
 
 // Initialize database (create tables if they don't exist)
 export function initializeDatabase() {
   if (!sqlite) {
-    console.log('Skipping database initialization - SQLite not available');
+    console.log("Skipping database initialization - SQLite not available");
     return;
   }
 
   try {
-    console.log('Initializing database...');
-    
+    console.log("Initializing database...");
+
     // Create tables manually for now (simple approach)
     sqlite.exec(`
       CREATE TABLE IF NOT EXISTS jobs (
@@ -234,10 +241,10 @@ export function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_invoices_client_id ON invoices(client_id);
       CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
     `);
-    
-    console.log('Database initialized successfully');
+
+    console.log("Database initialized successfully");
   } catch (error) {
-    console.error('Error initializing database:', error);
+    console.error("Error initializing database:", error);
     throw error;
   }
 }
@@ -255,7 +262,9 @@ export function getDatabaseStats() {
     return [];
   }
 
-  const stats = sqlite.prepare(`
+  const stats = sqlite
+    .prepare(
+      `
     SELECT 
       'jobs' as table_name, COUNT(*) as count FROM jobs
     UNION ALL
@@ -266,8 +275,10 @@ export function getDatabaseStats() {
     SELECT 'invoices' as table_name, COUNT(*) as count FROM invoices
     UNION ALL
     SELECT 'contacts' as table_name, COUNT(*) as count FROM contacts
-  `).all();
-  
+  `,
+    )
+    .all();
+
   return stats;
 }
 

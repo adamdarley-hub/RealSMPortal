@@ -1,10 +1,24 @@
-import { db } from '../db/database';
-import { jobs, clients, servers, invoices, contacts, sync_log } from '../db/schema';
-import { eq, desc, gte, sql, and } from 'drizzle-orm';
-import { mapJobFromServeManager, mapClientFromServeManager, mapServerFromServeManager } from '../utils/servemanager-mapper';
+import { db } from "../db/database";
+import {
+  jobs,
+  clients,
+  servers,
+  invoices,
+  contacts,
+  sync_log,
+} from "../db/schema";
+import { eq, desc, gte, sql, and } from "drizzle-orm";
+import {
+  mapJobFromServeManager,
+  mapClientFromServeManager,
+  mapServerFromServeManager,
+} from "../utils/servemanager-mapper";
 
 // Import the ServeManager request function
-import { makeServeManagerRequest, getServeManagerConfig } from '../routes/servemanager';
+import {
+  makeServeManagerRequest,
+  getServeManagerConfig,
+} from "../routes/servemanager";
 
 interface SyncResult {
   success: boolean;
@@ -15,7 +29,6 @@ interface SyncResult {
 }
 
 export class CacheService {
-
   private isDatabaseAvailable(): boolean {
     return db !== null && db !== undefined;
   }
@@ -24,29 +37,32 @@ export class CacheService {
 
   async getJobsFromCache(filters: any = {}): Promise<any[]> {
     if (!this.isDatabaseAvailable()) {
-      console.log('Database not available, returning empty array for jobs cache');
+      console.log(
+        "Database not available, returning empty array for jobs cache",
+      );
       return [];
     }
     try {
       let query = db.select().from(jobs);
-      
+
       // Apply filters
       const conditions = [];
-      if (filters.status && filters.status !== 'all') {
+      if (filters.status && filters.status !== "all") {
         // Map "unassigned" filter to empty status in database
-        const statusValue = filters.status === 'unassigned' ? '' : filters.status;
+        const statusValue =
+          filters.status === "unassigned" ? "" : filters.status;
         conditions.push(eq(jobs.status, statusValue));
       }
-      if (filters.priority && filters.priority !== 'all') {
+      if (filters.priority && filters.priority !== "all") {
         conditions.push(eq(jobs.priority, filters.priority));
       }
-      if (filters.client_id && filters.client_id !== 'all') {
+      if (filters.client_id && filters.client_id !== "all") {
         conditions.push(eq(jobs.client_id, filters.client_id));
       }
-      if (filters.server_id && filters.server_id !== 'all') {
+      if (filters.server_id && filters.server_id !== "all") {
         conditions.push(eq(jobs.server_id, filters.server_id));
       }
-      
+
       if (conditions.length > 0) {
         if (conditions.length === 1) {
           query = query.where(conditions[0]);
@@ -54,11 +70,11 @@ export class CacheService {
           query = query.where(and(...conditions));
         }
       }
-      
+
       const cachedJobs = await query.orderBy(desc(jobs.created_at));
-      
+
       // Transform back to the expected format
-      return cachedJobs.map(job => ({
+      return cachedJobs.map((job) => ({
         id: job.id,
         uuid: job.uuid,
         job_number: job.job_number,
@@ -76,7 +92,9 @@ export class CacheService {
         client_phone: job.client_phone,
         recipient_name: job.recipient_name,
         defendant_name: job.defendant_name,
-        service_address: job.service_address ? JSON.parse(job.service_address) : null,
+        service_address: job.service_address
+          ? JSON.parse(job.service_address)
+          : null,
         address: job.address ? JSON.parse(job.address) : null,
         server_id: job.server_id,
         server_name: job.server_name,
@@ -100,22 +118,26 @@ export class CacheService {
         law_firm: job.law_firm,
         _raw: job.raw_data ? JSON.parse(job.raw_data) : null,
         _cached: true,
-        _last_synced: job.last_synced
+        _last_synced: job.last_synced,
       }));
     } catch (error) {
-      console.error('Error getting jobs from cache:', error);
+      console.error("Error getting jobs from cache:", error);
       return [];
     }
   }
 
   async getJobFromCache(jobId: string): Promise<any | null> {
     if (!this.isDatabaseAvailable()) {
-      console.log('Database not available, returning null for job cache');
+      console.log("Database not available, returning null for job cache");
       return null;
     }
 
     try {
-      const cachedJobs = await db.select().from(jobs).where(eq(jobs.id, jobId)).limit(1);
+      const cachedJobs = await db
+        .select()
+        .from(jobs)
+        .where(eq(jobs.id, jobId))
+        .limit(1);
 
       if (cachedJobs.length === 0) {
         return null;
@@ -146,14 +168,20 @@ export class CacheService {
         client_company: job.client_company,
         client_email: job.client_email,
         client_phone: job.client_phone,
-        client_address: job.client_address ? JSON.parse(job.client_address) : null,
+        client_address: job.client_address
+          ? JSON.parse(job.client_address)
+          : null,
         account_id: job.account_id,
         recipient_name: job.recipient_name,
         defendant_name: job.defendant_name,
         defendant_first_name: job.defendant_first_name,
         defendant_last_name: job.defendant_last_name,
-        defendant_address: job.defendant_address ? JSON.parse(job.defendant_address) : null,
-        service_address: job.service_address ? JSON.parse(job.service_address) : null,
+        defendant_address: job.defendant_address
+          ? JSON.parse(job.defendant_address)
+          : null,
+        service_address: job.service_address
+          ? JSON.parse(job.service_address)
+          : null,
         address: job.address ? JSON.parse(job.address) : null,
         server_id: job.server_id,
         server_name: job.server_name,
@@ -184,12 +212,14 @@ export class CacheService {
         attempts: job.attempts ? JSON.parse(job.attempts) : [],
         documents: job.documents ? JSON.parse(job.documents) : [],
         attachments: job.attachments ? JSON.parse(job.attachments) : [],
-        gps_coordinates: job.gps_coordinates ? JSON.parse(job.gps_coordinates) : null,
+        gps_coordinates: job.gps_coordinates
+          ? JSON.parse(job.gps_coordinates)
+          : null,
         tags: job.tags ? JSON.parse(job.tags) : [],
         badges: job.badges ? JSON.parse(job.badges) : [],
         raw_data: job.raw_data ? JSON.parse(job.raw_data) : null,
         _cached: true,
-        last_synced: job.last_synced
+        last_synced: job.last_synced,
       };
     } catch (error) {
       console.error(`Error getting job ${jobId} from cache:`, error);
@@ -199,13 +229,13 @@ export class CacheService {
 
   async syncJobsFromServeManager(): Promise<SyncResult> {
     if (!this.isDatabaseAvailable()) {
-      console.log('Database not available, skipping jobs sync');
+      console.log("Database not available, skipping jobs sync");
       return {
         success: false,
         recordsSynced: 0,
         totalRecords: 0,
         duration: 0,
-        error: 'Database not available'
+        error: "Database not available",
       };
     }
 
@@ -213,24 +243,24 @@ export class CacheService {
     let recordsSynced = 0;
 
     try {
-      console.log('🔄 Starting jobs sync from ServeManager...');
-      
+      console.log("🔄 Starting jobs sync from ServeManager...");
+
       const config = await getServeManagerConfig();
       let allJobs: any[] = [];
       let page = 1;
       let hasMorePages = true;
       const maxPages = 100;
-      
+
       // Fetch all jobs from ServeManager
       while (hasMorePages && page <= maxPages) {
         try {
           const params = new URLSearchParams();
-          params.append('per_page', '50'); // Reduced from 100 to 50 for better performance
-          params.append('page', page.toString());
+          params.append("per_page", "50"); // Reduced from 100 to 50 for better performance
+          params.append("page", page.toString());
 
           const endpoint = `/jobs?${params.toString()}`;
           const pageData = await makeServeManagerRequest(endpoint);
-          
+
           let pageJobs: any[] = [];
           if (pageData.data && Array.isArray(pageData.data)) {
             pageJobs = pageData.data;
@@ -239,21 +269,25 @@ export class CacheService {
           } else if (Array.isArray(pageData)) {
             pageJobs = pageData;
           }
-          
+
           if (pageJobs.length > 0) {
             console.log(`📊 Page ${page} structure:`, {
               jobsCount: pageJobs.length,
               firstJobKeys: Object.keys(pageJobs[0] || {}),
-              firstJobSample: pageJobs[0]
+              firstJobSample: pageJobs[0],
             });
-            const mappedJobs = pageJobs.map(rawJob => {
-              const mapped = mapJobFromServeManager(rawJob);
-              if (!mapped) {
-                console.error('❌ Mapping failed for job:', rawJob);
-              }
-              return mapped;
-            }).filter(Boolean); // Remove any undefined results
-            console.log(`✅ Mapped ${mappedJobs.length} of ${pageJobs.length} jobs`);
+            const mappedJobs = pageJobs
+              .map((rawJob) => {
+                const mapped = mapJobFromServeManager(rawJob);
+                if (!mapped) {
+                  console.error("❌ Mapping failed for job:", rawJob);
+                }
+                return mapped;
+              })
+              .filter(Boolean); // Remove any undefined results
+            console.log(
+              `✅ Mapped ${mappedJobs.length} of ${pageJobs.length} jobs`,
+            );
             allJobs.push(...mappedJobs);
             hasMorePages = pageJobs.length === 50; // Updated for new page size
             page++;
@@ -265,13 +299,21 @@ export class CacheService {
           hasMorePages = false;
         }
       }
-      
-      console.log(`📥 Fetched ${allJobs.length} jobs from ServeManager, caching locally...`);
-      
+
+      console.log(
+        `📥 Fetched ${allJobs.length} jobs from ServeManager, caching locally...`,
+      );
+
       // Cache jobs in database - process directly
-      console.log(`Processing ${allJobs.length} real ServeManager jobs for database insertion...`);
+      console.log(
+        `Processing ${allJobs.length} real ServeManager jobs for database insertion...`,
+      );
       for (const job of allJobs) {
-        const jobId = job.id || job.uuid || job.job_number || `job_${Date.now()}_${Math.random()}`;
+        const jobId =
+          job.id ||
+          job.uuid ||
+          job.job_number ||
+          `job_${Date.now()}_${Math.random()}`;
 
         // Prepare data for insertion with proper null handling and explicit field mapping
         const jobData = {
@@ -280,7 +322,9 @@ export class CacheService {
           servemanager_id: String(job.id || job.uuid || jobId),
           uuid: job.uuid ? String(job.uuid) : null,
           job_number: job.job_number ? String(job.job_number) : null,
-          generated_job_id: job.generated_job_id ? String(job.generated_job_id) : null,
+          generated_job_id: job.generated_job_id
+            ? String(job.generated_job_id)
+            : null,
           reference: job.reference ? String(job.reference) : null,
 
           // Status and priority
@@ -294,39 +338,59 @@ export class CacheService {
           updated_at: job.updated_at ? String(job.updated_at) : null,
           due_date: job.due_date ? String(job.due_date) : null,
           service_date: job.service_date ? String(job.service_date) : null,
-          completed_date: job.completed_date ? String(job.completed_date) : null,
+          completed_date: job.completed_date
+            ? String(job.completed_date)
+            : null,
           received_date: job.received_date ? String(job.received_date) : null,
 
           // Client information
           client_id: job.client_id ? String(job.client_id) : null,
           client_name: job.client_name ? String(job.client_name) : null,
-          client_company: job.client_company ? String(job.client_company) : null,
+          client_company: job.client_company
+            ? String(job.client_company)
+            : null,
           client_email: job.client_email ? String(job.client_email) : null,
           client_phone: job.client_phone ? String(job.client_phone) : null,
-          client_address: job.client_address ? JSON.stringify(job.client_address) : null,
+          client_address: job.client_address
+            ? JSON.stringify(job.client_address)
+            : null,
           account_id: job.account_id ? String(job.account_id) : null,
 
           // Recipient information
-          recipient_name: job.recipient_name ? String(job.recipient_name) : null,
-          defendant_name: job.defendant_name ? String(job.defendant_name) : null,
-          defendant_first_name: job.defendant_first_name ? String(job.defendant_first_name) : null,
-          defendant_last_name: job.defendant_last_name ? String(job.defendant_last_name) : null,
-          defendant_address: job.defendant_address ? JSON.stringify(job.defendant_address) : null,
-          service_address: job.service_address ? JSON.stringify(job.service_address) : null,
+          recipient_name: job.recipient_name
+            ? String(job.recipient_name)
+            : null,
+          defendant_name: job.defendant_name
+            ? String(job.defendant_name)
+            : null,
+          defendant_first_name: job.defendant_first_name
+            ? String(job.defendant_first_name)
+            : null,
+          defendant_last_name: job.defendant_last_name
+            ? String(job.defendant_last_name)
+            : null,
+          defendant_address: job.defendant_address
+            ? JSON.stringify(job.defendant_address)
+            : null,
+          service_address: job.service_address
+            ? JSON.stringify(job.service_address)
+            : null,
           address: job.address ? JSON.stringify(job.address) : null,
 
           // Server information
           server_id: job.server_id ? String(job.server_id) : null,
           server_name: job.server_name ? String(job.server_name) : null,
-          assigned_server: job.assigned_server ? String(job.assigned_server) : null,
+          assigned_server: job.assigned_server
+            ? String(job.assigned_server)
+            : null,
           assigned_to: job.assigned_to ? String(job.assigned_to) : null,
 
           // Financial information (real numbers)
-          amount: typeof job.amount === 'number' ? job.amount : null,
-          price: typeof job.price === 'number' ? job.price : null,
-          cost: typeof job.cost === 'number' ? job.cost : null,
-          fee: typeof job.fee === 'number' ? job.fee : null,
-          total: typeof job.total === 'number' ? job.total : null,
+          amount: typeof job.amount === "number" ? job.amount : null,
+          price: typeof job.price === "number" ? job.price : null,
+          cost: typeof job.cost === "number" ? job.cost : null,
+          fee: typeof job.fee === "number" ? job.fee : null,
+          total: typeof job.total === "number" ? job.total : null,
 
           // Service information
           service_type: job.service_type ? String(job.service_type) : null,
@@ -337,13 +401,16 @@ export class CacheService {
           instructions: job.instructions ? String(job.instructions) : null,
 
           // Attempt information
-          attempt_count: typeof job.attempt_count === 'number' ? job.attempt_count : null,
+          attempt_count:
+            typeof job.attempt_count === "number" ? job.attempt_count : null,
           last_attempt: job.last_attempt ? String(job.last_attempt) : null,
-          last_attempt_date: job.last_attempt_date ? String(job.last_attempt_date) : null,
+          last_attempt_date: job.last_attempt_date
+            ? String(job.last_attempt_date)
+            : null,
 
           // Location data (real numbers)
-          latitude: typeof job.latitude === 'number' ? job.latitude : null,
-          longitude: typeof job.longitude === 'number' ? job.longitude : null,
+          latitude: typeof job.latitude === "number" ? job.latitude : null,
+          longitude: typeof job.longitude === "number" ? job.longitude : null,
 
           // Additional fields
           court: job.court ? String(job.court) : null,
@@ -357,7 +424,9 @@ export class CacheService {
           attempts: job.attempts ? JSON.stringify(job.attempts) : null,
           documents: job.documents ? JSON.stringify(job.documents) : null,
           attachments: job.attachments ? JSON.stringify(job.attachments) : null,
-          gps_coordinates: job.gps_coordinates ? JSON.stringify(job.gps_coordinates) : null,
+          gps_coordinates: job.gps_coordinates
+            ? JSON.stringify(job.gps_coordinates)
+            : null,
           tags: job.tags ? JSON.stringify(job.tags) : null,
           badges: job.badges ? JSON.stringify(job.badges) : null,
 
@@ -370,170 +439,259 @@ export class CacheService {
         // Use simple insert with conflict resolution
         try {
           // Use insertOrIgnore to handle conflicts gracefully
-          const result = db.insert(jobs).values(jobData).onConflictDoNothing().run();
+          const result = db
+            .insert(jobs)
+            .values(jobData)
+            .onConflictDoNothing()
+            .run();
 
           recordsSynced++;
           if (recordsSynced % 50 === 0) {
             console.log(`✅ Processed ${recordsSynced} jobs...`);
           }
         } catch (insertError) {
-          console.warn(`⚠️ Skipping job ${jobData.id} due to insertion error:`, insertError.message);
+          console.warn(
+            `⚠️ Skipping job ${jobData.id} due to insertion error:`,
+            insertError.message,
+          );
 
           // Log limited debug info for first few failures
           if (recordsSynced < 3) {
-            console.warn(`Failed job details: ${jobData.id} - Status: ${jobData.status}`);
+            console.warn(
+              `Failed job details: ${jobData.id} - Status: ${jobData.status}`,
+            );
           }
 
           // Continue processing other jobs instead of failing the entire sync
         }
       }
-      
+
       const duration = Date.now() - startTime;
-      
+
       // Update sync log
-      await this.updateSyncLog('jobs', {
+      await this.updateSyncLog("jobs", {
         last_full_sync: new Date().toISOString(),
-        last_sync_status: 'success',
+        last_sync_status: "success",
         records_synced: recordsSynced,
         total_records: allJobs.length,
         sync_duration_ms: duration,
-        last_sync_error: null
+        last_sync_error: null,
       });
-      
-      console.log(`✅ Jobs sync completed: ${recordsSynced} records in ${duration}ms`);
-      
+
+      console.log(
+        `✅ Jobs sync completed: ${recordsSynced} records in ${duration}ms`,
+      );
+
       return {
         success: true,
         recordsSynced,
         totalRecords: allJobs.length,
-        duration
+        duration,
       };
-      
     } catch (error) {
       const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
 
-      console.error('❌ Jobs sync failed:', errorMessage);
-      console.log('📦 Falling back to mock data for demo purposes...');
+      console.error("❌ Jobs sync failed:", errorMessage);
+      console.log("📦 Falling back to mock data for demo purposes...");
 
       // Use mock data as fallback - import from mock-data.ts file
-      const { getMockJobs } = await import('../routes/mock-data');
+      const { getMockJobs } = await import("../routes/mock-data");
 
       // Create a fake request to get the mock data
       const mockReq = { query: {} };
       const mockRes = {
         json: (data: any) => data,
         setHeader: () => {},
-        set: () => {}
+        set: () => {},
       };
 
       let mockJobsData;
       try {
         getMockJobs(mockReq as any, mockRes as any);
         // Import the mock data directly
-        const mockDataModule = await import('../routes/mock-data');
+        const mockDataModule = await import("../routes/mock-data");
         // Access the mockJobs array directly
-        const fs = await import('fs');
-        const path = await import('path');
-        const mockDataPath = path.join(__dirname, '../routes/mock-data.ts');
-        const mockDataContent = fs.readFileSync(mockDataPath, 'utf8');
+        const fs = await import("fs");
+        const path = await import("path");
+        const mockDataPath = path.join(__dirname, "../routes/mock-data.ts");
+        const mockDataContent = fs.readFileSync(mockDataPath, "utf8");
 
         // For now, use the updated mock data directly
         const mockJobs = [
           {
             id: "20527876",
             job_number: "20527876",
-            client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
-            recipient: { name: "Robert Eskridge", address: { street: "1920 WILWOOD DRIVE", city: "ROUND ROCK", state: "TX", zip: "78681", full_address: "1920 WILWOOD DRIVE, ROUND ROCK TX 78681" } },
+            client: {
+              id: "client1",
+              name: "Pronto Process Service",
+              company: "Pronto Process Service",
+            },
+            recipient: {
+              name: "Robert Eskridge",
+              address: {
+                street: "1920 WILWOOD DRIVE",
+                city: "ROUND ROCK",
+                state: "TX",
+                zip: "78681",
+                full_address: "1920 WILWOOD DRIVE, ROUND ROCK TX 78681",
+              },
+            },
             status: "pending",
             priority: "routine",
             server: { id: "server1", name: "Adam Darley" },
             due_date: null,
             created_date: "2024-01-15T10:00:00Z",
-            amount: 50.00,
+            amount: 50.0,
             description: "Service of Process - Divorce Papers",
-            service_type: "Service"
+            service_type: "Service",
           },
           {
             id: "20527766",
             job_number: "20527766",
-            client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
-            recipient: { name: "MINJUNG KWUN", address: { street: "291 LOCKHART LOOP", city: "GEORGETOWN", state: "TX", zip: "78628", full_address: "291 LOCKHART LOOP, GEORGETOWN TX 78628" } },
+            client: {
+              id: "client1",
+              name: "Pronto Process Service",
+              company: "Pronto Process Service",
+            },
+            recipient: {
+              name: "MINJUNG KWUN",
+              address: {
+                street: "291 LOCKHART LOOP",
+                city: "GEORGETOWN",
+                state: "TX",
+                zip: "78628",
+                full_address: "291 LOCKHART LOOP, GEORGETOWN TX 78628",
+              },
+            },
             status: "pending",
             priority: "routine",
             server: { id: "server1", name: "Adam Darley" },
             due_date: null,
             created_date: "2024-01-14T09:30:00Z",
-            amount: 50.00,
+            amount: 50.0,
             description: "Subpoena Service",
-            service_type: "Service"
+            service_type: "Service",
           },
           {
             id: "20508743",
             job_number: "20508743",
-            client: { id: "client2", name: "Kerr Civil Process Service", company: "Kerr Civil Process Service" },
-            recipient: { name: "WILLIAMSON CENTRAL APPRAISAL DISTRICT", address: { street: "625 FM 1460", city: "Georgetown", state: "TX", zip: "78626", full_address: "625 FM 1460, Georgetown TX 78626" } },
+            client: {
+              id: "client2",
+              name: "Kerr Civil Process Service",
+              company: "Kerr Civil Process Service",
+            },
+            recipient: {
+              name: "WILLIAMSON CENTRAL APPRAISAL DISTRICT",
+              address: {
+                street: "625 FM 1460",
+                city: "Georgetown",
+                state: "TX",
+                zip: "78626",
+                full_address: "625 FM 1460, Georgetown TX 78626",
+              },
+            },
             status: "pending",
             priority: "routine",
             server: null,
             due_date: "2024-08-20",
             created_date: "2024-01-10T08:15:00Z",
-            amount: 0.00,
+            amount: 0.0,
             description: "Court Papers - Personal Injury",
-            service_type: "Service"
+            service_type: "Service",
           },
           {
             id: "20527877",
             job_number: "20527877",
-            client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
-            recipient: { name: "Sarah Mitchell", address: { street: "455 E 5TH ST APT 204", city: "AUSTIN", state: "TX", zip: "78701", full_address: "455 E 5TH ST APT 204, AUSTIN TX 78701" } },
+            client: {
+              id: "client1",
+              name: "Pronto Process Service",
+              company: "Pronto Process Service",
+            },
+            recipient: {
+              name: "Sarah Mitchell",
+              address: {
+                street: "455 E 5TH ST APT 204",
+                city: "AUSTIN",
+                state: "TX",
+                zip: "78701",
+                full_address: "455 E 5TH ST APT 204, AUSTIN TX 78701",
+              },
+            },
             status: "completed",
             priority: "rush",
             server: { id: "server1", name: "Adam Darley" },
             due_date: null,
             created_date: "2024-01-12T14:20:00Z",
-            amount: 75.00,
+            amount: 75.0,
             description: "Rush Service - Eviction Notice",
-            service_type: "Service"
+            service_type: "Service",
           },
           {
             id: "20508744",
             job_number: "20508744",
-            client: { id: "client2", name: "Kerr Civil Process Service", company: "Kerr Civil Process Service" },
-            recipient: { name: "Michael Thompson", address: { street: "1204 CEDAR PARK CT", city: "CEDAR PARK", state: "TX", zip: "78613", full_address: "1204 CEDAR PARK CT, CEDAR PARK TX 78613" } },
+            client: {
+              id: "client2",
+              name: "Kerr Civil Process Service",
+              company: "Kerr Civil Process Service",
+            },
+            recipient: {
+              name: "Michael Thompson",
+              address: {
+                street: "1204 CEDAR PARK CT",
+                city: "CEDAR PARK",
+                state: "TX",
+                zip: "78613",
+                full_address: "1204 CEDAR PARK CT, CEDAR PARK TX 78613",
+              },
+            },
             status: "completed",
             priority: "routine",
             server: { id: "server1", name: "Adam Darley" },
             due_date: null,
             created_date: "2024-01-08T11:45:00Z",
-            amount: 45.00,
+            amount: 45.0,
             description: "Summons and Complaint",
-            service_type: "Service"
+            service_type: "Service",
           },
           {
             id: "20527878",
             job_number: "20527878",
-            client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
-            recipient: { name: "David Rodriguez", address: { street: "2301 S LAMAR BLVD", city: "AUSTIN", state: "TX", zip: "78704", full_address: "2301 S LAMAR BLVD, AUSTIN TX 78704" } },
+            client: {
+              id: "client1",
+              name: "Pronto Process Service",
+              company: "Pronto Process Service",
+            },
+            recipient: {
+              name: "David Rodriguez",
+              address: {
+                street: "2301 S LAMAR BLVD",
+                city: "AUSTIN",
+                state: "TX",
+                zip: "78704",
+                full_address: "2301 S LAMAR BLVD, AUSTIN TX 78704",
+              },
+            },
             status: "in_progress",
             priority: "routine",
             server: { id: "server1", name: "Adam Darley" },
             due_date: "2024-01-25",
             created_date: "2024-01-16T09:10:00Z",
-            amount: 50.00,
+            amount: 50.0,
             description: "Service of Process - Contract Dispute",
-            service_type: "Service"
-          }
+            service_type: "Service",
+          },
         ];
       } catch (error) {
-        console.error('Error importing mock data:', error);
+        console.error("Error importing mock data:", error);
         mockJobsData = [];
       }
 
       try {
         // Use mock jobs directly in the correct format
-        console.log('Using mock jobs directly:', mockJobs.length);
-        const mappedMockJobs = mockJobs.map(job => ({
+        console.log("Using mock jobs directly:", mockJobs.length);
+        const mappedMockJobs = mockJobs.map((job) => ({
           id: job.id,
           job_number: job.job_number,
           client: job.client,
@@ -551,12 +709,14 @@ export class CacheService {
           description: job.description,
           service_type: job.service_type,
           address: job.recipient.address,
-          due_date: job.due_date
+          due_date: job.due_date,
         }));
-        console.log('Mapped mock jobs result:', mappedMockJobs.length, 'items');
+        console.log("Mapped mock jobs result:", mappedMockJobs.length, "items");
 
         // Cache mock jobs directly without transaction for testing
-        console.log(`Processing ${mappedMockJobs.length} mock jobs for database insertion...`);
+        console.log(
+          `Processing ${mappedMockJobs.length} mock jobs for database insertion...`,
+        );
         for (const job of mappedMockJobs) {
           const jobId = job.id || `job_${Date.now()}_${Math.random()}`;
 
@@ -628,42 +788,44 @@ export class CacheService {
           };
 
           try {
-            db.insert(jobs).values(jobData).onConflictDoUpdate({
-              target: jobs.servemanager_id,
-              set: jobData
-            }).run();
+            db.insert(jobs)
+              .values(jobData)
+              .onConflictDoUpdate({
+                target: jobs.servemanager_id,
+                set: jobData,
+              })
+              .run();
             recordsSynced++;
             console.log(`✅ Inserted mock job: ${jobId}`);
           } catch (insertError) {
-            console.error('Error inserting mock job:', insertError);
+            console.error("Error inserting mock job:", insertError);
           }
         }
         console.log(`✅ Mock jobs cached: ${recordsSynced} records`);
 
-        await this.updateSyncLog('jobs', {
+        await this.updateSyncLog("jobs", {
           last_full_sync: new Date().toISOString(),
-          last_sync_status: 'success',
+          last_sync_status: "success",
           records_synced: recordsSynced,
           total_records: mappedMockJobs.length,
           sync_duration_ms: Date.now() - startTime,
-          last_sync_error: 'Used mock data fallback'
+          last_sync_error: "Used mock data fallback",
         });
 
         return {
           success: true,
           recordsSynced,
           totalRecords: mappedMockJobs.length,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
-
       } catch (mockError) {
-        console.error('Error with mock data fallback:', mockError);
+        console.error("Error with mock data fallback:", mockError);
 
         // Update sync log with error
-        await this.updateSyncLog('jobs', {
-          last_sync_status: 'error',
+        await this.updateSyncLog("jobs", {
+          last_sync_status: "error",
           last_sync_error: errorMessage,
-          sync_duration_ms: duration
+          sync_duration_ms: duration,
         });
 
         return {
@@ -671,24 +833,29 @@ export class CacheService {
           recordsSynced,
           totalRecords: 0,
           duration,
-          error: errorMessage
+          error: errorMessage,
         };
       }
     }
   }
-  
+
   // =================== CLIENTS ===================
-  
+
   async getClientsFromCache(): Promise<any[]> {
     if (!this.isDatabaseAvailable()) {
-      console.log('Database not available, returning empty array for clients cache');
+      console.log(
+        "Database not available, returning empty array for clients cache",
+      );
       return [];
     }
 
     try {
-      const cachedClients = await db.select().from(clients).orderBy(desc(clients.company));
-      
-      return cachedClients.map(client => ({
+      const cachedClients = await db
+        .select()
+        .from(clients)
+        .orderBy(desc(clients.company));
+
+      return cachedClients.map((client) => ({
         id: client.id,
         servemanager_id: client.servemanager_id,
         name: client.name,
@@ -696,8 +863,12 @@ export class CacheService {
         email: client.email,
         phone: client.phone,
         address: client.address ? JSON.parse(client.address) : null,
-        billing_address: client.billing_address ? JSON.parse(client.billing_address) : null,
-        mailing_address: client.mailing_address ? JSON.parse(client.mailing_address) : null,
+        billing_address: client.billing_address
+          ? JSON.parse(client.billing_address)
+          : null,
+        mailing_address: client.mailing_address
+          ? JSON.parse(client.mailing_address)
+          : null,
         created_date: client.created_date,
         updated_date: client.updated_date,
         active: client.active,
@@ -705,38 +876,38 @@ export class CacheService {
         raw_data: client.raw_data ? JSON.parse(client.raw_data) : null,
         _raw: client.raw_data ? JSON.parse(client.raw_data) : null,
         _cached: true,
-        _last_synced: client.last_synced
+        _last_synced: client.last_synced,
       }));
     } catch (error) {
-      console.error('Error getting clients from cache:', error);
+      console.error("Error getting clients from cache:", error);
       return [];
     }
   }
-  
+
   async syncClientsFromServeManager(): Promise<SyncResult> {
     const startTime = Date.now();
     let recordsSynced = 0;
-    
+
     try {
-      console.log('🔄 Starting clients sync from ServeManager...');
-      
+      console.log("🔄 Starting clients sync from ServeManager...");
+
       let allClients: any[] = [];
       let page = 1;
       let hasMorePages = true;
       const maxPages = 50;
-      
+
       while (hasMorePages && page <= maxPages) {
         try {
           const params = new URLSearchParams();
-          params.append('per_page', '50'); // Optimized page size
-          params.append('page', page.toString());
-          
+          params.append("per_page", "50"); // Optimized page size
+          params.append("page", page.toString());
+
           // Try multiple possible client endpoints since /clients returns 404
           let pageData = null;
           const possibleEndpoints = [
             `/companies?${params.toString()}`,
             `/accounts?${params.toString()}`,
-            `/clients?${params.toString()}`
+            `/clients?${params.toString()}`,
           ];
 
           for (const endpoint of possibleEndpoints) {
@@ -745,14 +916,16 @@ export class CacheService {
               console.log(`✅ Successfully fetched from ${endpoint}`);
               break;
             } catch (endpointError) {
-              console.log(`❌ Failed to fetch from ${endpoint}, trying next...`);
+              console.log(
+                `❌ Failed to fetch from ${endpoint}, trying next...`,
+              );
             }
           }
 
           if (!pageData) {
-            throw new Error('All client endpoints failed');
+            throw new Error("All client endpoints failed");
           }
-          
+
           let pageClients: any[] = [];
           if (pageData.data && Array.isArray(pageData.data)) {
             pageClients = pageData.data;
@@ -761,9 +934,11 @@ export class CacheService {
           } else if (Array.isArray(pageData)) {
             pageClients = pageData;
           }
-          
+
           if (pageClients.length > 0) {
-            const mappedClients = pageClients.map(rawClient => mapClientFromServeManager(rawClient));
+            const mappedClients = pageClients.map((rawClient) =>
+              mapClientFromServeManager(rawClient),
+            );
             allClients.push(...mappedClients);
             hasMorePages = pageClients.length === 50; // Updated for optimized page size
             page++;
@@ -775,12 +950,14 @@ export class CacheService {
           hasMorePages = false;
         }
       }
-      
-      console.log(`📥 Fetched ${allClients.length} clients, caching locally...`);
+
+      console.log(
+        `📥 Fetched ${allClients.length} clients, caching locally...`,
+      );
 
       // Debug: Log the structure of the first client
       if (allClients.length > 0) {
-        console.log('📊 First client structure:', {
+        console.log("📊 First client structure:", {
           rawKeys: Object.keys(allClients[0]._raw || {}),
           mapped: {
             id: allClients[0].id,
@@ -788,16 +965,18 @@ export class CacheService {
             company: allClients[0].company,
             email: allClients[0].email,
             phone: allClients[0].phone,
-            address: allClients[0].address
+            address: allClients[0].address,
           },
           addressDetail: allClients[0]._raw?.addresses?.[0],
           contactDetail: allClients[0]._raw?.contacts?.[0],
-          rawSample: allClients[0]._raw
+          rawSample: allClients[0]._raw,
         });
       }
 
       // Process clients directly
-      console.log(`Processing ${allClients.length} clients for database insertion...`);
+      console.log(
+        `Processing ${allClients.length} clients for database insertion...`,
+      );
       for (const client of allClients) {
         const clientId = client.id || `client_${Date.now()}_${Math.random()}`;
 
@@ -809,12 +988,16 @@ export class CacheService {
           email: client.email || null,
           phone: client.phone || null,
           address: client.address ? JSON.stringify(client.address) : null,
-          billing_address: client.billing_address ? JSON.stringify(client.billing_address) : null,
-          mailing_address: client.mailing_address ? JSON.stringify(client.mailing_address) : null,
+          billing_address: client.billing_address
+            ? JSON.stringify(client.billing_address)
+            : null,
+          mailing_address: client.mailing_address
+            ? JSON.stringify(client.mailing_address)
+            : null,
           created_date: client.created_date || new Date().toISOString(),
           updated_date: client.updated_date || new Date().toISOString(),
           active: client.active !== false,
-          status: client.status || 'active',
+          status: client.status || "active",
           raw_data: client._raw ? JSON.stringify(client._raw) : null,
           last_synced: new Date().toISOString(),
         };
@@ -823,26 +1006,31 @@ export class CacheService {
           db.insert(clients).values(clientData).onConflictDoNothing().run();
           recordsSynced++;
         } catch (insertError) {
-          console.warn(`⚠️ Skipping client ${clientData.id} due to insertion error:`, insertError.message);
+          console.warn(
+            `⚠️ Skipping client ${clientData.id} due to insertion error:`,
+            insertError.message,
+          );
         }
       }
-      
+
       const duration = Date.now() - startTime;
-      console.log(`✅ Clients sync completed: ${recordsSynced} records in ${duration}ms`);
-      
+      console.log(
+        `✅ Clients sync completed: ${recordsSynced} records in ${duration}ms`,
+      );
+
       return {
         success: true,
         recordsSynced,
         totalRecords: allClients.length,
-        duration
+        duration,
       };
-      
     } catch (error) {
       const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
 
-      console.error('❌ Clients sync failed:', errorMessage);
-      console.log('📦 Falling back to mock client data for demo purposes...');
+      console.error("❌ Clients sync failed:", errorMessage);
+      console.log("📦 Falling back to mock client data for demo purposes...");
 
       // Use mock data as fallback
       const mockClients = [
@@ -852,9 +1040,14 @@ export class CacheService {
           company: "Pronto Process Service",
           email: "info@prontoprocess.com",
           phone: "(512) 555-0123",
-          address: { street: "123 Main St", city: "Austin", state: "TX", zip: "78701" },
+          address: {
+            street: "123 Main St",
+            city: "Austin",
+            state: "TX",
+            zip: "78701",
+          },
           created_date: "2023-06-15T00:00:00Z",
-          active: true
+          active: true,
         },
         {
           id: "client2",
@@ -862,16 +1055,21 @@ export class CacheService {
           company: "Kerr Civil Process Service",
           email: "contact@kerrprocess.com",
           phone: "(512) 555-0456",
-          address: { street: "456 Oak Ave", city: "Georgetown", state: "TX", zip: "78626" },
+          address: {
+            street: "456 Oak Ave",
+            city: "Georgetown",
+            state: "TX",
+            zip: "78626",
+          },
           created_date: "2023-08-20T00:00:00Z",
-          active: true
-        }
+          active: true,
+        },
       ];
 
       try {
         // Use mock clients directly in the correct format
-        console.log('Using mock clients directly:', mockClients.length);
-        const mappedMockClients = mockClients.map(client => ({
+        console.log("Using mock clients directly:", mockClients.length);
+        const mappedMockClients = mockClients.map((client) => ({
           id: client.id,
           name: client.name,
           company: client.company,
@@ -879,12 +1077,18 @@ export class CacheService {
           phone: client.phone,
           address: client.address,
           created_date: client.created_date,
-          active: client.active
+          active: client.active,
         }));
-        console.log('Mapped mock clients result:', mappedMockClients.length, 'items');
+        console.log(
+          "Mapped mock clients result:",
+          mappedMockClients.length,
+          "items",
+        );
 
         // Cache mock clients directly
-        console.log(`Processing ${mappedMockClients.length} mock clients for database insertion...`);
+        console.log(
+          `Processing ${mappedMockClients.length} mock clients for database insertion...`,
+        );
         for (const client of mappedMockClients) {
           const clientId = client.id || `client_${Date.now()}_${Math.random()}`;
 
@@ -901,20 +1105,23 @@ export class CacheService {
             created_date: client.created_date,
             updated_date: client.created_date,
             active: client.active ? 1 : 0,
-            status: 'active',
+            status: "active",
             raw_data: null,
             last_synced: new Date().toISOString(),
           };
 
           try {
-            db.insert(clients).values(clientData).onConflictDoUpdate({
-              target: clients.servemanager_id,
-              set: clientData
-            }).run();
+            db.insert(clients)
+              .values(clientData)
+              .onConflictDoUpdate({
+                target: clients.servemanager_id,
+                set: clientData,
+              })
+              .run();
             recordsSynced++;
             console.log(`✅ Inserted mock client: ${clientId}`);
           } catch (insertError) {
-            console.error('Error inserting mock client:', insertError);
+            console.error("Error inserting mock client:", insertError);
           }
         }
         console.log(`✅ Mock clients cached: ${recordsSynced} records`);
@@ -923,62 +1130,64 @@ export class CacheService {
           success: true,
           recordsSynced,
           totalRecords: mappedMockClients.length,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
-
       } catch (mockError) {
-        console.error('Error with mock client data fallback:', mockError);
+        console.error("Error with mock client data fallback:", mockError);
 
         return {
           success: false,
           recordsSynced: 0,
           totalRecords: 0,
           duration,
-          error: errorMessage
+          error: errorMessage,
         };
       }
     }
   }
-  
+
   // =================== SYNC LOG ===================
-  
+
   async updateSyncLog(tableName: string, data: any) {
     if (!this.isDatabaseAvailable()) {
-      console.log('Database not available, skipping sync log update');
+      console.log("Database not available, skipping sync log update");
       return;
     }
 
     try {
-      await db.insert(sync_log).values({
-        table_name: tableName,
-        ...data,
-        updated_at: new Date().toISOString()
-      }).onConflictDoUpdate({
-        target: sync_log.table_name,
-        set: {
+      await db
+        .insert(sync_log)
+        .values({
+          table_name: tableName,
           ...data,
-          updated_at: new Date().toISOString()
-        }
-      });
+          updated_at: new Date().toISOString(),
+        })
+        .onConflictDoUpdate({
+          target: sync_log.table_name,
+          set: {
+            ...data,
+            updated_at: new Date().toISOString(),
+          },
+        });
     } catch (error) {
-      console.error('Error updating sync log:', error);
+      console.error("Error updating sync log:", error);
     }
   }
-  
+
   async getSyncStatus() {
     try {
       const logs = await db.select().from(sync_log);
       return logs;
     } catch (error) {
-      console.error('Error getting sync status:', error);
+      console.error("Error getting sync status:", error);
       return [];
     }
   }
-  
+
   // =================== FULL SYNC ===================
-  
+
   async syncAllData(): Promise<{ [key: string]: SyncResult }> {
-    console.log('🚀 Starting full sync of all data...');
+    console.log("🚀 Starting full sync of all data...");
 
     const results: { [key: string]: SyncResult } = {};
 
@@ -991,7 +1200,7 @@ export class CacheService {
     // Sync servers
     results.servers = await this.syncServersFromServeManager();
 
-    console.log('🎉 Full sync completed:', results);
+    console.log("🎉 Full sync completed:", results);
     return results;
   }
 
@@ -999,9 +1208,12 @@ export class CacheService {
 
   async getServersFromCache(): Promise<any[]> {
     try {
-      const cachedServers = await db.select().from(servers).orderBy(desc(servers.name));
+      const cachedServers = await db
+        .select()
+        .from(servers)
+        .orderBy(desc(servers.name));
 
-      return cachedServers.map(server => ({
+      return cachedServers.map((server) => ({
         id: server.id,
         servemanager_id: server.servemanager_id,
         name: server.name,
@@ -1015,10 +1227,10 @@ export class CacheService {
         territories: server.territories ? JSON.parse(server.territories) : [],
         created_date: server.created_date,
         _cached: true,
-        _last_synced: server.last_synced
+        _last_synced: server.last_synced,
       }));
     } catch (error) {
-      console.error('Error getting servers from cache:', error);
+      console.error("Error getting servers from cache:", error);
       return [];
     }
   }
@@ -1028,7 +1240,7 @@ export class CacheService {
     let recordsSynced = 0;
 
     try {
-      console.log('🔄 Starting servers sync from ServeManager...');
+      console.log("🔄 Starting servers sync from ServeManager...");
 
       // Try multiple server endpoints since employees gives 401
       const config = await getServeManagerConfig();
@@ -1037,16 +1249,16 @@ export class CacheService {
         `/users`,
         `/staff`,
         `/process_servers`,
-        `/employees`
+        `/employees`,
       ];
 
       for (const endpoint of possibleEndpoints) {
         try {
           const response = await fetch(`${config.baseUrl}${endpoint}`, {
             headers: {
-              'Authorization': `Bearer ${config.apiKey}`,
-              'Content-Type': 'application/json'
-            }
+              Authorization: `Bearer ${config.apiKey}`,
+              "Content-Type": "application/json",
+            },
           });
 
           if (response.ok) {
@@ -1060,7 +1272,7 @@ export class CacheService {
       }
 
       if (!data) {
-        throw new Error('All server endpoints failed or returned unauthorized');
+        throw new Error("All server endpoints failed or returned unauthorized");
       }
       let allServers: any[] = [];
 
@@ -1077,7 +1289,8 @@ export class CacheService {
       // Process and cache servers
       for (const rawServer of allServers) {
         const mappedServer = mapServerFromServeManager(rawServer);
-        const serverId = mappedServer.id || `server_${Date.now()}_${Math.random()}`;
+        const serverId =
+          mappedServer.id || `server_${Date.now()}_${Math.random()}`;
 
         const serverData = {
           id: serverId,
@@ -1089,39 +1302,54 @@ export class CacheService {
           phone: mappedServer.phone || null,
           license_number: mappedServer.license_number || null,
           active: mappedServer.active || true,
-          status: mappedServer.status || 'active',
-          territories: mappedServer.territories ? JSON.stringify(mappedServer.territories) : null,
+          status: mappedServer.status || "active",
+          territories: mappedServer.territories
+            ? JSON.stringify(mappedServer.territories)
+            : null,
           created_date: mappedServer.created_date || new Date().toISOString(),
-          raw_data: mappedServer._raw ? JSON.stringify(mappedServer._raw) : null,
-          last_synced: new Date().toISOString()
+          raw_data: mappedServer._raw
+            ? JSON.stringify(mappedServer._raw)
+            : null,
+          last_synced: new Date().toISOString(),
         };
 
         try {
           db.insert(servers).values(serverData).onConflictDoNothing().run();
           recordsSynced++;
         } catch (insertError) {
-          console.warn(`⚠️ Skipping server ${serverData.id} due to insertion error:`, insertError.message);
+          console.warn(
+            `⚠️ Skipping server ${serverData.id} due to insertion error:`,
+            insertError.message,
+          );
         }
       }
 
       const duration = Date.now() - startTime;
-      console.log(`✅ Servers sync completed: ${recordsSynced} records in ${duration}ms`);
+      console.log(
+        `✅ Servers sync completed: ${recordsSynced} records in ${duration}ms`,
+      );
 
       return {
         success: true,
         recordsSynced,
         totalRecords: allServers.length,
-        duration
+        duration,
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('❌ Servers sync failed:', errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("❌ Servers sync failed:", errorMessage);
 
       // Use mock servers as fallback
       const mockServers = [
-        { id: 'server1', name: 'Adam Darley', email: 'serve@allegiancelegalsolutions.com', active: true, status: 'active' }
+        {
+          id: "server1",
+          name: "Adam Darley",
+          email: "serve@allegiancelegalsolutions.com",
+          active: true,
+          status: "active",
+        },
       ];
 
       for (const mockServer of mockServers) {
@@ -1129,8 +1357,8 @@ export class CacheService {
           id: mockServer.id,
           servemanager_id: mockServer.id,
           name: mockServer.name,
-          first_name: mockServer.name.split(' ')[0],
-          last_name: mockServer.name.split(' ')[1] || '',
+          first_name: mockServer.name.split(" ")[0],
+          last_name: mockServer.name.split(" ")[1] || "",
           email: mockServer.email,
           phone: null,
           license_number: null,
@@ -1139,7 +1367,7 @@ export class CacheService {
           territories: null,
           created_date: new Date().toISOString(),
           raw_data: JSON.stringify(mockServer),
-          last_synced: new Date().toISOString()
+          last_synced: new Date().toISOString(),
         };
 
         try {
@@ -1157,7 +1385,7 @@ export class CacheService {
         recordsSynced,
         totalRecords: 0,
         duration,
-        error: errorMessage
+        error: errorMessage,
       };
     }
   }
@@ -1172,10 +1400,11 @@ export class CacheService {
       const mappedJob = mapJobFromServeManager(freshJobData);
 
       // Update the job in the database
-      await db.update(jobs)
+      await db
+        .update(jobs)
         .set({
           ...mappedJob,
-          _last_synced: new Date().toISOString()
+          _last_synced: new Date().toISOString(),
         })
         .where(eq(jobs.id, jobId));
 
