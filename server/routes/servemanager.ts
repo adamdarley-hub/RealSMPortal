@@ -1156,19 +1156,175 @@ export const updateClient: RequestHandler = async (req, res) => {
     const { id } = req.params;
     const contactData = req.body;
 
-    console.log(`🔄 Client ${id} contact update request:`, contactData);
-    console.log(`⚠️ ServeManager API limitation: nested arrays (phone_numbers, addresses, contacts) cannot be updated via API`);
-    console.log(`💾 Storing contact information locally for client portal use`);
+    console.log(`🔄 Attempting ServeManager contact update for client ${id}:`, contactData);
 
-    // ServeManager doesn't support updating nested phone_numbers, addresses, or contacts arrays via API
-    // This has been confirmed through multiple attempts and API testing
-    // The API accepts the request but silently ignores nested array updates
+    // First, let's get the current client data to understand the structure
+    console.log(`📋 Fetching current client ${id} data from ServeManager...`);
+    let currentClient;
+    try {
+      const clientResponse = await makeServeManagerRequest(`/companies/${id}`);
+      currentClient = clientResponse.data || clientResponse;
+      console.log(`📊 Current client structure:`, {
+        id: currentClient.id,
+        phone_numbers: currentClient.phone_numbers?.length || 0,
+        addresses: currentClient.addresses?.length || 0,
+        contacts: currentClient.contacts?.length || 0,
+        email_addresses: currentClient.email_addresses?.length || 0
+      });
+    } catch (fetchError) {
+      console.error(`❌ Could not fetch current client data:`, fetchError);
+      return res.status(404).json({
+        error: 'Client not found',
+        message: `Could not fetch client ${id} from ServeManager`
+      });
+    }
 
-    res.json({
-      success: true,
-      message: 'Contact information saved locally. ServeManager contact updates must be done manually in the ServeManager system.',
-      limitation: 'ServeManager API does not support updating phone_numbers, addresses, or contacts arrays via PATCH requests',
-      recommendation: 'Contact information updates should be made directly in the ServeManager admin interface'
+    // Strategy 1: Try updating company record with nested arrays
+    console.log(`🔧 Strategy 1: Updating company with nested contact arrays...`);
+    try {
+      const updatePayload = {
+        data: {
+          type: 'companies',
+          id: id,
+          attributes: {
+            // Preserve existing data
+            name: currentClient.name,
+            // Update phone numbers array
+            phone_numbers: [
+              {
+                id: currentClient.phone_numbers?.[0]?.id || null,
+                phone: contactData.phone || '',
+                primary: true
+              }
+            ],
+            // Update addresses array
+            addresses: [
+              {
+                id: currentClient.addresses?.[0]?.id || null,
+                street: contactData.address || '',
+                city: contactData.city || '',
+                state: contactData.state || '',
+                zip: contactData.zip || '',
+                primary: true
+              }
+            ]
+          }
+        }
+      };
+
+      console.log(`📤 Sending update payload:`, JSON.stringify(updatePayload, null, 2));
+
+      const response1 = await makeServeManagerRequest(`/companies/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updatePayload)
+      });
+
+      console.log(`✅ Strategy 1 successful! Contact updated in ServeManager`);
+      return res.json({
+        success: true,
+        message: 'Contact information updated in ServeManager successfully',
+        data: response1,
+        strategy: 'nested_arrays_patch'
+      });
+
+    } catch (strategy1Error) {
+      console.log(`❌ Strategy 1 failed:`, strategy1Error.message);
+    }
+
+    // Strategy 2: Try simplified company update
+    console.log(`🔧 Strategy 2: Simplified company update...`);
+    try {
+      const simplePayload = {
+        data: {
+          type: 'companies',
+          id: id,
+          attributes: {
+            phone: contactData.phone,
+            address: contactData.address,
+            city: contactData.city,
+            state: contactData.state,
+            zip: contactData.zip
+          }
+        }
+      };
+
+      const response2 = await makeServeManagerRequest(`/companies/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(simplePayload)
+      });
+
+      console.log(`✅ Strategy 2 successful! Contact updated in ServeManager`);
+      return res.json({
+        success: true,
+        message: 'Contact information updated in ServeManager successfully',
+        data: response2,
+        strategy: 'simple_patch'
+      });
+
+    } catch (strategy2Error) {
+      console.log(`❌ Strategy 2 failed:`, strategy2Error.message);
+    }
+
+    // Strategy 3: Try PUT instead of PATCH
+    console.log(`🔧 Strategy 3: Full company PUT update...`);
+    try {
+      const putPayload = {
+        ...currentClient,
+        phone: contactData.phone,
+        address: contactData.address,
+        city: contactData.city,
+        state: contactData.state,
+        zip: contactData.zip,
+        // Try to update the first phone number and address in arrays
+        phone_numbers: currentClient.phone_numbers?.length ? [
+          {
+            ...currentClient.phone_numbers[0],
+            phone: contactData.phone
+          },
+          ...currentClient.phone_numbers.slice(1)
+        ] : [{ phone: contactData.phone, primary: true }],
+        addresses: currentClient.addresses?.length ? [
+          {
+            ...currentClient.addresses[0],
+            street: contactData.address,
+            city: contactData.city,
+            state: contactData.state,
+            zip: contactData.zip
+          },
+          ...currentClient.addresses.slice(1)
+        ] : [{
+          street: contactData.address,
+          city: contactData.city,
+          state: contactData.state,
+          zip: contactData.zip,
+          primary: true
+        }]
+      };
+
+      const response3 = await makeServeManagerRequest(`/companies/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(putPayload)
+      });
+
+      console.log(`✅ Strategy 3 successful! Contact updated in ServeManager`);
+      return res.json({
+        success: true,
+        message: 'Contact information updated in ServeManager successfully',
+        data: response3,
+        strategy: 'full_put'
+      });
+
+    } catch (strategy3Error) {
+      console.log(`❌ Strategy 3 failed:`, strategy3Error.message);
+    }
+
+    // All strategies failed - return error with details
+    console.error(`💥 All ServeManager update strategies failed`);
+    return res.status(500).json({
+      error: 'Failed to update ServeManager',
+      message: 'All update strategies failed. ServeManager may not support contact information updates via API.',
+      strategies_attempted: ['nested_arrays_patch', 'simple_patch', 'full_put'],
+      recommendation: 'Contact information updates may need to be made directly in the ServeManager admin interface'
     });
 
   } catch (error) {
