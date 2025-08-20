@@ -1158,51 +1158,72 @@ export const updateClient: RequestHandler = async (req, res) => {
 
     console.log(`🔄 Updating client ${id} contact information:`, contactData);
 
-    // Step 1: Get the company/client data to find the primary contact
+    // Step 1: Get the company/client data to see current state
     console.log(`🔍 Getting company data for client ${id}`);
     const companyData = await makeServeManagerRequest(`/companies/${id}`);
-    console.log(`📋 Company data retrieved:`, JSON.stringify(companyData, null, 2));
+    console.log(`📋 Current company data:`, JSON.stringify(companyData, null, 2));
 
-    // Step 2: Find the primary contact
-    const contacts = companyData.data?.contacts || companyData.contacts || [];
-    const primaryContact = contacts.find((contact: any) => contact.primary) || contacts[0];
+    const company = companyData.data || companyData;
+    const currentContacts = company.contacts || [];
+    const currentAddresses = company.addresses || [];
+    const primaryContact = currentContacts.find((contact: any) => contact.primary) || currentContacts[0];
+    const primaryAddress = currentAddresses.find((addr: any) => addr.primary) || currentAddresses[0];
 
     if (!primaryContact) {
       throw new Error('No contact found for this company');
     }
 
     console.log(`👤 Found primary contact:`, primaryContact);
+    console.log(`🏠 Found primary address:`, primaryAddress);
 
-    // Step 3: Update only the contact phone number (addresses may not be updateable)
-    const contactUpdateData = {
+    // Step 2: Update the company using proper JSON:API format
+    const updatedContacts = currentContacts.map((contact: any) => {
+      if (contact.id === primaryContact.id) {
+        return {
+          ...contact,
+          phone: contactData.phone || contact.phone
+        };
+      }
+      return contact;
+    });
+
+    const updatedAddresses = currentAddresses.map((address: any) => {
+      if (address.id === primaryAddress?.id) {
+        return {
+          ...address,
+          address1: contactData.address || address.address1,
+          city: contactData.city || address.city,
+          state: contactData.state || address.state,
+          postal_code: contactData.zip || address.postal_code
+        };
+      }
+      return address;
+    });
+
+    const updateData = {
       data: {
-        type: 'contact',
-        id: primaryContact.id,
+        type: 'company',
+        id: parseInt(id),
         attributes: {
-          phone: contactData.phone || primaryContact.phone,
+          contacts: updatedContacts,
+          addresses: updatedAddresses
         }
       }
     };
 
-    // Update the contact phone number
-    console.log(`📞 Updating contact ${primaryContact.id}:`, contactUpdateData);
-    const contactResult = await makeServeManagerRequest(`/contacts/${primaryContact.id}`, {
+    console.log(`📡 Updating company ${id}:`, JSON.stringify(updateData, null, 2));
+
+    const result = await makeServeManagerRequest(`/companies/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(contactUpdateData),
+      body: JSON.stringify(updateData),
     });
 
-    console.log(`✅ Contact updated successfully:`, contactResult);
-
-    // Note: Address updates are not supported via API - those must be done in ServeManager directly
-    const addresses = companyData.data?.addresses || companyData.addresses || [];
-    const primaryAddress = addresses.find((addr: any) => addr.primary) || addresses[0];
+    console.log(`✅ Company updated successfully:`, result);
 
     res.json({
       success: true,
-      message: 'Contact phone number updated successfully in ServeManager. Address changes must be made directly in ServeManager.',
-      contact: contactResult,
-      address_note: 'Address updates not supported via API - must be done in ServeManager directly',
-      current_address: primaryAddress || 'No address found'
+      message: 'Contact information updated successfully in ServeManager',
+      result: result
     });
 
   } catch (error) {
