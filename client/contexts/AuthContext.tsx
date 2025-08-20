@@ -143,7 +143,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: foundClient.email,
             role: 'client',
             company: foundClient.company,
-            client_id: foundClient.id
+            client_id: foundClient.id,
+            client_contact: {
+              phone: foundClient.phone || '',
+              address: foundClient.address?.street || '',
+              city: foundClient.address?.city || '',
+              state: foundClient.address?.state || '',
+              zip: foundClient.address?.zip || ''
+            }
           };
 
           setUser(clientUser);
