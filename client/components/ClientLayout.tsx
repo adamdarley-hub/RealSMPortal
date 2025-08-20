@@ -76,11 +76,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 <img
                   src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=200"
                   alt="Allegiance Legal Solutions"
-                  className="h-6 w-auto mb-2"
+                  className="h-6 w-auto"
                 />
-                <Badge variant="secondary" className="mt-1">
-                  Client Portal
-                </Badge>
               </div>
               <nav className="flex-1 px-4 py-6 space-y-2">
                 {navigation.map((item) => {
