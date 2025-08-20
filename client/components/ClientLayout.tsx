@@ -73,7 +73,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <div className="flex flex-col h-full">
               <div className="p-6 border-b">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  ServePortal
+                  Allegiance Legal Solutions
                 </h2>
                 <Badge variant="secondary" className="mt-1">
                   Client Portal
