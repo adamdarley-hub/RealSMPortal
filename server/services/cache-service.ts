@@ -828,7 +828,7 @@ export class CacheService {
       }
       
       const duration = Date.now() - startTime;
-      console.log(`��� Clients sync completed: ${recordsSynced} records in ${duration}ms`);
+      console.log(`✅ Clients sync completed: ${recordsSynced} records in ${duration}ms`);
       
       return {
         success: true,
@@ -943,6 +943,11 @@ export class CacheService {
   // =================== SYNC LOG ===================
   
   async updateSyncLog(tableName: string, data: any) {
+    if (!this.isDatabaseAvailable()) {
+      console.log('Database not available, skipping sync log update');
+      return;
+    }
+
     try {
       await db.insert(sync_log).values({
         table_name: tableName,
