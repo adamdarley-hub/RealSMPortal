@@ -76,9 +76,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           <SheetContent side="left" className="w-64 p-0">
             <div className="flex flex-col h-full">
               <div className="p-6 border-b">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Allegiance Legal Solutions
-                </h2>
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=200"
+                  alt="Allegiance Legal Solutions"
+                  className="h-6 w-auto mb-2"
+                />
                 <Badge variant="secondary" className="mt-1">
                   Client Portal
                 </Badge>
