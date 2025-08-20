@@ -463,7 +463,7 @@ export default function ClientSettings() {
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    Save Locally
+                    Save Contact Info
                   </>
                 )}
               </Button>
