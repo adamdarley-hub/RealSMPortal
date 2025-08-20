@@ -37,9 +37,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto">
           <div className="flex items-center flex-shrink-0 px-6">
             <img
-              src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=200"
+              src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=300"
               alt="Allegiance Legal Solutions"
-              className="h-8 w-auto"
+              className="h-12 w-auto max-w-full"
             />
           </div>
           <div className="mt-6 flex flex-col flex-grow">
