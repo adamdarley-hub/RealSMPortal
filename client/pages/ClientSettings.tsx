@@ -317,7 +317,7 @@ export default function ClientSettings() {
               Contact Information
             </CardTitle>
             <CardDescription>
-              Update your contact details. Changes will be synced with ServeManager.
+              Update your contact details. Note: Contact information updates may require administrator approval in ServeManager.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
