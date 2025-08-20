@@ -2,7 +2,13 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import ClientLayout from "@/components/ClientLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +66,13 @@ function AttemptCount({ jobId }: { jobId: string }) {
 }
 
 // Component to fetch fresh due date for each job
-function FreshDueDate({ jobId, fallbackDate }: { jobId: string; fallbackDate?: string }) {
+function FreshDueDate({
+  jobId,
+  fallbackDate,
+}: {
+  jobId: string;
+  fallbackDate?: string;
+}) {
   const [dueDate, setDueDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -89,11 +101,11 @@ function FreshDueDate({ jobId, fallbackDate }: { jobId: string; fallbackDate?: s
     return <span className="text-xs text-muted-foreground">...</span>;
   }
 
-  return <span>{dueDate ? formatDate(dueDate) : 'No deadline'}</span>;
+  return <span>{dueDate ? formatDate(dueDate) : "No deadline"}</span>;
 }
 
 function formatDate(dateString: string): string {
-  if (!dateString) return 'No date';
+  if (!dateString) return "No date";
   return new Date(dateString).toLocaleDateString();
 }
 
@@ -138,7 +150,7 @@ export default function ClientDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<ClientJob[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -147,16 +159,21 @@ export default function ClientDashboard() {
 
   const kpis = useMemo((): ClientKPIs => {
     const totalJobs = jobs.length;
-    const activeJobs = jobs.filter(job => 
-      ['pending', 'in_progress', 'assigned'].includes(job.status?.toLowerCase())
+    const activeJobs = jobs.filter((job) =>
+      ["pending", "in_progress", "assigned"].includes(
+        job.status?.toLowerCase(),
+      ),
     ).length;
-    const completedJobs = jobs.filter(job => 
-      ['served', 'completed'].includes(job.status?.toLowerCase())
+    const completedJobs = jobs.filter((job) =>
+      ["served", "completed"].includes(job.status?.toLowerCase()),
     ).length;
-    const overdueJobs = jobs.filter(job => {
+    const overdueJobs = jobs.filter((job) => {
       const dueDate = new Date(job.due_date);
       const now = new Date();
-      return dueDate < now && !['served', 'completed'].includes(job.status?.toLowerCase());
+      return (
+        dueDate < now &&
+        !["served", "completed"].includes(job.status?.toLowerCase())
+      );
     }).length;
 
     return { totalJobs, activeJobs, completedJobs, overdueJobs };
@@ -171,21 +188,23 @@ export default function ClientDashboard() {
     try {
       // If forceSync is true, trigger a full data refresh first
       if (forceSync) {
-        console.log('🔄 Forcing data sync from ServeManager...');
+        console.log("🔄 Forcing data sync from ServeManager...");
         try {
-          await fetch('/api/sync/legacy', { method: 'POST' });
-          console.log('✅ Data sync completed');
+          await fetch("/api/sync/legacy", { method: "POST" });
+          console.log("✅ Data sync completed");
         } catch (syncError) {
-          console.warn('⚠��� Sync failed, continuing with cache:', syncError);
+          console.warn("⚠��� Sync failed, continuing with cache:", syncError);
         }
       }
 
       // Add cache busting timestamp to force fresh data
-      const cacheBuster = forceSync ? `&t=${Date.now()}` : '';
-      const response = await fetch(`/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`);
+      const cacheBuster = forceSync ? `&t=${Date.now()}` : "";
+      const response = await fetch(
+        `/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`,
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to load jobs');
+        throw new Error("Failed to load jobs");
       }
 
       const data = await response.json();
@@ -198,7 +217,8 @@ export default function ClientDashboard() {
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load jobs';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load jobs";
       setError(errorMessage);
       toast({
         title: "Error",
@@ -220,21 +240,26 @@ export default function ClientDashboard() {
     // Apply status filter first
     if (statusFilter) {
       switch (statusFilter) {
-        case 'active':
-          filtered = filtered.filter(job =>
-            ['pending', 'in_progress', 'assigned'].includes(job.status?.toLowerCase())
+        case "active":
+          filtered = filtered.filter((job) =>
+            ["pending", "in_progress", "assigned"].includes(
+              job.status?.toLowerCase(),
+            ),
           );
           break;
-        case 'completed':
-          filtered = filtered.filter(job =>
-            ['served', 'completed'].includes(job.status?.toLowerCase())
+        case "completed":
+          filtered = filtered.filter((job) =>
+            ["served", "completed"].includes(job.status?.toLowerCase()),
           );
           break;
-        case 'overdue':
-          filtered = filtered.filter(job => {
+        case "overdue":
+          filtered = filtered.filter((job) => {
             const dueDate = new Date(job.due_date);
             const now = new Date();
-            return dueDate < now && !['served', 'completed'].includes(job.status?.toLowerCase());
+            return (
+              dueDate < now &&
+              !["served", "completed"].includes(job.status?.toLowerCase())
+            );
           });
           break;
         default:
@@ -243,13 +268,14 @@ export default function ClientDashboard() {
     }
 
     // Apply search filter - search all visible information
-    return filtered.filter(job => {
+    return filtered.filter((job) => {
       const searchLower = searchTerm.toLowerCase();
 
       // Basic job info
       if (job.job_number?.toLowerCase().includes(searchLower)) return true;
       if (job.recipient_name?.toLowerCase().includes(searchLower)) return true;
-      if (job.court_case_number?.toLowerCase().includes(searchLower)) return true;
+      if (job.court_case_number?.toLowerCase().includes(searchLower))
+        return true;
 
       // Case details (plaintiff vs defendant)
       if (job.plaintiff?.toLowerCase().includes(searchLower)) return true;
@@ -270,7 +296,7 @@ export default function ClientDashboard() {
         job.defendant_address?.street,
         job.defendant_address?.city,
         job.defendant_address?.state,
-        job.defendant_address?.zip
+        job.defendant_address?.zip,
       ];
 
       for (const field of addressFields) {
@@ -284,7 +310,8 @@ export default function ClientDashboard() {
           if (addr.address2?.toLowerCase().includes(searchLower)) return true;
           if (addr.city?.toLowerCase().includes(searchLower)) return true;
           if (addr.state?.toLowerCase().includes(searchLower)) return true;
-          if (addr.postal_code?.toLowerCase().includes(searchLower)) return true;
+          if (addr.postal_code?.toLowerCase().includes(searchLower))
+            return true;
         }
       }
 
@@ -298,16 +325,19 @@ export default function ClientDashboard() {
     });
   }, [jobs, searchTerm, statusFilter]);
 
-
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
-      case "high": case "urgent": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      case "medium": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      case "low": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+      case "high":
+      case "urgent":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      case "low":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
     }
   };
-
 
   if (loading) {
     return (
@@ -320,7 +350,7 @@ export default function ClientDashboard() {
             </div>
             <Skeleton className="h-10 w-32" />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <Card key={i}>
@@ -371,7 +401,11 @@ export default function ClientDashboard() {
               Track your process service requests
             </p>
           </div>
-          <Button onClick={() => loadJobs(true)} variant="outline" className="gap-2">
+          <Button
+            onClick={() => loadJobs(true)}
+            variant="outline"
+            className="gap-2"
+          >
             <RefreshCw className="w-4 h-4" />
             Force Refresh
           </Button>
@@ -380,7 +414,7 @@ export default function ClientDashboard() {
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card
-            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === null ? 'ring-2 ring-blue-500' : ''}`}
+            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === null ? "ring-2 ring-blue-500" : ""}`}
             onClick={() => setStatusFilter(null)}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -393,8 +427,10 @@ export default function ClientDashboard() {
           </Card>
 
           <Card
-            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'active' ? 'ring-2 ring-blue-500' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'active' ? null : 'active')}
+            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === "active" ? "ring-2 ring-blue-500" : ""}`}
+            onClick={() =>
+              setStatusFilter(statusFilter === "active" ? null : "active")
+            }
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
@@ -406,8 +442,10 @@ export default function ClientDashboard() {
           </Card>
 
           <Card
-            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'completed' ? 'ring-2 ring-blue-500' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'completed' ? null : 'completed')}
+            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === "completed" ? "ring-2 ring-blue-500" : ""}`}
+            onClick={() =>
+              setStatusFilter(statusFilter === "completed" ? null : "completed")
+            }
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Completed</CardTitle>
@@ -419,15 +457,19 @@ export default function ClientDashboard() {
           </Card>
 
           <Card
-            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === 'overdue' ? 'ring-2 ring-blue-500' : ''}`}
-            onClick={() => setStatusFilter(statusFilter === 'overdue' ? null : 'overdue')}
+            className={`cursor-pointer transition-all hover:shadow-md ${statusFilter === "overdue" ? "ring-2 ring-blue-500" : ""}`}
+            onClick={() =>
+              setStatusFilter(statusFilter === "overdue" ? null : "overdue")
+            }
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Overdue</CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">{kpis.overdueJobs}</div>
+              <div className="text-2xl font-bold text-destructive">
+                {kpis.overdueJobs}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -487,42 +529,67 @@ export default function ClientDashboard() {
                                 job.address,
                                 job.defendant_address,
                                 // Check ServeManager addresses_attributes array for primary address
-                                job.addresses_attributes?.find((addr: any) => addr.primary === true),
+                                job.addresses_attributes?.find(
+                                  (addr: any) => addr.primary === true,
+                                ),
                                 job.addresses_attributes?.[0], // Fallback to first if no primary
-                                job.raw_data?.addresses_attributes?.find((addr: any) => addr.primary === true),
+                                job.raw_data?.addresses_attributes?.find(
+                                  (addr: any) => addr.primary === true,
+                                ),
                                 job.raw_data?.addresses_attributes?.[0],
                                 // Check raw data sources that ServeManager uses
-                                job.raw_data?.addresses?.find((addr: any) => addr.primary === true),
+                                job.raw_data?.addresses?.find(
+                                  (addr: any) => addr.primary === true,
+                                ),
                                 job.raw_data?.addresses?.[0],
-                                (job as any).addresses?.find((addr: any) => addr.primary === true),
+                                (job as any).addresses?.find(
+                                  (addr: any) => addr.primary === true,
+                                ),
                                 (job as any).addresses?.[0],
                                 // Check nested raw data
                                 job.raw_data?.service_address,
                                 job.raw_data?.defendant_address,
-                                job.raw_data?.address
+                                job.raw_data?.address,
                               ];
 
                               for (const address of possibleAddresses) {
                                 if (!address) continue;
 
                                 // If address is a string, return it directly
-                                if (typeof address === 'string' && address.trim()) {
+                                if (
+                                  typeof address === "string" &&
+                                  address.trim()
+                                ) {
                                   return address.trim();
                                 }
 
                                 // If address is an object, format it
-                                if (typeof address === 'object' && address) {
+                                if (typeof address === "object" && address) {
                                   // Handle ServeManager addresses_attributes format
                                   const parts = [
-                                    address.address1 || address.street || address.street1, // ServeManager uses address1
-                                    address.address2 || address.street2
+                                    address.address1 ||
+                                      address.street ||
+                                      address.street1, // ServeManager uses address1
+                                    address.address2 || address.street2,
                                   ].filter(Boolean);
 
-                                  const street = parts.join(' ');
-                                  const cityState = [address.city, address.state].filter(Boolean).join(', ');
-                                  const zip = address.zip || address.postal_code;
+                                  const street = parts.join(" ");
+                                  const cityState = [
+                                    address.city,
+                                    address.state,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(", ");
+                                  const zip =
+                                    address.zip || address.postal_code;
 
-                                  const formattedAddress = [street, cityState, zip].filter(Boolean).join(', ');
+                                  const formattedAddress = [
+                                    street,
+                                    cityState,
+                                    zip,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(", ");
 
                                   if (formattedAddress.trim()) {
                                     return formattedAddress;
@@ -530,7 +597,7 @@ export default function ClientDashboard() {
                                 }
                               }
 
-                              return 'Address pending';
+                              return "Address pending";
                             };
 
                             return getServiceAddressString(job);
@@ -555,26 +622,34 @@ export default function ClientDashboard() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={getPriorityColor(job.priority)}>
-                        {job.priority.replace(/\b\w/g, l => l.toUpperCase())}
+                      <Badge
+                        variant="outline"
+                        className={getPriorityColor(job.priority)}
+                      >
+                        {job.priority.replace(/\b\w/g, (l) => l.toUpperCase())}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <FreshDueDate jobId={job.id} fallbackDate={job.due_date} />
+                      <FreshDueDate
+                        jobId={job.id}
+                        fallbackDate={job.due_date}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-            
+
             {filteredJobs.length === 0 && (
               <div className="text-center py-8">
                 <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Jobs Found</h3>
                 <p className="text-muted-foreground">
-                  {searchTerm ? "No jobs match your search criteria" :
-                   statusFilter ? `No ${statusFilter} jobs found` :
-                   "No jobs available"}
+                  {searchTerm
+                    ? "No jobs match your search criteria"
+                    : statusFilter
+                      ? `No ${statusFilter} jobs found`
+                      : "No jobs available"}
                 </p>
                 {statusFilter && (
                   <Button

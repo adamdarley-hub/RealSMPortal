@@ -11,7 +11,7 @@ import {
   User,
   LogOut,
   Building,
-  Settings
+  Settings,
 } from "lucide-react";
 
 const navigation = [
@@ -20,14 +20,18 @@ const navigation = [
   { name: "Settings", href: "/client/settings", icon: Settings },
 ];
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+export default function ClientLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
-    window.location.href = '/login';
+    window.location.href = "/login";
   };
 
   return (
@@ -116,7 +120,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
             <div className="flex-1 px-4 flex justify-between items-center">
               <div className="flex-1" />
-              
+
               {/* User info */}
               <div className="ml-4 flex items-center space-x-4">
                 <div className="flex flex-col text-right">
@@ -141,9 +145,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           </div>
 
           {/* Page content */}
-          <main className="flex-1">
-            {children}
-          </main>
+          <main className="flex-1">{children}</main>
         </Sheet>
       </div>
     </div>

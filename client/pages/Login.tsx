@@ -1,18 +1,24 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -20,13 +26,13 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     const success = await login(email, password);
     if (success) {
-      navigate('/');
+      navigate("/");
     } else {
-      setError('Invalid email or password');
+      setError("Invalid email or password");
     }
   };
 
@@ -56,13 +62,13 @@ export default function Login() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -97,7 +103,7 @@ export default function Login() {
                   Signing in...
                 </>
               ) : (
-                'Sign In'
+                "Sign In"
               )}
             </Button>
           </form>
@@ -115,13 +121,14 @@ export default function Login() {
               <div className="bg-blue-50 p-2 rounded border border-blue-200">
                 <strong>Any Client:</strong> Use any client email from database
                 <br />
-                <strong>Examples:</strong> service@wyattprocess.com, kelly@kerrcivilprocess.com
+                <strong>Examples:</strong> service@wyattprocess.com,
+                kelly@kerrcivilprocess.com
                 <br />
                 <strong>Password:</strong> password
               </div>
               <div className="bg-yellow-50 p-2 rounded border border-yellow-200 text-xs">
-                <strong>Note:</strong> All accounts use "password" for development.
-                Clients can set custom passwords later.
+                <strong>Note:</strong> All accounts use "password" for
+                development. Clients can set custom passwords later.
               </div>
             </div>
           </div>

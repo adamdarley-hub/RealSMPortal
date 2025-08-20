@@ -56,26 +56,28 @@ export default function Layout({ children }: LayoutProps) {
 
   const handleLogout = () => {
     logout();
-    window.location.href = '/login';
+    window.location.href = "/login";
   };
-  
+
   const navItems = adminNavItems; // Admin layout always uses admin nav items
 
   return (
     <div className="h-screen flex bg-background">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden" 
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-4 border-b border-sidebar-border">
@@ -104,7 +106,7 @@ export default function Layout({ children }: LayoutProps) {
                         "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                         isActive
                           ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                       )}
                       onClick={() => setSidebarOpen(false)}
                     >
@@ -121,16 +123,26 @@ export default function Layout({ children }: LayoutProps) {
           <div className="p-4 border-t border-sidebar-border">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start gap-3 p-3 h-auto">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 p-3 h-auto"
+                >
                   <Avatar className="w-8 h-8">
                     <AvatarImage src="" />
                     <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                      {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                      {user?.name
+                        ?.split(" ")
+                        .map((n) => n[0])
+                        .join("") || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium text-sidebar-foreground">{user?.name}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{user?.role} Portal</p>
+                    <p className="text-sm font-medium text-sidebar-foreground">
+                      {user?.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {user?.role} Portal
+                    </p>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
@@ -141,7 +153,9 @@ export default function Layout({ children }: LayoutProps) {
                 <DropdownMenuItem>Billing</DropdownMenuItem>
                 <DropdownMenuItem>Support</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
+                  Log out
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -162,9 +176,11 @@ export default function Layout({ children }: LayoutProps) {
               >
                 <Menu className="w-5 h-5" />
               </Button>
-              
+
               <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Allegiance Admin</span>
+                <span className="font-medium text-foreground">
+                  Allegiance Admin
+                </span>
                 <span>•</span>
                 <span className="capitalize">{user?.role} Portal</span>
               </div>
@@ -173,13 +189,13 @@ export default function Layout({ children }: LayoutProps) {
             <div className="flex items-center gap-4">
               <div className="hidden md:flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
                 <Search className="w-4 h-4 text-muted-foreground" />
-                <input 
-                  type="text" 
-                  placeholder="Search jobs, clients..." 
+                <input
+                  type="text"
+                  placeholder="Search jobs, clients..."
                   className="bg-transparent border-0 outline-none text-sm w-64"
                 />
               </div>
-              
+
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full text-xs"></span>
@@ -189,9 +205,7 @@ export default function Layout({ children }: LayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );
