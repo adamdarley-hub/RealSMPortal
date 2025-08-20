@@ -1014,6 +1014,25 @@ export default function ClientJobDetail() {
                     <p className="text-sm mt-1">{job.description}</p>
                   </div>
                 )}
+
+                {/* Documents to be Served */}
+                {job.documents && Array.isArray(job.documents) && job.documents.length > 0 && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Documents to be Served</label>
+                    <div className="mt-2 space-y-2">
+                      {job.documents.map((doc: any, index: number) => (
+                        <div key={doc.id || index} className="border-l-4 border-blue-200 pl-3 py-2 bg-gray-50 rounded-r">
+                          <p className="text-sm font-medium">{doc.name || doc.title || doc.document_type || `Document ${index + 1}`}</p>
+                          {(doc.received_at || doc.received_date || doc.date_received) && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Received: {formatDateTime(doc.received_at || doc.received_date || doc.date_received)}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
