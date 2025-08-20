@@ -84,9 +84,9 @@ export default function Layout({ children }: LayoutProps) {
             </div>
             <div>
               <img
-                src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=200"
+                src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=300"
                 alt="Allegiance Legal Solutions"
-                className="h-8 w-auto"
+                className="h-12 w-auto max-w-full"
               />
             </div>
           </div>
