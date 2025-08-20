@@ -34,8 +34,6 @@
     "@supabase/supabase-js": "^2.55.0",
     "@types/node-fetch": "^2.6.13",
     "dotenv": "^17.2.0",
-    "drizzle-kit": "^0.31.4",
-    "drizzle-orm": "^0.44.4",
     "express": "^4.18.2",
     "node-fetch": "^3.3.2",
     "stripe": "^18.4.0",
