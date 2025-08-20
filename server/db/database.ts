@@ -1,9 +1,18 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import path from 'path';
 import fs from 'fs';
 import * as schema from './schema';
+
+// Try to import better-sqlite3, but make it optional for production builds
+let Database: any = null;
+let drizzle: any = null;
+
+try {
+  Database = require('better-sqlite3');
+  const drizzleModule = require('drizzle-orm/better-sqlite3');
+  drizzle = drizzleModule.drizzle;
+} catch (error) {
+  console.log('SQLite not available in production environment - using in-memory fallback');
+}
 
 // Database file path
 const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'servemanager.db');
