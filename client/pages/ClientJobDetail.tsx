@@ -921,11 +921,11 @@ export default function ClientJobDetail() {
                     <label className="text-sm font-medium text-gray-500">Received Date</label>
                     <p className="text-sm">
                       {(() => {
-                        // Look for documents received date
-                        if (job.documents && Array.isArray(job.documents) && job.documents.length > 0) {
-                          const firstDoc = job.documents[0];
-                          if (firstDoc.received_at || firstDoc.received_date || firstDoc.date_received) {
-                            return formatDateTime(firstDoc.received_at || firstDoc.received_date || firstDoc.date_received);
+                        // Look for documents_to_be_served_attributes received date
+                        if (job.documents_to_be_served_attributes && Array.isArray(job.documents_to_be_served_attributes) && job.documents_to_be_served_attributes.length > 0) {
+                          const firstDoc = job.documents_to_be_served_attributes[0];
+                          if (firstDoc.received_at) {
+                            return formatDateTime(firstDoc.received_at);
                           }
                         }
                         // Fallback to job created date if no documents received date
