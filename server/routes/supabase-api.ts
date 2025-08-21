@@ -128,6 +128,20 @@ export const getSupabaseJobs: RequestHandler = async (req, res) => {
       sort_order
     };
 
+    // Double-check Supabase config before calling service
+    if (!isSupabaseConfigured()) {
+      console.log('⚠️ Supabase check failed at service call, using mock data');
+      return res.json({
+        jobs: [],
+        total: 0,
+        page: 1,
+        limit: 50,
+        has_more: false,
+        source: 'supabase-mock-fallback',
+        duration_ms: Date.now() - startTime
+      });
+    }
+
     // Fetch from Supabase
     const result = await supabaseService.getJobs(filters, pagination);
     
