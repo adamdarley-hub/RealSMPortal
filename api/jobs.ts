@@ -137,11 +137,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               data.data?.length || 0,
             );
 
+            // LOG THE FULL RAW RESPONSE STRUCTURE
+            console.log("🔍 FULL RAW SERVEMANAGER RESPONSE:");
+            console.log("📋 Response structure:", {
+              hasData: !!data.data,
+              dataLength: data.data?.length || 0,
+              hasMeta: !!data.meta,
+              hasIncluded: !!data.included,
+              includedLength: data.included?.length || 0,
+              metaKeys: data.meta ? Object.keys(data.meta) : [],
+            });
+
             if (data.data && data.data.length > 0) {
-              console.log(
-                "📄 Sample job data:",
-                JSON.stringify(data.data[0], null, 2).substring(0, 500),
-              );
+              console.log("📄 FIRST JOB RAW DATA:");
+              console.log(JSON.stringify(data.data[0], null, 2));
+
+              if (data.included && data.included.length > 0) {
+                console.log("📎 FIRST INCLUDED ITEM:");
+                console.log(JSON.stringify(data.included[0], null, 2));
+              }
             }
 
             // Transform ServeManager data to expected format
