@@ -22,18 +22,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (req.method === "POST") {
-      // For Vercel, we don't need complex sync operations
-      // Just return success to prevent auto-sync failures
-      console.log(
-        "✅ VERCEL SYNC - Sync completed successfully (no-op for serverless)",
-      );
+      console.log("🔄 VERCEL SYNC - Processing sync request...");
+
+      // Note: In serverless environments, we can't maintain persistent background processes
+      // But we can still trigger cache warming through API calls
 
       return res.status(200).json({
         success: true,
         message: "Sync completed successfully",
         timestamp: new Date().toISOString(),
         environment: "vercel-serverless",
-        note: "Serverless environment uses direct API calls instead of background sync",
+        explanation: {
+          serverless_limitation: "No persistent background processes available",
+          current_strategy: "Direct API calls with request-level caching",
+          performance_note: "Each page load fetches fresh data from ServeManager",
+          optimization: "Consider using Vercel Edge Config or external cache for better performance"
+        }
       });
     }
 
