@@ -111,7 +111,7 @@ export default function ApiConfig() {
 
   const saveConfiguration = async () => {
     // Basic validation
-    if (config.serveManager.enabled && (!config.serveManager.baseUrl || !config.serveManager.apiKey || config.serveManager.apiKey.startsWith('***'))) {
+    if (config.serveManager.enabled && (!config.serveManager.baseUrl || !config.serveManager.apiKey)) {
       toast({
         title: "Validation Error",
         description: "Please enter ServeManager API URL and key before saving",
