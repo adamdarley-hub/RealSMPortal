@@ -132,43 +132,32 @@ export class CacheService {
               "🔍 Sample raw job data:",
               JSON.stringify(filteredJobs[0], null, 2),
             );
-            // Transform ServeManager data to expected frontend format
+            // Transform ServeManager data using proper mapper
             const transformedJobs = filteredJobs.map((job) => {
-              // ServeManager data structure has attributes at root level
-              const courtCase = job.court_case || {};
-              const attempts = job.attempts || [];
+              const mappedJob = mapJobFromServeManager(job);
 
-              // Map priority: ServeManager uses "Routine" or "Rush"
-              const priority =
-                job.service_level === "Rush" ? "rush" : "routine";
-
+              // Convert to frontend format
               return {
-                id: job.id,
-                job_number: job.job_number || job.servemanager_job_number,
-                recipient_name:
-                  job.recipient_name ||
-                  courtCase.defendant ||
-                  "Unknown Recipient",
-                status: job.status || "pending",
-                priority: priority,
-                created_at: job.created_at || new Date().toISOString(),
-                due_date: job.due_date || job.date_due,
-                amount: parseFloat(job.amount || job.price || "0"),
-                client_id: job.client_company?.id,
-                client_company: job.client_company?.name,
-                client_name:
-                  job.client_contact?.first_name +
-                  " " +
-                  job.client_contact?.last_name,
-                service_address: job.service_address,
-                defendant_address: job.defendant_address,
-                address: job.address,
-                addresses_attributes: job.addresses_attributes,
-                court_case_number: courtCase.number,
-                plaintiff: courtCase.plaintiff,
-                defendant_name: courtCase.defendant,
-                attempt_count: job.attempt_count || attempts.length,
-                attempts: attempts,
+                id: mappedJob.id,
+                job_number: mappedJob.job_number || mappedJob.servemanager_job_number,
+                recipient_name: mappedJob.recipient_name || "Unknown Recipient",
+                status: mappedJob.status || "pending",
+                priority: mappedJob.priority || "routine",
+                created_at: mappedJob.created_at || new Date().toISOString(),
+                due_date: mappedJob.due_date,
+                amount: parseFloat(String(mappedJob.amount || "0")),
+                client_id: mappedJob.client_id,
+                client_company: mappedJob.client_company,
+                client_name: mappedJob.client_name,
+                service_address: mappedJob.service_address,
+                defendant_address: mappedJob.defendant_address,
+                address: mappedJob.address,
+                addresses_attributes: mappedJob.addresses_attributes,
+                court_case_number: mappedJob.court_case_number,
+                plaintiff: mappedJob.plaintiff,
+                defendant_name: mappedJob.defendant_name || mappedJob.recipient_name,
+                attempt_count: mappedJob.attempt_count || 0,
+                attempts: mappedJob.attempts || [],
                 // Keep raw data for debugging
                 raw_data: job,
               };
