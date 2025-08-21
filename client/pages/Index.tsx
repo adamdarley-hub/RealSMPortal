@@ -299,8 +299,10 @@ export default function Dashboard() {
   }, [courtCases, casesSearch]);
 
   // Helper functions
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+  const getStatusColor = (status: string | null | undefined) => {
+    if (!status) return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+
+    switch (String(status).toLowerCase()) {
       case "served": case "completed": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
       case "in_progress": case "assigned": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
       case "attempted": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
@@ -309,8 +311,10 @@ export default function Dashboard() {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority.toLowerCase()) {
+  const getPriorityColor = (priority: string | null | undefined) => {
+    if (!priority) return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+
+    switch (String(priority).toLowerCase()) {
       case "high": case "urgent": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
       case "medium": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
       case "low": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
