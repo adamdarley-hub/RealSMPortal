@@ -235,8 +235,10 @@ export default function ClientDashboard() {
       console.log('📋 Client jobs loaded:', {
         total: data.jobs?.length || 0,
         source: data.source,
-        clientId: user.client_id
+        clientId: user.client_id,
+        firstJob: data.jobs?.[0]
       });
+      console.log('📄 Full API response:', data);
 
       setJobs(data.jobs || []);
 
