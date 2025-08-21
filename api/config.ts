@@ -282,6 +282,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // Store config in global memory (persists across function calls in same container)
           global.tempApiConfig = { ...global.tempApiConfig, ...configToStore };
 
+          // Clear cache to ensure new config is loaded
+          clearConfigCache();
+
           console.log(
             "⚠️ VERCEL DEBUG - Config saved temporarily. For persistent storage, set these environment variables in Vercel:",
           );
@@ -313,7 +316,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
         }
       } catch (error) {
-        console.error("🚨 VERCEL DEBUG - Error saving config:", error);
+        console.error("���� VERCEL DEBUG - Error saving config:", error);
         return res.status(500).json({
           error: "Failed to save configuration",
           details: error instanceof Error ? error.message : "Unknown error",
