@@ -25,6 +25,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "GET") {
+      console.log("🔧 VERCEL DEBUG - Config GET request received");
+      console.log("🌍 VERCEL DEBUG - Environment check:", {
+        hasServeManagerBaseUrl: !!process.env.SERVEMANAGER_BASE_URL,
+        hasServeManagerApiKey: !!process.env.SERVEMANAGER_API_KEY,
+        hasGlobalTempConfig: !!global.tempApiConfig,
+        tempConfigKeys: global.tempApiConfig ? Object.keys(global.tempApiConfig) : [],
+        hostname: req.headers.host
+      });
+
       // Return current config (with masked sensitive values)
       const config = {
         serveManager: {
