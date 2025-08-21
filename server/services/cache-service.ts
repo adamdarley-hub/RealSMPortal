@@ -66,16 +66,33 @@ export class CacheService {
         console.log(`📋 ServeManager returned ${jobs.length} jobs`);
 
         // Check if we have client_id filter and log sample client_ids from jobs
-        if (filters.client_id) {
-          const sampleJobs = jobs.slice(0, 3).map((job) => ({
-            id: job.id,
-            client_id: job.client_id || job.attributes?.client_id,
-            client_company:
-              job.client_company || job.attributes?.client_company,
-          }));
-          console.log(`🔍 Looking for client_id: ${filters.client_id}`);
-          console.log("📊 Sample jobs with client info:", sampleJobs);
+      if (filters.client_id) {
+        const sampleJobs = jobs.slice(0, 3).map((job) => ({
+          id: job.id,
+          client_id: job.client_id || job.attributes?.client_id,
+          client_company: job.client_company || job.attributes?.client_company,
+          client_company_id: job.client_company?.id || job.attributes?.client_company?.id,
+        }));
+        console.log(`🔍 Looking for client_id: ${filters.client_id}`);
+        console.log("📊 Sample jobs with client info:", sampleJobs);
+
+        // Filter jobs by client_company.id since that's where ServeManager stores the client ID
+        const filteredJobs = jobs.filter((job) => {
+          const clientCompanyId = String(job.client_company?.id || job.attributes?.client_company?.id || '');
+          return clientCompanyId === String(filters.client_id);
+        });
+
+        console.log(`✅ Found ${filteredJobs.length} jobs for client_id ${filters.client_id}`);
+        if (filteredJobs.length > 0) {
+          console.log("📋 Sample filtered job:", {
+            id: filteredJobs[0].id,
+            client_company_id: filteredJobs[0].client_company?.id,
+            client_company_name: filteredJobs[0].client_company?.name
+          });
         }
+
+        return filteredJobs;
+      }
 
         return jobs;
       }
