@@ -21,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log("🌍 VERCEL JOBS - Environment:", {
         hostname: req.headers.host,
         timestamp: new Date().toISOString(),
-        userAgent: req.headers['user-agent']?.substring(0, 50)
+        userAgent: req.headers["user-agent"]?.substring(0, 50),
       });
 
       // Get query parameters
@@ -29,7 +29,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const limit = req.query.limit as string;
       const refresh = req.query.refresh as string;
 
-      console.log("🔍 VERCEL JOBS - Query params:", { clientId, limit, refresh });
+      console.log("🔍 VERCEL JOBS - Query params:", {
+        clientId,
+        limit,
+        refresh,
+      });
 
       const servemanagerConfig = {
         baseUrl: process.env.SERVEMANAGER_BASE_URL,
@@ -188,15 +192,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               status: response.status,
               statusText: response.statusText,
               errorText: errorText.substring(0, 200),
-              url: url.toString()
+              url: url.toString(),
             });
           }
         } catch (error) {
           console.log("⚠️ VERCEL JOBS - ServeManager request failed:", {
-            error: error instanceof Error ? error.message : 'Unknown error',
-            errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+            error: error instanceof Error ? error.message : "Unknown error",
+            errorType:
+              error instanceof Error ? error.constructor.name : "Unknown",
             baseUrl: servemanagerConfig.baseUrl,
-            hasApiKey: !!servemanagerConfig.apiKey
+            hasApiKey: !!servemanagerConfig.apiKey,
           });
         }
       }
