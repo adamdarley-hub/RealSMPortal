@@ -198,23 +198,16 @@ export default function ClientDashboard() {
       }
 
       // Add cache busting timestamp to force fresh data
-      // Detect environment and use appropriate API base
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
-      const isFlyDev = window.location.hostname.includes('fly.dev'); // Builder.io preview environment
-      const isDevelopment = isLocalhost || isFlyDev;
-
-      // Use dev server backend for both localhost and Fly.dev preview
-      const apiBase = isDevelopment ? (isLocalhost ? 'http://localhost:8081' : '') : '';
-
       const cacheBuster = forceSync ? `&t=${Date.now()}` : "";
-      // TEMPORARY: Use ServeManager API while debugging Supabase
-      const jobsUrl = `${apiBase}/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`;
+
+      // Use relative URL to go through the proxy
+      const jobsUrl = `/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`;
 
       console.log('🔗 Client jobs request URL:', jobsUrl);
       console.log('🏢 Client company:', user.company);
       console.log('🆔 Client ID:', user.client_id);
-      console.log('🏠 Environment:', isLocalhost ? 'Localhost Dev' : isFlyDev ? 'Fly.dev Preview' : 'Production');
       console.log('🌐 Hostname:', window.location.hostname);
+      console.log('🔍 Client filtering for:', user.client_id);
 
       const response = await fetch(jobsUrl, {
         headers: {
