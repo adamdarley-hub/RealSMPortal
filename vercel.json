@@ -4,10 +4,8 @@
   "devCommand": "npm run dev",
   "framework": null,
   "functions": {
-    "netlify/functions/api.ts": {
-      "runtime": "nodejs22.x",
-      "memory": 1024,
-      "maxDuration": 30
+    "api/**/*.ts": {
+      "runtime": "nodejs22.x"
     }
   },
   "build": {
@@ -16,7 +14,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/netlify/functions/api" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
