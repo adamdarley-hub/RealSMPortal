@@ -19,15 +19,21 @@ export class CacheService {
     console.log(
       "Serverless mode: Fetching jobs directly from ServeManager (no cache)",
     );
+    console.log("🔍 Filters received:", filters);
+
     try {
       // Fetch directly from ServeManager API
+      const queryParams = {
+        page: 1,
+        per_page: 100,
+        ...filters,
+      };
+
+      console.log("🌐 ServeManager query params:", queryParams);
+
       const response = await makeServeManagerRequest("/jobs", {
         method: "GET",
-        query: {
-          page: 1,
-          per_page: 100,
-          ...filters,
-        },
+        query: queryParams,
       });
 
       if (response && response.data) {
