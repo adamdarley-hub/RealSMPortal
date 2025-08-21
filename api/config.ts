@@ -69,19 +69,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         radar: {
           publishableKey:
             process.env.RADAR_PUBLISHABLE_KEY ||
-            tempConfig.radar?.publishableKey ||
+            global.tempApiConfig?.radar?.publishableKey ||
             "",
           secretKey: process.env.RADAR_SECRET_KEY
             ? "***" + process.env.RADAR_SECRET_KEY.slice(-4)
-            : tempConfig.radar?.secretKey
-              ? "***" + tempConfig.radar.secretKey.slice(-4)
+            : global.tempApiConfig?.radar?.secretKey
+              ? "***" + global.tempApiConfig.radar.secretKey.slice(-4)
               : "",
           enabled: Boolean(
-            process.env.RADAR_SECRET_KEY || tempConfig.radar?.enabled,
+            process.env.RADAR_SECRET_KEY || global.tempApiConfig?.radar?.enabled,
           ),
           environment:
             (process.env.RADAR_ENVIRONMENT as "test" | "live") ||
-            tempConfig.radar?.environment ||
+            global.tempApiConfig?.radar?.environment ||
             "test",
         },
       };
