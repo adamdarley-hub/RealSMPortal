@@ -376,9 +376,9 @@ export default function Dashboard() {
     }
   };
 
-  const formatRelativeTime = (dateString: string) => {
+  const formatRelativeTime = (dateString: any) => {
     if (!dateString) return "No date";
-    const date = new Date(dateString);
+    const date = new Date(String(dateString));
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
