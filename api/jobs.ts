@@ -1,10 +1,12 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// Mock jobs data for fallback
+// Mock jobs data for fallback - includes proper client_id for filtering
 const mockJobs = [
+  // Kelly Kerr (client_id: 1454323) jobs
   {
     id: "1",
     job_number: "JOB-001",
+    client_id: "1454323",
     client_company: "Kerr Civil Process",
     client_name: "Kelly Kerr",
     recipient_name: "John Doe",
@@ -15,26 +17,13 @@ const mockJobs = [
     amount: 125.0,
     city: "Atlanta",
     state: "GA",
-    attempts: [],
-  },
-  {
-    id: "2",
-    job_number: "JOB-002",
-    client_company: "Pronto Process",
-    client_name: "Shawn Wells",
-    recipient_name: "Jane Smith",
-    status: "in_progress",
-    priority: "medium",
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-    amount: 85.0,
-    city: "Marietta",
-    state: "GA",
+    address: "123 Main St",
     attempts: [],
   },
   {
     id: "3",
     job_number: "JOB-003",
+    client_id: "1454323",
     client_company: "Kerr Civil Process",
     client_name: "Kelly Kerr",
     recipient_name: "Bob Johnson",
@@ -45,11 +34,13 @@ const mockJobs = [
     amount: 95.0,
     city: "Decatur",
     state: "GA",
+    address: "789 Oak Ave",
     attempts: [],
   },
   {
     id: "4",
     job_number: "JOB-004",
+    client_id: "1454323",
     client_company: "Kerr Civil Process",
     client_name: "Kelly Kerr",
     recipient_name: "Sarah Wilson",
@@ -60,11 +51,13 @@ const mockJobs = [
     amount: 150.0,
     city: "Roswell",
     state: "GA",
+    address: "456 Pine St",
     attempts: [],
   },
   {
     id: "5",
     job_number: "JOB-005",
+    client_id: "1454323",
     client_company: "Kerr Civil Process",
     client_name: "Kelly Kerr",
     recipient_name: "Mike Davis",
@@ -75,6 +68,59 @@ const mockJobs = [
     amount: 110.0,
     city: "Alpharetta",
     state: "GA",
+    address: "321 Cedar Ln",
+    attempts: [],
+  },
+  {
+    id: "6",
+    job_number: "JOB-006",
+    client_id: "1454323",
+    client_company: "Kerr Civil Process",
+    client_name: "Kelly Kerr",
+    recipient_name: "Lisa Brown",
+    status: "completed",
+    priority: "medium",
+    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    due_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    amount: 75.0,
+    city: "Sandy Springs",
+    state: "GA",
+    address: "654 Elm Dr",
+    attempts: [{ id: 1, date: new Date().toISOString(), status: "successful" }],
+  },
+  // Shawn Wells (client_id: 1454358) jobs
+  {
+    id: "2",
+    job_number: "JOB-002",
+    client_id: "1454358",
+    client_company: "Pronto Process",
+    client_name: "Shawn Wells",
+    recipient_name: "Jane Smith",
+    status: "in_progress",
+    priority: "medium",
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+    amount: 85.0,
+    city: "Marietta",
+    state: "GA",
+    address: "555 Maple St",
+    attempts: [],
+  },
+  {
+    id: "7",
+    job_number: "JOB-007",
+    client_id: "1454358",
+    client_company: "Pronto Process",
+    client_name: "Shawn Wells",
+    recipient_name: "Tom Anderson",
+    status: "pending",
+    priority: "high",
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    due_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+    amount: 120.0,
+    city: "Kennesaw",
+    state: "GA",
+    address: "987 Birch Rd",
     attempts: [],
   },
 ];
@@ -212,28 +258,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // Fallback to mock jobs
-      console.log("Using mock jobs");
+      console.log("⚠️ ServeManager not configured, using mock jobs");
 
       // Filter mock jobs by client_id if specified
       let filteredMockJobs = mockJobs;
       if (clientId) {
+        console.log(`🔍 Filtering mock jobs for client_id: ${clientId}`);
+
         filteredMockJobs = mockJobs.filter((job) => {
-          // Kelly Kerr client
-          if (clientId === "1454323") {
-            return job.client_company === "Kerr Civil Process";
-          }
-          // Shawn Wells client
-          if (clientId === "1454358") {
-            return job.client_company === "Pronto Process";
-          }
-          return false;
+          return job.client_id === clientId;
         });
+
+        console.log(
+          `📋 Filtered ${filteredMockJobs.length} of ${mockJobs.length} jobs for client ${clientId}`,
+        );
+
+        if (filteredMockJobs.length > 0) {
+          console.log("📄 Sample filtered job:", {
+            id: filteredMockJobs[0].id,
+            job_number: filteredMockJobs[0].job_number,
+            client_id: filteredMockJobs[0].client_id,
+            client_company: filteredMockJobs[0].client_company,
+            recipient_name: filteredMockJobs[0].recipient_name
+          });
+        }
+      } else {
+        console.log("📋 No client_id specified, returning all mock jobs");
       }
 
-      console.log(
-        `Returning ${filteredMockJobs.length} jobs for client ${clientId}`,
-      );
-      return res.status(200).json({ jobs: filteredMockJobs });
+      return res.status(200).json({
+        jobs: filteredMockJobs,
+        source: "mock",
+        total: filteredMockJobs.length
+      });
     }
 
     return res.status(405).json({ error: "Method not allowed" });
