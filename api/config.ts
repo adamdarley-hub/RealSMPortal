@@ -228,6 +228,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // Save to persistent storage
           await configStorageService.saveConfig(configToStore);
 
+          // Clear cache to ensure new config is loaded
+          clearConfigCache();
+
           console.log("✅ VERCEL DEBUG - Configuration saved to persistent storage!");
 
           return res.status(200).json({
