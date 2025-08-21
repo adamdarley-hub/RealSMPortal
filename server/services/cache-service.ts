@@ -41,9 +41,22 @@ export class CacheService {
 
       console.log("🌐 ServeManager query params:", queryParams);
 
-      const response = await makeServeManagerRequest("/jobs", {
+      // Build URL with query parameters
+      let endpoint = "/jobs";
+      if (Object.keys(queryParams).length > 0) {
+        const params = new URLSearchParams();
+        Object.entries(queryParams).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            params.append(key, String(value));
+          }
+        });
+        endpoint += `?${params.toString()}`;
+      }
+
+      console.log(`🔍 Final endpoint: ${endpoint}`);
+
+      const response = await makeServeManagerRequest(endpoint, {
         method: "GET",
-        query: queryParams,
       });
 
       if (response && response.data) {
