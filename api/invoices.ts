@@ -53,13 +53,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(200).json(transformedInvoices);
           }
         } catch (error) {
-          console.log('ServeManager not available, using mock invoices:', error);
+          console.log('ServeManager not available');
         }
       }
 
-      // Fallback to mock invoices
-      console.log('Using mock invoices');
-      return res.status(200).json(mockInvoices);
+      // No mock data - return empty array
+      console.log('ServeManager not configured or available');
+      return res.status(200).json([]);
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
