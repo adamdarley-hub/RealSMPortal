@@ -37,152 +37,15 @@ export const getSupabaseJobs: RequestHandler = async (req, res) => {
       // Create comprehensive mock Supabase jobs for testing
       const clientId = req.query.client_id as string;
 
-      // Mock jobs for Kelly Kerr (1454323)
-      const kellyJobs = [
-        {
-          id: "kelly-1",
-          servemanager_id: 123001,
-          job_number: "KK-001",
-          client_company: "Kerr Civil Process",
-          client_name: "Kelly Kerr",
-          recipient_name: "John Smith",
-          service_address: "123 Main St, Atlanta, GA 30309",
-          status: "in_progress",
-          service_status: "assigned",
-          priority: "high",
-          server_name: "Mike Johnson",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          due_date: new Date(
-            Date.now() + 3 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-          amount: 125.0,
-          raw_data: {},
-          sync_status: "synced",
-          last_synced_at: new Date().toISOString(),
-        },
-        {
-          id: "kelly-2",
-          servemanager_id: 123002,
-          job_number: "KK-002",
-          client_company: "Kerr Civil Process",
-          client_name: "Kelly Kerr",
-          recipient_name: "Jane Doe",
-          service_address: "456 Oak Ave, Marietta, GA 30062",
-          status: "pending",
-          service_status: "received",
-          priority: "medium",
-          server_name: "Sarah Wilson",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          due_date: new Date(
-            Date.now() + 5 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-          amount: 95.0,
-          raw_data: {},
-          sync_status: "synced",
-          last_synced_at: new Date().toISOString(),
-        },
-        {
-          id: "kelly-3",
-          servemanager_id: 123003,
-          job_number: "KK-003",
-          client_company: "Kerr Civil Process",
-          client_name: "Kelly Kerr",
-          recipient_name: "Bob Wilson",
-          service_address: "789 Pine St, Roswell, GA 30075",
-          status: "completed",
-          service_status: "served",
-          priority: "medium",
-          server_name: "Tom Anderson",
-          created_at: new Date(
-            Date.now() - 7 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-          updated_at: new Date().toISOString(),
-          due_date: new Date(
-            Date.now() - 2 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-          amount: 110.0,
-          raw_data: {},
-          sync_status: "synced",
-          last_synced_at: new Date().toISOString(),
-        },
-      ];
-
-      // Mock jobs for Shawn Wells (1454358)
-      const shawnJobs = [
-        {
-          id: "shawn-1",
-          servemanager_id: 124001,
-          job_number: "SW-001",
-          client_company: "Pronto Process",
-          client_name: "Shawn Wells",
-          recipient_name: "Lisa Brown",
-          service_address: "321 Cedar Ln, Kennesaw, GA 30144",
-          status: "pending",
-          service_status: "received",
-          priority: "urgent",
-          server_name: "Mike Johnson",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          due_date: new Date(
-            Date.now() + 2 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-          amount: 140.0,
-          raw_data: {},
-          sync_status: "synced",
-          last_synced_at: new Date().toISOString(),
-        },
-        {
-          id: "shawn-2",
-          servemanager_id: 124002,
-          job_number: "SW-002",
-          client_company: "Pronto Process",
-          client_name: "Shawn Wells",
-          recipient_name: "Mark Davis",
-          service_address: "654 Elm Dr, Alpharetta, GA 30022",
-          status: "overdue",
-          service_status: "attempted",
-          priority: "high",
-          server_name: "Sarah Wilson",
-          created_at: new Date(
-            Date.now() - 10 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-          updated_at: new Date().toISOString(),
-          due_date: new Date(
-            Date.now() - 1 * 24 * 60 * 60 * 1000,
-          ).toISOString(),
-          amount: 85.0,
-          raw_data: {},
-          sync_status: "synced",
-          last_synced_at: new Date().toISOString(),
-        },
-      ];
-
-      // Default jobs for admin view (all jobs)
-      const allJobs = [...kellyJobs, ...shawnJobs];
-
-      // Select appropriate jobs based on client_id
-      let mockJobs;
-      if (clientId === "1454323") {
-        mockJobs = kellyJobs;
-        console.log(`👩 Returning ${kellyJobs.length} jobs for Kelly Kerr`);
-      } else if (clientId === "1454358") {
-        mockJobs = shawnJobs;
-        console.log(`👨 Returning ${shawnJobs.length} jobs for Shawn Wells`);
-      } else {
-        mockJobs = allJobs;
-        console.log(`👥 Returning ${allJobs.length} total jobs for admin view`);
-      }
-
-      console.log("✅ Returning mock data, should not reach Supabase service");
+      // No mock data - return empty array
+      console.log("⚠️ No mock data available, returning empty jobs array");
       return res.json({
-        jobs: mockJobs,
-        total: mockJobs.length,
+        jobs: [],
+        total: 0,
         page: 1,
         limit: 50,
         has_more: false,
-        source: "supabase-mock",
+        source: "empty",
         duration_ms: Date.now() - startTime,
       });
     }
