@@ -385,6 +385,19 @@ export default function ClientDashboard() {
 
       return false;
     });
+
+    console.log('🎯 Final filtered jobs result:', {
+      beforeSearch: filtered.length,
+      afterSearch: finalFiltered.length,
+      searchTerm,
+      sample: finalFiltered.slice(0, 3).map(job => ({
+        id: job?.id,
+        job_number: job?.job_number,
+        recipient_name: job?.recipient_name
+      }))
+    });
+
+    return finalFiltered;
   }, [jobs, searchTerm, statusFilter]);
 
   const getPriorityColor = (priority: string) => {
