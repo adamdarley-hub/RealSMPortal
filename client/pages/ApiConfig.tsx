@@ -123,10 +123,12 @@ export default function ApiConfig() {
 
   const saveConfiguration = async () => {
     // Basic validation - allow masked keys (starting with ***)
+    const hasValidServeManagerKey = config.serveManager.apiKey &&
+      (config.serveManager.apiKey.startsWith("***") || config.serveManager.apiKey.length > 0);
+
     if (
       config.serveManager.enabled &&
-      (!config.serveManager.baseUrl ||
-        (!config.serveManager.apiKey || config.serveManager.apiKey === "") && !config.serveManager.apiKey?.startsWith("***"))
+      (!config.serveManager.baseUrl || !hasValidServeManagerKey)
     ) {
       toast({
         title: "Validation Error",
