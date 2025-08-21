@@ -47,84 +47,132 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         hasServeManagerBaseUrl: !!process.env.SERVEMANAGER_BASE_URL,
         hasServeManagerApiKey: !!process.env.SERVEMANAGER_API_KEY,
         hasGlobalTempConfig: !!global.tempApiConfig,
-        tempConfigKeys: global.tempApiConfig
-          ? Object.keys(global.tempApiConfig)
-          : [],
         hostname: req.headers.host,
       });
 
-      // Return current config (with masked sensitive values)
-      const config = {
-        serveManager: {
-          baseUrl:
-            process.env.SERVEMANAGER_BASE_URL ||
-            global.tempApiConfig?.serveManager?.baseUrl ||
-            "",
-          apiKey: process.env.SERVEMANAGER_API_KEY
-            ? "***" + process.env.SERVEMANAGER_API_KEY.slice(-4)
-            : global.tempApiConfig?.serveManager?.apiKey
-              ? "***" + global.tempApiConfig.serveManager.apiKey.slice(-4)
-              : "",
-          enabled: Boolean(
-            process.env.SERVEMANAGER_BASE_URL ||
-              global.tempApiConfig?.serveManager?.enabled,
-          ),
-          testEndpoint: "/account",
-        },
-        stripe: {
-          publishableKey:
-            process.env.STRIPE_PUBLISHABLE_KEY ||
-            global.tempApiConfig?.stripe?.publishableKey ||
-            "",
-          secretKey: process.env.STRIPE_SECRET_KEY
-            ? "***" + process.env.STRIPE_SECRET_KEY.slice(-4)
-            : global.tempApiConfig?.stripe?.secretKey
-              ? "***" + global.tempApiConfig.stripe.secretKey.slice(-4)
-              : "",
-          webhookSecret: process.env.STRIPE_WEBHOOK_SECRET
-            ? "***" + process.env.STRIPE_WEBHOOK_SECRET.slice(-4)
-            : global.tempApiConfig?.stripe?.webhookSecret
-              ? "***" + global.tempApiConfig.stripe.webhookSecret.slice(-4)
-              : "",
-          enabled: Boolean(
-            process.env.STRIPE_SECRET_KEY ||
-              global.tempApiConfig?.stripe?.enabled,
-          ),
-          environment:
-            (process.env.STRIPE_ENVIRONMENT as "test" | "live") ||
-            global.tempApiConfig?.stripe?.environment ||
-            "test",
-        },
-        radar: {
-          publishableKey:
-            process.env.RADAR_PUBLISHABLE_KEY ||
-            global.tempApiConfig?.radar?.publishableKey ||
-            "",
-          secretKey: process.env.RADAR_SECRET_KEY
-            ? "***" + process.env.RADAR_SECRET_KEY.slice(-4)
-            : global.tempApiConfig?.radar?.secretKey
-              ? "***" + global.tempApiConfig.radar.secretKey.slice(-4)
-              : "",
-          enabled: Boolean(
-            process.env.RADAR_SECRET_KEY ||
-              global.tempApiConfig?.radar?.enabled,
-          ),
-          environment:
-            (process.env.RADAR_ENVIRONMENT as "test" | "live") ||
-            global.tempApiConfig?.radar?.environment ||
-            "test",
-        },
-      };
+      try {
+        // Try to load from persistent storage first
+        const isStorageAvailable = await configStorageService.isAvailable();
+        console.log("💾 VERCEL DEBUG - Storage available:", isStorageAvailable);
 
-      console.log("📤 VERCEL DEBUG - Returning config:", {
-        serveManagerEnabled: config.serveManager.enabled,
-        serveManagerHasUrl: !!config.serveManager.baseUrl,
-        serveManagerHasKey:
-          !!config.serveManager.apiKey && config.serveManager.apiKey !== "",
-        stripeEnabled: config.stripe.enabled,
-      });
+        let config;
+        if (isStorageAvailable) {
+          // Load effective config (environment vars take precedence)
+          const effectiveConfig = await configStorageService.getEffectiveConfig();
 
-      return res.status(200).json(config);
+          // Mask sensitive values for API response
+          config = {
+            serveManager: {
+              baseUrl: effectiveConfig.serveManager?.baseUrl || "",
+              apiKey: effectiveConfig.serveManager?.apiKey
+                ? "***" + effectiveConfig.serveManager.apiKey.slice(-4)
+                : "",
+              enabled: effectiveConfig.serveManager?.enabled || false,
+              testEndpoint: "/account",
+            },
+            stripe: {
+              publishableKey: effectiveConfig.stripe?.publishableKey || "",
+              secretKey: effectiveConfig.stripe?.secretKey
+                ? "***" + effectiveConfig.stripe.secretKey.slice(-4)
+                : "",
+              webhookSecret: effectiveConfig.stripe?.webhookSecret
+                ? "***" + effectiveConfig.stripe.webhookSecret.slice(-4)
+                : "",
+              enabled: effectiveConfig.stripe?.enabled || false,
+              environment: effectiveConfig.stripe?.environment || "test",
+            },
+            radar: {
+              publishableKey: effectiveConfig.radar?.publishableKey || "",
+              secretKey: effectiveConfig.radar?.secretKey
+                ? "***" + effectiveConfig.radar.secretKey.slice(-4)
+                : "",
+              enabled: effectiveConfig.radar?.enabled || false,
+              environment: effectiveConfig.radar?.environment || "test",
+            },
+          };
+        } else {
+          // Fallback to environment variables and global memory
+          config = {
+            serveManager: {
+              baseUrl:
+                process.env.SERVEMANAGER_BASE_URL ||
+                global.tempApiConfig?.serveManager?.baseUrl ||
+                "",
+              apiKey: process.env.SERVEMANAGER_API_KEY
+                ? "***" + process.env.SERVEMANAGER_API_KEY.slice(-4)
+                : global.tempApiConfig?.serveManager?.apiKey
+                  ? "***" + global.tempApiConfig.serveManager.apiKey.slice(-4)
+                  : "",
+              enabled: Boolean(
+                process.env.SERVEMANAGER_BASE_URL ||
+                  global.tempApiConfig?.serveManager?.enabled,
+              ),
+              testEndpoint: "/account",
+            },
+            stripe: {
+              publishableKey:
+                process.env.STRIPE_PUBLISHABLE_KEY ||
+                global.tempApiConfig?.stripe?.publishableKey ||
+                "",
+              secretKey: process.env.STRIPE_SECRET_KEY
+                ? "***" + process.env.STRIPE_SECRET_KEY.slice(-4)
+                : global.tempApiConfig?.stripe?.secretKey
+                  ? "***" + global.tempApiConfig.stripe.secretKey.slice(-4)
+                  : "",
+              webhookSecret: process.env.STRIPE_WEBHOOK_SECRET
+                ? "***" + process.env.STRIPE_WEBHOOK_SECRET.slice(-4)
+                : global.tempApiConfig?.stripe?.webhookSecret
+                  ? "***" + global.tempApiConfig.stripe.webhookSecret.slice(-4)
+                  : "",
+              enabled: Boolean(
+                process.env.STRIPE_SECRET_KEY ||
+                  global.tempApiConfig?.stripe?.enabled,
+              ),
+              environment:
+                (process.env.STRIPE_ENVIRONMENT as "test" | "live") ||
+                global.tempApiConfig?.stripe?.environment ||
+                "test",
+            },
+            radar: {
+              publishableKey:
+                process.env.RADAR_PUBLISHABLE_KEY ||
+                global.tempApiConfig?.radar?.publishableKey ||
+                "",
+              secretKey: process.env.RADAR_SECRET_KEY
+                ? "***" + process.env.RADAR_SECRET_KEY.slice(-4)
+                : global.tempApiConfig?.radar?.secretKey
+                  ? "***" + global.tempApiConfig.radar.secretKey.slice(-4)
+                  : "",
+              enabled: Boolean(
+                process.env.RADAR_SECRET_KEY ||
+                  global.tempApiConfig?.radar?.enabled,
+              ),
+              environment:
+                (process.env.RADAR_ENVIRONMENT as "test" | "live") ||
+                global.tempApiConfig?.radar?.environment ||
+                "test",
+            },
+          };
+        }
+
+        console.log("📤 VERCEL DEBUG - Returning config:", {
+          serveManagerEnabled: config.serveManager.enabled,
+          serveManagerHasUrl: !!config.serveManager.baseUrl,
+          serveManagerHasKey:
+            !!config.serveManager.apiKey && config.serveManager.apiKey !== "",
+          stripeEnabled: config.stripe.enabled,
+          storageUsed: isStorageAvailable,
+        });
+
+        return res.status(200).json(config);
+      } catch (error) {
+        console.error("🚨 VERCEL DEBUG - Error loading config:", error);
+        // Return error but still try to provide fallback config
+        return res.status(500).json({
+          error: "Failed to load configuration",
+          details: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
     }
 
     if (req.method === "POST") {
