@@ -186,16 +186,20 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         return { success: false, error: 'Health check failed' };
       }
 
-      const response = await fetch('/api/sync', {
+      // Use native fetch to avoid FullStory interference
+      const nativeFetch = window.fetch.bind(window);
+      const response = await nativeFetch('/api/sync', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache',
+          'X-Requested-With': 'XMLHttpRequest'
         },
         signal: controller.signal,
         // Add retry logic by disabling cache
-        cache: 'no-cache'
+        cache: 'no-cache',
+        credentials: 'same-origin'
       }).catch((fetchError) => {
         console.warn('🌐 Network error during sync:', {
           message: fetchError.message,
