@@ -40,13 +40,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(200).json(data);
           }
         } catch (error) {
-          console.log('ServeManager not available, using mock clients');
+          console.log('ServeManager not available');
         }
       }
 
-      // Fallback to mock clients
-      console.log('Using mock clients for authentication');
-      return res.status(200).json({ data: mockClients });
+      // No mock data - return empty array
+      console.log('ServeManager not configured or available');
+      return res.status(200).json({
+        clients: [],
+        error: 'ServeManager API not configured or not available'
+      });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
