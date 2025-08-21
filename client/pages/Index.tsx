@@ -579,30 +579,30 @@ export default function Dashboard() {
                         className="hover:bg-muted/50 cursor-pointer"
                         onClick={() => navigate(`/jobs/${job.id}`)}
                       >
-                        <TableCell className="font-medium">{job.job_number}</TableCell>
-                        <TableCell>{job.client_company}</TableCell>
-                        <TableCell>{job.recipient_name}</TableCell>
+                        <TableCell className="font-medium">{String(job.job_number || '')}</TableCell>
+                        <TableCell>{String(job.client_company?.name || job.client_company || '')}</TableCell>
+                        <TableCell>{String(job.recipient_name || '')}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <MapPin className="w-3 h-3" />
-                            {job.city && job.state ? `${job.city}, ${job.state}` : 'Address pending'}
+                            {job.city && job.state ? `${String(job.city)}, ${String(job.state)}` : 'Address pending'}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(job.status)}>
-                            {job.status.replace('_', ' ')}
+                            {String(job.status || '').replace('_', ' ')}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={getPriorityColor(job.priority)}>
-                            {job.priority}
+                            {String(job.priority || '')}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           {job.due_date ? new Date(job.due_date).toLocaleDateString() : 'No deadline'}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          ${job.amount.toFixed(2)}
+                          ${Number(job.amount || 0).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     ))}
