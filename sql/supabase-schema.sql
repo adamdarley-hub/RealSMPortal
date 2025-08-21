@@ -153,6 +153,9 @@ CREATE TRIGGER update_attempts_updated_at BEFORE UPDATE ON attempts
 CREATE TRIGGER update_photos_updated_at BEFORE UPDATE ON photos
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_api_configurations_updated_at BEFORE UPDATE ON api_configurations
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
