@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         // Test ServeManager connection
         const credentials = Buffer.from(`${apiKey}:`).toString("base64");
-        
+
         const testUrl = `${baseUrl}/account`;
         console.log("Testing ServeManager connection to:", testUrl);
 
@@ -43,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (response.ok) {
           const data = await response.json();
           console.log("ServeManager test successful");
-          
+
           return res.status(200).json({
             success: true,
             message: "ServeManager API connection successful",
@@ -52,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } else {
           const errorText = await response.text();
           console.log("ServeManager test failed:", response.status, errorText);
-          
+
           return res.status(response.status).json({
             error: `ServeManager API error: ${response.status} ${response.statusText}`,
             details: errorText,

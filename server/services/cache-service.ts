@@ -93,125 +93,160 @@ export class CacheService {
       }
 
       if (allJobs.length > 0) {
-        console.log(`📋 ServeManager returned ${allJobs.length} total jobs across ${currentPage} pages`);
+        console.log(
+          `📋 ServeManager returned ${allJobs.length} total jobs across ${currentPage} pages`,
+        );
 
         // Check if we have client_id filter and log sample client_ids from jobs
-      if (filters.client_id) {
-        const sampleJobs = allJobs.slice(0, 3).map((job) => ({
-          id: job.id,
-          client_id: job.client_id || job.attributes?.client_id,
-          client_company: job.client_company || job.attributes?.client_company,
-          client_company_id: job.client_company?.id || job.attributes?.client_company?.id,
-        }));
-        console.log(`🔍 Looking for client_id: ${filters.client_id}`);
-        console.log("📊 Sample jobs with client info:", sampleJobs);
+        if (filters.client_id) {
+          const sampleJobs = allJobs.slice(0, 3).map((job) => ({
+            id: job.id,
+            client_id: job.client_id || job.attributes?.client_id,
+            client_company:
+              job.client_company || job.attributes?.client_company,
+            client_company_id:
+              job.client_company?.id || job.attributes?.client_company?.id,
+          }));
+          console.log(`🔍 Looking for client_id: ${filters.client_id}`);
+          console.log("📊 Sample jobs with client info:", sampleJobs);
 
-        // Filter jobs by client_company.id since that's where ServeManager stores the client ID
-        const filteredJobs = allJobs.filter((job) => {
-          const clientCompanyId = String(job.client_company?.id || job.attributes?.client_company?.id || '');
-          return clientCompanyId === String(filters.client_id);
-        });
-
-        console.log(`✅ Found ${filteredJobs.length} jobs for client_id ${filters.client_id}`);
-        if (filteredJobs.length > 0) {
-          console.log("🔄 STARTING TRANSFORMATION - This should appear in logs");
-          console.log("🔍 Sample raw job data:", JSON.stringify(filteredJobs[0], null, 2));
-          // Transform ServeManager data to expected frontend format
-          const transformedJobs = filteredJobs.map((job) => {
-            // ServeManager data structure has attributes at root level
-            const courtCase = job.court_case || {};
-            const attempts = job.attempts || [];
-
-            // Map priority: ServeManager uses "Routine" or "Rush"
-            const priority = job.service_level === "Rush" ? "rush" : "routine";
-
-            return {
-              id: job.id,
-              job_number: job.job_number || job.servemanager_job_number,
-              recipient_name: job.recipient_name || courtCase.defendant || "Unknown Recipient",
-              status: job.status || "pending",
-              priority: priority,
-              created_at: job.created_at || new Date().toISOString(),
-              due_date: job.due_date || job.date_due,
-              amount: parseFloat(job.amount || job.price || "0"),
-              client_id: job.client_company?.id,
-              client_company: job.client_company?.name,
-              client_name: job.client_contact?.first_name + " " + job.client_contact?.last_name,
-              service_address: job.service_address,
-              defendant_address: job.defendant_address,
-              address: job.address,
-              addresses_attributes: job.addresses_attributes,
-              court_case_number: courtCase.number,
-              plaintiff: courtCase.plaintiff,
-              defendant_name: courtCase.defendant,
-              attempt_count: job.attempt_count || attempts.length,
-              attempts: attempts,
-              // Keep raw data for debugging
-              raw_data: job
-            };
+          // Filter jobs by client_company.id since that's where ServeManager stores the client ID
+          const filteredJobs = allJobs.filter((job) => {
+            const clientCompanyId = String(
+              job.client_company?.id ||
+                job.attributes?.client_company?.id ||
+                "",
+            );
+            return clientCompanyId === String(filters.client_id);
           });
 
-          console.log("📋 Sample transformed job:", {
-            id: transformedJobs[0].id,
-            job_number: transformedJobs[0].job_number,
-            recipient_name: transformedJobs[0].recipient_name,
-            status: transformedJobs[0].status,
-            client_company: transformedJobs[0].client_company
-          });
+          console.log(
+            `✅ Found ${filteredJobs.length} jobs for client_id ${filters.client_id}`,
+          );
+          if (filteredJobs.length > 0) {
+            console.log(
+              "🔄 STARTING TRANSFORMATION - This should appear in logs",
+            );
+            console.log(
+              "🔍 Sample raw job data:",
+              JSON.stringify(filteredJobs[0], null, 2),
+            );
+            // Transform ServeManager data to expected frontend format
+            const transformedJobs = filteredJobs.map((job) => {
+              // ServeManager data structure has attributes at root level
+              const courtCase = job.court_case || {};
+              const attempts = job.attempts || [];
 
-          return transformedJobs;
-        } else {
-          console.log("⚠️ No jobs found for client, creating mock jobs for testing");
+              // Map priority: ServeManager uses "Routine" or "Rush"
+              const priority =
+                job.service_level === "Rush" ? "rush" : "routine";
 
-          // Create some mock jobs for Kelly Kerr (client_id: 1454323)
-          if (filters.client_id === '1454323') {
-            const mockJobs = [
-              {
-                id: 'mock-1',
-                job_number: 'KK-001',
-                client_company: { id: 1454323, name: 'Kerr Civil Process' },
-                recipient_name: 'John Smith',
-                status: 'in_progress',
-                priority: 'high',
-                created_at: new Date().toISOString(),
-                due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-                amount: 125,
-                city: 'Atlanta',
-                state: 'GA',
-                addresses_attributes: [{
-                  address1: '123 Main St',
-                  city: 'Atlanta',
-                  state: 'GA',
-                  postal_code: '30309'
-                }]
-              },
-              {
-                id: 'mock-2',
-                job_number: 'KK-002',
-                client_company: { id: 1454323, name: 'Kerr Civil Process' },
-                recipient_name: 'Jane Doe',
-                status: 'pending',
-                priority: 'medium',
-                created_at: new Date().toISOString(),
-                due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-                amount: 95,
-                city: 'Marietta',
-                state: 'GA',
-                addresses_attributes: [{
-                  address1: '456 Oak Ave',
-                  city: 'Marietta',
-                  state: 'GA',
-                  postal_code: '30062'
-                }]
-              }
-            ];
-            console.log("🎭 Created mock jobs for Kelly Kerr:", mockJobs.length);
-            return mockJobs;
+              return {
+                id: job.id,
+                job_number: job.job_number || job.servemanager_job_number,
+                recipient_name:
+                  job.recipient_name ||
+                  courtCase.defendant ||
+                  "Unknown Recipient",
+                status: job.status || "pending",
+                priority: priority,
+                created_at: job.created_at || new Date().toISOString(),
+                due_date: job.due_date || job.date_due,
+                amount: parseFloat(job.amount || job.price || "0"),
+                client_id: job.client_company?.id,
+                client_company: job.client_company?.name,
+                client_name:
+                  job.client_contact?.first_name +
+                  " " +
+                  job.client_contact?.last_name,
+                service_address: job.service_address,
+                defendant_address: job.defendant_address,
+                address: job.address,
+                addresses_attributes: job.addresses_attributes,
+                court_case_number: courtCase.number,
+                plaintiff: courtCase.plaintiff,
+                defendant_name: courtCase.defendant,
+                attempt_count: job.attempt_count || attempts.length,
+                attempts: attempts,
+                // Keep raw data for debugging
+                raw_data: job,
+              };
+            });
+
+            console.log("📋 Sample transformed job:", {
+              id: transformedJobs[0].id,
+              job_number: transformedJobs[0].job_number,
+              recipient_name: transformedJobs[0].recipient_name,
+              status: transformedJobs[0].status,
+              client_company: transformedJobs[0].client_company,
+            });
+
+            return transformedJobs;
+          } else {
+            console.log(
+              "⚠️ No jobs found for client, creating mock jobs for testing",
+            );
+
+            // Create some mock jobs for Kelly Kerr (client_id: 1454323)
+            if (filters.client_id === "1454323") {
+              const mockJobs = [
+                {
+                  id: "mock-1",
+                  job_number: "KK-001",
+                  client_company: { id: 1454323, name: "Kerr Civil Process" },
+                  recipient_name: "John Smith",
+                  status: "in_progress",
+                  priority: "high",
+                  created_at: new Date().toISOString(),
+                  due_date: new Date(
+                    Date.now() + 3 * 24 * 60 * 60 * 1000,
+                  ).toISOString(),
+                  amount: 125,
+                  city: "Atlanta",
+                  state: "GA",
+                  addresses_attributes: [
+                    {
+                      address1: "123 Main St",
+                      city: "Atlanta",
+                      state: "GA",
+                      postal_code: "30309",
+                    },
+                  ],
+                },
+                {
+                  id: "mock-2",
+                  job_number: "KK-002",
+                  client_company: { id: 1454323, name: "Kerr Civil Process" },
+                  recipient_name: "Jane Doe",
+                  status: "pending",
+                  priority: "medium",
+                  created_at: new Date().toISOString(),
+                  due_date: new Date(
+                    Date.now() + 5 * 24 * 60 * 60 * 1000,
+                  ).toISOString(),
+                  amount: 95,
+                  city: "Marietta",
+                  state: "GA",
+                  addresses_attributes: [
+                    {
+                      address1: "456 Oak Ave",
+                      city: "Marietta",
+                      state: "GA",
+                      postal_code: "30062",
+                    },
+                  ],
+                },
+              ];
+              console.log(
+                "🎭 Created mock jobs for Kelly Kerr:",
+                mockJobs.length,
+              );
+              return mockJobs;
+            }
+
+            return [];
           }
-
-          return [];
         }
-      }
 
         return allJobs;
       }

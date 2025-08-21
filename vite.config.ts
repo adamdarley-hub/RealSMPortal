@@ -13,16 +13,16 @@ export default defineConfig(({ mode }) => ({
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
     proxy: {
-      '/api': {
-        target: 'http://localhost:8081',
+      "/api": {
+        target: "http://localhost:8081",
         changeOrigin: true,
         secure: false,
-      }
-    }
+      },
+    },
   },
   preview: {
     port: 3000,
-    strictPort: true
+    strictPort: true,
   },
   build: {
     outDir: "dist/spa",

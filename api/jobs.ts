@@ -157,7 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log("🔧 ServeManager config available:", {
         hasBaseUrl: !!servemanagerConfig.baseUrl,
         hasApiKey: !!servemanagerConfig.apiKey,
-        baseUrl: servemanagerConfig.baseUrl
+        baseUrl: servemanagerConfig.baseUrl,
       });
 
       if (servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
@@ -196,10 +196,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           if (response.ok) {
             const data = await response.json();
-            console.log("✅ Fetched real jobs from ServeManager. Jobs count:", data.data?.length || 0);
+            console.log(
+              "✅ Fetched real jobs from ServeManager. Jobs count:",
+              data.data?.length || 0,
+            );
 
             if (data.data && data.data.length > 0) {
-              console.log("📄 Sample job data:", JSON.stringify(data.data[0], null, 2));
+              console.log(
+                "📄 Sample job data:",
+                JSON.stringify(data.data[0], null, 2),
+              );
             }
 
             // Transform ServeManager data to expected format
@@ -210,25 +216,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
                 // Get client info from included data or relationships
                 const clientData = data.included?.find(
-                  (item: any) => item.type === "client" && item.id === relationships.client?.data?.id
+                  (item: any) =>
+                    item.type === "client" &&
+                    item.id === relationships.client?.data?.id,
                 );
 
                 return {
                   id: job.id,
-                  job_number: attributes.job_number || attributes.reference || `JOB-${job.id}`,
-                  client_company: clientData?.attributes?.company || attributes.client_company || "Unknown Client",
-                  client_name: clientData?.attributes?.name || attributes.client_name || "Unknown",
+                  job_number:
+                    attributes.job_number ||
+                    attributes.reference ||
+                    `JOB-${job.id}`,
+                  client_company:
+                    clientData?.attributes?.company ||
+                    attributes.client_company ||
+                    "Unknown Client",
+                  client_name:
+                    clientData?.attributes?.name ||
+                    attributes.client_name ||
+                    "Unknown",
                   client_id: relationships.client?.data?.id || null,
-                  recipient_name: attributes.recipient_name || attributes.defendant_name || "Unknown Recipient",
+                  recipient_name:
+                    attributes.recipient_name ||
+                    attributes.defendant_name ||
+                    "Unknown Recipient",
                   status: attributes.status || "pending",
                   priority: attributes.priority || "medium",
                   created_at: attributes.created_at || new Date().toISOString(),
                   due_date: attributes.due_date || attributes.date_due,
-                  amount: parseFloat(attributes.amount || attributes.price || "0"),
-                  city: attributes.city || attributes.service_address?.city || "Unknown",
-                  state: attributes.state || attributes.service_address?.state || "Unknown",
+                  amount: parseFloat(
+                    attributes.amount || attributes.price || "0",
+                  ),
+                  city:
+                    attributes.city ||
+                    attributes.service_address?.city ||
+                    "Unknown",
+                  state:
+                    attributes.state ||
+                    attributes.service_address?.state ||
+                    "Unknown",
                   zip: attributes.zip || attributes.service_address?.zip,
-                  address: attributes.address || attributes.service_address?.address,
+                  address:
+                    attributes.address || attributes.service_address?.address,
                   attempts: attributes.service_attempts || [],
                   documents: attributes.documents || [],
                   notes: attributes.notes,
@@ -238,17 +267,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             console.log("🔄 Transformed jobs count:", transformedJobs.length);
 
             if (transformedJobs.length > 0) {
-              console.log("📋 Sample transformed job:", JSON.stringify(transformedJobs[0], null, 2));
+              console.log(
+                "📋 Sample transformed job:",
+                JSON.stringify(transformedJobs[0], null, 2),
+              );
             }
 
             return res.status(200).json({
               jobs: transformedJobs,
               source: "servemanager",
-              total: data.meta?.total || transformedJobs.length
+              total: data.meta?.total || transformedJobs.length,
             });
           } else {
             const errorText = await response.text();
-            console.log("❌ ServeManager API error:", response.status, errorText);
+            console.log(
+              "❌ ServeManager API error:",
+              response.status,
+              errorText,
+            );
           }
         } catch (error) {
           console.log("⚠️ ServeManager not available, using mock jobs:", error);
@@ -279,7 +315,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             job_number: filteredMockJobs[0].job_number,
             client_id: filteredMockJobs[0].client_id,
             client_company: filteredMockJobs[0].client_company,
-            recipient_name: filteredMockJobs[0].recipient_name
+            recipient_name: filteredMockJobs[0].recipient_name,
           });
         }
       } else {
@@ -289,7 +325,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({
         jobs: filteredMockJobs,
         source: "mock",
-        total: filteredMockJobs.length
+        total: filteredMockJobs.length,
       });
     }
 

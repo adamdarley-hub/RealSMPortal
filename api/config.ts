@@ -92,8 +92,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const configToStore = { ...newConfig };
 
       // If ServeManager API key is masked, keep the environment value
-      if (configToStore.serveManager?.apiKey?.startsWith('***')) {
-        if (tempConfig.serveManager?.apiKey && !tempConfig.serveManager.apiKey.startsWith('***')) {
+      if (configToStore.serveManager?.apiKey?.startsWith("***")) {
+        if (
+          tempConfig.serveManager?.apiKey &&
+          !tempConfig.serveManager.apiKey.startsWith("***")
+        ) {
           configToStore.serveManager.apiKey = tempConfig.serveManager.apiKey;
         }
         // Don't store masked keys
@@ -101,13 +104,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // Similar for other masked fields
-      if (configToStore.stripe?.secretKey?.startsWith('***')) {
+      if (configToStore.stripe?.secretKey?.startsWith("***")) {
         delete configToStore.stripe.secretKey;
       }
-      if (configToStore.stripe?.webhookSecret?.startsWith('***')) {
+      if (configToStore.stripe?.webhookSecret?.startsWith("***")) {
         delete configToStore.stripe.webhookSecret;
       }
-      if (configToStore.radar?.secretKey?.startsWith('***')) {
+      if (configToStore.radar?.secretKey?.startsWith("***")) {
         delete configToStore.radar.secretKey;
       }
 
@@ -119,13 +122,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
       if (newConfig.serveManager?.enabled) {
         console.log("SERVEMANAGER_BASE_URL=" + newConfig.serveManager.baseUrl);
-        if (newConfig.serveManager.apiKey && !newConfig.serveManager.apiKey.startsWith('***')) {
+        if (
+          newConfig.serveManager.apiKey &&
+          !newConfig.serveManager.apiKey.startsWith("***")
+        ) {
           console.log("SERVEMANAGER_API_KEY=" + newConfig.serveManager.apiKey);
         }
       }
       if (newConfig.stripe?.enabled) {
-        console.log("STRIPE_PUBLISHABLE_KEY=" + newConfig.stripe.publishableKey);
-        if (newConfig.stripe.secretKey && !newConfig.stripe.secretKey.startsWith('***')) {
+        console.log(
+          "STRIPE_PUBLISHABLE_KEY=" + newConfig.stripe.publishableKey,
+        );
+        if (
+          newConfig.stripe.secretKey &&
+          !newConfig.stripe.secretKey.startsWith("***")
+        ) {
           console.log("STRIPE_SECRET_KEY=" + newConfig.stripe.secretKey);
         }
       }

@@ -169,18 +169,31 @@ export default function Dashboard() {
       }
 
       // Detect environment and use appropriate API base
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
-      const isFlyDev = window.location.hostname.includes('fly.dev'); // Builder.io preview environment
+      const isLocalhost =
+        window.location.hostname === "localhost" ||
+        window.location.hostname.includes("127.0.0.1");
+      const isFlyDev = window.location.hostname.includes("fly.dev"); // Builder.io preview environment
       const isDevelopment = isLocalhost || isFlyDev;
 
       // Use dev server backend for both localhost and Fly.dev preview
-      const apiBase = isDevelopment ? (isLocalhost ? 'http://localhost:8081' : '') : '';
+      const apiBase = isDevelopment
+        ? isLocalhost
+          ? "http://localhost:8081"
+          : ""
+        : "";
 
       const cacheBuster = `&t=${Date.now()}`;
-      console.log('🔄 Admin loading data with params:', params.toString());
-      console.log('🏠 Environment:', isLocalhost ? 'Localhost Dev' : isFlyDev ? 'Fly.dev Preview' : 'Production');
-      console.log('🔗 API Base:', apiBase || 'Vercel Functions');
-      console.log('🌐 Hostname:', window.location.hostname);
+      console.log("🔄 Admin loading data with params:", params.toString());
+      console.log(
+        "🏠 Environment:",
+        isLocalhost
+          ? "Localhost Dev"
+          : isFlyDev
+            ? "Fly.dev Preview"
+            : "Production",
+      );
+      console.log("🔗 API Base:", apiBase || "Vercel Functions");
+      console.log("🌐 Hostname:", window.location.hostname);
 
       const [
         jobsResponse,
@@ -190,52 +203,68 @@ export default function Dashboard() {
       ] = await Promise.all([
         // TEMPORARY: Use ServeManager API while debugging Supabase
         fetch(`${apiBase}/api/jobs?${params.toString()}${cacheBuster}`, {
-          headers: { 'Cache-Control': 'no-cache' }
+          headers: { "Cache-Control": "no-cache" },
         }),
         fetch(`${apiBase}/api/clients?${params.toString()}${cacheBuster}`, {
-          headers: { 'Cache-Control': 'no-cache' }
+          headers: { "Cache-Control": "no-cache" },
         }),
         fetch(`${apiBase}/api/servers?${params.toString()}${cacheBuster}`, {
-          headers: { 'Cache-Control': 'no-cache' }
+          headers: { "Cache-Control": "no-cache" },
         }),
         fetch(`${apiBase}/api/court_cases?${params.toString()}${cacheBuster}`, {
-          headers: { 'Cache-Control': 'no-cache' }
+          headers: { "Cache-Control": "no-cache" },
         }),
       ]);
 
-      console.log('🔍 Jobs response status:', jobsResponse.status, jobsResponse.statusText);
-      console.log('🔍 Jobs response headers:', Object.fromEntries(jobsResponse.headers.entries()));
+      console.log(
+        "🔍 Jobs response status:",
+        jobsResponse.status,
+        jobsResponse.statusText,
+      );
+      console.log(
+        "🔍 Jobs response headers:",
+        Object.fromEntries(jobsResponse.headers.entries()),
+      );
 
       if (!jobsResponse.ok) {
         const errorText = await jobsResponse.text();
-        console.error('❌ Jobs API error response:', errorText);
-        throw new Error(`Failed to load jobs data: ${jobsResponse.status} ${jobsResponse.statusText}`);
+        console.error("❌ Jobs API error response:", errorText);
+        throw new Error(
+          `Failed to load jobs data: ${jobsResponse.status} ${jobsResponse.statusText}`,
+        );
       }
 
       // Check if response is actually JSON
-      const contentType = jobsResponse.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
+      const contentType = jobsResponse.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
         const responseText = await jobsResponse.text();
-        console.error('❌ Jobs API returned non-JSON response:', responseText.substring(0, 200));
-        throw new Error(`Jobs API returned ${contentType || 'unknown content type'} instead of JSON`);
+        console.error(
+          "❌ Jobs API returned non-JSON response:",
+          responseText.substring(0, 200),
+        );
+        throw new Error(
+          `Jobs API returned ${contentType || "unknown content type"} instead of JSON`,
+        );
       }
 
       const jobsData = await jobsResponse.json();
       const jobs = jobsData.jobs || [];
 
-      console.log('📋 Admin jobs loaded:', {
+      console.log("📋 Admin jobs loaded:", {
         total: jobs.length,
         source: jobsData.source,
-        sampleJob: jobs[0] ? {
-          id: jobs[0].id,
-          job_number: jobs[0].job_number,
-          recipient_name: jobs[0].recipient_name,
-          client_company: jobs[0].client_company,
-          amount: jobs[0].amount,
-          city: jobs[0].city,
-          state: jobs[0].state,
-          status: jobs[0].status
-        } : null
+        sampleJob: jobs[0]
+          ? {
+              id: jobs[0].id,
+              job_number: jobs[0].job_number,
+              recipient_name: jobs[0].recipient_name,
+              client_company: jobs[0].client_company,
+              amount: jobs[0].amount,
+              city: jobs[0].city,
+              state: jobs[0].state,
+              status: jobs[0].status,
+            }
+          : null,
       });
 
       let clientsData = { clients: [] };
@@ -243,9 +272,9 @@ export default function Dashboard() {
         try {
           clientsData = await clientsResponse.json();
         } catch (error) {
-          console.warn('⚠️ Failed to parse clients JSON:', error);
+          console.warn("⚠️ Failed to parse clients JSON:", error);
           const text = await clientsResponse.text();
-          console.log('📄 Clients response text:', text.substring(0, 200));
+          console.log("📄 Clients response text:", text.substring(0, 200));
         }
       }
 
@@ -254,7 +283,7 @@ export default function Dashboard() {
         try {
           serversData = await serversResponse.json();
         } catch (error) {
-          console.warn('⚠️ Failed to parse servers JSON:', error);
+          console.warn("⚠️ Failed to parse servers JSON:", error);
         }
       }
 
@@ -263,7 +292,7 @@ export default function Dashboard() {
         try {
           courtCasesData = await courtCasesResponse.json();
         } catch (error) {
-          console.warn('⚠️ Failed to parse court cases JSON:', error);
+          console.warn("⚠️ Failed to parse court cases JSON:", error);
         }
       }
 

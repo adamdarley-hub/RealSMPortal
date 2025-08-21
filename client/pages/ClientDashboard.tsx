@@ -177,58 +177,69 @@ export default function ClientDashboard() {
       // Use relative URL to go through the proxy
       const jobsUrl = `/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`;
 
-      console.log('🔗 Client jobs request URL:', jobsUrl);
-      console.log('🏢 Client company:', user.company);
-      console.log('🆔 Client ID:', user.client_id);
-      console.log('🌐 Hostname:', window.location.hostname);
-      console.log('🔍 Client filtering for:', user.client_id);
+      console.log("🔗 Client jobs request URL:", jobsUrl);
+      console.log("🏢 Client company:", user.company);
+      console.log("🆔 Client ID:", user.client_id);
+      console.log("🌐 Hostname:", window.location.hostname);
+      console.log("🔍 Client filtering for:", user.client_id);
 
       const response = await fetch(jobsUrl, {
         headers: {
-          'Cache-Control': 'no-cache'
-        }
+          "Cache-Control": "no-cache",
+        },
       });
 
-      console.log('🔍 Client jobs response status:', response.status, response.statusText);
+      console.log(
+        "🔍 Client jobs response status:",
+        response.status,
+        response.statusText,
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Client jobs API error response:', errorText);
-        throw new Error(`Failed to load jobs: ${response.status} ${response.statusText}`);
+        console.error("❌ Client jobs API error response:", errorText);
+        throw new Error(
+          `Failed to load jobs: ${response.status} ${response.statusText}`,
+        );
       }
 
       // Check if response is actually JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
         const responseText = await response.text();
-        console.error('❌ Client jobs API returned non-JSON response:', responseText.substring(0, 200));
-        throw new Error(`Jobs API returned ${contentType || 'unknown content type'} instead of JSON`);
+        console.error(
+          "❌ Client jobs API returned non-JSON response:",
+          responseText.substring(0, 200),
+        );
+        throw new Error(
+          `Jobs API returned ${contentType || "unknown content type"} instead of JSON`,
+        );
       }
 
       const data = await response.json();
-      console.log('📋 Client jobs API response received:');
-      console.log('  - Total jobs:', data.jobs?.length || 0);
-      console.log('  - Source:', data.source);
-      console.log('  - Client ID filter:', user.client_id);
-      console.log('  - First job sample:', data.jobs?.[0]);
-      console.log('📄 Full API response structure:', {
+      console.log("📋 Client jobs API response received:");
+      console.log("  - Total jobs:", data.jobs?.length || 0);
+      console.log("  - Source:", data.source);
+      console.log("  - Client ID filter:", user.client_id);
+      console.log("  - First job sample:", data.jobs?.[0]);
+      console.log("📄 Full API response structure:", {
         keys: Object.keys(data),
         jobsArray: Array.isArray(data.jobs),
         jobsLength: data.jobs?.length,
-        dataStructure: data
+        dataStructure: data,
       });
 
       const jobsToSet = data.jobs || [];
-      console.log('🎯 About to set jobs state:', {
+      console.log("🎯 About to set jobs state:", {
         jobsCount: jobsToSet.length,
         firstJob: jobsToSet[0],
-        sample: jobsToSet.slice(0, 3).map(job => ({
+        sample: jobsToSet.slice(0, 3).map((job) => ({
           id: job?.id,
           job_number: job?.job_number,
           recipient_name: job?.recipient_name,
           status: job?.status,
-          priority: job?.priority
-        }))
+          priority: job?.priority,
+        })),
       });
 
       setJobs(jobsToSet);
@@ -258,11 +269,11 @@ export default function ClientDashboard() {
   }, [user?.client_id]);
 
   const filteredJobs = useMemo(() => {
-    console.log('🔍 Starting filteredJobs computation:', {
+    console.log("🔍 Starting filteredJobs computation:", {
       rawJobsCount: jobs.length,
       statusFilter,
       searchTerm,
-      firstJob: jobs[0]
+      firstJob: jobs[0],
     });
 
     let filtered = jobs;
@@ -296,10 +307,10 @@ export default function ClientDashboard() {
         default:
           break;
       }
-      console.log('📊 After status filter:', {
+      console.log("📊 After status filter:", {
         statusFilter,
         before: beforeCount,
-        after: filtered.length
+        after: filtered.length,
       });
     }
 
@@ -360,15 +371,15 @@ export default function ClientDashboard() {
       return false;
     });
 
-    console.log('🎯 Final filtered jobs result:', {
+    console.log("🎯 Final filtered jobs result:", {
       beforeSearch: filtered.length,
       afterSearch: finalFiltered.length,
       searchTerm,
-      sample: finalFiltered.slice(0, 3).map(job => ({
+      sample: finalFiltered.slice(0, 3).map((job) => ({
         id: job?.id,
         job_number: job?.job_number,
-        recipient_name: job?.recipient_name
-      }))
+        recipient_name: job?.recipient_name,
+      })),
     });
 
     return finalFiltered;
