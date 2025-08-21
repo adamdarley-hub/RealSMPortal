@@ -186,12 +186,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // If ServeManager is not configured or failed, return empty array
-      console.log("❌ ServeManager not available or not configured");
+      console.log("❌ VERCEL DEBUG - ServeManager not available or not configured");
+      console.log("🔧 VERCEL DEBUG - Final fallback - returning empty jobs array");
+
       return res.status(200).json({
         jobs: [],
         source: "empty",
         total: 0,
-        error: "ServeManager API not configured or not available",
+        page: 1,
+        limit: parseInt(limit as string) || 100,
+        has_more: false,
+        error: "ServeManager API not configured or not available"
       });
     }
 
