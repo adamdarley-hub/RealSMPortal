@@ -53,7 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // In production, this would fetch from ServeManager API
       // For now, return mock clients for authentication to work
-      const servemanagerConfig = await getServeManagerConfig();
+      const servemanagerConfig = getServeManagerConfig();
 
       if (
         servemanagerConfig.enabled &&
