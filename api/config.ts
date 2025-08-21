@@ -1,13 +1,13 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// Extend global for temporary config storage in serverless environments
-declare global {
-  var tempApiConfig: any;
-}
-
+// Note: Global config type is defined in server/routes/config.ts
 // Initialize global config if not exists
 if (!global.tempApiConfig) {
-  global.tempApiConfig = {};
+  global.tempApiConfig = {
+    serveManager: { baseUrl: "", apiKey: "", enabled: false, testEndpoint: "/account" },
+    radar: { publishableKey: "", secretKey: "", enabled: false, environment: "test" },
+    stripe: { publishableKey: "", secretKey: "", enabled: false, environment: "test", webhookSecret: "" }
+  };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
