@@ -30,7 +30,8 @@ export class CacheService {
 
       // Convert filters to ServeManager format
       if (filters.client_id) {
-        queryParams["filter[client_id]"] = filters.client_id;
+        // ServeManager uses filter[client_company_id] not filter[client_id]
+        queryParams["filter[client_company_id]"] = filters.client_id;
       }
       if (filters.status) {
         queryParams["filter[status]"] = filters.status;
