@@ -62,7 +62,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'GET') {
       console.log('Serving jobs data');
-      
+
+      // Get query parameters
+      const clientId = req.query.client_id as string;
+      const limit = req.query.limit as string;
+
+      console.log('Query params:', { clientId, limit });
+
       const servemanagerConfig = {
         baseUrl: process.env.SERVEMANAGER_BASE_URL,
         apiKey: process.env.SERVEMANAGER_API_KEY
