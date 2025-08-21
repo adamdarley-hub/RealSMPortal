@@ -2,12 +2,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/spa",
   "devCommand": "npm run dev",
-  "framework": null,
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs22.x"
-    }
-  },
   "build": {
     "env": {
       "NODE_VERSION": "22"
