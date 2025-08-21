@@ -86,6 +86,7 @@ export class CacheService {
         console.log(`✅ Found ${filteredJobs.length} jobs for client_id ${filters.client_id}`);
         if (filteredJobs.length > 0) {
           console.log("🔄 STARTING TRANSFORMATION - This should appear in logs");
+          console.log("🔍 Sample raw job data:", JSON.stringify(filteredJobs[0], null, 2));
           // Transform ServeManager data to expected frontend format
           const transformedJobs = filteredJobs.map((job) => {
             const attrs = job.attributes || {};
