@@ -36,14 +36,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         refresh,
       });
 
-      const servemanagerConfig = {
-        baseUrl: process.env.SERVEMANAGER_BASE_URL,
-        apiKey: process.env.SERVEMANAGER_API_KEY,
-      };
+      // Get ServeManager configuration
+      const servemanagerConfig = await getServeManagerConfig();
 
       console.log("🔧 VERCEL DEBUG - ServeManager config check:", {
         hasBaseUrl: !!servemanagerConfig.baseUrl,
         hasApiKey: !!servemanagerConfig.apiKey,
+        enabled: servemanagerConfig.enabled,
         baseUrl: servemanagerConfig.baseUrl,
         apiKeyLength: servemanagerConfig.apiKey?.length || 0,
         clientId,
