@@ -112,12 +112,11 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           healthController.abort(new Error('Health check timeout after 10 seconds'));
         }, 10000); // 10 second timeout for health check
 
-        // Try multiple health check endpoints based on deployment environment
+        // Try multiple health check endpoints in order of preference
         const healthEndpoints = [
-          '/api/jobs?limit=1',      // Development backend
-          '/api/ping',              // Simple health check
-          '/api/config',            // Config endpoint
-          '/api/cached-jobs?limit=1' // Alternative endpoint
+          '/api/v2/jobs?limit=1',   // Supabase (ultra-fast)
+          '/api/jobs?limit=1',      // Cached backend
+          '/api/sync/status',       // Sync status check
         ];
 
         let healthCheck = null;
