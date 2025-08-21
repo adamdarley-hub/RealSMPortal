@@ -213,7 +213,7 @@ export class CacheService {
         }
       }
 
-        return jobs;
+        return allJobs;
       }
 
       return [];
