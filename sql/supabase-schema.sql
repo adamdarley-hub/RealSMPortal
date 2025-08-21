@@ -170,6 +170,7 @@ CREATE POLICY "Enable all operations for clients" ON clients FOR ALL USING (true
 CREATE POLICY "Enable all operations for servers" ON servers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all operations for attempts" ON attempts FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all operations for photos" ON photos FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Enable all operations for api_configurations" ON api_configurations FOR ALL USING (true) WITH CHECK (true);
 
 -- Create function for getting job with full details
 CREATE OR REPLACE FUNCTION get_job_with_details(job_uuid UUID)
