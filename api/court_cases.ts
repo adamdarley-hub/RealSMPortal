@@ -61,12 +61,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'GET') {
       console.log('Serving court cases data');
       
-      const servemanagerConfig = {
-        baseUrl: process.env.SERVEMANAGER_BASE_URL,
-        apiKey: process.env.SERVEMANAGER_API_KEY
-      };
+      const servemanagerConfig = await getServeManagerConfig();
 
-      if (servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
+      if (servemanagerConfig.enabled && servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
         try {
           // Try to fetch real court cases from ServeManager
           const credentials = Buffer.from(`${servemanagerConfig.apiKey}:`).toString('base64');
