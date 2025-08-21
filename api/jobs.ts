@@ -17,14 +17,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "GET") {
-      console.log("📋 Serving jobs data");
+      console.log("📋 VERCEL JOBS - Serving jobs data");
+      console.log("🌍 VERCEL JOBS - Environment:", {
+        hostname: req.headers.host,
+        timestamp: new Date().toISOString(),
+        userAgent: req.headers['user-agent']?.substring(0, 50)
+      });
 
       // Get query parameters
       const clientId = req.query.client_id as string;
       const limit = req.query.limit as string;
       const refresh = req.query.refresh as string;
 
-      console.log("🔍 Query params:", { clientId, limit, refresh });
+      console.log("🔍 VERCEL JOBS - Query params:", { clientId, limit, refresh });
 
       const servemanagerConfig = {
         baseUrl: process.env.SERVEMANAGER_BASE_URL,
@@ -192,7 +197,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // If ServeManager is not configured or failed, return empty array
       console.log(
-        "❌ VERCEL DEBUG - ServeManager not available or not configured",
+        "��� VERCEL DEBUG - ServeManager not available or not configured",
       );
       console.log(
         "🔧 VERCEL DEBUG - Final fallback - returning empty jobs array",
