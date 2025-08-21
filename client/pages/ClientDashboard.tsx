@@ -284,10 +284,18 @@ export default function ClientDashboard() {
   }, [user?.client_id]);
 
   const filteredJobs = useMemo(() => {
+    console.log('🔍 Starting filteredJobs computation:', {
+      rawJobsCount: jobs.length,
+      statusFilter,
+      searchTerm,
+      firstJob: jobs[0]
+    });
+
     let filtered = jobs;
 
     // Apply status filter first
     if (statusFilter) {
+      const beforeCount = filtered.length;
       switch (statusFilter) {
         case "active":
           filtered = filtered.filter((job) =>
@@ -314,10 +322,15 @@ export default function ClientDashboard() {
         default:
           break;
       }
+      console.log('📊 After status filter:', {
+        statusFilter,
+        before: beforeCount,
+        after: filtered.length
+      });
     }
 
     // Apply search filter - search all visible information
-    return filtered.filter((job) => {
+    const finalFiltered = filtered.filter((job) => {
       const searchLower = searchTerm.toLowerCase();
 
       // Basic job info
