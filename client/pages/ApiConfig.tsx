@@ -144,12 +144,10 @@ export default function ApiConfig() {
       return;
     }
 
-    const hasValidRadarKey =
-      config.radar.publishableKey &&
-      (config.radar.publishableKey.startsWith("***") ||
-        config.radar.publishableKey.length > 0);
-
-    if (config.radar.enabled && !hasValidRadarKey) {
+    if (
+      config.radar.enabled &&
+      (!config.radar.publishableKey || config.radar.publishableKey.trim() === "")
+    ) {
       toast({
         title: "Validation Error",
         description: "Please enter radar.io publishable key before saving",
