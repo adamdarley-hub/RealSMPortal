@@ -174,7 +174,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         jobs: [],
         source: "empty",
         total: 0,
-        error: "ServeManager API not configured or not available"
+        error: "ServeManager API not configured or not available",
       });
     }
 

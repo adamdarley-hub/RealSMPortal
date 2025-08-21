@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'client';
+  role: "admin" | "client";
   company?: string;
   client_id?: string;
   client_contact?: {
@@ -26,12 +26,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Admin user credentials - only for admin access
-const ADMIN_EMAIL = 'admin@serveportal.com';
+const ADMIN_EMAIL = "admin@serveportal.com";
 const ADMIN_USER = {
-  id: 'admin',
-  name: 'Admin User',
+  id: "admin",
+  name: "Admin User",
   email: ADMIN_EMAIL,
-  role: 'admin' as const
+  role: "admin" as const,
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -40,73 +40,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check if user has explicitly logged out - this takes highest priority
-    const hasLoggedOut = localStorage.getItem('serveportal_logged_out');
+    const hasLoggedOut = localStorage.getItem("serveportal_logged_out");
     if (hasLoggedOut) {
-      console.log('🚪 User has logged out, skipping auto-login');
+      console.log("🚪 User has logged out, skipping auto-login");
       setIsLoading(false);
       return;
     }
 
     // Check for stored auth on startup
-    const storedUser = localStorage.getItem('serveportal_user');
+    const storedUser = localStorage.getItem("serveportal_user");
     if (storedUser) {
-      console.log('💾 Found stored user, logging in');
+      console.log("💾 Found stored user, logging in");
       setUser(JSON.parse(storedUser));
       setIsLoading(false);
       return;
     }
 
     // Auto-login admin user in Builder.io preview environment (only if not logged out)
-    const isBuilderPreview = window.location.search.includes('builder.preview=') ||
-                            window.location.hostname.includes('builder.io') ||
-                            window.parent !== window;
+    const isBuilderPreview =
+      window.location.search.includes("builder.preview=") ||
+      window.location.hostname.includes("builder.io") ||
+      window.parent !== window;
 
     if (isBuilderPreview) {
-      console.log('🔧 Builder.io preview detected - auto-logging in admin user');
+      console.log(
+        "🔧 Builder.io preview detected - auto-logging in admin user",
+      );
       setUser(ADMIN_USER);
-      localStorage.setItem('serveportal_user', JSON.stringify(ADMIN_USER));
+      localStorage.setItem("serveportal_user", JSON.stringify(ADMIN_USER));
     }
 
     setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    console.log('🔐 Login attempt:', { email, password });
+    console.log("🔐 Login attempt:", { email, password });
     setIsLoading(true);
 
     // Check password - generic password for all users during development
-    if (password !== 'password') {
-      console.log('❌ Invalid password');
+    if (password !== "password") {
+      console.log("❌ Invalid password");
       setIsLoading(false);
       return false;
     }
 
     // Check if it's the admin user first
     if (email === ADMIN_EMAIL) {
-      console.log('✅ Admin login successful');
+      console.log("✅ Admin login successful");
       setUser(ADMIN_USER);
-      localStorage.setItem('serveportal_user', JSON.stringify(ADMIN_USER));
-      localStorage.removeItem('serveportal_logged_out');
+      localStorage.setItem("serveportal_user", JSON.stringify(ADMIN_USER));
+      localStorage.removeItem("serveportal_logged_out");
       setIsLoading(false);
       return true;
     }
 
     // Check if email exists in the clients database
     try {
-      const response = await fetch('/api/clients');
+      const response = await fetch("/api/clients");
       const data = await response.json();
 
       if (data.clients) {
-        const foundClient = data.clients.find((client: any) =>
-          client.email?.toLowerCase() === email.toLowerCase()
+        const foundClient = data.clients.find(
+          (client: any) => client.email?.toLowerCase() === email.toLowerCase(),
         );
 
         if (foundClient) {
-          console.log('✅ Database client login successful:', foundClient);
-          console.log('📞 Client contact data debug:', {
+          console.log("✅ Database client login successful:", foundClient);
+          console.log("📞 Client contact data debug:", {
             phone: foundClient.phone,
             address: foundClient.address,
-            fullClient: foundClient
+            fullClient: foundClient,
           });
 
           // Create user object from client data
@@ -114,40 +117,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: foundClient.id,
             name: foundClient.name,
             email: foundClient.email,
-            role: 'client',
+            role: "client",
             company: foundClient.company,
             client_id: foundClient.id,
             client_contact: {
-              phone: foundClient.phone || '',
-              address: foundClient.address?.street || '',
-              city: foundClient.address?.city || '',
-              state: foundClient.address?.state || '',
-              zip: foundClient.address?.zip || ''
-            }
+              phone: foundClient.phone || "",
+              address: foundClient.address?.street || "",
+              city: foundClient.address?.city || "",
+              state: foundClient.address?.state || "",
+              zip: foundClient.address?.zip || "",
+            },
           };
 
-          console.log('👤 Created user object with contact info:', clientUser.client_contact);
+          console.log(
+            "👤 Created user object with contact info:",
+            clientUser.client_contact,
+          );
 
           setUser(clientUser);
-          localStorage.setItem('serveportal_user', JSON.stringify(clientUser));
-          localStorage.removeItem('serveportal_logged_out');
+          localStorage.setItem("serveportal_user", JSON.stringify(clientUser));
+          localStorage.removeItem("serveportal_logged_out");
           setIsLoading(false);
           return true;
         }
       }
     } catch (error) {
-      console.error('Error checking client database:', error);
+      console.error("Error checking client database:", error);
     }
 
-    console.log('❌ Login failed - user not found');
+    console.log("❌ Login failed - user not found");
     setIsLoading(false);
     return false;
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('serveportal_user');
-    localStorage.setItem('serveportal_logged_out', 'true');
+    localStorage.removeItem("serveportal_user");
+    localStorage.setItem("serveportal_logged_out", "true");
   };
 
   return (
@@ -160,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
