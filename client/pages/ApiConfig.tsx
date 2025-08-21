@@ -126,8 +126,7 @@ export default function ApiConfig() {
     if (
       config.serveManager.enabled &&
       (!config.serveManager.baseUrl ||
-        !config.serveManager.apiKey ||
-        (config.serveManager.apiKey === "" && !config.serveManager.apiKey.startsWith("***")))
+        (!config.serveManager.apiKey || config.serveManager.apiKey === "") && !config.serveManager.apiKey?.startsWith("***"))
     ) {
       toast({
         title: "Validation Error",
