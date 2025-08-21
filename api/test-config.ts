@@ -17,10 +17,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log("🧪 VERCEL TEST - Config test endpoint called");
 
-    // Check storage availability
-    const isStorageAvailable = await configStorageService.isAvailable();
-    console.log("💾 VERCEL TEST - Storage available:", isStorageAvailable);
-
     // Check environment variables
     const envVars = {
       hasServeManagerBaseUrl: !!process.env.SERVEMANAGER_BASE_URL,
@@ -29,32 +25,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       apiKeyLength: process.env.SERVEMANAGER_API_KEY?.length || 0,
     };
 
-    // Get effective configuration
-    let effectiveConfig = null;
-    let baseUrl = "";
-    let apiKey = "";
-
-    if (isStorageAvailable) {
-      try {
-        effectiveConfig = await configStorageService.getEffectiveConfig();
-        baseUrl = effectiveConfig.serveManager?.baseUrl || "";
-        apiKey = effectiveConfig.serveManager?.apiKey || "";
-      } catch (error) {
-        console.log("💾 VERCEL TEST - Error loading from storage:", error);
-      }
-    }
-
-    // Fallback to environment variables and global config
-    if (!baseUrl || !apiKey) {
-      baseUrl =
-        process.env.SERVEMANAGER_BASE_URL ||
-        global.tempApiConfig?.serveManager?.baseUrl ||
-        "";
-      apiKey =
-        process.env.SERVEMANAGER_API_KEY ||
-        global.tempApiConfig?.serveManager?.apiKey ||
-        "";
-    }
+    // Get effective configuration using simple config utility
+    const config = await getServeManagerConfig();
+    const baseUrl = config.baseUrl;
+    const apiKey = config.apiKey;
 
     // Check global config (for debugging)
     const globalConfig = {
@@ -62,15 +36,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       globalServeManager: global.tempApiConfig?.serveManager || null,
     };
 
-    // Check stored config
-    const storedConfig = isStorageAvailable
-      ? {
-          hasStoredConfig: !!effectiveConfig,
-          serveManagerEnabled: effectiveConfig?.serveManager?.enabled || false,
-          hasStoredUrl: !!effectiveConfig?.serveManager?.baseUrl,
-          hasStoredKey: !!effectiveConfig?.serveManager?.apiKey,
-        }
-      : null;
+    // Configuration summary
+    const configSummary = {
+      effectiveConfigEnabled: config.enabled,
+      hasEffectiveUrl: !!baseUrl,
+      hasEffectiveKey: !!apiKey,
+      configSource: process.env.SERVEMANAGER_BASE_URL ? "environment" : 
+                   global.tempApiConfig?.serveManager?.baseUrl ? "global" : "stored_or_default",
+    };
 
     // Test ServeManager connection
     let connectionTest = null;
@@ -140,28 +113,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       configuration: {
         environmentVariables: envVars,
         globalConfig: globalConfig,
-        storedConfig: storedConfig,
-        storageAvailable: isStorageAvailable,
-        effectiveValues: {
-          hasBaseUrl: !!baseUrl,
-          hasApiKey: !!apiKey,
-          baseUrlSource:
-            baseUrl === process.env.SERVEMANAGER_BASE_URL
-              ? "environment"
-              : baseUrl === global.tempApiConfig?.serveManager?.baseUrl
-                ? "global"
-                : baseUrl === effectiveConfig?.serveManager?.baseUrl
-                  ? "storage"
-                  : "unknown",
-          apiKeySource:
-            apiKey === process.env.SERVEMANAGER_API_KEY
-              ? "environment"
-              : apiKey === global.tempApiConfig?.serveManager?.apiKey
-                ? "global"
-                : apiKey === effectiveConfig?.serveManager?.apiKey
-                  ? "storage"
-                  : "unknown",
-        },
+        effectiveConfig: configSummary,
       },
       serveManagerTest: connectionTest,
     };
