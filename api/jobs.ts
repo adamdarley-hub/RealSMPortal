@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getServeManagerConfig } from "../server/utils/config-helper";
+import { getServeManagerConfig } from "./_config-utils";
 
 // No mock data - all data comes from ServeManager
 
