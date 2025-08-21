@@ -118,7 +118,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               attempts: job.attributes?.attempts || []
             })) || [];
 
-            return res.status(200).json(transformedJobs);
+            // Filter by client_id if specified
+            let filteredJobs = transformedJobs;
+            if (clientId) {
+              filteredJobs = transformedJobs.filter((job: any) =>
+                job.client_id === clientId ||
+                job.client_company?.includes('Kerr') && clientId === '1454323' ||
+                job.client_company?.includes('Pronto') && clientId === '1454358'
+              );
+            }
+
+            return res.status(200).json({ jobs: filteredJobs });
           }
         } catch (error) {
           console.log('ServeManager not available, using mock jobs:', error);
