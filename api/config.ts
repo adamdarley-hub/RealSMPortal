@@ -163,7 +163,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       return res.status(200).json({
         message:
-          "Configuration saved successfully for this session. Set environment variables in Vercel for persistence.",
+          "Configuration saved successfully! Settings will persist across requests until container restart.",
       });
     }
 
