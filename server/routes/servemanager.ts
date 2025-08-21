@@ -813,49 +813,8 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
       console.log(`Could not check invoice list:`, listError);
     }
 
-    // Fallback to database cache if API is completely unavailable
-    console.log(`API unavailable, checking database cache as last resort...`);
-    try {
-      const { db } = await import('../db/database');
-      const { invoices } = await import('../db/schema');
-      const { eq } = await import('drizzle-orm');
-
-      const cachedInvoice = await db.select().from(invoices).where(eq(invoices.id, id)).limit(1);
-
-      if (cachedInvoice.length > 0) {
-        const invoice = cachedInvoice[0];
-        console.log(`⚠️ Serving limited data from cache for invoice ${id} (no line_items available)`);
-
-        const formattedInvoice = {
-          id: invoice.id,
-          invoice_number: invoice.invoice_number,
-          status: invoice.status,
-          subtotal: invoice.subtotal || 0,
-          total_tax_amount: invoice.tax || 0,
-          total: invoice.total || 0,
-          balance_due: String(invoice.total || 0), // Assume unpaid if no payment data
-          total_paid: "0.00",
-          created_date: invoice.created_date,
-          due_date: invoice.due_date,
-          paid_date: invoice.paid_date,
-          servemanager_job_number: parseInt(invoice.id) || 0,
-          line_items: [], // Empty - not stored in cache
-          payments: [], // Empty - not stored in cache
-          client: {
-            id: invoice.client_id,
-            name: invoice.client_name,
-            company: invoice.client_company,
-            email: null,
-            phone: null
-          },
-          jobs: invoice.jobs ? JSON.parse(invoice.jobs) : []
-        };
-
-        return res.json(formattedInvoice);
-      }
-    } catch (dbError) {
-      console.log(`Database fallback also failed:`, dbError);
-    }
+    // No database fallback in serverless mode
+    console.log(`API unavailable - no local cache available in serverless mode`);
 
     // Return 404 if truly not found
     return res.status(404).json({
