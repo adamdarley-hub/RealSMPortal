@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 // Extend global for temporary config storage in serverless environments
 declare global {
-  var tempApiConfig: any | undefined;
+  var tempApiConfig: any;
 }
 
 // Initialize global config if not exists
