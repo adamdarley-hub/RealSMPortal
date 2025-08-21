@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { getServeManagerConfig } from "../server/utils/config-helper";
 
 // Mock court cases data for fallback
 const mockCourtCases = [
