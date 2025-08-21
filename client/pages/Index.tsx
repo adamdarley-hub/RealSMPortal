@@ -804,7 +804,7 @@ export default function Dashboard() {
                           )}
                         </TableCell>
                         <TableCell>
-                          {formatRelativeTime(case_.updated_at || '')}
+                          {formatRelativeTime(case_.updated_at || "")}
                         </TableCell>
                       </TableRow>
                     ))}
