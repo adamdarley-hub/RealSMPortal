@@ -3,6 +3,7 @@ import {
   makeServeManagerRequest,
   getServeManagerConfig,
 } from "../routes/servemanager";
+import { mapJobFromServeManager } from "../utils/servemanager-mapper";
 
 interface SyncResult {
   success: boolean;
