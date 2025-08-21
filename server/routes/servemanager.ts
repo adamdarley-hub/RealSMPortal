@@ -1,29 +1,35 @@
 import { RequestHandler } from "express";
-import fs from 'fs/promises';
-import path from 'path';
-import crypto from 'crypto';
-import { mapJobFromServeManager, mapClientFromServeManager, mapServerFromServeManager, mapInvoiceFromServeManager } from '../utils/servemanager-mapper';
-import { supabaseSyncService } from '../services/supabase-sync';
+import fs from "fs/promises";
+import path from "path";
+import crypto from "crypto";
+import {
+  mapJobFromServeManager,
+  mapClientFromServeManager,
+  mapServerFromServeManager,
+  mapInvoiceFromServeManager,
+} from "../utils/servemanager-mapper";
+import { supabaseSyncService } from "../services/supabase-sync";
 
-const CONFIG_FILE = path.join(process.cwd(), '.api-config.json');
-const ENCRYPTION_KEY = process.env.CONFIG_ENCRYPTION_KEY || 'default-key-change-in-production';
+const CONFIG_FILE = path.join(process.cwd(), ".api-config.json");
+const ENCRYPTION_KEY =
+  process.env.CONFIG_ENCRYPTION_KEY || "default-key-change-in-production";
 
 function decrypt(text: string): string {
   try {
-    const algorithm = 'aes-256-cbc';
-    const key = crypto.scryptSync(ENCRYPTION_KEY, 'salt', 32);
+    const algorithm = "aes-256-cbc";
+    const key = crypto.scryptSync(ENCRYPTION_KEY, "salt", 32);
 
-    const parts = text.split(':');
+    const parts = text.split(":");
     if (parts.length !== 2) {
       return text; // Return original if format is wrong (backward compatibility)
     }
 
-    const iv = Buffer.from(parts[0], 'hex');
+    const iv = Buffer.from(parts[0], "hex");
     const encrypted = parts[1];
 
     const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
+    let decrypted = decipher.update(encrypted, "hex", "utf8");
+    decrypted += decipher.final("utf8");
 
     return decrypted;
   } catch (error) {
@@ -33,15 +39,19 @@ function decrypt(text: string): string {
 
 export async function getServeManagerConfig() {
   try {
-    const data = await fs.readFile(CONFIG_FILE, 'utf8');
+    const data = await fs.readFile(CONFIG_FILE, "utf8");
     const config = JSON.parse(data);
 
     if (!config.serveManager?.enabled) {
-      throw new Error('ServeManager integration is not enabled. Please configure it in Settings → API Configuration.');
+      throw new Error(
+        "ServeManager integration is not enabled. Please configure it in Settings → API Configuration.",
+      );
     }
 
     if (!config.serveManager?.baseUrl || !config.serveManager?.apiKey) {
-      throw new Error('ServeManager API URL or key is missing. Please check your configuration.');
+      throw new Error(
+        "ServeManager API URL or key is missing. Please check your configuration.",
+      );
     }
 
     return {
@@ -49,35 +59,50 @@ export async function getServeManagerConfig() {
       apiKey: decrypt(config.serveManager.apiKey),
     };
   } catch (error) {
-    if (error instanceof Error && error.message.includes('ENOENT')) {
-      throw new Error('ServeManager is not configured yet. Please go to Settings → API Configuration to set it up.');
+    if (error instanceof Error && error.message.includes("ENOENT")) {
+      throw new Error(
+        "ServeManager is not configured yet. Please go to Settings → API Configuration to set it up.",
+      );
     }
-    if (error instanceof Error && (error.message.includes('enabled') || error.message.includes('missing'))) {
+    if (
+      error instanceof Error &&
+      (error.message.includes("enabled") || error.message.includes("missing"))
+    ) {
       throw error;
     }
-    throw new Error('ServeManager configuration not found or invalid. Please check Settings → API Configuration.');
+    throw new Error(
+      "ServeManager configuration not found or invalid. Please check Settings → API Configuration.",
+    );
   }
 }
 
-export async function makeServeManagerRequest(endpoint: string, options: RequestInit = {}) {
+export async function makeServeManagerRequest(
+  endpoint: string,
+  options: RequestInit = {},
+) {
   const config = await getServeManagerConfig();
 
   // ServeManager uses HTTP Basic Auth with API key as username and empty password (per API docs)
-  const credentials = Buffer.from(`${config.apiKey}:`).toString('base64');
+  const credentials = Buffer.from(`${config.apiKey}:`).toString("base64");
 
   const fullUrl = `${config.baseUrl}${endpoint}`;
-  console.log(`🌐 ServeManager request: ${options.method || 'GET'} ${fullUrl}`);
+  console.log(`🌐 ServeManager request: ${options.method || "GET"} ${fullUrl}`);
   console.log(`🔑 Base URL: ${config.baseUrl}`);
   console.log(`📍 Endpoint: ${endpoint}`);
 
   const defaultHeaders: Record<string, string> = {
-    'Authorization': `Basic ${credentials}`,
-    'Accept': 'application/vnd.api+json',
+    Authorization: `Basic ${credentials}`,
+    Accept: "application/vnd.api+json",
   };
 
   // Only add JSON Content-Type if not already specified (allows form data)
-  if (!options.headers || !Object.keys(options.headers).some(key => key.toLowerCase() === 'content-type')) {
-    defaultHeaders['Content-Type'] = 'application/vnd.api+json';
+  if (
+    !options.headers ||
+    !Object.keys(options.headers).some(
+      (key) => key.toLowerCase() === "content-type",
+    )
+  ) {
+    defaultHeaders["Content-Type"] = "application/vnd.api+json";
   }
 
   const response = await fetch(fullUrl, {
@@ -90,7 +115,9 @@ export async function makeServeManagerRequest(endpoint: string, options: Request
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`ServeManager API error: ${response.status} ${response.statusText} - ${errorText}`);
+    throw new Error(
+      `ServeManager API error: ${response.status} ${response.statusText} - ${errorText}`,
+    );
   }
 
   return response.json();
@@ -99,29 +126,27 @@ export async function makeServeManagerRequest(endpoint: string, options: Request
 // Get ALL jobs with optional filtering - no pagination limits
 export const getJobs: RequestHandler = async (req, res) => {
   try {
-    console.log('=== FETCHING ALL JOBS ===');
+    console.log("=== FETCHING ALL JOBS ===");
 
     const config = await getServeManagerConfig();
-    console.log('API Key exists:', !!config.apiKey);
-    console.log('Base URL:', config.baseUrl);
+    console.log("API Key exists:", !!config.apiKey);
+    console.log("Base URL:", config.baseUrl);
 
-    const {
-      status,
-      priority,
-      client_id,
-      server_id,
-      date_from,
-      date_to
-    } = req.query;
+    const { status, priority, client_id, server_id, date_from, date_to } =
+      req.query;
 
     // Build filter parameters
     const filterParams = new URLSearchParams();
-    if (status && status !== 'all') filterParams.append('status', status as string);
-    if (priority && priority !== 'all') filterParams.append('priority', priority as string);
-    if (client_id && client_id !== 'all') filterParams.append('client_id', client_id as string);
-    if (server_id && server_id !== 'all') filterParams.append('server_id', server_id as string);
-    if (date_from) filterParams.append('date_from', date_from as string);
-    if (date_to) filterParams.append('date_to', date_to as string);
+    if (status && status !== "all")
+      filterParams.append("status", status as string);
+    if (priority && priority !== "all")
+      filterParams.append("priority", priority as string);
+    if (client_id && client_id !== "all")
+      filterParams.append("client_id", client_id as string);
+    if (server_id && server_id !== "all")
+      filterParams.append("server_id", server_id as string);
+    if (date_from) filterParams.append("date_from", date_from as string);
+    if (date_to) filterParams.append("date_to", date_to as string);
 
     // Fetch ALL jobs with pagination loop
     let allJobs: any[] = [];
@@ -129,12 +154,12 @@ export const getJobs: RequestHandler = async (req, res) => {
     let hasMorePages = true;
     const maxPages = 100; // Safety limit to prevent infinite loops
 
-    console.log('Starting pagination loop to fetch ALL jobs...');
+    console.log("Starting pagination loop to fetch ALL jobs...");
 
     while (hasMorePages && page <= maxPages) {
       const params = new URLSearchParams(filterParams);
-      params.append('per_page', '100'); // Max per page
-      params.append('page', page.toString());
+      params.append("per_page", "100"); // Max per page
+      params.append("page", page.toString());
 
       const endpoint = `/jobs?${params.toString()}`;
       console.log(`Fetching page ${page} from: ${config.baseUrl}${endpoint}`);
@@ -156,15 +181,15 @@ export const getJobs: RequestHandler = async (req, res) => {
 
         // Log the ACTUAL structure of the first job to understand ServeManager's format
         if (pageJobs.length > 0 && page === 1) {
-          console.log('=== FIRST RAW JOB FROM SERVEMANAGER ===');
+          console.log("=== FIRST RAW JOB FROM SERVEMANAGER ===");
           console.log(JSON.stringify(pageJobs[0], null, 2));
-          console.log('=== JOB KEYS AVAILABLE ===');
-          console.log('Available keys:', Object.keys(pageJobs[0]));
+          console.log("=== JOB KEYS AVAILABLE ===");
+          console.log("Available keys:", Object.keys(pageJobs[0]));
 
           // Log attempt structure if available
           if (pageJobs[0].attempts && Array.isArray(pageJobs[0].attempts)) {
-            console.log('=== ATTEMPTS STRUCTURE ===');
-            console.log('Number of attempts:', pageJobs[0].attempts.length);
+            console.log("=== ATTEMPTS STRUCTURE ===");
+            console.log("Number of attempts:", pageJobs[0].attempts.length);
             pageJobs[0].attempts.forEach((attempt, index) => {
               console.log(`Attempt ${index + 1}:`, {
                 keys: Object.keys(attempt),
@@ -176,17 +201,24 @@ export const getJobs: RequestHandler = async (req, res) => {
                 device_type: attempt.device_type,
                 created_via: attempt.created_via,
                 app_type: attempt.app_type,
-                attempt_date: attempt.attempt_date || attempt.attempted_at || attempt.date,
-                photos: attempt.photos?.length || attempt.attachments?.length || attempt.misc_attachments?.length || 0
+                attempt_date:
+                  attempt.attempt_date || attempt.attempted_at || attempt.date,
+                photos:
+                  attempt.photos?.length ||
+                  attempt.attachments?.length ||
+                  attempt.misc_attachments?.length ||
+                  0,
               });
             });
           }
-          console.log('=====================================');
+          console.log("=====================================");
         }
 
         if (pageJobs.length > 0) {
           // Map ALL raw jobs through our comprehensive mapper
-          const mappedJobs = pageJobs.map(rawJob => mapJobFromServeManager(rawJob));
+          const mappedJobs = pageJobs.map((rawJob) =>
+            mapJobFromServeManager(rawJob),
+          );
           allJobs.push(...mappedJobs);
 
           // Continue if we got a full page (suggests more data)
@@ -201,53 +233,112 @@ export const getJobs: RequestHandler = async (req, res) => {
       }
     }
 
-    console.log(`=== TOTAL JOBS FETCHED: ${allJobs.length} across ${page - 1} pages ===`);
+    console.log(
+      `=== TOTAL JOBS FETCHED: ${allJobs.length} across ${page - 1} pages ===`,
+    );
 
     res.json({
       jobs: allJobs,
       total: allJobs.length,
       pages_fetched: page - 1,
-      complete: page <= maxPages
+      complete: page <= maxPages,
     });
-
   } catch (error) {
-    console.error('Error fetching all jobs:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.log('Jobs API failed, falling back to mock data');
+    console.error("Error fetching all jobs:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.log("Jobs API failed, falling back to mock data");
 
     // Enhanced mock data with more variety
     const mockJobs = [
       {
-        id: "20527876", job_number: "20527876",
-        client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
-        recipient: { name: "Robert Eskridge", address: { street: "1920 WILWOOD DRIVE", city: "ROUND ROCK", state: "TX", zip: "78681", full_address: "1920 WILWOOD DRIVE, ROUND ROCK TX 78681" }},
-        status: "pending", priority: "routine", server: { id: "server1", name: "Adam Darley" },
-        due_date: null, created_date: "2024-01-15T10:00:00Z", amount: 50.00,
-        description: "Service of Process - Divorce Papers", service_type: "Service"
+        id: "20527876",
+        job_number: "20527876",
+        client: {
+          id: "client1",
+          name: "Pronto Process Service",
+          company: "Pronto Process Service",
+        },
+        recipient: {
+          name: "Robert Eskridge",
+          address: {
+            street: "1920 WILWOOD DRIVE",
+            city: "ROUND ROCK",
+            state: "TX",
+            zip: "78681",
+            full_address: "1920 WILWOOD DRIVE, ROUND ROCK TX 78681",
+          },
+        },
+        status: "pending",
+        priority: "routine",
+        server: { id: "server1", name: "Adam Darley" },
+        due_date: null,
+        created_date: "2024-01-15T10:00:00Z",
+        amount: 50.0,
+        description: "Service of Process - Divorce Papers",
+        service_type: "Service",
       },
       {
-        id: "20527766", job_number: "20527766",
-        client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
-        recipient: { name: "MINJUNG KWUN", address: { street: "291 LOCKHART LOOP", city: "GEORGETOWN", state: "TX", zip: "78628", full_address: "291 LOCKHART LOOP, GEORGETOWN TX 78628" }},
-        status: "pending", priority: "routine", server: { id: "server1", name: "Adam Darley" },
-        due_date: null, created_date: "2024-01-14T09:30:00Z", amount: 50.00,
-        description: "Subpoena Service", service_type: "Service"
+        id: "20527766",
+        job_number: "20527766",
+        client: {
+          id: "client1",
+          name: "Pronto Process Service",
+          company: "Pronto Process Service",
+        },
+        recipient: {
+          name: "MINJUNG KWUN",
+          address: {
+            street: "291 LOCKHART LOOP",
+            city: "GEORGETOWN",
+            state: "TX",
+            zip: "78628",
+            full_address: "291 LOCKHART LOOP, GEORGETOWN TX 78628",
+          },
+        },
+        status: "pending",
+        priority: "routine",
+        server: { id: "server1", name: "Adam Darley" },
+        due_date: null,
+        created_date: "2024-01-14T09:30:00Z",
+        amount: 50.0,
+        description: "Subpoena Service",
+        service_type: "Service",
       },
       {
-        id: "20508743", job_number: "20508743",
-        client: { id: "client2", name: "Kerr Civil Process Service", company: "Kerr Civil Process Service" },
-        recipient: { name: "WILLIAMSON CENTRAL APPRAISAL DISTRICT", address: { street: "625 FM 1460", city: "Georgetown", state: "TX", zip: "78626", full_address: "625 FM 1460, Georgetown TX 78626" }},
-        status: "pending", priority: "routine", server: null,
-        due_date: "2024-08-20", created_date: "2024-01-10T08:15:00Z", amount: 0.00,
-        description: "Court Papers - Personal Injury", service_type: "Service"
-      }
+        id: "20508743",
+        job_number: "20508743",
+        client: {
+          id: "client2",
+          name: "Kerr Civil Process Service",
+          company: "Kerr Civil Process Service",
+        },
+        recipient: {
+          name: "WILLIAMSON CENTRAL APPRAISAL DISTRICT",
+          address: {
+            street: "625 FM 1460",
+            city: "Georgetown",
+            state: "TX",
+            zip: "78626",
+            full_address: "625 FM 1460, Georgetown TX 78626",
+          },
+        },
+        status: "pending",
+        priority: "routine",
+        server: null,
+        due_date: "2024-08-20",
+        created_date: "2024-01-10T08:15:00Z",
+        amount: 0.0,
+        description: "Court Papers - Personal Injury",
+        service_type: "Service",
+      },
     ];
 
     res.json({
       jobs: mockJobs,
       total: mockJobs.length,
       mock: true,
-      error: errorMessage
+      error: errorMessage,
     });
   }
 };
@@ -259,10 +350,10 @@ export const getJob: RequestHandler = async (req, res) => {
     const data = await makeServeManagerRequest(`/jobs/${id}`);
     res.json(data);
   } catch (error) {
-    console.error('Error fetching job:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch job from ServeManager',
-      message: error instanceof Error ? error.message : 'Unknown error'
+    console.error("Error fetching job:", error);
+    res.status(500).json({
+      error: "Failed to fetch job from ServeManager",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -270,7 +361,7 @@ export const getJob: RequestHandler = async (req, res) => {
 // Get ALL clients - no pagination limits
 export const getClients: RequestHandler = async (req, res) => {
   try {
-    console.log('=== FETCHING ALL CLIENTS ===');
+    console.log("=== FETCHING ALL CLIENTS ===");
 
     // Fetch ALL clients with pagination loop
     let allClients: any[] = [];
@@ -280,8 +371,8 @@ export const getClients: RequestHandler = async (req, res) => {
 
     while (hasMorePages && page <= maxPages) {
       const params = new URLSearchParams();
-      params.append('per_page', '100'); // Max per page
-      params.append('page', page.toString());
+      params.append("per_page", "100"); // Max per page
+      params.append("page", page.toString());
 
       const endpoint = `/clients?${params.toString()}`;
       console.log(`Fetching clients page ${page}`);
@@ -299,11 +390,15 @@ export const getClients: RequestHandler = async (req, res) => {
           pageClients = pageData;
         }
 
-        console.log(`Clients page ${page}: Found ${pageClients.length} clients`);
+        console.log(
+          `Clients page ${page}: Found ${pageClients.length} clients`,
+        );
 
         if (pageClients.length > 0) {
           // Map ALL raw clients through our comprehensive mapper
-          const mappedClients = pageClients.map(rawClient => mapClientFromServeManager(rawClient));
+          const mappedClients = pageClients.map((rawClient) =>
+            mapClientFromServeManager(rawClient),
+          );
           allClients.push(...mappedClients);
 
           hasMorePages = pageClients.length === 100;
@@ -322,38 +417,64 @@ export const getClients: RequestHandler = async (req, res) => {
     res.json({
       clients: allClients,
       total: allClients.length,
-      pages_fetched: page - 1
+      pages_fetched: page - 1,
     });
-
   } catch (error) {
-    console.error('Error fetching all clients, using mock data:', error);
+    console.error("Error fetching all clients, using mock data:", error);
 
     // Enhanced mock data
     const mockClients = [
       {
-        id: "client1", name: "Pronto Process Service", company: "Pronto Process Service",
-        email: "info@prontoprocess.com", phone: "(512) 555-0123",
-        address: { street: "123 Main St", city: "Austin", state: "TX", zip: "78701" },
-        created_date: "2023-06-15T00:00:00Z", active: true
+        id: "client1",
+        name: "Pronto Process Service",
+        company: "Pronto Process Service",
+        email: "info@prontoprocess.com",
+        phone: "(512) 555-0123",
+        address: {
+          street: "123 Main St",
+          city: "Austin",
+          state: "TX",
+          zip: "78701",
+        },
+        created_date: "2023-06-15T00:00:00Z",
+        active: true,
       },
       {
-        id: "client2", name: "Kerr Civil Process Service", company: "Kerr Civil Process Service",
-        email: "contact@kerrprocess.com", phone: "(512) 555-0456",
-        address: { street: "456 Oak Ave", city: "Georgetown", state: "TX", zip: "78626" },
-        created_date: "2023-08-20T00:00:00Z", active: true
+        id: "client2",
+        name: "Kerr Civil Process Service",
+        company: "Kerr Civil Process Service",
+        email: "contact@kerrprocess.com",
+        phone: "(512) 555-0456",
+        address: {
+          street: "456 Oak Ave",
+          city: "Georgetown",
+          state: "TX",
+          zip: "78626",
+        },
+        created_date: "2023-08-20T00:00:00Z",
+        active: true,
       },
       {
-        id: "client3", name: "Johnson & Associates Law", company: "Johnson & Associates Law",
-        email: "admin@johnsonlaw.com", phone: "(512) 555-0789",
-        address: { street: "789 Legal Lane", city: "Round Rock", state: "TX", zip: "78664" },
-        created_date: "2023-03-10T00:00:00Z", active: true
-      }
+        id: "client3",
+        name: "Johnson & Associates Law",
+        company: "Johnson & Associates Law",
+        email: "admin@johnsonlaw.com",
+        phone: "(512) 555-0789",
+        address: {
+          street: "789 Legal Lane",
+          city: "Round Rock",
+          state: "TX",
+          zip: "78664",
+        },
+        created_date: "2023-03-10T00:00:00Z",
+        active: true,
+      },
     ];
 
     res.json({
       clients: mockClients,
       total: mockClients.length,
-      mock: true
+      mock: true,
     });
   }
 };
@@ -361,12 +482,17 @@ export const getClients: RequestHandler = async (req, res) => {
 // Get ALL servers/employees - no pagination limits
 export const getServers: RequestHandler = async (req, res) => {
   try {
-    console.log('=== FETCHING ALL SERVERS/EMPLOYEES ===');
+    console.log("=== FETCHING ALL SERVERS/EMPLOYEES ===");
 
     // Try multiple endpoints as ServeManager might use different names
-    const endpointsToTry = ['/servers', '/employees', '/staff', '/process_servers'];
+    const endpointsToTry = [
+      "/servers",
+      "/employees",
+      "/staff",
+      "/process_servers",
+    ];
     let allServers: any[] = [];
-    let successfulEndpoint = '';
+    let successfulEndpoint = "";
 
     for (const baseEndpoint of endpointsToTry) {
       try {
@@ -379,8 +505,8 @@ export const getServers: RequestHandler = async (req, res) => {
 
         while (hasMorePages && page <= maxPages) {
           const params = new URLSearchParams();
-          params.append('per_page', '100');
-          params.append('page', page.toString());
+          params.append("per_page", "100");
+          params.append("page", page.toString());
 
           const endpoint = `${baseEndpoint}?${params.toString()}`;
 
@@ -393,7 +519,10 @@ export const getServers: RequestHandler = async (req, res) => {
               pageServers = pageData.data;
             } else if (pageData.servers && Array.isArray(pageData.servers)) {
               pageServers = pageData.servers;
-            } else if (pageData.employees && Array.isArray(pageData.employees)) {
+            } else if (
+              pageData.employees &&
+              Array.isArray(pageData.employees)
+            ) {
               pageServers = pageData.employees;
             } else if (pageData.staff && Array.isArray(pageData.staff)) {
               pageServers = pageData.staff;
@@ -401,11 +530,15 @@ export const getServers: RequestHandler = async (req, res) => {
               pageServers = pageData;
             }
 
-            console.log(`${baseEndpoint} page ${page}: Found ${pageServers.length} servers`);
+            console.log(
+              `${baseEndpoint} page ${page}: Found ${pageServers.length} servers`,
+            );
 
             if (pageServers.length > 0) {
               // Map ALL raw servers through our comprehensive mapper
-              const mappedServers = pageServers.map(rawServer => mapServerFromServeManager(rawServer));
+              const mappedServers = pageServers.map((rawServer) =>
+                mapServerFromServeManager(rawServer),
+              );
               endpointServers.push(...mappedServers);
 
               hasMorePages = pageServers.length === 100;
@@ -414,7 +547,10 @@ export const getServers: RequestHandler = async (req, res) => {
               hasMorePages = false;
             }
           } catch (pageError) {
-            console.error(`Error fetching ${baseEndpoint} page ${page}:`, pageError);
+            console.error(
+              `Error fetching ${baseEndpoint} page ${page}:`,
+              pageError,
+            );
             hasMorePages = false;
           }
         }
@@ -422,7 +558,9 @@ export const getServers: RequestHandler = async (req, res) => {
         if (endpointServers.length > 0) {
           allServers = endpointServers;
           successfulEndpoint = baseEndpoint;
-          console.log(`Successfully fetched ${allServers.length} servers from ${baseEndpoint}`);
+          console.log(
+            `Successfully fetched ${allServers.length} servers from ${baseEndpoint}`,
+          );
           break;
         }
       } catch (endpointError) {
@@ -430,40 +568,56 @@ export const getServers: RequestHandler = async (req, res) => {
       }
     }
 
-    console.log(`=== TOTAL SERVERS FETCHED: ${allServers.length} from ${successfulEndpoint} ===`);
+    console.log(
+      `=== TOTAL SERVERS FETCHED: ${allServers.length} from ${successfulEndpoint} ===`,
+    );
 
     res.json({
       servers: allServers,
       total: allServers.length,
-      endpoint_used: successfulEndpoint
+      endpoint_used: successfulEndpoint,
     });
-
   } catch (error) {
-    console.error('Error fetching all servers, using mock data:', error);
+    console.error("Error fetching all servers, using mock data:", error);
 
     // Enhanced mock data with more servers
     const mockServers = [
       {
-        id: "server1", name: "Adam Darley", email: "adam@serveportal.com", phone: "(512) 555-0789",
-        license_number: "TX12345", active: true, territories: ["Austin", "Georgetown", "Round Rock"],
-        created_date: "2023-01-15T00:00:00Z"
+        id: "server1",
+        name: "Adam Darley",
+        email: "adam@serveportal.com",
+        phone: "(512) 555-0789",
+        license_number: "TX12345",
+        active: true,
+        territories: ["Austin", "Georgetown", "Round Rock"],
+        created_date: "2023-01-15T00:00:00Z",
       },
       {
-        id: "server2", name: "Sarah Wilson", email: "sarah@serveportal.com", phone: "(512) 555-0234",
-        license_number: "TX12346", active: true, territories: ["Austin", "Cedar Park"],
-        created_date: "2023-02-20T00:00:00Z"
+        id: "server2",
+        name: "Sarah Wilson",
+        email: "sarah@serveportal.com",
+        phone: "(512) 555-0234",
+        license_number: "TX12346",
+        active: true,
+        territories: ["Austin", "Cedar Park"],
+        created_date: "2023-02-20T00:00:00Z",
       },
       {
-        id: "server3", name: "Mike Rodriguez", email: "mike@serveportal.com", phone: "(512) 555-0567",
-        license_number: "TX12347", active: true, territories: ["Georgetown", "Leander"],
-        created_date: "2023-04-10T00:00:00Z"
-      }
+        id: "server3",
+        name: "Mike Rodriguez",
+        email: "mike@serveportal.com",
+        phone: "(512) 555-0567",
+        license_number: "TX12347",
+        active: true,
+        territories: ["Georgetown", "Leander"],
+        created_date: "2023-04-10T00:00:00Z",
+      },
     ];
 
     res.json({
       servers: mockServers,
       total: mockServers.length,
-      mock: true
+      mock: true,
     });
   }
 };
@@ -478,38 +632,43 @@ export const getInvoices: RequestHandler = async (req, res) => {
     const { status, client_id, date_from, date_to } = req.query;
 
     // Create cache key based on filters
-    const cacheKey = `invoices-${status || 'all'}-${client_id || 'all'}-${date_from || ''}-${date_to || ''}`;
+    const cacheKey = `invoices-${status || "all"}-${client_id || "all"}-${date_from || ""}-${date_to || ""}`;
     const cached = invoicesCache.get(cacheKey);
     const now = Date.now();
 
     // Check cache first
-    if (cached && (now - cached.timestamp) < INVOICES_CACHE_TTL) {
-      console.log(`⚡ Serving ${cached.data.length} invoices from cache (${Math.round((now - cached.timestamp) / 1000)}s old)`);
+    if (cached && now - cached.timestamp < INVOICES_CACHE_TTL) {
+      console.log(
+        `⚡ Serving ${cached.data.length} invoices from cache (${Math.round((now - cached.timestamp) / 1000)}s old)`,
+      );
 
       // Filter client-specific invoices
       let invoices = cached.data;
-      if (client_id && client_id !== 'all') {
-        invoices = cached.data.filter(invoice =>
-          invoice.client_id?.toString() === client_id ||
-          invoice.client?.id?.toString() === client_id
+      if (client_id && client_id !== "all") {
+        invoices = cached.data.filter(
+          (invoice) =>
+            invoice.client_id?.toString() === client_id ||
+            invoice.client?.id?.toString() === client_id,
         );
       }
 
       return res.json({
         invoices,
         total: invoices.length,
-        source: 'cache'
+        source: "cache",
       });
     }
 
-    console.log('=== FETCHING ALL INVOICES FROM API ===');
+    console.log("=== FETCHING ALL INVOICES FROM API ===");
 
     // Build filter parameters
     const filterParams = new URLSearchParams();
-    if (status && status !== 'all') filterParams.append('status', status as string);
-    if (client_id && client_id !== 'all') filterParams.append('client_id', client_id as string);
-    if (date_from) filterParams.append('date_from', date_from as string);
-    if (date_to) filterParams.append('date_to', date_to as string);
+    if (status && status !== "all")
+      filterParams.append("status", status as string);
+    if (client_id && client_id !== "all")
+      filterParams.append("client_id", client_id as string);
+    if (date_from) filterParams.append("date_from", date_from as string);
+    if (date_to) filterParams.append("date_to", date_to as string);
 
     // Fetch ALL invoices with pagination loop
     let allInvoices: any[] = [];
@@ -519,8 +678,8 @@ export const getInvoices: RequestHandler = async (req, res) => {
 
     while (hasMorePages && page <= maxPages) {
       const params = new URLSearchParams(filterParams);
-      params.append('per_page', '100');
-      params.append('page', page.toString());
+      params.append("per_page", "100");
+      params.append("page", page.toString());
 
       const endpoint = `/invoices?${params.toString()}`;
       console.log(`Fetching invoices page ${page}`);
@@ -538,8 +697,9 @@ export const getInvoices: RequestHandler = async (req, res) => {
           pageInvoices = pageData;
         }
 
-        console.log(`Invoices page ${page}: Found ${pageInvoices.length} invoices`);
-
+        console.log(
+          `Invoices page ${page}: Found ${pageInvoices.length} invoices`,
+        );
 
         if (pageInvoices.length > 0) {
           allInvoices.push(...pageInvoices);
@@ -555,24 +715,34 @@ export const getInvoices: RequestHandler = async (req, res) => {
     }
 
     console.log(`=== TOTAL INVOICES FETCHED: ${allInvoices.length} ===`);
-    console.log('📋 Sample invoice IDs from API:', allInvoices.slice(0, 5).map(inv => ({
-      id: inv.id,
-      invoice_number: inv.invoice_number,
-      servemanager_id: inv.servemanager_id
-    })));
+    console.log(
+      "📋 Sample invoice IDs from API:",
+      allInvoices.slice(0, 5).map((inv) => ({
+        id: inv.id,
+        invoice_number: inv.invoice_number,
+        servemanager_id: inv.servemanager_id,
+      })),
+    );
 
     // Use local client cache for performance (no additional API call needed)
     let clientsCache: any[] = [];
     try {
-      const { cacheService } = await import('../services/cache-service');
+      const { cacheService } = await import("../services/cache-service");
       clientsCache = await cacheService.getClientsFromCache();
-      console.log(`✅ Using ${clientsCache.length} cached clients for invoice mapping`);
+      console.log(
+        `✅ Using ${clientsCache.length} cached clients for invoice mapping`,
+      );
     } catch (error) {
-      console.warn('Could not fetch cached clients for invoice mapping:', error);
+      console.warn(
+        "Could not fetch cached clients for invoice mapping:",
+        error,
+      );
     }
 
     // Transform invoices using mapper to ensure consistent data structure
-    const mappedInvoices = allInvoices.map(invoice => mapInvoiceFromServeManager(invoice, clientsCache));
+    const mappedInvoices = allInvoices.map((invoice) =>
+      mapInvoiceFromServeManager(invoice, clientsCache),
+    );
 
     // Cache the invoices for future requests
     invoicesCache.set(cacheKey, { data: mappedInvoices, timestamp: now });
@@ -582,18 +752,17 @@ export const getInvoices: RequestHandler = async (req, res) => {
       invoices: mappedInvoices,
       total: mappedInvoices.length,
       pages_fetched: page - 1,
-      source: 'api'
+      source: "api",
     });
-
   } catch (error) {
-    console.error('Error fetching invoices from ServeManager API:', error);
+    console.error("Error fetching invoices from ServeManager API:", error);
 
     // Return error response for production monitoring
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       res.status(500).json({
-        error: 'Failed to fetch invoices',
-        message: 'Unable to retrieve invoice data from ServeManager',
-        timestamp: new Date().toISOString()
+        error: "Failed to fetch invoices",
+        message: "Unable to retrieve invoice data from ServeManager",
+        timestamp: new Date().toISOString(),
       });
       return;
     }
@@ -601,31 +770,52 @@ export const getInvoices: RequestHandler = async (req, res) => {
     // Enhanced mock data for development
     const mockInvoices = [
       {
-        id: "inv001", invoice_number: "INV-2024-001",
-        client: { id: "client1", name: "Pronto Process Service", company: "Pronto Process Service" },
+        id: "inv001",
+        invoice_number: "INV-2024-001",
+        client: {
+          id: "client1",
+          name: "Pronto Process Service",
+          company: "Pronto Process Service",
+        },
         jobs: [
-          { id: "20527876", job_number: "20527876", amount: 50.00 },
-          { id: "20527766", job_number: "20527766", amount: 50.00 }
+          { id: "20527876", job_number: "20527876", amount: 50.0 },
+          { id: "20527766", job_number: "20527766", amount: 50.0 },
         ],
-        status: "sent", subtotal: 100.00, tax: 8.25, total: 108.25,
-        created_date: "2024-01-15T00:00:00Z", due_date: "2024-02-14T00:00:00Z"
+        status: "sent",
+        subtotal: 100.0,
+        tax: 8.25,
+        total: 108.25,
+        created_date: "2024-01-15T00:00:00Z",
+        due_date: "2024-02-14T00:00:00Z",
       },
       {
-        id: "inv002", invoice_number: "INV-2024-002",
-        client: { id: "client2", name: "Kerr Civil Process Service", company: "Kerr Civil Process Service" },
-        jobs: [{ id: "20508743", job_number: "20508743", amount: 75.00 }],
-        status: "paid", subtotal: 75.00, tax: 6.19, total: 81.19,
-        created_date: "2024-01-10T00:00:00Z", due_date: "2024-02-09T00:00:00Z", paid_date: "2024-01-25T00:00:00Z"
-      }
+        id: "inv002",
+        invoice_number: "INV-2024-002",
+        client: {
+          id: "client2",
+          name: "Kerr Civil Process Service",
+          company: "Kerr Civil Process Service",
+        },
+        jobs: [{ id: "20508743", job_number: "20508743", amount: 75.0 }],
+        status: "paid",
+        subtotal: 75.0,
+        tax: 6.19,
+        total: 81.19,
+        created_date: "2024-01-10T00:00:00Z",
+        due_date: "2024-02-09T00:00:00Z",
+        paid_date: "2024-01-25T00:00:00Z",
+      },
     ];
 
     // Apply mapper to mock data for consistency
-    const mappedMockInvoices = mockInvoices.map(invoice => mapInvoiceFromServeManager(invoice, []));
+    const mappedMockInvoices = mockInvoices.map((invoice) =>
+      mapInvoiceFromServeManager(invoice, []),
+    );
 
     res.json({
       invoices: mappedMockInvoices,
       total: mappedMockInvoices.length,
-      mock: true
+      mock: true,
     });
   }
 };
@@ -643,15 +833,19 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
     const addClientInfo = async (invoice: any) => {
       let clientsCache: any[] = [];
       try {
-        const { cacheService } = await import('../services/cache-service');
+        const { cacheService } = await import("../services/cache-service");
         clientsCache = await cacheService.getClientsFromCache();
       } catch (error) {
-        console.warn('Could not fetch cached clients for invoice mapping:', error);
+        console.warn(
+          "Could not fetch cached clients for invoice mapping:",
+          error,
+        );
       }
 
-      const clientInfo = clientsCache.find(c =>
-        c.id === String(invoice.client_id) ||
-        c.servemanager_id === String(invoice.client_id)
+      const clientInfo = clientsCache.find(
+        (c) =>
+          c.id === String(invoice.client_id) ||
+          c.servemanager_id === String(invoice.client_id),
       );
 
       if (clientInfo) {
@@ -660,7 +854,7 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
           name: clientInfo.name,
           company: clientInfo.company,
           email: clientInfo.email,
-          phone: clientInfo.phone
+          phone: clientInfo.phone,
         };
       }
       return invoice;
@@ -672,7 +866,7 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
       `/invoice/${id}`,
       `/api/invoices/${id}`,
       `/billing/invoices/${id}`,
-      `/invoices/${id}/details`
+      `/invoices/${id}/details`,
     ];
 
     for (const endpoint of endpointVariations) {
@@ -692,7 +886,7 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
             balance_due: enrichedInvoice.balance_due,
             total: enrichedInvoice.total,
             line_items_count: enrichedInvoice.line_items?.length || 0,
-            client_id: enrichedInvoice.client_id
+            client_id: enrichedInvoice.client_id,
           });
 
           return res.json(enrichedInvoice);
@@ -703,7 +897,9 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
     }
 
     // Fallback: search in invoice list if direct API fails
-    console.log(`🔍 Invoice ${id} not found via direct API, checking invoice list...`);
+    console.log(
+      `🔍 Invoice ${id} not found via direct API, checking invoice list...`,
+    );
 
     try {
       // Get all invoices from multiple pages to find the target invoice
@@ -713,8 +909,11 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
       const maxPages = 10; // Search first 1000 invoices
 
       while (hasMorePages && page <= maxPages) {
-        const pageResponse = await makeServeManagerRequest(`/invoices?per_page=100&page=${page}`);
-        const pageInvoices = pageResponse.data || pageResponse.invoices || pageResponse;
+        const pageResponse = await makeServeManagerRequest(
+          `/invoices?per_page=100&page=${page}`,
+        );
+        const pageInvoices =
+          pageResponse.data || pageResponse.invoices || pageResponse;
 
         if (Array.isArray(pageInvoices) && pageInvoices.length > 0) {
           allInvoices.push(...pageInvoices);
@@ -722,11 +921,12 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
           page++;
 
           // Check if we found our target invoice on this page
-          const foundOnPage = pageInvoices.find(inv =>
-            inv.id?.toString() === id ||
-            inv.invoice_id?.toString() === id ||
-            inv.invoice_number === id ||
-            inv.servemanager_id?.toString() === id
+          const foundOnPage = pageInvoices.find(
+            (inv) =>
+              inv.id?.toString() === id ||
+              inv.invoice_id?.toString() === id ||
+              inv.invoice_number === id ||
+              inv.servemanager_id?.toString() === id,
           );
 
           if (foundOnPage) {
@@ -735,7 +935,7 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
               invoice_id: foundOnPage.invoice_id,
               invoice_number: foundOnPage.invoice_number,
               servemanager_id: foundOnPage.servemanager_id,
-              line_items_count: foundOnPage.line_items?.length || 0
+              line_items_count: foundOnPage.line_items?.length || 0,
             });
 
             const enrichedInvoice = await addClientInfo(foundOnPage);
@@ -746,18 +946,23 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
         }
       }
 
-      console.log(`📊 Searched ${allInvoices.length} invoices across ${page - 1} pages. Sample IDs:`,
-        allInvoices.slice(0, 10).map(inv => ({
+      console.log(
+        `📊 Searched ${allInvoices.length} invoices across ${page - 1} pages. Sample IDs:`,
+        allInvoices.slice(0, 10).map((inv) => ({
           id: inv.id,
           invoice_number: inv.invoice_number,
-          servemanager_id: inv.servemanager_id
-        }))
+          servemanager_id: inv.servemanager_id,
+        })),
       );
 
-      console.log(`❌ Invoice ${id} not found in ${allInvoices.length} invoices`);
+      console.log(
+        `❌ Invoice ${id} not found in ${allInvoices.length} invoices`,
+      );
 
       // Try to search by job if the invoice might be linked to a specific job
-      console.log(`🔍 Trying to find invoice ${id} by searching job-related endpoints...`);
+      console.log(
+        `🔍 Trying to find invoice ${id} by searching job-related endpoints...`,
+      );
 
       // Since invoices are often associated with jobs, let's try to find it via job search
       try {
@@ -767,32 +972,46 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
         // Search recent jobs for invoice references
         for (let page = 1; page <= 5; page++) {
           try {
-            const jobsResponse = await makeServeManagerRequest(`/jobs?per_page=100&page=${page}&sort=updated_at&order=desc`);
+            const jobsResponse = await makeServeManagerRequest(
+              `/jobs?per_page=100&page=${page}&sort=updated_at&order=desc`,
+            );
             const jobs = jobsResponse.data || jobsResponse.jobs || jobsResponse;
 
             if (Array.isArray(jobs)) {
-              foundJobWithInvoice = jobs.find(job =>
-                job.invoice_id?.toString() === id ||
-                job.invoices?.some((inv: any) => inv.id?.toString() === id) ||
-                (job.invoice && job.invoice.id?.toString() === id)
+              foundJobWithInvoice = jobs.find(
+                (job) =>
+                  job.invoice_id?.toString() === id ||
+                  job.invoices?.some((inv: any) => inv.id?.toString() === id) ||
+                  (job.invoice && job.invoice.id?.toString() === id),
               );
 
               if (foundJobWithInvoice) {
-                console.log(`🎯 Found job ${foundJobWithInvoice.id} that references invoice ${id}`);
+                console.log(
+                  `🎯 Found job ${foundJobWithInvoice.id} that references invoice ${id}`,
+                );
 
                 // Try to get the invoice through the job
-                const jobDetailResponse = await makeServeManagerRequest(`/jobs/${foundJobWithInvoice.id}`);
+                const jobDetailResponse = await makeServeManagerRequest(
+                  `/jobs/${foundJobWithInvoice.id}`,
+                );
                 const jobDetail = jobDetailResponse.data || jobDetailResponse;
 
                 if (jobDetail.invoice || jobDetail.invoices) {
-                  const jobInvoice = jobDetail.invoice || jobDetail.invoices?.find((inv: any) => inv.id?.toString() === id);
+                  const jobInvoice =
+                    jobDetail.invoice ||
+                    jobDetail.invoices?.find(
+                      (inv: any) => inv.id?.toString() === id,
+                    );
                   if (jobInvoice) {
-                    console.log(`✅ Found invoice ${id} via job ${foundJobWithInvoice.id}:`, {
-                      id: jobInvoice.id,
-                      status: jobInvoice.status,
-                      total: jobInvoice.total,
-                      line_items_count: jobInvoice.line_items?.length || 0
-                    });
+                    console.log(
+                      `✅ Found invoice ${id} via job ${foundJobWithInvoice.id}:`,
+                      {
+                        id: jobInvoice.id,
+                        status: jobInvoice.status,
+                        total: jobInvoice.total,
+                        line_items_count: jobInvoice.line_items?.length || 0,
+                      },
+                    );
 
                     const enrichedInvoice = await addClientInfo(jobInvoice);
                     return res.json(enrichedInvoice);
@@ -802,31 +1021,34 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
               }
             }
           } catch (jobPageError) {
-            console.log(`Jobs page ${page} search failed:`, jobPageError.message);
+            console.log(
+              `Jobs page ${page} search failed:`,
+              jobPageError.message,
+            );
           }
         }
       } catch (jobSearchError) {
         console.log(`Job-based invoice search failed:`, jobSearchError.message);
       }
-
     } catch (listError) {
       console.log(`Could not check invoice list:`, listError);
     }
 
     // No database fallback in serverless mode
-    console.log(`API unavailable - no local cache available in serverless mode`);
+    console.log(
+      `API unavailable - no local cache available in serverless mode`,
+    );
 
     // Return 404 if truly not found
     return res.status(404).json({
-      error: 'Invoice not found',
-      message: `Invoice with ID ${id} not found in ServeManager API or local cache`
+      error: "Invoice not found",
+      message: `Invoice with ID ${id} not found in ServeManager API or local cache`,
     });
-
   } catch (error) {
     console.error(`Error in getInvoiceById for ${req.params.id}:`, error);
     res.status(500).json({
-      error: 'Failed to fetch invoice',
-      message: 'Unable to retrieve invoice data'
+      error: "Failed to fetch invoice",
+      message: "Unable to retrieve invoice data",
     });
   }
 };
@@ -834,12 +1056,17 @@ export const getInvoiceById: RequestHandler = async (req, res) => {
 // Get ALL contacts - no pagination limits
 export const getContacts: RequestHandler = async (req, res) => {
   try {
-    console.log('=== FETCHING ALL CONTACTS ===');
+    console.log("=== FETCHING ALL CONTACTS ===");
 
     // Try multiple endpoints as ServeManager might use different names
-    const endpointsToTry = ['/contacts', '/people', '/recipients', '/individuals'];
+    const endpointsToTry = [
+      "/contacts",
+      "/people",
+      "/recipients",
+      "/individuals",
+    ];
     let allContacts: any[] = [];
-    let successfulEndpoint = '';
+    let successfulEndpoint = "";
 
     for (const baseEndpoint of endpointsToTry) {
       try {
@@ -852,8 +1079,8 @@ export const getContacts: RequestHandler = async (req, res) => {
 
         while (hasMorePages && page <= maxPages) {
           const params = new URLSearchParams();
-          params.append('per_page', '100');
-          params.append('page', page.toString());
+          params.append("per_page", "100");
+          params.append("page", page.toString());
 
           const endpoint = `${baseEndpoint}?${params.toString()}`;
 
@@ -868,13 +1095,18 @@ export const getContacts: RequestHandler = async (req, res) => {
               pageContacts = pageData.contacts;
             } else if (pageData.people && Array.isArray(pageData.people)) {
               pageContacts = pageData.people;
-            } else if (pageData.recipients && Array.isArray(pageData.recipients)) {
+            } else if (
+              pageData.recipients &&
+              Array.isArray(pageData.recipients)
+            ) {
               pageContacts = pageData.recipients;
             } else if (Array.isArray(pageData)) {
               pageContacts = pageData;
             }
 
-            console.log(`${baseEndpoint} page ${page}: Found ${pageContacts.length} contacts`);
+            console.log(
+              `${baseEndpoint} page ${page}: Found ${pageContacts.length} contacts`,
+            );
 
             if (pageContacts.length > 0) {
               endpointContacts.push(...pageContacts);
@@ -884,7 +1116,10 @@ export const getContacts: RequestHandler = async (req, res) => {
               hasMorePages = false;
             }
           } catch (pageError) {
-            console.error(`Error fetching ${baseEndpoint} page ${page}:`, pageError);
+            console.error(
+              `Error fetching ${baseEndpoint} page ${page}:`,
+              pageError,
+            );
             hasMorePages = false;
           }
         }
@@ -892,7 +1127,9 @@ export const getContacts: RequestHandler = async (req, res) => {
         if (endpointContacts.length > 0) {
           allContacts = endpointContacts;
           successfulEndpoint = baseEndpoint;
-          console.log(`Successfully fetched ${allContacts.length} contacts from ${baseEndpoint}`);
+          console.log(
+            `Successfully fetched ${allContacts.length} contacts from ${baseEndpoint}`,
+          );
           break;
         }
       } catch (endpointError) {
@@ -900,35 +1137,52 @@ export const getContacts: RequestHandler = async (req, res) => {
       }
     }
 
-    console.log(`=== TOTAL CONTACTS FETCHED: ${allContacts.length} from ${successfulEndpoint} ===`);
+    console.log(
+      `=== TOTAL CONTACTS FETCHED: ${allContacts.length} from ${successfulEndpoint} ===`,
+    );
 
     res.json({
       contacts: allContacts,
       total: allContacts.length,
-      endpoint_used: successfulEndpoint
+      endpoint_used: successfulEndpoint,
     });
-
   } catch (error) {
-    console.error('Error fetching all contacts, using mock data:', error);
+    console.error("Error fetching all contacts, using mock data:", error);
 
     // Mock contacts data
     const mockContacts = [
       {
-        id: "contact1", name: "Robert Eskridge", email: "robert.eskridge@email.com", phone: "(512) 555-1111",
-        address: { street: "1920 WILWOOD DRIVE", city: "ROUND ROCK", state: "TX", zip: "78681" },
-        created_date: "2024-01-15T00:00:00Z"
+        id: "contact1",
+        name: "Robert Eskridge",
+        email: "robert.eskridge@email.com",
+        phone: "(512) 555-1111",
+        address: {
+          street: "1920 WILWOOD DRIVE",
+          city: "ROUND ROCK",
+          state: "TX",
+          zip: "78681",
+        },
+        created_date: "2024-01-15T00:00:00Z",
       },
       {
-        id: "contact2", name: "MINJUNG KWUN", email: "minjung.kwun@email.com", phone: "(512) 555-2222",
-        address: { street: "291 LOCKHART LOOP", city: "GEORGETOWN", state: "TX", zip: "78628" },
-        created_date: "2024-01-14T00:00:00Z"
-      }
+        id: "contact2",
+        name: "MINJUNG KWUN",
+        email: "minjung.kwun@email.com",
+        phone: "(512) 555-2222",
+        address: {
+          street: "291 LOCKHART LOOP",
+          city: "GEORGETOWN",
+          state: "TX",
+          zip: "78628",
+        },
+        created_date: "2024-01-14T00:00:00Z",
+      },
     ];
 
     res.json({
       contacts: mockContacts,
       total: mockContacts.length,
-      mock: true
+      mock: true,
     });
   }
 };
@@ -936,14 +1190,15 @@ export const getContacts: RequestHandler = async (req, res) => {
 // Get ALL court cases - no pagination limits
 export const getCourtCases: RequestHandler = async (req, res) => {
   try {
-    console.log('=== FETCHING ALL COURT CASES ===');
+    console.log("=== FETCHING ALL COURT CASES ===");
 
     const { company_id, q } = req.query;
 
     // Build filter parameters
     const filterParams = new URLSearchParams();
-    if (company_id && company_id !== 'all') filterParams.append('company_id', company_id as string);
-    if (q) filterParams.append('q', q as string);
+    if (company_id && company_id !== "all")
+      filterParams.append("company_id", company_id as string);
+    if (q) filterParams.append("q", q as string);
 
     // Fetch ALL court cases with pagination loop
     let allCourtCases: any[] = [];
@@ -953,8 +1208,8 @@ export const getCourtCases: RequestHandler = async (req, res) => {
 
     while (hasMorePages && page <= maxPages) {
       const params = new URLSearchParams(filterParams);
-      params.append('per_page', '100');
-      params.append('page', page.toString());
+      params.append("per_page", "100");
+      params.append("page", page.toString());
 
       const endpoint = `/court_cases?${params.toString()}`;
       console.log(`Fetching court cases page ${page}`);
@@ -966,13 +1221,18 @@ export const getCourtCases: RequestHandler = async (req, res) => {
         let pageCourtCases: any[] = [];
         if (pageData.data && Array.isArray(pageData.data)) {
           pageCourtCases = pageData.data;
-        } else if (pageData.court_cases && Array.isArray(pageData.court_cases)) {
+        } else if (
+          pageData.court_cases &&
+          Array.isArray(pageData.court_cases)
+        ) {
           pageCourtCases = pageData.court_cases;
         } else if (Array.isArray(pageData)) {
           pageCourtCases = pageData;
         }
 
-        console.log(`Court cases page ${page}: Found ${pageCourtCases.length} court cases`);
+        console.log(
+          `Court cases page ${page}: Found ${pageCourtCases.length} court cases`,
+        );
 
         if (pageCourtCases.length > 0) {
           allCourtCases.push(...pageCourtCases);
@@ -992,11 +1252,10 @@ export const getCourtCases: RequestHandler = async (req, res) => {
     res.json({
       court_cases: allCourtCases,
       total: allCourtCases.length,
-      pages_fetched: page - 1
+      pages_fetched: page - 1,
     });
-
   } catch (error) {
-    console.error('Error fetching all court cases, using mock data:', error);
+    console.error("Error fetching all court cases, using mock data:", error);
 
     // Enhanced mock data
     const mockCourtCases = [
@@ -1012,10 +1271,10 @@ export const getCourtCases: RequestHandler = async (req, res) => {
           id: "court1",
           name: "Superior Court of Travis County",
           county: "Travis",
-          state: "TX"
+          state: "TX",
         },
         created_at: "2024-01-15T00:00:00Z",
-        updated_at: "2024-01-28T00:00:00Z"
+        updated_at: "2024-01-28T00:00:00Z",
       },
       {
         id: "case002",
@@ -1029,17 +1288,17 @@ export const getCourtCases: RequestHandler = async (req, res) => {
           id: "court2",
           name: "District Court of Harris County",
           county: "Harris",
-          state: "TX"
+          state: "TX",
         },
         created_at: "2024-01-10T00:00:00Z",
-        updated_at: "2024-01-25T00:00:00Z"
-      }
+        updated_at: "2024-01-25T00:00:00Z",
+      },
     ];
 
     res.json({
       court_cases: mockCourtCases,
       total: mockCourtCases.length,
-      mock: true
+      mock: true,
     });
   }
 };
@@ -1049,29 +1308,36 @@ export const createJob: RequestHandler = async (req, res) => {
   try {
     const jobData = req.body;
 
-    const data = await makeServeManagerRequest('/jobs', {
-      method: 'POST',
+    const data = await makeServeManagerRequest("/jobs", {
+      method: "POST",
       body: JSON.stringify(jobData),
     });
 
     // Sync new job to Supabase for persistence
     if (data && data.data && data.data.id) {
       try {
-        console.log(`🔄 Syncing new job ${data.data.id} to Supabase for persistence`);
+        console.log(
+          `🔄 Syncing new job ${data.data.id} to Supabase for persistence`,
+        );
         await supabaseSyncService.syncSingleJob(data.data.id);
-        console.log(`✅ New job ${data.data.id} synced to Supabase successfully`);
+        console.log(
+          `✅ New job ${data.data.id} synced to Supabase successfully`,
+        );
       } catch (syncError) {
-        console.error(`⚠️ Failed to sync new job ${data.data.id} to Supabase:`, syncError);
+        console.error(
+          `⚠️ Failed to sync new job ${data.data.id} to Supabase:`,
+          syncError,
+        );
         // Don't fail the request if Supabase sync fails - just log the warning
       }
     }
 
     res.status(201).json(data);
   } catch (error) {
-    console.error('Error creating job:', error);
+    console.error("Error creating job:", error);
     res.status(500).json({
-      error: 'Failed to create job in ServeManager',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to create job in ServeManager",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -1083,7 +1349,7 @@ export const updateJob: RequestHandler = async (req, res) => {
     const jobData = req.body;
 
     const data = await makeServeManagerRequest(`/jobs/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(jobData),
     });
 
@@ -1094,17 +1360,20 @@ export const updateJob: RequestHandler = async (req, res) => {
         await supabaseSyncService.syncSingleJob(parseInt(id));
         console.log(`✅ Updated job ${id} synced to Supabase successfully`);
       } catch (syncError) {
-        console.error(`⚠️ Failed to sync updated job ${id} to Supabase:`, syncError);
+        console.error(
+          `⚠️ Failed to sync updated job ${id} to Supabase:`,
+          syncError,
+        );
         // Don't fail the request if Supabase sync fails - just log the warning
       }
     }
 
     res.json(data);
   } catch (error) {
-    console.error('Error updating job:', error);
+    console.error("Error updating job:", error);
     res.status(500).json({
-      error: 'Failed to update job in ServeManager',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to update job in ServeManager",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -1115,7 +1384,10 @@ export const updateClient: RequestHandler = async (req, res) => {
     const { id } = req.params;
     const contactData = req.body;
 
-    console.log(`🔄 Attempting ServeManager contact update for client ${id}:`, contactData);
+    console.log(
+      `🔄 Attempting ServeManager contact update for client ${id}:`,
+      contactData,
+    );
 
     // First, let's get the current client data to understand the structure
     console.log(`📋 Fetching current client ${id} data from ServeManager...`);
@@ -1128,22 +1400,24 @@ export const updateClient: RequestHandler = async (req, res) => {
         phone_numbers: currentClient.phone_numbers?.length || 0,
         addresses: currentClient.addresses?.length || 0,
         contacts: currentClient.contacts?.length || 0,
-        email_addresses: currentClient.email_addresses?.length || 0
+        email_addresses: currentClient.email_addresses?.length || 0,
       });
     } catch (fetchError) {
       console.error(`❌ Could not fetch current client data:`, fetchError);
       return res.status(404).json({
-        error: 'Client not found',
-        message: `Could not fetch client ${id} from ServeManager`
+        error: "Client not found",
+        message: `Could not fetch client ${id} from ServeManager`,
       });
     }
 
     // Strategy 1: Try updating company record with nested arrays
-    console.log(`🔧 Strategy 1: Updating company with nested contact arrays...`);
+    console.log(
+      `🔧 Strategy 1: Updating company with nested contact arrays...`,
+    );
     try {
       const updatePayload = {
         data: {
-          type: 'companies',
+          type: "companies",
           id: id,
           attributes: {
             // Preserve existing data
@@ -1152,40 +1426,42 @@ export const updateClient: RequestHandler = async (req, res) => {
             phone_numbers: [
               {
                 id: currentClient.phone_numbers?.[0]?.id || null,
-                phone: contactData.phone || '',
-                primary: true
-              }
+                phone: contactData.phone || "",
+                primary: true,
+              },
             ],
             // Update addresses array
             addresses: [
               {
                 id: currentClient.addresses?.[0]?.id || null,
-                street: contactData.address || '',
-                city: contactData.city || '',
-                state: contactData.state || '',
-                zip: contactData.zip || '',
-                primary: true
-              }
-            ]
-          }
-        }
+                street: contactData.address || "",
+                city: contactData.city || "",
+                state: contactData.state || "",
+                zip: contactData.zip || "",
+                primary: true,
+              },
+            ],
+          },
+        },
       };
 
-      console.log(`📤 Sending update payload:`, JSON.stringify(updatePayload, null, 2));
+      console.log(
+        `📤 Sending update payload:`,
+        JSON.stringify(updatePayload, null, 2),
+      );
 
       const response1 = await makeServeManagerRequest(`/companies/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(updatePayload)
+        method: "PATCH",
+        body: JSON.stringify(updatePayload),
       });
 
       console.log(`✅ Strategy 1 successful! Contact updated in ServeManager`);
       return res.json({
         success: true,
-        message: 'Contact information updated in ServeManager successfully',
+        message: "Contact information updated in ServeManager successfully",
         data: response1,
-        strategy: 'nested_arrays_patch'
+        strategy: "nested_arrays_patch",
       });
-
     } catch (strategy1Error) {
       console.log(`❌ Strategy 1 failed:`, strategy1Error.message);
     }
@@ -1195,31 +1471,30 @@ export const updateClient: RequestHandler = async (req, res) => {
     try {
       const simplePayload = {
         data: {
-          type: 'companies',
+          type: "companies",
           id: id,
           attributes: {
             phone: contactData.phone,
             address: contactData.address,
             city: contactData.city,
             state: contactData.state,
-            zip: contactData.zip
-          }
-        }
+            zip: contactData.zip,
+          },
+        },
       };
 
       const response2 = await makeServeManagerRequest(`/companies/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(simplePayload)
+        method: "PATCH",
+        body: JSON.stringify(simplePayload),
       });
 
       console.log(`✅ Strategy 2 successful! Contact updated in ServeManager`);
       return res.json({
         success: true,
-        message: 'Contact information updated in ServeManager successfully',
+        message: "Contact information updated in ServeManager successfully",
         data: response2,
-        strategy: 'simple_patch'
+        strategy: "simple_patch",
       });
-
     } catch (strategy2Error) {
       console.log(`❌ Strategy 2 failed:`, strategy2Error.message);
     }
@@ -1235,44 +1510,49 @@ export const updateClient: RequestHandler = async (req, res) => {
         state: contactData.state,
         zip: contactData.zip,
         // Try to update the first phone number and address in arrays
-        phone_numbers: currentClient.phone_numbers?.length ? [
-          {
-            ...currentClient.phone_numbers[0],
-            phone: contactData.phone
-          },
-          ...currentClient.phone_numbers.slice(1)
-        ] : [{ phone: contactData.phone, primary: true }],
-        addresses: currentClient.addresses?.length ? [
-          {
-            ...currentClient.addresses[0],
-            street: contactData.address,
-            city: contactData.city,
-            state: contactData.state,
-            zip: contactData.zip
-          },
-          ...currentClient.addresses.slice(1)
-        ] : [{
-          street: contactData.address,
-          city: contactData.city,
-          state: contactData.state,
-          zip: contactData.zip,
-          primary: true
-        }]
+        phone_numbers: currentClient.phone_numbers?.length
+          ? [
+              {
+                ...currentClient.phone_numbers[0],
+                phone: contactData.phone,
+              },
+              ...currentClient.phone_numbers.slice(1),
+            ]
+          : [{ phone: contactData.phone, primary: true }],
+        addresses: currentClient.addresses?.length
+          ? [
+              {
+                ...currentClient.addresses[0],
+                street: contactData.address,
+                city: contactData.city,
+                state: contactData.state,
+                zip: contactData.zip,
+              },
+              ...currentClient.addresses.slice(1),
+            ]
+          : [
+              {
+                street: contactData.address,
+                city: contactData.city,
+                state: contactData.state,
+                zip: contactData.zip,
+                primary: true,
+              },
+            ],
       };
 
       const response3 = await makeServeManagerRequest(`/companies/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(putPayload)
+        method: "PUT",
+        body: JSON.stringify(putPayload),
       });
 
       console.log(`✅ Strategy 3 successful! Contact updated in ServeManager`);
       return res.json({
         success: true,
-        message: 'Contact information updated in ServeManager successfully',
+        message: "Contact information updated in ServeManager successfully",
         data: response3,
-        strategy: 'full_put'
+        strategy: "full_put",
       });
-
     } catch (strategy3Error) {
       console.log(`❌ Strategy 3 failed:`, strategy3Error.message);
     }
@@ -1280,17 +1560,18 @@ export const updateClient: RequestHandler = async (req, res) => {
     // All strategies failed - return error with details
     console.error(`💥 All ServeManager update strategies failed`);
     return res.status(500).json({
-      error: 'Failed to update ServeManager',
-      message: 'All update strategies failed. ServeManager may not support contact information updates via API.',
-      strategies_attempted: ['nested_arrays_patch', 'simple_patch', 'full_put'],
-      recommendation: 'Contact information updates may need to be made directly in the ServeManager admin interface'
+      error: "Failed to update ServeManager",
+      message:
+        "All update strategies failed. ServeManager may not support contact information updates via API.",
+      strategies_attempted: ["nested_arrays_patch", "simple_patch", "full_put"],
+      recommendation:
+        "Contact information updates may need to be made directly in the ServeManager admin interface",
     });
-
   } catch (error) {
-    console.error('❌ Error in contact update:', error);
+    console.error("❌ Error in contact update:", error);
     res.status(500).json({
-      error: 'Failed to process contact information update',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to process contact information update",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
