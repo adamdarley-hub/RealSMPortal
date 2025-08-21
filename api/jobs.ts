@@ -166,43 +166,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } catch (error) {
           console.log("⚠️ ServeManager not available, using mock jobs:", error);
         }
-      } else {
-        console.log("⚠️ ServeManager not configured, using mock jobs");
       }
 
-      // Fallback to mock jobs
-      console.log("⚠️ ServeManager not configured, using mock jobs");
-
-      // Filter mock jobs by client_id if specified
-      let filteredMockJobs = mockJobs;
-      if (clientId) {
-        console.log(`🔍 Filtering mock jobs for client_id: ${clientId}`);
-
-        filteredMockJobs = mockJobs.filter((job) => {
-          return job.client_id === clientId;
-        });
-
-        console.log(
-          `📋 Filtered ${filteredMockJobs.length} of ${mockJobs.length} jobs for client ${clientId}`,
-        );
-
-        if (filteredMockJobs.length > 0) {
-          console.log("📄 Sample filtered job:", {
-            id: filteredMockJobs[0].id,
-            job_number: filteredMockJobs[0].job_number,
-            client_id: filteredMockJobs[0].client_id,
-            client_company: filteredMockJobs[0].client_company,
-            recipient_name: filteredMockJobs[0].recipient_name,
-          });
-        }
-      } else {
-        console.log("📋 No client_id specified, returning all mock jobs");
-      }
-
+      // If ServeManager is not configured or failed, return empty array
+      console.log("❌ ServeManager not available or not configured");
       return res.status(200).json({
-        jobs: filteredMockJobs,
-        source: "mock",
-        total: filteredMockJobs.length,
+        jobs: [],
+        source: "empty",
+        total: 0,
+        error: "ServeManager API not configured or not available"
       });
     }
 
