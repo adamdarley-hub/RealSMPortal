@@ -94,18 +94,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "GET") {
-      console.log("Serving jobs data");
+      console.log("📋 Serving jobs data");
 
       // Get query parameters
       const clientId = req.query.client_id as string;
       const limit = req.query.limit as string;
+      const refresh = req.query.refresh as string;
 
-      console.log("Query params:", { clientId, limit });
+      console.log("🔍 Query params:", { clientId, limit, refresh });
 
       const servemanagerConfig = {
         baseUrl: process.env.SERVEMANAGER_BASE_URL,
         apiKey: process.env.SERVEMANAGER_API_KEY,
       };
+
+      console.log("🔧 ServeManager config available:", {
+        hasBaseUrl: !!servemanagerConfig.baseUrl,
+        hasApiKey: !!servemanagerConfig.apiKey,
+        baseUrl: servemanagerConfig.baseUrl
+      });
 
       if (servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
         try {
@@ -114,79 +121,94 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             `${servemanagerConfig.apiKey}:`,
           ).toString("base64");
 
-          // Build URL with query parameters
+          // Build URL with query parameters - ServeManager uses JSON:API format
           const url = new URL(`${servemanagerConfig.baseUrl}/jobs`);
+
+          // Add pagination
+          url.searchParams.set("page[number]", "1");
+          url.searchParams.set("page[size]", limit || "100");
+
+          // Add client filter if specified
           if (clientId) {
             url.searchParams.set("filter[client_id]", clientId);
           }
-          if (limit) {
-            url.searchParams.set("page[size]", limit);
-          }
 
-          console.log("Fetching from ServeManager:", url.toString());
+          // Add includes for related data
+          url.searchParams.set("include", "client,service_attempts,addresses");
+
+          console.log("🌐 Fetching from ServeManager:", url.toString());
 
           const response = await fetch(url.toString(), {
             headers: {
               Authorization: `Basic ${credentials}`,
               Accept: "application/vnd.api+json",
+              "Content-Type": "application/vnd.api+json",
             },
           });
 
+          console.log("📡 ServeManager response status:", response.status);
+
           if (response.ok) {
             const data = await response.json();
-            console.log("Fetched real jobs from ServeManager");
+            console.log("✅ Fetched real jobs from ServeManager. Jobs count:", data.data?.length || 0);
+
+            if (data.data && data.data.length > 0) {
+              console.log("📄 Sample job data:", JSON.stringify(data.data[0], null, 2));
+            }
 
             // Transform ServeManager data to expected format
             const transformedJobs =
-              data.data?.map((job: any) => ({
-                id: job.id,
-                job_number:
-                  job.attributes?.job_number ||
-                  job.attributes?.reference ||
-                  `JOB-${job.id}`,
-                client_company:
-                  job.attributes?.client_company ||
-                  job.relationships?.client?.data?.attributes?.company ||
-                  "Unknown Client",
-                client_name: job.attributes?.client_name || "Unknown",
-                recipient_name:
-                  job.attributes?.recipient_name ||
-                  job.attributes?.defendant_name ||
-                  "Unknown",
-                status: job.attributes?.status || "pending",
-                priority: job.attributes?.priority || "medium",
-                created_at:
-                  job.attributes?.created_at || new Date().toISOString(),
-                due_date: job.attributes?.due_date || job.attributes?.date_due,
-                amount: parseFloat(
-                  job.attributes?.amount || job.attributes?.price || "0",
-                ),
-                city:
-                  job.attributes?.city || job.attributes?.service_address?.city,
-                state:
-                  job.attributes?.state ||
-                  job.attributes?.service_address?.state,
-                attempts: job.attributes?.attempts || [],
-              })) || [];
+              data.data?.map((job: any) => {
+                const attributes = job.attributes || {};
+                const relationships = job.relationships || {};
 
-            // Filter by client_id if specified
-            let filteredJobs = transformedJobs;
-            if (clientId) {
-              filteredJobs = transformedJobs.filter(
-                (job: any) =>
-                  job.client_id === clientId ||
-                  (job.client_company?.includes("Kerr") &&
-                    clientId === "1454323") ||
-                  (job.client_company?.includes("Pronto") &&
-                    clientId === "1454358"),
-              );
+                // Get client info from included data or relationships
+                const clientData = data.included?.find(
+                  (item: any) => item.type === "client" && item.id === relationships.client?.data?.id
+                );
+
+                return {
+                  id: job.id,
+                  job_number: attributes.job_number || attributes.reference || `JOB-${job.id}`,
+                  client_company: clientData?.attributes?.company || attributes.client_company || "Unknown Client",
+                  client_name: clientData?.attributes?.name || attributes.client_name || "Unknown",
+                  client_id: relationships.client?.data?.id || null,
+                  recipient_name: attributes.recipient_name || attributes.defendant_name || "Unknown Recipient",
+                  status: attributes.status || "pending",
+                  priority: attributes.priority || "medium",
+                  created_at: attributes.created_at || new Date().toISOString(),
+                  due_date: attributes.due_date || attributes.date_due,
+                  amount: parseFloat(attributes.amount || attributes.price || "0"),
+                  city: attributes.city || attributes.service_address?.city || "Unknown",
+                  state: attributes.state || attributes.service_address?.state || "Unknown",
+                  zip: attributes.zip || attributes.service_address?.zip,
+                  address: attributes.address || attributes.service_address?.address,
+                  attempts: attributes.service_attempts || [],
+                  documents: attributes.documents || [],
+                  notes: attributes.notes,
+                };
+              }) || [];
+
+            console.log("🔄 Transformed jobs count:", transformedJobs.length);
+
+            if (transformedJobs.length > 0) {
+              console.log("📋 Sample transformed job:", JSON.stringify(transformedJobs[0], null, 2));
             }
 
-            return res.status(200).json({ jobs: filteredJobs });
+            return res.status(200).json({
+              jobs: transformedJobs,
+              source: "servemanager",
+              total: data.meta?.total || transformedJobs.length
+            });
+          } else {
+            const errorText = await response.text();
+            console.log("❌ ServeManager API error:", response.status, errorText);
           }
         } catch (error) {
-          console.log("ServeManager not available, using mock jobs:", error);
+          console.log("⚠️ ServeManager not available, using mock jobs:", error);
         }
+      } else {
+        console.log("⚠️ ServeManager not configured, using mock jobs");
       }
 
       // Fallback to mock jobs

@@ -85,20 +85,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === "POST") {
       console.log("Saving config in serverless environment...");
 
+      const newConfig = req.body;
+      console.log("Received config:", JSON.stringify(newConfig, null, 2));
+
+      // Don't update masked keys - keep the real values from environment
+      const configToStore = { ...newConfig };
+
+      // If ServeManager API key is masked, keep the environment value
+      if (configToStore.serveManager?.apiKey?.startsWith('***')) {
+        if (tempConfig.serveManager?.apiKey && !tempConfig.serveManager.apiKey.startsWith('***')) {
+          configToStore.serveManager.apiKey = tempConfig.serveManager.apiKey;
+        }
+        // Don't store masked keys
+        delete configToStore.serveManager.apiKey;
+      }
+
+      // Similar for other masked fields
+      if (configToStore.stripe?.secretKey?.startsWith('***')) {
+        delete configToStore.stripe.secretKey;
+      }
+      if (configToStore.stripe?.webhookSecret?.startsWith('***')) {
+        delete configToStore.stripe.webhookSecret;
+      }
+      if (configToStore.radar?.secretKey?.startsWith('***')) {
+        delete configToStore.radar.secretKey;
+      }
+
       // Store config temporarily (will be lost on function restart)
-      tempConfig = req.body;
+      tempConfig = { ...tempConfig, ...configToStore };
 
       console.log(
         "Config saved temporarily. For persistent storage, set these environment variables in Vercel:",
       );
-      if (req.body.serveManager?.enabled) {
-        console.log("SERVEMANAGER_BASE_URL=" + req.body.serveManager.baseUrl);
-        console.log("SERVEMANAGER_API_KEY=your_api_key");
+      if (newConfig.serveManager?.enabled) {
+        console.log("SERVEMANAGER_BASE_URL=" + newConfig.serveManager.baseUrl);
+        if (newConfig.serveManager.apiKey && !newConfig.serveManager.apiKey.startsWith('***')) {
+          console.log("SERVEMANAGER_API_KEY=" + newConfig.serveManager.apiKey);
+        }
       }
-      if (req.body.stripe?.enabled) {
-        console.log("STRIPE_PUBLISHABLE_KEY=" + req.body.stripe.publishableKey);
-        console.log("STRIPE_SECRET_KEY=your_stripe_secret");
-        console.log("STRIPE_WEBHOOK_SECRET=your_webhook_secret");
+      if (newConfig.stripe?.enabled) {
+        console.log("STRIPE_PUBLISHABLE_KEY=" + newConfig.stripe.publishableKey);
+        if (newConfig.stripe.secretKey && !newConfig.stripe.secretKey.startsWith('***')) {
+          console.log("STRIPE_SECRET_KEY=" + newConfig.stripe.secretKey);
+        }
       }
 
       return res.status(200).json({
