@@ -3,6 +3,11 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 
+// Extend global for temporary config storage in serverless environments
+declare global {
+  var tempApiConfig: ApiConfig | undefined;
+}
+
 interface ApiConfig {
   serveManager: {
     baseUrl: string;
