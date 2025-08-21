@@ -1,5 +1,36 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getServeManagerConfig } from "./_config-utils";
+
+// Simple config getter to avoid import issues
+function getServeManagerConfig() {
+  // Environment variables take priority
+  const envBaseUrl = process.env.SERVEMANAGER_BASE_URL;
+  const envApiKey = process.env.SERVEMANAGER_API_KEY;
+
+  if (envBaseUrl && envApiKey) {
+    return {
+      baseUrl: envBaseUrl,
+      apiKey: envApiKey,
+      enabled: true,
+    };
+  }
+
+  // Fall back to global memory
+  const globalConfig = global.tempApiConfig?.serveManager;
+  if (globalConfig?.baseUrl && globalConfig?.apiKey) {
+    return {
+      baseUrl: globalConfig.baseUrl,
+      apiKey: globalConfig.apiKey,
+      enabled: globalConfig.enabled || false,
+    };
+  }
+
+  // Default disabled config
+  return {
+    baseUrl: '',
+    apiKey: '',
+    enabled: false,
+  };
+}
 
 // No mock data - all clients come from ServeManager
 
