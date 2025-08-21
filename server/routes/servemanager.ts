@@ -43,23 +43,37 @@ function decrypt(text: string): string {
 
 export async function getServeManagerConfig() {
   try {
-    // Try the new config helper first (supports persistent storage)
-    const config = await getServeManagerConfigHelper();
+    console.log("🔑 Getting ServeManager config...");
 
-    if (!validateServeManagerConfig(config)) {
-      throw new Error(
-        "ServeManager integration is not enabled or properly configured. Please configure it in Settings → API Configuration.",
-      );
+    // 1. Check environment variables first (highest priority)
+    const envBaseUrl = process.env.SERVEMANAGER_BASE_URL;
+    const envApiKey = process.env.SERVEMANAGER_API_KEY;
+
+    if (envBaseUrl && envApiKey) {
+      console.log("✅ Using environment variables for ServeManager config");
+      return {
+        baseUrl: envBaseUrl,
+        apiKey: envApiKey,
+      };
     }
 
-    return {
-      baseUrl: config.baseUrl,
-      apiKey: config.apiKey,
-    };
-  } catch (error) {
-    console.error("Failed to get ServeManager config from helper:", error);
+    // 2. Check global memory (saved from UI)
+    const globalConfig = global.tempApiConfig?.serveManager;
+    if (globalConfig?.baseUrl && globalConfig?.apiKey && globalConfig?.enabled) {
+      console.log("✅ Using global memory config for ServeManager:", {
+        hasBaseUrl: !!globalConfig.baseUrl,
+        hasApiKey: !!globalConfig.apiKey,
+        enabled: globalConfig.enabled,
+        baseUrl: globalConfig.baseUrl,
+        apiKeyLength: globalConfig.apiKey?.length || 0,
+      });
+      return {
+        baseUrl: globalConfig.baseUrl,
+        apiKey: globalConfig.apiKey,
+      };
+    }
 
-    // Fallback to file-based config for backward compatibility
+    // 3. Fallback to file-based config for backward compatibility
     try {
       const data = await fs.readFile(CONFIG_FILE, "utf8");
       const config = JSON.parse(data);
@@ -76,28 +90,25 @@ export async function getServeManagerConfig() {
         );
       }
 
+      console.log("✅ Using file-based config for ServeManager");
       return {
         baseUrl: config.serveManager.baseUrl,
         apiKey: decrypt(config.serveManager.apiKey),
       };
     } catch (fileError) {
-      console.error("Fallback file config also failed:", fileError);
+      console.error("❌ No configuration found in any source:", {
+        environmentVars: { hasBaseUrl: !!envBaseUrl, hasApiKey: !!envApiKey },
+        globalConfig: { exists: !!globalConfig, enabled: globalConfig?.enabled },
+        fileError: fileError instanceof Error ? fileError.message : "Unknown",
+      });
 
-      if (fileError instanceof Error && fileError.message.includes("ENOENT")) {
-        throw new Error(
-          "ServeManager is not configured yet. Please go to Settings → API Configuration to set it up.",
-        );
-      }
-      if (
-        error instanceof Error &&
-        (error.message.includes("enabled") || error.message.includes("missing"))
-      ) {
-        throw error;
-      }
       throw new Error(
-        "ServeManager configuration not found or invalid. Please check Settings → API Configuration.",
+        "ServeManager is not configured. Please go to Settings → API Configuration to set it up.",
       );
     }
+  } catch (error) {
+    console.error("❌ Failed to get ServeManager config:", error);
+    throw error;
   }
 }
 
