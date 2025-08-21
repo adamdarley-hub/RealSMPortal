@@ -194,25 +194,26 @@ export default function Dashboard() {
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-      const openJobs = jobs.filter((job: any) => 
-        ['pending', 'in_progress', 'assigned'].includes(job.status?.toLowerCase())
-      ).length;
+      const openJobs = jobs.filter((job: any) => {
+        const status = job.status ? String(job.status).toLowerCase() : '';
+        return ['pending', 'in_progress', 'assigned'].includes(status);
+      }).length;
 
       const servedJobs = jobs.filter((job: any) => {
-        const status = job.status?.toLowerCase();
-        const serviceStatus = job.service_status?.toLowerCase();
-        const jobStatus = job.job_status?.toLowerCase();
+        const status = job.status ? String(job.status).toLowerCase() : '';
+        const serviceStatus = job.service_status ? String(job.service_status).toLowerCase() : '';
+        const jobStatus = job.job_status ? String(job.job_status).toLowerCase() : '';
 
         return status === 'served' ||
                serviceStatus === 'served' ||
                jobStatus === 'served';
       }).length;
 
-
       const served7d = jobs.filter((job: any) => {
         const completedDate = job.completed_date || job.service_date;
-        return completedDate && new Date(completedDate) >= sevenDaysAgo && 
-               ['served', 'completed'].includes(job.status?.toLowerCase());
+        const status = job.status ? String(job.status).toLowerCase() : '';
+        return completedDate && new Date(completedDate) >= sevenDaysAgo &&
+               ['served', 'completed'].includes(status);
       }).length;
 
       const upcomingDeadlines = jobs.filter((job: any) => {
