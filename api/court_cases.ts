@@ -24,11 +24,11 @@ function getServeManagerConfig() {
     };
   }
 
-  // Default disabled config
+  // HARDCODED FALLBACK FOR TESTING
   return {
-    baseUrl: "",
-    apiKey: "",
-    enabled: false,
+    baseUrl: "https://www.servemanager.com/api",
+    apiKey: "mGcmzLfOxLXa5wCJfhbXgQ",
+    enabled: true,
   };
 }
 
