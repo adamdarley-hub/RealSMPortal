@@ -153,12 +153,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               console.log(JSON.stringify(data.data[0], null, 2));
 
               // Log the available fields to help with mapping
-              console.log("🔍 Available job fields:", Object.keys(data.data[0]));
+              console.log(
+                "🔍 Available job fields:",
+                Object.keys(data.data[0]),
+              );
               if (data.data[0].attributes) {
-                console.log("🔍 Available attributes:", Object.keys(data.data[0].attributes));
+                console.log(
+                  "🔍 Available attributes:",
+                  Object.keys(data.data[0].attributes),
+                );
               }
               if (data.data[0].relationships) {
-                console.log("🔍 Available relationships:", Object.keys(data.data[0].relationships));
+                console.log(
+                  "🔍 Available relationships:",
+                  Object.keys(data.data[0].relationships),
+                );
               }
 
               if (data.included && data.included.length > 0) {
@@ -166,7 +175,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 console.log(JSON.stringify(data.included[0], null, 2));
                 console.log("🔍 Included item type:", data.included[0].type);
                 if (data.included[0].attributes) {
-                  console.log("🔍 Included attributes:", Object.keys(data.included[0].attributes));
+                  console.log(
+                    "🔍 Included attributes:",
+                    Object.keys(data.included[0].attributes),
+                  );
                 }
               }
             }
