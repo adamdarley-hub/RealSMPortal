@@ -477,6 +477,30 @@ export default function ClientDashboard() {
     );
   }
 
+  // Production debug logging for Vercel
+  console.log("🎯 PRODUCTION DEBUG - ClientDashboard render:", {
+    timestamp: new Date().toISOString(),
+    hostname: window.location.hostname,
+    user: {
+      name: user?.name,
+      email: user?.email,
+      company: user?.company,
+      clientId: user?.client_id,
+      hasUser: !!user
+    },
+    dataState: {
+      jobsCount: jobs.length,
+      loading,
+      error: !!error,
+      hasJobs: jobs.length > 0
+    },
+    firstJob: jobs[0] ? {
+      id: jobs[0].id,
+      jobNumber: jobs[0].job_number,
+      recipient: jobs[0].recipient_name
+    } : null
+  });
+
   return (
     <ClientLayout>
       <div className="p-6 space-y-6">
