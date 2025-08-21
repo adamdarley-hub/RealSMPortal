@@ -666,18 +666,18 @@ export default function Dashboard() {
                         key={case_.id}
                         className="hover:bg-muted/50"
                       >
-                        <TableCell className="font-medium">{case_.number}</TableCell>
+                        <TableCell className="font-medium">{String(case_.number || '')}</TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{case_.plaintiff || 'Unknown Plaintiff'}</p>
-                            <p className="text-sm text-muted-foreground">vs. {case_.defendant || 'Unknown Defendant'}</p>
+                            <p className="font-medium">{String(case_.plaintiff || 'Unknown Plaintiff')}</p>
+                            <p className="text-sm text-muted-foreground">vs. {String(case_.defendant || 'Unknown Defendant')}</p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{case_.court?.name || 'Court not specified'}</p>
+                            <p className="font-medium">{String(case_.court?.name || case_.court || 'Court not specified')}</p>
                             {case_.court?.county && case_.court?.state && (
-                              <p className="text-sm text-muted-foreground">{case_.court.county}, {case_.court.state}</p>
+                              <p className="text-sm text-muted-foreground">{String(case_.court.county)}, {String(case_.court.state)}</p>
                             )}
                           </div>
                         </TableCell>
