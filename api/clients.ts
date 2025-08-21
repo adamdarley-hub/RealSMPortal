@@ -1,30 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// Mock clients data - in production this would come from ServeManager or database
-const mockClients = [
-  {
-    id: '1454323',
-    name: 'Kelly Kerr',
-    email: 'kelly@kerrcivilprocess.com', 
-    company: 'Kerr Civil Process',
-    phone: '(555) 123-4567',
-    address: '123 Main St',
-    city: 'Atlanta',
-    state: 'GA',
-    zip: '30309'
-  },
-  {
-    id: '1454358',
-    name: 'Shawn Wells',
-    email: 'office@prontoprocess.com',
-    company: 'Pronto Process',
-    phone: '(555) 987-6543',
-    address: '456 Oak Ave',
-    city: 'Atlanta', 
-    state: 'GA',
-    zip: '30305'
-  }
-];
+// No mock data - all clients come from ServeManager
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
