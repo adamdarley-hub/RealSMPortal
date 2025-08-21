@@ -1,4 +1,7 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+// Temporarily removing this endpoint to stay under Vercel's 12 function limit
+export default function() {
+  return { servers: [], total: 0 };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
