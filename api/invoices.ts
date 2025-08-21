@@ -1,44 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// Mock invoices data for fallback
-const mockInvoices = [
-  {
-    id: '1',
-    invoice_number: 'INV-001',
-    client_company: 'Kerr Civil Process',
-    client_name: 'Kelly Kerr',
-    status: 'paid',
-    subtotal: 125.00,
-    total: 125.00,
-    created_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    due_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    paid_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: '2',
-    invoice_number: 'INV-002', 
-    client_company: 'Pronto Process',
-    client_name: 'Shawn Wells',
-    status: 'sent',
-    subtotal: 85.00,
-    total: 85.00,
-    created_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    due_date: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(),
-    paid_date: null
-  },
-  {
-    id: '3',
-    invoice_number: 'INV-003',
-    client_company: 'Kerr Civil Process', 
-    client_name: 'Kelly Kerr',
-    status: 'draft',
-    subtotal: 95.00,
-    total: 95.00,
-    created_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    due_date: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000).toISOString(),
-    paid_date: null
-  }
-];
+// No mock data - all invoices should come from ServeManager
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
