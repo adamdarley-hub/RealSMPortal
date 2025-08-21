@@ -287,10 +287,14 @@ export default function Dashboard() {
 
   const filteredCases = useMemo(() => {
     return courtCases.filter(case_ => {
-      return casesSearch === '' ||
-        case_.number.toLowerCase().includes(casesSearch.toLowerCase()) ||
-        case_.plaintiff.toLowerCase().includes(casesSearch.toLowerCase()) ||
-        case_.defendant.toLowerCase().includes(casesSearch.toLowerCase());
+      if (casesSearch === '') return true;
+
+      const searchTerm = casesSearch.toLowerCase();
+      return (
+        (case_.number && String(case_.number).toLowerCase().includes(searchTerm)) ||
+        (case_.plaintiff && String(case_.plaintiff).toLowerCase().includes(searchTerm)) ||
+        (case_.defendant && String(case_.defendant).toLowerCase().includes(searchTerm))
+      );
     });
   }, [courtCases, casesSearch]);
 
