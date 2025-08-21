@@ -44,11 +44,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       if (servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
+        console.log("✅ VERCEL DEBUG - ServeManager credentials available, attempting API call");
         try {
           // Try to fetch real jobs from ServeManager
           const credentials = Buffer.from(
             `${servemanagerConfig.apiKey}:`,
           ).toString("base64");
+
+          console.log("🔑 VERCEL DEBUG - Generated credentials for API call");
 
           // Build URL with query parameters - ServeManager uses JSON:API format
           const url = new URL(`${servemanagerConfig.baseUrl}/jobs`);
