@@ -1,4 +1,8 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+// Temporarily removing this endpoint to stay under Vercel's 12 function limit
+// Will consolidate into another endpoint
+export default function() {
+  return { message: "Debug endpoint temporarily disabled to reduce function count" };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
