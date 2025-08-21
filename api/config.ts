@@ -97,6 +97,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
       };
 
+      console.log("📤 VERCEL DEBUG - Returning config:", {
+        serveManagerEnabled: config.serveManager.enabled,
+        serveManagerHasUrl: !!config.serveManager.baseUrl,
+        serveManagerHasKey: !!config.serveManager.apiKey && config.serveManager.apiKey !== "",
+        stripeEnabled: config.stripe.enabled
+      });
+
       return res.status(200).json(config);
     }
 
