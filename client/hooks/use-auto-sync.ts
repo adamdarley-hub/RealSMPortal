@@ -112,20 +112,46 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           healthController.abort(new Error('Health check timeout after 10 seconds'));
         }, 10000); // 10 second timeout for health check
 
-        const healthCheck = await fetch('/api/jobs?limit=1', {
-          method: 'GET',
-          signal: healthController.signal,
-          // Add cache-busting to prevent cached responses from hiding real issues
-          cache: 'no-cache',
-          // Add timeout to prevent hanging requests
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Accept': 'application/json'
-          },
-          // Ensure fetch uses standard implementation, not FullStory intercepted version
-          redirect: 'follow',
-          mode: 'cors'
-        });
+        // Try multiple health check endpoints based on deployment environment
+        const healthEndpoints = [
+          '/api/jobs?limit=1',      // Development backend
+          '/api/ping',              // Simple health check
+          '/api/config',            // Config endpoint
+          '/api/cached-jobs?limit=1' // Alternative endpoint
+        ];
+
+        let healthCheck = null;
+        let healthCheckPassed = false;
+
+        for (const endpoint of healthEndpoints) {
+          try {
+            console.log(`🏥 Health check trying: ${endpoint}`);
+            healthCheck = await fetch(endpoint, {
+              method: 'GET',
+              signal: healthController.signal,
+              cache: 'no-cache',
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Accept': 'application/json'
+              },
+              redirect: 'follow',
+              mode: 'cors'
+            });
+
+            if (healthCheck.ok) {
+              console.log(`✅ Health check passed with: ${endpoint}`);
+              healthCheckPassed = true;
+              break;
+            }
+          } catch (endpointError) {
+            console.log(`❌ Health check failed for ${endpoint}:`, endpointError.message);
+            continue; // Try next endpoint
+          }
+        }
+
+        if (!healthCheckPassed) {
+          throw new Error('All health check endpoints failed');
+        }
 
         clearTimeout(healthTimeoutId);
 
