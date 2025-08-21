@@ -199,9 +199,19 @@ export default function ClientDashboard() {
 
       // Add cache busting timestamp to force fresh data
       const cacheBuster = forceSync ? `&t=${Date.now()}` : "";
+      // Use direct Vercel API route for client jobs (not dev server cache)
       const response = await fetch(
         `/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`,
+        {
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        }
       );
+
+      console.log('🔗 Client jobs request URL:', `/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`);
+      console.log('🏢 Client company:', user.company);
+      console.log('🆔 Client ID:', user.client_id);
 
       if (!response.ok) {
         throw new Error("Failed to load jobs");
