@@ -23,11 +23,21 @@ export class CacheService {
 
     try {
       // Fetch directly from ServeManager API
-      const queryParams = {
+      const queryParams: any = {
         page: 1,
         per_page: 100,
-        ...filters,
       };
+
+      // Convert filters to ServeManager format
+      if (filters.client_id) {
+        queryParams['filter[client_id]'] = filters.client_id;
+      }
+      if (filters.status) {
+        queryParams['filter[status]'] = filters.status;
+      }
+      if (filters.priority) {
+        queryParams['filter[priority]'] = filters.priority;
+      }
 
       console.log("🌐 ServeManager query params:", queryParams);
 
