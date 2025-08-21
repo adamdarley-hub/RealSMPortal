@@ -26,8 +26,8 @@ function getServeManagerConfig() {
 
   // Default disabled config
   return {
-    baseUrl: '',
-    apiKey: '',
+    baseUrl: "",
+    apiKey: "",
     enabled: false,
   };
 }
@@ -72,8 +72,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       effectiveConfigEnabled: config.enabled,
       hasEffectiveUrl: !!baseUrl,
       hasEffectiveKey: !!apiKey,
-      configSource: process.env.SERVEMANAGER_BASE_URL ? "environment" : 
-                   global.tempApiConfig?.serveManager?.baseUrl ? "global" : "stored_or_default",
+      configSource: process.env.SERVEMANAGER_BASE_URL
+        ? "environment"
+        : global.tempApiConfig?.serveManager?.baseUrl
+          ? "global"
+          : "stored_or_default",
     };
 
     // Test ServeManager connection

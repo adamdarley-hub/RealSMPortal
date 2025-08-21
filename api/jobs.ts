@@ -5,7 +5,7 @@ function getServeManagerConfig() {
   // Environment variables take priority
   const envBaseUrl = process.env.SERVEMANAGER_BASE_URL;
   const envApiKey = process.env.SERVEMANAGER_API_KEY;
-  
+
   if (envBaseUrl && envApiKey) {
     return {
       baseUrl: envBaseUrl,
@@ -26,8 +26,8 @@ function getServeManagerConfig() {
 
   // Default disabled config
   return {
-    baseUrl: '',
-    apiKey: '',
+    baseUrl: "",
+    apiKey: "",
     enabled: false,
   };
 }
@@ -256,7 +256,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         page: 1,
         limit: parseInt(limit as string) || 100,
         has_more: false,
-        message: "ServeManager API not configured or not available. Please configure API credentials in Settings.",
+        message:
+          "ServeManager API not configured or not available. Please configure API credentials in Settings.",
       });
     }
 

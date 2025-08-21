@@ -59,7 +59,11 @@ export async function getServeManagerConfig() {
 
     // 2. Check global memory (saved from UI)
     const globalConfig = global.tempApiConfig?.serveManager;
-    if (globalConfig?.baseUrl && globalConfig?.apiKey && globalConfig?.enabled) {
+    if (
+      globalConfig?.baseUrl &&
+      globalConfig?.apiKey &&
+      globalConfig?.enabled
+    ) {
       console.log("✅ Using global memory config for ServeManager:", {
         hasBaseUrl: !!globalConfig.baseUrl,
         hasApiKey: !!globalConfig.apiKey,
@@ -98,7 +102,10 @@ export async function getServeManagerConfig() {
     } catch (fileError) {
       console.error("❌ No configuration found in any source:", {
         environmentVars: { hasBaseUrl: !!envBaseUrl, hasApiKey: !!envApiKey },
-        globalConfig: { exists: !!globalConfig, enabled: globalConfig?.enabled },
+        globalConfig: {
+          exists: !!globalConfig,
+          enabled: globalConfig?.enabled,
+        },
         fileError: fileError instanceof Error ? fileError.message : "Unknown",
       });
 

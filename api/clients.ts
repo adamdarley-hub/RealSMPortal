@@ -26,8 +26,8 @@ function getServeManagerConfig() {
 
   // Default disabled config
   return {
-    baseUrl: '',
-    apiKey: '',
+    baseUrl: "",
+    apiKey: "",
     enabled: false,
   };
 }
