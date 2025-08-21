@@ -109,8 +109,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         // Create a separate shorter timeout for health check
         const healthController = new AbortController();
         const healthTimeoutId = setTimeout(() => {
-          healthController.abort(new Error('Health check timeout after 10 seconds'));
-        }, 10000); // 10 second timeout for health check
+          healthController.abort();
+        }, 5000); // Reduced to 5 second timeout for health check
 
         const healthCheck = await fetch('/api/jobs?limit=1', {
           method: 'GET',
@@ -135,6 +135,21 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           throw new Error(`Server unavailable (${healthCheck.status})`);
         }
       } catch (healthError) {
+        // Check if this is an abort error (timeout)
+        if (healthError.name === 'AbortError') {
+          console.warn('⏰ Health check timed out after 5 seconds, continuing with cached data');
+          if (mountedRef.current) {
+            setStatus(prev => ({
+              ...prev,
+              isSyncing: false,
+              error: 'Health check timed out - using cached data',
+              lastSync: prev.lastSync || new Date()
+            }));
+          }
+          clearTimeout(timeoutId);
+          return { success: false, error: 'Health check timeout' };
+        }
+
         // Check if this is a network/fetch error vs server error
         const isNetworkError = healthError.name === 'TypeError' ||
                               healthError.message.includes('Failed to fetch') ||
@@ -150,8 +165,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         } else {
           console.warn('⚠️ Server health check failed, skipping sync:', {
             error: healthError.message,
-            name: healthError.name,
-            cause: healthError.cause
+            name: healthError.name
           });
         }
 
@@ -161,7 +175,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
             ...prev,
             isSyncing: false,
             error: 'Server unavailable - using cached data',
-            lastSync: prev.lastSync || new Date().toISOString()
+            lastSync: prev.lastSync || new Date()
           }));
         }
         clearTimeout(timeoutId);
