@@ -176,84 +176,145 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "POST") {
-      console.log("Saving config in serverless environment...");
+      console.log("💾 VERCEL DEBUG - Saving config in serverless environment...");
 
-      const newConfig = req.body;
-      console.log("Received config:", JSON.stringify(newConfig, null, 2));
+      try {
+        const newConfig = req.body;
+        console.log("📝 VERCEL DEBUG - Received config:", JSON.stringify(newConfig, null, 2));
 
-      // Don't update masked keys - keep the real values from environment
-      const configToStore = { ...newConfig };
+        const isStorageAvailable = await configStorageService.isAvailable();
+        console.log("💾 VERCEL DEBUG - Storage available for save:", isStorageAvailable);
 
-      // If ServeManager API key is masked, keep the existing value
-      if (configToStore.serveManager?.apiKey?.startsWith("***")) {
-        if (
-          global.tempApiConfig?.serveManager?.apiKey &&
-          !global.tempApiConfig.serveManager.apiKey.startsWith("***")
-        ) {
-          configToStore.serveManager.apiKey =
-            global.tempApiConfig.serveManager.apiKey;
+        // Don't update masked keys - keep the real values
+        const configToStore = { ...newConfig };
+
+        if (isStorageAvailable) {
+          // Get existing config to preserve masked values
+          const existingConfig = await configStorageService.loadConfig();
+
+          // If ServeManager API key is masked, keep the existing value
+          if (configToStore.serveManager?.apiKey?.startsWith("***")) {
+            if (existingConfig.serveManager?.apiKey) {
+              configToStore.serveManager.apiKey = existingConfig.serveManager.apiKey;
+            } else {
+              delete configToStore.serveManager.apiKey;
+            }
+          }
+
+          // Similar for other masked fields
+          if (configToStore.stripe?.secretKey?.startsWith("***")) {
+            if (existingConfig.stripe?.secretKey) {
+              configToStore.stripe.secretKey = existingConfig.stripe.secretKey;
+            } else {
+              delete configToStore.stripe.secretKey;
+            }
+          }
+          if (configToStore.stripe?.webhookSecret?.startsWith("***")) {
+            if (existingConfig.stripe?.webhookSecret) {
+              configToStore.stripe.webhookSecret = existingConfig.stripe.webhookSecret;
+            } else {
+              delete configToStore.stripe.webhookSecret;
+            }
+          }
+          if (configToStore.radar?.secretKey?.startsWith("***")) {
+            if (existingConfig.radar?.secretKey) {
+              configToStore.radar.secretKey = existingConfig.radar.secretKey;
+            } else {
+              delete configToStore.radar.secretKey;
+            }
+          }
+
+          // Save to persistent storage
+          await configStorageService.saveConfig(configToStore);
+
+          console.log("✅ VERCEL DEBUG - Configuration saved to persistent storage!");
+
+          return res.status(200).json({
+            message: "Configuration saved successfully to persistent storage! Settings will persist across all deployments.",
+            storage: "database",
+          });
         } else {
-          // Don't store masked keys
-          delete configToStore.serveManager.apiKey;
-        }
-      }
+          // Fallback to global memory
+          console.log("⚠️ VERCEL DEBUG - Falling back to global memory storage");
 
-      // Similar for other masked fields
-      if (configToStore.stripe?.secretKey?.startsWith("***")) {
-        if (global.tempApiConfig?.stripe?.secretKey) {
-          configToStore.stripe.secretKey =
-            global.tempApiConfig.stripe.secretKey;
-        } else {
-          delete configToStore.stripe.secretKey;
-        }
-      }
-      if (configToStore.stripe?.webhookSecret?.startsWith("***")) {
-        if (global.tempApiConfig?.stripe?.webhookSecret) {
-          configToStore.stripe.webhookSecret =
-            global.tempApiConfig.stripe.webhookSecret;
-        } else {
-          delete configToStore.stripe.webhookSecret;
-        }
-      }
-      if (configToStore.radar?.secretKey?.startsWith("***")) {
-        if (global.tempApiConfig?.radar?.secretKey) {
-          configToStore.radar.secretKey = global.tempApiConfig.radar.secretKey;
-        } else {
-          delete configToStore.radar.secretKey;
-        }
-      }
+          // Handle masked values with global memory fallback
+          if (configToStore.serveManager?.apiKey?.startsWith("***")) {
+            if (
+              global.tempApiConfig?.serveManager?.apiKey &&
+              !global.tempApiConfig.serveManager.apiKey.startsWith("***")
+            ) {
+              configToStore.serveManager.apiKey =
+                global.tempApiConfig.serveManager.apiKey;
+            } else {
+              delete configToStore.serveManager.apiKey;
+            }
+          }
 
-      // Store config in global memory (persists across function calls in same container)
-      global.tempApiConfig = { ...global.tempApiConfig, ...configToStore };
+          // Similar for other masked fields
+          if (configToStore.stripe?.secretKey?.startsWith("***")) {
+            if (global.tempApiConfig?.stripe?.secretKey) {
+              configToStore.stripe.secretKey =
+                global.tempApiConfig.stripe.secretKey;
+            } else {
+              delete configToStore.stripe.secretKey;
+            }
+          }
+          if (configToStore.stripe?.webhookSecret?.startsWith("***")) {
+            if (global.tempApiConfig?.stripe?.webhookSecret) {
+              configToStore.stripe.webhookSecret =
+                global.tempApiConfig.stripe.webhookSecret;
+            } else {
+              delete configToStore.stripe.webhookSecret;
+            }
+          }
+          if (configToStore.radar?.secretKey?.startsWith("***")) {
+            if (global.tempApiConfig?.radar?.secretKey) {
+              configToStore.radar.secretKey = global.tempApiConfig.radar.secretKey;
+            } else {
+              delete configToStore.radar.secretKey;
+            }
+          }
 
-      console.log(
-        "Config saved temporarily. For persistent storage, set these environment variables in Vercel:",
-      );
-      if (newConfig.serveManager?.enabled) {
-        console.log("SERVEMANAGER_BASE_URL=" + newConfig.serveManager.baseUrl);
-        if (
-          newConfig.serveManager.apiKey &&
-          !newConfig.serveManager.apiKey.startsWith("***")
-        ) {
-          console.log("SERVEMANAGER_API_KEY=" + newConfig.serveManager.apiKey);
-        }
-      }
-      if (newConfig.stripe?.enabled) {
-        console.log(
-          "STRIPE_PUBLISHABLE_KEY=" + newConfig.stripe.publishableKey,
-        );
-        if (
-          newConfig.stripe.secretKey &&
-          !newConfig.stripe.secretKey.startsWith("***")
-        ) {
-          console.log("STRIPE_SECRET_KEY=" + newConfig.stripe.secretKey);
-        }
-      }
+          // Store config in global memory (persists across function calls in same container)
+          global.tempApiConfig = { ...global.tempApiConfig, ...configToStore };
 
-      return res.status(200).json({
-        message:
-          "Configuration saved successfully! Settings will persist across requests until container restart.",
-      });
+          console.log(
+            "⚠️ VERCEL DEBUG - Config saved temporarily. For persistent storage, set these environment variables in Vercel:",
+          );
+          if (newConfig.serveManager?.enabled) {
+            console.log("SERVEMANAGER_BASE_URL=" + newConfig.serveManager.baseUrl);
+            if (
+              newConfig.serveManager.apiKey &&
+              !newConfig.serveManager.apiKey.startsWith("***")
+            ) {
+              console.log("SERVEMANAGER_API_KEY=" + newConfig.serveManager.apiKey);
+            }
+          }
+          if (newConfig.stripe?.enabled) {
+            console.log(
+              "STRIPE_PUBLISHABLE_KEY=" + newConfig.stripe.publishableKey,
+            );
+            if (
+              newConfig.stripe.secretKey &&
+              !newConfig.stripe.secretKey.startsWith("***")
+            ) {
+              console.log("STRIPE_SECRET_KEY=" + newConfig.stripe.secretKey);
+            }
+          }
+
+          return res.status(200).json({
+            message:
+              "Configuration saved temporarily! Settings will persist until container restart. For permanent storage, configure Supabase or set environment variables.",
+            storage: "memory",
+          });
+        }
+      } catch (error) {
+        console.error("🚨 VERCEL DEBUG - Error saving config:", error);
+        return res.status(500).json({
+          error: "Failed to save configuration",
+          details: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
     }
 
     return res.status(405).json({ error: "Method not allowed" });
