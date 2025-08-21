@@ -35,9 +35,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         explanation: {
           serverless_limitation: "No persistent background processes available",
           current_strategy: "Direct API calls with request-level caching",
-          performance_note: "Each page load fetches fresh data from ServeManager",
-          optimization: "Consider using Vercel Edge Config or external cache for better performance"
-        }
+          performance_note:
+            "Each page load fetches fresh data from ServeManager",
+          optimization:
+            "Consider using Vercel Edge Config or external cache for better performance",
+        },
       });
     }
 
