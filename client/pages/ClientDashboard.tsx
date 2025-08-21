@@ -265,6 +265,22 @@ export default function ClientDashboard() {
   };
 
   useEffect(() => {
+    console.log("🚀 PRODUCTION DEBUG - ClientDashboard useEffect triggered");
+    console.log("👤 PRODUCTION DEBUG - User data:", {
+      hasUser: !!user,
+      clientId: user?.client_id,
+      userName: user?.name,
+      userCompany: user?.company,
+      userEmail: user?.email,
+      fullUser: user
+    });
+
+    if (!user?.client_id) {
+      console.log("❌ PRODUCTION DEBUG - No client_id found, skipping job load");
+      return;
+    }
+
+    console.log("✅ PRODUCTION DEBUG - About to load jobs for client:", user.client_id);
     loadJobs();
   }, [user?.client_id]);
 
