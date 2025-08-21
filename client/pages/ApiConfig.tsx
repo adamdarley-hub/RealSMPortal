@@ -123,8 +123,10 @@ export default function ApiConfig() {
 
   const saveConfiguration = async () => {
     // Basic validation - allow masked keys (starting with ***)
-    const hasValidServeManagerKey = config.serveManager.apiKey &&
-      (config.serveManager.apiKey.startsWith("***") || config.serveManager.apiKey.length > 0);
+    const hasValidServeManagerKey =
+      config.serveManager.apiKey &&
+      (config.serveManager.apiKey.startsWith("***") ||
+        config.serveManager.apiKey.length > 0);
 
     if (
       config.serveManager.enabled &&
@@ -138,8 +140,10 @@ export default function ApiConfig() {
       return;
     }
 
-    const hasValidRadarKey = config.radar.publishableKey &&
-      (config.radar.publishableKey.startsWith("***") || config.radar.publishableKey.length > 0);
+    const hasValidRadarKey =
+      config.radar.publishableKey &&
+      (config.radar.publishableKey.startsWith("***") ||
+        config.radar.publishableKey.length > 0);
 
     if (config.radar.enabled && !hasValidRadarKey) {
       toast({
