@@ -4,9 +4,25 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // Initialize global config if not exists
 if (!global.tempApiConfig) {
   global.tempApiConfig = {
-    serveManager: { baseUrl: "", apiKey: "", enabled: false, testEndpoint: "/account" },
-    radar: { publishableKey: "", secretKey: "", enabled: false, environment: "test" },
-    stripe: { publishableKey: "", secretKey: "", enabled: false, environment: "test", webhookSecret: "" }
+    serveManager: {
+      baseUrl: "",
+      apiKey: "",
+      enabled: false,
+      testEndpoint: "/account",
+    },
+    radar: {
+      publishableKey: "",
+      secretKey: "",
+      enabled: false,
+      environment: "test",
+    },
+    stripe: {
+      publishableKey: "",
+      secretKey: "",
+      enabled: false,
+      environment: "test",
+      webhookSecret: "",
+    },
   };
 }
 
