@@ -59,7 +59,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               ? "***" + global.tempApiConfig.stripe.webhookSecret.slice(-4)
               : "",
           enabled: Boolean(
-            process.env.STRIPE_SECRET_KEY || global.tempApiConfig?.stripe?.enabled,
+            process.env.STRIPE_SECRET_KEY ||
+              global.tempApiConfig?.stripe?.enabled,
           ),
           environment:
             (process.env.STRIPE_ENVIRONMENT as "test" | "live") ||
@@ -77,7 +78,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               ? "***" + global.tempApiConfig.radar.secretKey.slice(-4)
               : "",
           enabled: Boolean(
-            process.env.RADAR_SECRET_KEY || global.tempApiConfig?.radar?.enabled,
+            process.env.RADAR_SECRET_KEY ||
+              global.tempApiConfig?.radar?.enabled,
           ),
           environment:
             (process.env.RADAR_ENVIRONMENT as "test" | "live") ||
@@ -104,7 +106,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           global.tempApiConfig?.serveManager?.apiKey &&
           !global.tempApiConfig.serveManager.apiKey.startsWith("***")
         ) {
-          configToStore.serveManager.apiKey = global.tempApiConfig.serveManager.apiKey;
+          configToStore.serveManager.apiKey =
+            global.tempApiConfig.serveManager.apiKey;
         } else {
           // Don't store masked keys
           delete configToStore.serveManager.apiKey;
@@ -114,14 +117,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Similar for other masked fields
       if (configToStore.stripe?.secretKey?.startsWith("***")) {
         if (global.tempApiConfig?.stripe?.secretKey) {
-          configToStore.stripe.secretKey = global.tempApiConfig.stripe.secretKey;
+          configToStore.stripe.secretKey =
+            global.tempApiConfig.stripe.secretKey;
         } else {
           delete configToStore.stripe.secretKey;
         }
       }
       if (configToStore.stripe?.webhookSecret?.startsWith("***")) {
         if (global.tempApiConfig?.stripe?.webhookSecret) {
-          configToStore.stripe.webhookSecret = global.tempApiConfig.stripe.webhookSecret;
+          configToStore.stripe.webhookSecret =
+            global.tempApiConfig.stripe.webhookSecret;
         } else {
           delete configToStore.stripe.webhookSecret;
         }
