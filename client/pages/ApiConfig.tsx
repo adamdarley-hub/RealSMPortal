@@ -126,15 +126,15 @@ export default function ApiConfig() {
     if (
       config.serveManager.enabled &&
       (!config.serveManager.baseUrl ||
-       !config.serveManager.apiKey ||
-       config.serveManager.apiKey.trim() === "")
+        !config.serveManager.apiKey ||
+        config.serveManager.apiKey.trim() === "")
     ) {
       console.log("Validation failed:", {
         enabled: config.serveManager.enabled,
         hasBaseUrl: !!config.serveManager.baseUrl,
         hasApiKey: !!config.serveManager.apiKey,
         apiKeyLength: config.serveManager.apiKey?.length,
-        apiKeyValue: config.serveManager.apiKey?.substring(0, 10) + "..."
+        apiKeyValue: config.serveManager.apiKey?.substring(0, 10) + "...",
       });
       toast({
         title: "Validation Error",
@@ -146,7 +146,8 @@ export default function ApiConfig() {
 
     if (
       config.radar.enabled &&
-      (!config.radar.publishableKey || config.radar.publishableKey.trim() === "")
+      (!config.radar.publishableKey ||
+        config.radar.publishableKey.trim() === "")
     ) {
       toast({
         title: "Validation Error",
