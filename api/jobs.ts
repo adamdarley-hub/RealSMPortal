@@ -78,7 +78,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         try {
           // Try to fetch real jobs from ServeManager
           const credentials = Buffer.from(`${servemanagerConfig.apiKey}:`).toString('base64');
-          const response = await fetch(`${servemanagerConfig.baseUrl}/jobs`, {
+
+          // Build URL with query parameters
+          const url = new URL(`${servemanagerConfig.baseUrl}/jobs`);
+          if (clientId) {
+            url.searchParams.set('filter[client_id]', clientId);
+          }
+          if (limit) {
+            url.searchParams.set('page[size]', limit);
+          }
+
+          console.log('Fetching from ServeManager:', url.toString());
+
+          const response = await fetch(url.toString(), {
             headers: {
               'Authorization': `Basic ${credentials}`,
               'Accept': 'application/vnd.api+json'
