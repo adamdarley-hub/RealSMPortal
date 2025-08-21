@@ -168,17 +168,28 @@ export default function Dashboard() {
         throw new Error("Invalid query scoping");
       }
 
-      // Fetch all real data
+      // Fetch all real data - force bypass cache
+      const cacheBuster = `&t=${Date.now()}`;
+      console.log('🔄 Admin loading data with params:', params.toString());
+
       const [
         jobsResponse,
         clientsResponse,
         serversResponse,
         courtCasesResponse,
       ] = await Promise.all([
-        fetch(`/api/jobs?${params.toString()}`),
-        fetch(`/api/clients?${params.toString()}`),
-        fetch(`/api/servers?${params.toString()}`),
-        fetch(`/api/court_cases?${params.toString()}`),
+        fetch(`/api/jobs?${params.toString()}${cacheBuster}`, {
+          headers: { 'Cache-Control': 'no-cache' }
+        }),
+        fetch(`/api/clients?${params.toString()}${cacheBuster}`, {
+          headers: { 'Cache-Control': 'no-cache' }
+        }),
+        fetch(`/api/servers?${params.toString()}${cacheBuster}`, {
+          headers: { 'Cache-Control': 'no-cache' }
+        }),
+        fetch(`/api/court_cases?${params.toString()}${cacheBuster}`, {
+          headers: { 'Cache-Control': 'no-cache' }
+        }),
       ]);
 
       if (!jobsResponse.ok) {
@@ -187,6 +198,21 @@ export default function Dashboard() {
 
       const jobsData = await jobsResponse.json();
       const jobs = jobsData.jobs || [];
+
+      console.log('📋 Admin jobs loaded:', {
+        total: jobs.length,
+        source: jobsData.source,
+        sampleJob: jobs[0] ? {
+          id: jobs[0].id,
+          job_number: jobs[0].job_number,
+          recipient_name: jobs[0].recipient_name,
+          client_company: jobs[0].client_company,
+          amount: jobs[0].amount,
+          city: jobs[0].city,
+          state: jobs[0].state,
+          status: jobs[0].status
+        } : null
+      });
 
       let clientsData = { clients: [] };
       if (clientsResponse.ok) {
