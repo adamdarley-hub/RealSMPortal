@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { configStorageService } from "../server/services/config-storage";
+import { clearConfigCache } from "../server/utils/config-helper";
 
 // Note: Global config type is defined in server/routes/config.ts
 // Initialize global config if not exists (fallback for when storage is unavailable)
