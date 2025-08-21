@@ -46,8 +46,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Fallback to environment variables and global config
     if (!baseUrl || !apiKey) {
-      baseUrl = process.env.SERVEMANAGER_BASE_URL || global.tempApiConfig?.serveManager?.baseUrl || "";
-      apiKey = process.env.SERVEMANAGER_API_KEY || global.tempApiConfig?.serveManager?.apiKey || "";
+      baseUrl =
+        process.env.SERVEMANAGER_BASE_URL ||
+        global.tempApiConfig?.serveManager?.baseUrl ||
+        "";
+      apiKey =
+        process.env.SERVEMANAGER_API_KEY ||
+        global.tempApiConfig?.serveManager?.apiKey ||
+        "";
     }
 
     // Check global config (for debugging)
@@ -57,12 +63,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     // Check stored config
-    const storedConfig = isStorageAvailable ? {
-      hasStoredConfig: !!effectiveConfig,
-      serveManagerEnabled: effectiveConfig?.serveManager?.enabled || false,
-      hasStoredUrl: !!(effectiveConfig?.serveManager?.baseUrl),
-      hasStoredKey: !!(effectiveConfig?.serveManager?.apiKey),
-    } : null;
+    const storedConfig = isStorageAvailable
+      ? {
+          hasStoredConfig: !!effectiveConfig,
+          serveManagerEnabled: effectiveConfig?.serveManager?.enabled || false,
+          hasStoredUrl: !!effectiveConfig?.serveManager?.baseUrl,
+          hasStoredKey: !!effectiveConfig?.serveManager?.apiKey,
+        }
+      : null;
 
     // Test ServeManager connection
     let connectionTest = null;
@@ -137,12 +145,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         effectiveValues: {
           hasBaseUrl: !!baseUrl,
           hasApiKey: !!apiKey,
-          baseUrlSource: baseUrl === process.env.SERVEMANAGER_BASE_URL ? "environment" :
-                        baseUrl === global.tempApiConfig?.serveManager?.baseUrl ? "global" :
-                        baseUrl === effectiveConfig?.serveManager?.baseUrl ? "storage" : "unknown",
-          apiKeySource: apiKey === process.env.SERVEMANAGER_API_KEY ? "environment" :
-                       apiKey === global.tempApiConfig?.serveManager?.apiKey ? "global" :
-                       apiKey === effectiveConfig?.serveManager?.apiKey ? "storage" : "unknown",
+          baseUrlSource:
+            baseUrl === process.env.SERVEMANAGER_BASE_URL
+              ? "environment"
+              : baseUrl === global.tempApiConfig?.serveManager?.baseUrl
+                ? "global"
+                : baseUrl === effectiveConfig?.serveManager?.baseUrl
+                  ? "storage"
+                  : "unknown",
+          apiKeySource:
+            apiKey === process.env.SERVEMANAGER_API_KEY
+              ? "environment"
+              : apiKey === global.tempApiConfig?.serveManager?.apiKey
+                ? "global"
+                : apiKey === effectiveConfig?.serveManager?.apiKey
+                  ? "storage"
+                  : "unknown",
         },
       },
       serveManagerTest: connectionTest,

@@ -24,7 +24,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // For now, return mock clients for authentication to work
       const servemanagerConfig = await getServeManagerConfig();
 
-      if (servemanagerConfig.enabled && servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
+      if (
+        servemanagerConfig.enabled &&
+        servemanagerConfig.baseUrl &&
+        servemanagerConfig.apiKey
+      ) {
         try {
           // Try to fetch real clients from ServeManager
           const credentials = Buffer.from(

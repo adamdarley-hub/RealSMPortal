@@ -22,7 +22,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const servemanagerConfig = await getServeManagerConfig();
 
-      if (servemanagerConfig.enabled && servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
+      if (
+        servemanagerConfig.enabled &&
+        servemanagerConfig.baseUrl &&
+        servemanagerConfig.apiKey
+      ) {
         try {
           // Try to fetch real invoices from ServeManager
           const credentials = Buffer.from(

@@ -9,7 +9,10 @@ import {
   mapInvoiceFromServeManager,
 } from "../utils/servemanager-mapper";
 import { supabaseSyncService } from "../services/supabase-sync";
-import { getServeManagerConfig as getServeManagerConfigHelper, validateServeManagerConfig } from "../utils/config-helper";
+import {
+  getServeManagerConfig as getServeManagerConfigHelper,
+  validateServeManagerConfig,
+} from "../utils/config-helper";
 
 const CONFIG_FILE = path.join(process.cwd(), ".api-config.json");
 const ENCRYPTION_KEY =
