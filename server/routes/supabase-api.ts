@@ -8,6 +8,8 @@ export const getSupabaseJobs: RequestHandler = async (req, res) => {
   try {
     const startTime = Date.now();
     console.log('🚀 Supabase jobs API called');
+    console.log('🔍 Request URL:', req.url);
+    console.log('🔍 Request params:', req.query);
 
     // Check if Supabase is configured with detailed debugging
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -153,6 +155,7 @@ export const getSupabaseJobs: RequestHandler = async (req, res) => {
         console.log(`👥 Returning ${allJobs.length} total jobs for admin view`);
       }
 
+      console.log('✅ Returning mock data, should not reach Supabase service');
       return res.json({
         jobs: mockJobs,
         total: mockJobs.length,
@@ -163,6 +166,10 @@ export const getSupabaseJobs: RequestHandler = async (req, res) => {
         duration_ms: Date.now() - startTime
       });
     }
+
+    // THIS SHOULD NEVER BE REACHED WHILE FORCE MODE IS ON
+    console.log('❌ ERROR: Should not reach this point - force mode should have returned mock data!');
+    throw new Error('Mock data force mode failed - this should not happen');
 
     // Parse query parameters
     const page = parseInt(req.query.page as string) || 1;
