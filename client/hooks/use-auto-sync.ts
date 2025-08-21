@@ -112,7 +112,9 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           healthController.abort();
         }, 5000); // Reduced to 5 second timeout for health check
 
-        const healthCheck = await fetch('/api/jobs?limit=1', {
+        // Use native fetch to avoid FullStory interference
+        const nativeFetch = window.fetch.bind(window);
+        const healthCheck = await nativeFetch('/api/jobs?limit=1', {
           method: 'GET',
           signal: healthController.signal,
           // Add cache-busting to prevent cached responses from hiding real issues
@@ -120,11 +122,13 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           // Add timeout to prevent hanging requests
           headers: {
             'Cache-Control': 'no-cache',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest' // Help identify AJAX requests
           },
           // Ensure fetch uses standard implementation, not FullStory intercepted version
           redirect: 'follow',
-          mode: 'cors'
+          mode: 'cors',
+          credentials: 'same-origin'
         });
 
         clearTimeout(healthTimeoutId);
