@@ -97,7 +97,7 @@ export class CacheService {
 
         // Check if we have client_id filter and log sample client_ids from jobs
       if (filters.client_id) {
-        const sampleJobs = jobs.slice(0, 3).map((job) => ({
+        const sampleJobs = allJobs.slice(0, 3).map((job) => ({
           id: job.id,
           client_id: job.client_id || job.attributes?.client_id,
           client_company: job.client_company || job.attributes?.client_company,
@@ -107,7 +107,7 @@ export class CacheService {
         console.log("📊 Sample jobs with client info:", sampleJobs);
 
         // Filter jobs by client_company.id since that's where ServeManager stores the client ID
-        const filteredJobs = jobs.filter((job) => {
+        const filteredJobs = allJobs.filter((job) => {
           const clientCompanyId = String(job.client_company?.id || job.attributes?.client_company?.id || '');
           return clientCompanyId === String(filters.client_id);
         });
