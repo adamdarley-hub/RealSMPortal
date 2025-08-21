@@ -89,28 +89,34 @@ export class CacheService {
           console.log("🔍 Sample raw job data:", JSON.stringify(filteredJobs[0], null, 2));
           // Transform ServeManager data to expected frontend format
           const transformedJobs = filteredJobs.map((job) => {
-            const attrs = job.attributes || {};
+            // ServeManager data structure has attributes at root level
+            const courtCase = job.court_case || {};
+            const attempts = job.attempts || [];
+
+            // Map priority: ServeManager uses "Routine" or "Rush"
+            const priority = job.service_level === "Rush" ? "rush" : "routine";
+
             return {
               id: job.id,
-              job_number: attrs.job_number || attrs.reference || `JOB-${job.id}`,
-              recipient_name: attrs.recipient_name || attrs.defendant_name || "Unknown Recipient",
-              status: attrs.status || "pending",
-              priority: attrs.priority || "medium",
-              created_at: attrs.created_at || new Date().toISOString(),
-              due_date: attrs.due_date || attrs.date_due,
-              amount: parseFloat(attrs.amount || attrs.price || "0"),
+              job_number: job.job_number || job.servemanager_job_number,
+              recipient_name: job.recipient_name || courtCase.defendant || "Unknown Recipient",
+              status: job.status || "pending",
+              priority: priority,
+              created_at: job.created_at || new Date().toISOString(),
+              due_date: job.due_date || job.date_due,
+              amount: parseFloat(job.amount || job.price || "0"),
               client_id: job.client_company?.id,
               client_company: job.client_company?.name,
-              client_name: attrs.client_name || job.client_company?.name,
-              service_address: attrs.service_address,
-              defendant_address: attrs.defendant_address,
-              address: attrs.address,
-              addresses_attributes: attrs.addresses_attributes,
-              court_case_number: attrs.court_case_number || attrs.case_number,
-              plaintiff: attrs.plaintiff,
-              defendant_name: attrs.defendant_name,
-              attempt_count: attrs.attempt_count || 0,
-              attempts: attrs.attempts || attrs.service_attempts || [],
+              client_name: job.client_contact?.first_name + " " + job.client_contact?.last_name,
+              service_address: job.service_address,
+              defendant_address: job.defendant_address,
+              address: job.address,
+              addresses_attributes: job.addresses_attributes,
+              court_case_number: courtCase.number,
+              plaintiff: courtCase.plaintiff,
+              defendant_name: courtCase.defendant,
+              attempt_count: job.attempt_count || attempts.length,
+              attempts: attempts,
               // Keep raw data for debugging
               raw_data: job
             };
