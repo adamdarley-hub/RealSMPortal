@@ -222,7 +222,8 @@ export default function Jobs() {
 
       // Handle AbortError gracefully without retrying
       if (error.name === 'AbortError') {
-        console.log('���️ Jobs request was aborted (likely due to timeout or navigation)');
+        console.log('⚠️ Jobs request was aborted (likely due to timeout or navigation)');
+        setError('Request timed out - ServeManager API may be experiencing issues');
         setLoading(false);
         return;
       }
