@@ -213,14 +213,24 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           stack: fetchError.stack?.substring(0, 200) // Truncated stack trace
         });
 
+        // Check if this might be FullStory interference
+        const isFullStoryError = fetchError.stack?.includes('fullstory') ||
+                                fetchError.stack?.includes('fs.js') ||
+                                (fetchError.name === 'TypeError' && fetchError.message === 'Failed to fetch');
+
         // Handle different types of network errors
         if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+          // Check if FullStory is likely the cause
+          const errorMessage = isFullStoryError
+            ? 'FullStory interference detected - using cached data'
+            : 'Network connection failed - using cached data';
+
           // Network connection issue - don't crash, just skip sync
           if (mountedRef.current) {
             setStatus(prev => ({
               ...prev,
               isSyncing: false,
-              error: 'Network connection failed - using cached data'
+              error: errorMessage
             }));
           }
           return null; // Signal to skip processing
