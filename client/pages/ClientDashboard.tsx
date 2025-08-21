@@ -216,11 +216,29 @@ export default function ClientDashboard() {
         }
       });
 
+      console.log('🔍 Client jobs response status:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error("Failed to load jobs");
+        const errorText = await response.text();
+        console.error('❌ Client jobs API error response:', errorText);
+        throw new Error(`Failed to load jobs: ${response.status} ${response.statusText}`);
+      }
+
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const responseText = await response.text();
+        console.error('❌ Client jobs API returned non-JSON response:', responseText.substring(0, 200));
+        throw new Error(`Jobs API returned ${contentType || 'unknown content type'} instead of JSON`);
       }
 
       const data = await response.json();
+      console.log('📋 Client jobs loaded:', {
+        total: data.jobs?.length || 0,
+        source: data.source,
+        clientId: user.client_id
+      });
+
       setJobs(data.jobs || []);
 
       if (forceSync) {
