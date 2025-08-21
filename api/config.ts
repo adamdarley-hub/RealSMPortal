@@ -30,16 +30,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         serveManager: {
           baseUrl:
             process.env.SERVEMANAGER_BASE_URL ||
-            tempConfig.serveManager?.baseUrl ||
+            global.tempApiConfig?.serveManager?.baseUrl ||
             "",
           apiKey: process.env.SERVEMANAGER_API_KEY
             ? "***" + process.env.SERVEMANAGER_API_KEY.slice(-4)
-            : tempConfig.serveManager?.apiKey
-              ? "***" + tempConfig.serveManager.apiKey.slice(-4)
+            : global.tempApiConfig?.serveManager?.apiKey
+              ? "***" + global.tempApiConfig.serveManager.apiKey.slice(-4)
               : "",
           enabled: Boolean(
             process.env.SERVEMANAGER_BASE_URL ||
-              tempConfig.serveManager?.enabled,
+              global.tempApiConfig?.serveManager?.enabled,
           ),
           testEndpoint: "/account",
         },
