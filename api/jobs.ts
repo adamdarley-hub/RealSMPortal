@@ -137,7 +137,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Fallback to mock jobs
       console.log('Using mock jobs');
-      return res.status(200).json(mockJobs);
+
+      // Filter mock jobs by client_id if specified
+      let filteredMockJobs = mockJobs;
+      if (clientId) {
+        filteredMockJobs = mockJobs.filter(job => {
+          // Kelly Kerr client
+          if (clientId === '1454323') {
+            return job.client_company === 'Kerr Civil Process';
+          }
+          // Shawn Wells client
+          if (clientId === '1454358') {
+            return job.client_company === 'Pronto Process';
+          }
+          return false;
+        });
+      }
+
+      console.log(`Returning ${filteredMockJobs.length} jobs for client ${clientId}`);
+      return res.status(200).json({ jobs: filteredMockJobs });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
