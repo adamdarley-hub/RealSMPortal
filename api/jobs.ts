@@ -65,7 +65,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // Add includes for related data
           url.searchParams.set("include", "client,service_attempts,addresses");
 
-          console.log("🌐 Fetching from ServeManager:", url.toString());
+          console.log("🌐 VERCEL DEBUG - Making ServeManager request:", {
+            url: url.toString(),
+            method: 'GET',
+            hasCredentials: !!credentials,
+            timestamp: new Date().toISOString()
+          });
 
           const response = await fetch(url.toString(), {
             headers: {
@@ -75,7 +80,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
           });
 
-          console.log("📡 ServeManager response status:", response.status);
+          console.log("📡 VERCEL DEBUG - ServeManager response:", {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+            contentType: response.headers.get('content-type'),
+            timestamp: new Date().toISOString()
+          });
 
           if (response.ok) {
             const data = await response.json();
