@@ -199,8 +199,12 @@ export default function ClientDashboard() {
 
       // Add cache busting timestamp to force fresh data
       // Detect environment and use appropriate API base
-      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
-      const apiBase = isDevelopment ? 'http://localhost:8081' : '';
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
+      const isFlyDev = window.location.hostname.includes('fly.dev'); // Builder.io preview environment
+      const isDevelopment = isLocalhost || isFlyDev;
+
+      // Use dev server backend for both localhost and Fly.dev preview
+      const apiBase = isDevelopment ? (isLocalhost ? 'http://localhost:8081' : '') : '';
 
       const cacheBuster = forceSync ? `&t=${Date.now()}` : "";
       const jobsUrl = `${apiBase}/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`;
@@ -208,7 +212,8 @@ export default function ClientDashboard() {
       console.log('🔗 Client jobs request URL:', jobsUrl);
       console.log('🏢 Client company:', user.company);
       console.log('🆔 Client ID:', user.client_id);
-      console.log('🏠 Environment:', isDevelopment ? 'Development' : 'Production');
+      console.log('🏠 Environment:', isLocalhost ? 'Localhost Dev' : isFlyDev ? 'Fly.dev Preview' : 'Production');
+      console.log('🌐 Hostname:', window.location.hostname);
 
       const response = await fetch(jobsUrl, {
         headers: {

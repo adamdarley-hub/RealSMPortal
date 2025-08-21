@@ -169,13 +169,18 @@ export default function Dashboard() {
       }
 
       // Detect environment and use appropriate API base
-      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
-      const apiBase = isDevelopment ? 'http://localhost:8081' : '';
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
+      const isFlyDev = window.location.hostname.includes('fly.dev'); // Builder.io preview environment
+      const isDevelopment = isLocalhost || isFlyDev;
+
+      // Use dev server backend for both localhost and Fly.dev preview
+      const apiBase = isDevelopment ? (isLocalhost ? 'http://localhost:8081' : '') : '';
 
       const cacheBuster = `&t=${Date.now()}`;
       console.log('🔄 Admin loading data with params:', params.toString());
-      console.log('🏠 Environment:', isDevelopment ? 'Development' : 'Production');
+      console.log('🏠 Environment:', isLocalhost ? 'Localhost Dev' : isFlyDev ? 'Fly.dev Preview' : 'Production');
       console.log('🔗 API Base:', apiBase || 'Vercel Functions');
+      console.log('🌐 Hostname:', window.location.hostname);
 
       const [
         jobsResponse,
