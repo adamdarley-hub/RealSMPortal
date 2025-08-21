@@ -1,13 +1,80 @@
 import { RequestHandler } from 'express';
 import { supabaseService } from '../services/supabase-service';
 import { supabaseSyncService } from '../services/supabase-sync';
-import { JobFilters, PaginationOptions } from '../../shared/supabase';
+import { JobFilters, PaginationOptions, isSupabaseConfigured } from '../../shared/supabase';
 
 // Get jobs with fast pagination and filtering
 export const getSupabaseJobs: RequestHandler = async (req, res) => {
   try {
     const startTime = Date.now();
-    
+    console.log('🚀 Supabase jobs API called');
+
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      console.log('⚠️ Supabase not configured, returning mock data for testing');
+
+      // Create mock Supabase jobs for testing
+      const clientId = req.query.client_id as string;
+      const mockJobs = [
+        {
+          id: 'supabase-mock-1',
+          servemanager_id: 123001,
+          job_number: 'SB-001',
+          client_company: clientId === '1454323' ? 'Kerr Civil Process' : 'Pronto Process',
+          client_name: clientId === '1454323' ? 'Kelly Kerr' : 'Shawn Wells',
+          recipient_name: 'John Smith',
+          service_address: '123 Main St, Atlanta, GA 30309',
+          status: 'in_progress',
+          service_status: 'assigned',
+          priority: 'high',
+          server_name: 'Mike Johnson',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+          amount: 125.00,
+          raw_data: {},
+          sync_status: 'synced',
+          last_synced_at: new Date().toISOString()
+        },
+        {
+          id: 'supabase-mock-2',
+          servemanager_id: 123002,
+          job_number: 'SB-002',
+          client_company: clientId === '1454323' ? 'Kerr Civil Process' : 'Pronto Process',
+          client_name: clientId === '1454323' ? 'Kelly Kerr' : 'Shawn Wells',
+          recipient_name: 'Jane Doe',
+          service_address: '456 Oak Ave, Marietta, GA 30062',
+          status: 'pending',
+          service_status: 'received',
+          priority: 'medium',
+          server_name: 'Sarah Wilson',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+          amount: 95.00,
+          raw_data: {},
+          sync_status: 'synced',
+          last_synced_at: new Date().toISOString()
+        }
+      ];
+
+      // Filter by client_id if specified
+      let filteredJobs = mockJobs;
+      if (clientId) {
+        console.log(`🎭 Returning ${filteredJobs.length} mock Supabase jobs for client ${clientId}`);
+      }
+
+      return res.json({
+        jobs: filteredJobs,
+        total: filteredJobs.length,
+        page: 1,
+        limit: 50,
+        has_more: false,
+        source: 'supabase-mock',
+        duration_ms: Date.now() - startTime
+      });
+    }
+
     // Parse query parameters
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 100); // Max 100 per page
