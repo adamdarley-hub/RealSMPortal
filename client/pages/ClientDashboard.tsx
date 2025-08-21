@@ -207,8 +207,8 @@ export default function ClientDashboard() {
       const apiBase = isDevelopment ? (isLocalhost ? 'http://localhost:8081' : '') : '';
 
       const cacheBuster = forceSync ? `&t=${Date.now()}` : "";
-      // Use Supabase API for ultra-fast client jobs
-      const jobsUrl = `${apiBase}/api/v2/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`;
+      // TEMPORARY: Use ServeManager API while debugging Supabase
+      const jobsUrl = `${apiBase}/api/jobs?client_id=${user.client_id}&limit=1000${cacheBuster}`;
 
       console.log('🔗 Client jobs request URL:', jobsUrl);
       console.log('🏢 Client company:', user.company);

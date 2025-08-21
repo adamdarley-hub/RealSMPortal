@@ -188,8 +188,8 @@ export default function Dashboard() {
         serversResponse,
         courtCasesResponse,
       ] = await Promise.all([
-        // Use Supabase API for ultra-fast jobs
-        fetch(`${apiBase}/api/v2/jobs?${params.toString()}${cacheBuster}`, {
+        // TEMPORARY: Use ServeManager API while debugging Supabase
+        fetch(`${apiBase}/api/jobs?${params.toString()}${cacheBuster}`, {
           headers: { 'Cache-Control': 'no-cache' }
         }),
         fetch(`${apiBase}/api/clients?${params.toString()}${cacheBuster}`, {
