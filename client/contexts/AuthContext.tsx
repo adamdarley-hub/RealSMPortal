@@ -25,31 +25,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demonstration - in production this would come from a backend
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Sarah Johnson',
-    email: 'admin@serveportal.com',
-    role: 'admin'
-  },
-  {
-    id: '2',
-    name: 'Kelly Kerr',
-    email: 'kelly@kerrcivilprocess.com',
-    role: 'client',
-    company: 'Kerr Civil Process',
-    client_id: '1454323'
-  },
-  {
-    id: '3',
-    name: 'Shawn Wells',
-    email: 'office@prontoprocess.com',
-    role: 'client',
-    company: 'Pronto Process',
-    client_id: '1454358'
-  }
-];
+// Admin user credentials - only for admin access
+const ADMIN_EMAIL = 'admin@serveportal.com';
+const ADMIN_USER = {
+  id: 'admin',
+  name: 'Admin User',
+  email: ADMIN_EMAIL,
+  role: 'admin' as const
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
