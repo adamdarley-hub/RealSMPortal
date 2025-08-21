@@ -666,7 +666,7 @@ export default function ClientDashboard() {
                     <TableCell>
                       <div className="text-center">
                         <span className="text-sm font-medium">
-                          <AttemptCount jobId={job.id} />
+                          <AttemptCount count={job.attempt_count || 0} />
                         </span>
                       </div>
                     </TableCell>
