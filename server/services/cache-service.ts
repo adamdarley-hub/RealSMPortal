@@ -30,13 +30,13 @@ export class CacheService {
 
       // Convert filters to ServeManager format
       if (filters.client_id) {
-        queryParams['filter[client_id]'] = filters.client_id;
+        queryParams["filter[client_id]"] = filters.client_id;
       }
       if (filters.status) {
-        queryParams['filter[status]'] = filters.status;
+        queryParams["filter[status]"] = filters.status;
       }
       if (filters.priority) {
-        queryParams['filter[priority]'] = filters.priority;
+        queryParams["filter[priority]"] = filters.priority;
       }
 
       console.log("🌐 ServeManager query params:", queryParams);
@@ -60,15 +60,18 @@ export class CacheService {
       });
 
       if (response && response.data) {
-        const jobs = Array.isArray(response.data) ? response.data : [response.data];
+        const jobs = Array.isArray(response.data)
+          ? response.data
+          : [response.data];
         console.log(`📋 ServeManager returned ${jobs.length} jobs`);
 
         // Check if we have client_id filter and log sample client_ids from jobs
         if (filters.client_id) {
-          const sampleJobs = jobs.slice(0, 3).map(job => ({
+          const sampleJobs = jobs.slice(0, 3).map((job) => ({
             id: job.id,
             client_id: job.client_id || job.attributes?.client_id,
-            client_company: job.client_company || job.attributes?.client_company
+            client_company:
+              job.client_company || job.attributes?.client_company,
           }));
           console.log(`🔍 Looking for client_id: ${filters.client_id}`);
           console.log("📊 Sample jobs with client info:", sampleJobs);
