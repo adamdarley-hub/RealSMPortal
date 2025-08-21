@@ -188,7 +188,65 @@ export class CacheService {
           }
         }
 
-        return allJobs;
+        // Transform ALL jobs when no client filter is applied
+        console.log("🔄 TRANSFORMING ALL JOBS - No client filter applied");
+        console.log(`📊 Total jobs to transform: ${allJobs.length}`);
+
+        if (allJobs.length > 0) {
+          console.log("🔍 Sample raw job data:", JSON.stringify(allJobs[0], null, 2));
+
+          const transformedJobs = allJobs.map((job) => {
+            // ServeManager data structure has attributes at root level
+            const courtCase = job.court_case || {};
+            const attempts = job.attempts || [];
+
+            // Map priority: ServeManager uses "Routine" or "Rush"
+            const priority = job.service_level === "Rush" ? "rush" : "routine";
+
+            return {
+              id: job.id,
+              job_number: job.job_number || job.servemanager_job_number,
+              recipient_name:
+                job.recipient_name ||
+                courtCase.defendant ||
+                "Unknown Recipient",
+              status: job.status || "pending",
+              priority: priority,
+              created_at: job.created_at || new Date().toISOString(),
+              due_date: job.due_date || job.date_due,
+              amount: parseFloat(job.amount || job.price || "0"),
+              client_id: job.client_company?.id,
+              client_company: job.client_company?.name,
+              client_name:
+                job.client_contact?.first_name +
+                " " +
+                job.client_contact?.last_name,
+              service_address: job.service_address,
+              defendant_address: job.defendant_address,
+              address: job.address,
+              addresses_attributes: job.addresses_attributes,
+              court_case_number: courtCase.number,
+              plaintiff: courtCase.plaintiff,
+              defendant_name: courtCase.defendant,
+              attempt_count: job.attempt_count || attempts.length,
+              attempts: attempts,
+              // Keep raw data for debugging
+              raw_data: job,
+            };
+          });
+
+          console.log("📋 Sample transformed job:", {
+            id: transformedJobs[0].id,
+            job_number: transformedJobs[0].job_number,
+            recipient_name: transformedJobs[0].recipient_name,
+            status: transformedJobs[0].status,
+            client_company: transformedJobs[0].client_company,
+          });
+
+          return transformedJobs;
+        }
+
+        return [];
       }
 
       return [];
