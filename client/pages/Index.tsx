@@ -192,8 +192,21 @@ export default function Dashboard() {
         }),
       ]);
 
+      console.log('🔍 Jobs response status:', jobsResponse.status, jobsResponse.statusText);
+      console.log('🔍 Jobs response headers:', Object.fromEntries(jobsResponse.headers.entries()));
+
       if (!jobsResponse.ok) {
-        throw new Error("Failed to load jobs data");
+        const errorText = await jobsResponse.text();
+        console.error('❌ Jobs API error response:', errorText);
+        throw new Error(`Failed to load jobs data: ${jobsResponse.status} ${jobsResponse.statusText}`);
+      }
+
+      // Check if response is actually JSON
+      const contentType = jobsResponse.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const responseText = await jobsResponse.text();
+        console.error('❌ Jobs API returned non-JSON response:', responseText.substring(0, 200));
+        throw new Error(`Jobs API returned ${contentType || 'unknown content type'} instead of JSON`);
       }
 
       const jobsData = await jobsResponse.json();
@@ -216,17 +229,31 @@ export default function Dashboard() {
 
       let clientsData = { clients: [] };
       if (clientsResponse.ok) {
-        clientsData = await clientsResponse.json();
+        try {
+          clientsData = await clientsResponse.json();
+        } catch (error) {
+          console.warn('⚠️ Failed to parse clients JSON:', error);
+          const text = await clientsResponse.text();
+          console.log('📄 Clients response text:', text.substring(0, 200));
+        }
       }
 
       let serversData = { servers: [] };
       if (serversResponse.ok) {
-        serversData = await serversResponse.json();
+        try {
+          serversData = await serversResponse.json();
+        } catch (error) {
+          console.warn('⚠️ Failed to parse servers JSON:', error);
+        }
       }
 
       let courtCasesData = { court_cases: [] };
       if (courtCasesResponse.ok) {
-        courtCasesData = await courtCasesResponse.json();
+        try {
+          courtCasesData = await courtCasesResponse.json();
+        } catch (error) {
+          console.warn('⚠️ Failed to parse court cases JSON:', error);
+        }
       }
 
       // Calculate real KPIs from job data
