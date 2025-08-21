@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { configStorageService } from "../server/services/config-storage";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
