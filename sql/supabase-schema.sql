@@ -1,6 +1,21 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Create API configurations table for storing service configurations
+CREATE TABLE api_configurations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  service_name TEXT UNIQUE NOT NULL CHECK (service_name IN ('servemanager', 'stripe', 'radar')),
+  base_url TEXT,
+  api_key TEXT,
+  publishable_key TEXT,
+  secret_key TEXT,
+  webhook_secret TEXT,
+  environment TEXT CHECK (environment IN ('test', 'live')),
+  enabled BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Create jobs table
 CREATE TABLE jobs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
