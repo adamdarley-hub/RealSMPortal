@@ -107,7 +107,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
       // Check for FullStory interference and warn user
       const isFullStoryPresent = window.FS || document.querySelector('script[src*="fullstory"]');
       if (isFullStoryPresent && status.consecutiveFailures > 0) {
-        console.warn('🔍 FullStory detected and causing fetch issues. Consider disabling auto-sync.');
+        console.warn('���� FullStory detected and causing fetch issues. Consider disabling auto-sync.');
       }
 
       // Quick health check to see if server is reachable
@@ -395,6 +395,15 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
     if (intervalRef.current || !enabled || !mountedRef.current) {
       console.log('⏭️ Skipping start polling - already running or disabled or unmounted');
       return;
+    }
+
+    // Check if FullStory is causing too many issues and disable auto-sync
+    if (status.consecutiveFailures >= 3) {
+      const isFullStoryPresent = window.FS || document.querySelector('script[src*="fullstory"]');
+      if (isFullStoryPresent) {
+        console.warn('🔍 Auto-sync disabled due to FullStory interference. Too many consecutive failures.');
+        return;
+      }
     }
 
     if (mountedRef.current) {
