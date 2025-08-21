@@ -66,27 +66,58 @@ function decrypt(text: string): string {
 
 export async function loadConfig(): Promise<Partial<ApiConfig>> {
   try {
-    const data = await fs.readFile(CONFIG_FILE, 'utf8');
-    const config = JSON.parse(data);
+    // First try to load from file (for local development)
+    try {
+      const data = await fs.readFile(CONFIG_FILE, 'utf8');
+      const config = JSON.parse(data);
 
-    // Decrypt sensitive fields
-    if (config.serveManager?.apiKey && !config.serveManager.apiKey.startsWith('***')) {
-      config.serveManager.apiKey = decrypt(config.serveManager.apiKey);
+      // Decrypt sensitive fields
+      if (config.serveManager?.apiKey && !config.serveManager.apiKey.startsWith('***')) {
+        config.serveManager.apiKey = decrypt(config.serveManager.apiKey);
+      }
+      if (config.radar?.secretKey && !config.radar.secretKey.startsWith('***')) {
+        config.radar.secretKey = decrypt(config.radar.secretKey);
+      }
+      if (config.stripe?.secretKey && !config.stripe.secretKey.startsWith('***')) {
+        config.stripe.secretKey = decrypt(config.stripe.secretKey);
+      }
+      if (config.stripe?.webhookSecret && !config.stripe.webhookSecret.startsWith('***')) {
+        config.stripe.webhookSecret = decrypt(config.stripe.webhookSecret);
+      }
+
+      return config;
+    } catch (fileError) {
+      console.log('Config file not found, checking environment variables and temp storage...');
     }
-    if (config.radar?.secretKey && !config.radar.secretKey.startsWith('***')) {
-      config.radar.secretKey = decrypt(config.radar.secretKey);
-    }
-    if (config.stripe?.secretKey && !config.stripe.secretKey.startsWith('***')) {
-      config.stripe.secretKey = decrypt(config.stripe.secretKey);
-    }
-    if (config.stripe?.webhookSecret && !config.stripe.webhookSecret.startsWith('***')) {
-      config.stripe.webhookSecret = decrypt(config.stripe.webhookSecret);
-    }
+
+    // In serverless environment, check temp storage first, then environment variables
+    const tempConfig = (global as any).tempApiConfig;
+
+    const config: Partial<ApiConfig> = {
+      serveManager: {
+        baseUrl: process.env.SERVEMANAGER_BASE_URL || tempConfig?.serveManager?.baseUrl || '',
+        apiKey: process.env.SERVEMANAGER_API_KEY || tempConfig?.serveManager?.apiKey || '',
+        enabled: Boolean(process.env.SERVEMANAGER_BASE_URL || tempConfig?.serveManager?.enabled),
+        testEndpoint: '/account'
+      },
+      stripe: {
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || tempConfig?.stripe?.publishableKey || '',
+        secretKey: process.env.STRIPE_SECRET_KEY || tempConfig?.stripe?.secretKey || '',
+        webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || tempConfig?.stripe?.webhookSecret || '',
+        enabled: Boolean(process.env.STRIPE_SECRET_KEY || tempConfig?.stripe?.enabled),
+        environment: (process.env.STRIPE_ENVIRONMENT as 'test' | 'live') || tempConfig?.stripe?.environment || 'test'
+      },
+      radar: {
+        publishableKey: process.env.RADAR_PUBLISHABLE_KEY || tempConfig?.radar?.publishableKey || '',
+        secretKey: process.env.RADAR_SECRET_KEY || tempConfig?.radar?.secretKey || '',
+        enabled: Boolean(process.env.RADAR_SECRET_KEY || tempConfig?.radar?.enabled),
+        environment: (process.env.RADAR_ENVIRONMENT as 'test' | 'live') || tempConfig?.radar?.environment || 'test'
+      }
+    };
 
     return config;
   } catch (error) {
-    console.log('Config file not found, returning empty config');
-    // Return empty config if file doesn't exist
+    console.error('Error loading config:', error);
     return {};
   }
 }
