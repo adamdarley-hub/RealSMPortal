@@ -85,12 +85,44 @@ export class CacheService {
 
         console.log(`✅ Found ${filteredJobs.length} jobs for client_id ${filters.client_id}`);
         if (filteredJobs.length > 0) {
-          console.log("📋 Sample filtered job:", {
-            id: filteredJobs[0].id,
-            client_company_id: filteredJobs[0].client_company?.id,
-            client_company_name: filteredJobs[0].client_company?.name
+          // Transform ServeManager data to expected frontend format
+          const transformedJobs = filteredJobs.map((job) => {
+            const attrs = job.attributes || {};
+            return {
+              id: job.id,
+              job_number: attrs.job_number || attrs.reference || `JOB-${job.id}`,
+              recipient_name: attrs.recipient_name || attrs.defendant_name || "Unknown Recipient",
+              status: attrs.status || "pending",
+              priority: attrs.priority || "medium",
+              created_at: attrs.created_at || new Date().toISOString(),
+              due_date: attrs.due_date || attrs.date_due,
+              amount: parseFloat(attrs.amount || attrs.price || "0"),
+              client_id: job.client_company?.id,
+              client_company: job.client_company?.name,
+              client_name: attrs.client_name || job.client_company?.name,
+              service_address: attrs.service_address,
+              defendant_address: attrs.defendant_address,
+              address: attrs.address,
+              addresses_attributes: attrs.addresses_attributes,
+              court_case_number: attrs.court_case_number || attrs.case_number,
+              plaintiff: attrs.plaintiff,
+              defendant_name: attrs.defendant_name,
+              attempt_count: attrs.attempt_count || 0,
+              attempts: attrs.attempts || attrs.service_attempts || [],
+              // Keep raw data for debugging
+              raw_data: job
+            };
           });
-          return filteredJobs;
+
+          console.log("📋 Sample transformed job:", {
+            id: transformedJobs[0].id,
+            job_number: transformedJobs[0].job_number,
+            recipient_name: transformedJobs[0].recipient_name,
+            status: transformedJobs[0].status,
+            client_company: transformedJobs[0].client_company
+          });
+
+          return transformedJobs;
         } else {
           console.log("⚠️ No jobs found for client, creating mock jobs for testing");
 
