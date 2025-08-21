@@ -10,23 +10,23 @@ const mockJobs = [
     recipient_name: 'John Doe',
     status: 'served',
     priority: 'high',
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
+    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     amount: 125.00,
     city: 'Atlanta',
     state: 'GA',
     attempts: []
   },
   {
-    id: '2', 
+    id: '2',
     job_number: 'JOB-002',
     client_company: 'Pronto Process',
     client_name: 'Shawn Wells',
     recipient_name: 'Jane Smith',
     status: 'in_progress',
     priority: 'medium',
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-    due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
     amount: 85.00,
     city: 'Marietta',
     state: 'GA',
@@ -34,17 +34,47 @@ const mockJobs = [
   },
   {
     id: '3',
-    job_number: 'JOB-003', 
+    job_number: 'JOB-003',
     client_company: 'Kerr Civil Process',
     client_name: 'Kelly Kerr',
     recipient_name: 'Bob Johnson',
     status: 'pending',
     priority: 'low',
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     amount: 95.00,
     city: 'Decatur',
-    state: 'GA', 
+    state: 'GA',
+    attempts: []
+  },
+  {
+    id: '4',
+    job_number: 'JOB-004',
+    client_company: 'Kerr Civil Process',
+    client_name: 'Kelly Kerr',
+    recipient_name: 'Sarah Wilson',
+    status: 'overdue',
+    priority: 'urgent',
+    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+    due_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // overdue
+    amount: 150.00,
+    city: 'Roswell',
+    state: 'GA',
+    attempts: []
+  },
+  {
+    id: '5',
+    job_number: 'JOB-005',
+    client_company: 'Kerr Civil Process',
+    client_name: 'Kelly Kerr',
+    recipient_name: 'Mike Davis',
+    status: 'in_progress',
+    priority: 'medium',
+    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    amount: 110.00,
+    city: 'Alpharetta',
+    state: 'GA',
     attempts: []
   }
 ];
