@@ -391,7 +391,7 @@ export default function Jobs() {
     } catch (error) {
       // Handle AbortError gracefully
       if (error.name === 'AbortError') {
-        console.log('⚠��� Servers request was aborted (likely due to timeout or navigation)');
+        console.log('⚠️ Servers request was aborted (likely due to timeout or navigation)');
         return; // Don't try fallbacks for abort errors
       }
 
@@ -501,11 +501,10 @@ export default function Jobs() {
       try {
         const currentPageNum = Math.floor(filters.offset / filters.limit) + 1;
 
-        // Try multiple API endpoints based on deployment environment
+        // Try multiple API endpoints in order of preference
         const apiEndpoints = [
-          `/api/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Development backend
-          `/api/cached-jobs?limit=${filters.limit}&page=${currentPageNum}`, // Alternative endpoint
-          `/api/mock/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Fallback to mock data
+          `/api/v2/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Supabase (ultra-fast)
+          `/api/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Cached fallback
         ];
 
         let lastError = null;
