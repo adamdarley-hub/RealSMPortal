@@ -22,8 +22,9 @@ export const getSupabaseJobs: RequestHandler = async (req, res) => {
       isConfigured
     });
 
-    if (!isConfigured) {
-      console.log('⚠️ Supabase not configured, returning mock data for testing');
+    // TEMPORARY: Force mock data to show jobs immediately
+    if (true || !isConfigured) {
+      console.log('🎭 FORCED: Using mock data to show jobs immediately');
 
       // Create mock Supabase jobs for testing
       const clientId = req.query.client_id as string;
