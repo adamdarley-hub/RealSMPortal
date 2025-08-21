@@ -82,22 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Check if it's the admin user first
-    const adminUser = mockUsers.find(u => u.role === 'admin' && u.email === email);
-    if (adminUser) {
+    if (email === ADMIN_EMAIL) {
       console.log('✅ Admin login successful');
-      setUser(adminUser);
-      localStorage.setItem('serveportal_user', JSON.stringify(adminUser));
-      localStorage.removeItem('serveportal_logged_out');
-      setIsLoading(false);
-      return true;
-    }
-
-    // Check if it's a hardcoded mock client
-    const mockClient = mockUsers.find(u => u.role === 'client' && u.email === email);
-    if (mockClient) {
-      console.log('✅ Mock client login successful');
-      setUser(mockClient);
-      localStorage.setItem('serveportal_user', JSON.stringify(mockClient));
+      setUser(ADMIN_USER);
+      localStorage.setItem('serveportal_user', JSON.stringify(ADMIN_USER));
       localStorage.removeItem('serveportal_logged_out');
       setIsLoading(false);
       return true;
