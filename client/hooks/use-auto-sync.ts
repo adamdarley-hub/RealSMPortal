@@ -19,7 +19,7 @@ interface UseAutoSyncOptions {
 
 export function useAutoSync(options: UseAutoSyncOptions = {}) {
   const {
-    enabled = false, // Temporarily disabled due to network issues
+    enabled = false, // Disabled by default to prevent timeout issues
     interval = 60000, // 60 seconds default (increased from 30s to reduce server load)
     onDataUpdate
   } = options;
