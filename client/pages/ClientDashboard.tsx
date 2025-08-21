@@ -232,15 +232,32 @@ export default function ClientDashboard() {
       }
 
       const data = await response.json();
-      console.log('📋 Client jobs loaded:', {
-        total: data.jobs?.length || 0,
-        source: data.source,
-        clientId: user.client_id,
-        firstJob: data.jobs?.[0]
+      console.log('📋 Client jobs API response received:');
+      console.log('  - Total jobs:', data.jobs?.length || 0);
+      console.log('  - Source:', data.source);
+      console.log('  - Client ID filter:', user.client_id);
+      console.log('  - First job sample:', data.jobs?.[0]);
+      console.log('📄 Full API response structure:', {
+        keys: Object.keys(data),
+        jobsArray: Array.isArray(data.jobs),
+        jobsLength: data.jobs?.length,
+        dataStructure: data
       });
-      console.log('📄 Full API response:', data);
 
-      setJobs(data.jobs || []);
+      const jobsToSet = data.jobs || [];
+      console.log('🎯 About to set jobs state:', {
+        jobsCount: jobsToSet.length,
+        firstJob: jobsToSet[0],
+        sample: jobsToSet.slice(0, 3).map(job => ({
+          id: job?.id,
+          job_number: job?.job_number,
+          recipient_name: job?.recipient_name,
+          status: job?.status,
+          priority: job?.priority
+        }))
+      });
+
+      setJobs(jobsToSet);
 
       if (forceSync) {
         toast({
