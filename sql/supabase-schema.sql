@@ -162,6 +162,7 @@ ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE servers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE api_configurations ENABLE ROW LEVEL SECURITY;
 
 -- Create policies (allow all operations for now - can be restricted later)
 CREATE POLICY "Enable all operations for jobs" ON jobs FOR ALL USING (true) WITH CHECK (true);
