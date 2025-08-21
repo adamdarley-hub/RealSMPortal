@@ -12,13 +12,14 @@ export default defineConfig(({ mode }) => ({
       allow: ["./client", "./shared"],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-        secure: false,
-      }
-    }
+    // Proxy disabled to allow Vercel functions to handle API requests
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://localhost:8081',
+    //     changeOrigin: true,
+    //     secure: false,
+    //   }
+    // }
   },
   preview: {
     port: 3000,
