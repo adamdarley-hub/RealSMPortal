@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { configStorageService } from "../server/services/config-storage";
 
 // Note: Global config type is defined in server/routes/config.ts
-// Initialize global config if not exists
+// Initialize global config if not exists (fallback for when storage is unavailable)
 if (!global.tempApiConfig) {
   global.tempApiConfig = {
     serveManager: {
