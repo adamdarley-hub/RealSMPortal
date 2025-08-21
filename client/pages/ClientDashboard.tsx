@@ -511,6 +511,10 @@ export default function ClientDashboard() {
             <p className="text-muted-foreground">
               Track your process service requests
             </p>
+            {/* Production Debug Info */}
+            <div className="text-xs text-gray-500 mt-1 font-mono">
+              DEBUG: {jobs.length} jobs | User: {user?.name} | Client: {user?.client_id} | {window.location.hostname}
+            </div>
           </div>
           <Button
             onClick={() => loadJobs(true)}
