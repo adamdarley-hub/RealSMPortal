@@ -104,6 +104,12 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         throw new Error('Fetch API is not available');
       }
 
+      // Check for FullStory interference and warn user
+      const isFullStoryPresent = window.FS || document.querySelector('script[src*="fullstory"]');
+      if (isFullStoryPresent && status.consecutiveFailures > 0) {
+        console.warn('🔍 FullStory detected and causing fetch issues. Consider disabling auto-sync.');
+      }
+
       // Quick health check to see if server is reachable
       try {
         // Create a separate shorter timeout for health check
