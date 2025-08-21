@@ -391,7 +391,7 @@ export default function Jobs() {
     } catch (error) {
       // Handle AbortError gracefully
       if (error.name === 'AbortError') {
-        console.log('⚠️ Servers request was aborted (likely due to timeout or navigation)');
+        console.log('⚠��� Servers request was aborted (likely due to timeout or navigation)');
         return; // Don't try fallbacks for abort errors
       }
 
@@ -500,24 +500,60 @@ export default function Jobs() {
 
       try {
         const currentPageNum = Math.floor(filters.offset / filters.limit) + 1;
-        console.log(`🌐 Direct API call to /api/jobs?limit=${filters.limit}&page=${currentPageNum}`);
-        const response = await fetch(`/api/jobs?limit=${filters.limit}&page=${currentPageNum}`);
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // Try multiple API endpoints based on deployment environment
+        const apiEndpoints = [
+          `/api/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Development backend
+          `/api/cached-jobs?limit=${filters.limit}&page=${currentPageNum}`, // Alternative endpoint
+          `/api/mock/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Fallback to mock data
+        ];
+
+        let lastError = null;
+
+        for (const endpoint of apiEndpoints) {
+          try {
+            console.log(`🌐 Trying API endpoint: ${endpoint}`);
+
+            const response = await fetch(endpoint, {
+              timeout: 8000, // 8 second timeout
+              signal: AbortSignal.timeout(8000)
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`✅ Success with ${endpoint}: ${data.jobs?.length || 0} jobs`);
+
+              setJobs(data.jobs || []);
+              setTotalJobs(data.total || data.jobs?.length || 0);
+              setUsingMockData(!!data.mock || endpoint.includes('mock'));
+              setError(null);
+              return; // Success - exit function
+            } else {
+              console.log(`❌ ${endpoint} failed with status ${response.status}`);
+              lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+          } catch (fetchError) {
+            console.log(`❌ ${endpoint} failed with error:`, fetchError);
+            lastError = fetchError;
+            continue; // Try next endpoint
+          }
         }
 
-        const data = await response.json();
-        console.log(`📥 Received ${data.jobs.length} jobs from API. First job ID: ${data.jobs[0]?.id}, Total: ${data.total}`);
+        // If all endpoints failed
+        throw lastError || new Error('All API endpoints failed');
 
-        setJobs(data.jobs);
-        setTotalJobs(data.total || data.jobs.length);
-        setUsingMockData(!!data.mock);
-
-        console.log(`✅ Updated state with ${data.jobs.length} jobs for page ${currentPageNum}`);
       } catch (error) {
-        console.error('❌ Pagination API call failed:', error);
+        console.error('❌ All API calls failed:', error);
         setError(error instanceof Error ? error.message : 'Failed to load jobs');
+
+        // Show mock data as final fallback to prevent blank page
+        try {
+          setJobs([]);
+          setTotalJobs(0);
+          setUsingMockData(true);
+        } catch {
+          // Even mock fallback failed
+        }
       } finally {
         setLoading(false);
       }
