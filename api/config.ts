@@ -46,24 +46,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         stripe: {
           publishableKey:
             process.env.STRIPE_PUBLISHABLE_KEY ||
-            tempConfig.stripe?.publishableKey ||
+            global.tempApiConfig?.stripe?.publishableKey ||
             "",
           secretKey: process.env.STRIPE_SECRET_KEY
             ? "***" + process.env.STRIPE_SECRET_KEY.slice(-4)
-            : tempConfig.stripe?.secretKey
-              ? "***" + tempConfig.stripe.secretKey.slice(-4)
+            : global.tempApiConfig?.stripe?.secretKey
+              ? "***" + global.tempApiConfig.stripe.secretKey.slice(-4)
               : "",
           webhookSecret: process.env.STRIPE_WEBHOOK_SECRET
             ? "***" + process.env.STRIPE_WEBHOOK_SECRET.slice(-4)
-            : tempConfig.stripe?.webhookSecret
-              ? "***" + tempConfig.stripe.webhookSecret.slice(-4)
+            : global.tempApiConfig?.stripe?.webhookSecret
+              ? "***" + global.tempApiConfig.stripe.webhookSecret.slice(-4)
               : "",
           enabled: Boolean(
-            process.env.STRIPE_SECRET_KEY || tempConfig.stripe?.enabled,
+            process.env.STRIPE_SECRET_KEY || global.tempApiConfig?.stripe?.enabled,
           ),
           environment:
             (process.env.STRIPE_ENVIRONMENT as "test" | "live") ||
-            tempConfig.stripe?.environment ||
+            global.tempApiConfig?.stripe?.environment ||
             "test",
         },
         radar: {
