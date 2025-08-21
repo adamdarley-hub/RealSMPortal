@@ -1,7 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// Simple config storage for serverless environment
-let tempConfig: any = {};
+// Extend global for temporary config storage in serverless environments
+declare global {
+  var tempApiConfig: any | undefined;
+}
+
+// Initialize global config if not exists
+if (!global.tempApiConfig) {
+  global.tempApiConfig = {};
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
