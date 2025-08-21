@@ -31,10 +31,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         apiKey: process.env.SERVEMANAGER_API_KEY,
       };
 
-      console.log("🔧 ServeManager config available:", {
+      console.log("🔧 VERCEL DEBUG - ServeManager config check:", {
         hasBaseUrl: !!servemanagerConfig.baseUrl,
         hasApiKey: !!servemanagerConfig.apiKey,
         baseUrl: servemanagerConfig.baseUrl,
+        apiKeyLength: servemanagerConfig.apiKey?.length || 0,
+        clientId,
+        limit,
+        refresh,
+        hostname: req.headers.host,
+        userAgent: req.headers['user-agent']
       });
 
       if (servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
