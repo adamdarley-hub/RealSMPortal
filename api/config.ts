@@ -98,31 +98,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Don't update masked keys - keep the real values from environment
       const configToStore = { ...newConfig };
 
-      // If ServeManager API key is masked, keep the environment value
+      // If ServeManager API key is masked, keep the existing value
       if (configToStore.serveManager?.apiKey?.startsWith("***")) {
         if (
-          tempConfig.serveManager?.apiKey &&
-          !tempConfig.serveManager.apiKey.startsWith("***")
+          global.tempApiConfig?.serveManager?.apiKey &&
+          !global.tempApiConfig.serveManager.apiKey.startsWith("***")
         ) {
-          configToStore.serveManager.apiKey = tempConfig.serveManager.apiKey;
+          configToStore.serveManager.apiKey = global.tempApiConfig.serveManager.apiKey;
+        } else {
+          // Don't store masked keys
+          delete configToStore.serveManager.apiKey;
         }
-        // Don't store masked keys
-        delete configToStore.serveManager.apiKey;
       }
 
       // Similar for other masked fields
       if (configToStore.stripe?.secretKey?.startsWith("***")) {
-        delete configToStore.stripe.secretKey;
+        if (global.tempApiConfig?.stripe?.secretKey) {
+          configToStore.stripe.secretKey = global.tempApiConfig.stripe.secretKey;
+        } else {
+          delete configToStore.stripe.secretKey;
+        }
       }
       if (configToStore.stripe?.webhookSecret?.startsWith("***")) {
-        delete configToStore.stripe.webhookSecret;
+        if (global.tempApiConfig?.stripe?.webhookSecret) {
+          configToStore.stripe.webhookSecret = global.tempApiConfig.stripe.webhookSecret;
+        } else {
+          delete configToStore.stripe.webhookSecret;
+        }
       }
       if (configToStore.radar?.secretKey?.startsWith("***")) {
-        delete configToStore.radar.secretKey;
+        if (global.tempApiConfig?.radar?.secretKey) {
+          configToStore.radar.secretKey = global.tempApiConfig.radar.secretKey;
+        } else {
+          delete configToStore.radar.secretKey;
+        }
       }
 
-      // Store config temporarily (will be lost on function restart)
-      tempConfig = { ...tempConfig, ...configToStore };
+      // Store config in global memory (persists across function calls in same container)
+      global.tempApiConfig = { ...global.tempApiConfig, ...configToStore };
 
       console.log(
         "Config saved temporarily. For persistent storage, set these environment variables in Vercel:",
