@@ -275,11 +275,14 @@ export default function Dashboard() {
 
   // Filter functions using real data
   const filteredJobs = useMemo(() => {
-    return recentJobs.filter(job =>
-      job.job_number.toLowerCase().includes(jobsSearch.toLowerCase()) ||
-      job.client_company.toLowerCase().includes(jobsSearch.toLowerCase()) ||
-      job.recipient_name.toLowerCase().includes(jobsSearch.toLowerCase())
-    );
+    return recentJobs.filter(job => {
+      const searchTerm = jobsSearch.toLowerCase();
+      return (
+        (job.job_number && String(job.job_number).toLowerCase().includes(searchTerm)) ||
+        (job.client_company && String(job.client_company).toLowerCase().includes(searchTerm)) ||
+        (job.recipient_name && String(job.recipient_name).toLowerCase().includes(searchTerm))
+      );
+    });
   }, [recentJobs, jobsSearch]);
 
   const filteredCases = useMemo(() => {
