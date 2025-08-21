@@ -57,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     // Get effective configuration using simple config utility
-    const config = await getServeManagerConfig();
+    const config = getServeManagerConfig();
     const baseUrl = config.baseUrl;
     const apiKey = config.apiKey;
 
