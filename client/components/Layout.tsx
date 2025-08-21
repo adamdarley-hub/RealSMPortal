@@ -80,17 +80,12 @@ export default function Layout({ children }: LayoutProps) {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center gap-3 px-6 py-4 border-b border-sidebar-border">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Scale className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=300"
-                alt="Allegiance Legal Solutions"
-                className="h-12 w-auto max-w-full"
-              />
-            </div>
+          <div className="flex items-center justify-center px-6 py-4 border-b border-sidebar-border">
+            <img
+              src="https://cdn.builder.io/api/v1/image/assets%2Fa0b2fe3b0e09431caaa97bd8f93a665d%2F139db428d22d4a54820d95b38550cbce?format=webp&width=300"
+              alt="Allegiance Legal Solutions"
+              className="h-12 w-auto max-w-full"
+            />
           </div>
 
           {/* Navigation */}
