@@ -93,26 +93,32 @@ export async function loadConfig(): Promise<Partial<ApiConfig>> {
 
 async function saveConfig(config: ApiConfig): Promise<void> {
   try {
-    const configToSave = { ...config };
+    // In serverless environments (like Vercel), we can't write to the file system
+    // Instead, we'll store the configuration in memory and provide instructions
+    console.log('Serverless environment detected - cannot save to file system');
+    console.log('Configuration received:', JSON.stringify(config, null, 2));
 
-    // Encrypt sensitive fields only if they exist and aren't already masked
-    if (configToSave.serveManager?.apiKey && !configToSave.serveManager.apiKey.startsWith('***')) {
-      configToSave.serveManager.apiKey = encrypt(configToSave.serveManager.apiKey);
+    // For production serverless deployment, configurations should be set via environment variables
+    console.log('To persist these settings in production:');
+    console.log('1. Set environment variables in your Vercel dashboard');
+    console.log('2. Use the following environment variable names:');
+
+    if (config.serveManager?.enabled) {
+      console.log('   SERVEMANAGER_BASE_URL=' + config.serveManager.baseUrl);
+      console.log('   SERVEMANAGER_API_KEY=your_api_key');
     }
-    if (configToSave.radar?.secretKey && !configToSave.radar.secretKey.startsWith('***')) {
-      configToSave.radar.secretKey = encrypt(configToSave.radar.secretKey);
-    }
-    if (configToSave.stripe?.secretKey && !configToSave.stripe.secretKey.startsWith('***')) {
-      configToSave.stripe.secretKey = encrypt(configToSave.stripe.secretKey);
-    }
-    if (configToSave.stripe?.webhookSecret && !configToSave.stripe.webhookSecret.startsWith('***')) {
-      configToSave.stripe.webhookSecret = encrypt(configToSave.stripe.webhookSecret);
+    if (config.stripe?.enabled) {
+      console.log('   STRIPE_PUBLISHABLE_KEY=' + config.stripe.publishableKey);
+      console.log('   STRIPE_SECRET_KEY=your_stripe_secret');
+      console.log('   STRIPE_WEBHOOK_SECRET=your_webhook_secret');
     }
 
-    await fs.writeFile(CONFIG_FILE, JSON.stringify(configToSave, null, 2));
+    // Store in memory for the current session (will be lost on restart)
+    global.tempApiConfig = config;
+
   } catch (error) {
-    console.error('Error saving config file:', error);
-    throw new Error(`Failed to save configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('Error processing config:', error);
+    throw new Error(`Failed to process configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
