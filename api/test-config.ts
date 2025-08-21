@@ -17,6 +17,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log("🧪 VERCEL TEST - Config test endpoint called");
 
+    // Check storage availability
+    const isStorageAvailable = await configStorageService.isAvailable();
+    console.log("💾 VERCEL TEST - Storage available:", isStorageAvailable);
+
     // Check environment variables
     const envVars = {
       hasServeManagerBaseUrl: !!process.env.SERVEMANAGER_BASE_URL,
@@ -25,20 +29,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       apiKeyLength: process.env.SERVEMANAGER_API_KEY?.length || 0,
     };
 
-    // Check global config
+    // Get effective configuration
+    let effectiveConfig = null;
+    let baseUrl = "";
+    let apiKey = "";
+
+    if (isStorageAvailable) {
+      try {
+        effectiveConfig = await configStorageService.getEffectiveConfig();
+        baseUrl = effectiveConfig.serveManager?.baseUrl || "";
+        apiKey = effectiveConfig.serveManager?.apiKey || "";
+      } catch (error) {
+        console.log("💾 VERCEL TEST - Error loading from storage:", error);
+      }
+    }
+
+    // Fallback to environment variables and global config
+    if (!baseUrl || !apiKey) {
+      baseUrl = process.env.SERVEMANAGER_BASE_URL || global.tempApiConfig?.serveManager?.baseUrl || "";
+      apiKey = process.env.SERVEMANAGER_API_KEY || global.tempApiConfig?.serveManager?.apiKey || "";
+    }
+
+    // Check global config (for debugging)
     const globalConfig = {
       hasGlobalTempConfig: !!global.tempApiConfig,
       globalServeManager: global.tempApiConfig?.serveManager || null,
     };
 
+    // Check stored config
+    const storedConfig = isStorageAvailable ? {
+      hasStoredConfig: !!effectiveConfig,
+      serveManagerEnabled: effectiveConfig?.serveManager?.enabled || false,
+      hasStoredUrl: !!(effectiveConfig?.serveManager?.baseUrl),
+      hasStoredKey: !!(effectiveConfig?.serveManager?.apiKey),
+    } : null;
+
     // Test ServeManager connection
     let connectionTest = null;
-    const baseUrl =
-      process.env.SERVEMANAGER_BASE_URL ||
-      global.tempApiConfig?.serveManager?.baseUrl;
-    const apiKey =
-      process.env.SERVEMANAGER_API_KEY ||
-      global.tempApiConfig?.serveManager?.apiKey;
 
     if (baseUrl && apiKey) {
       try {
