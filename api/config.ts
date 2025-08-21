@@ -30,8 +30,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         hasServeManagerBaseUrl: !!process.env.SERVEMANAGER_BASE_URL,
         hasServeManagerApiKey: !!process.env.SERVEMANAGER_API_KEY,
         hasGlobalTempConfig: !!global.tempApiConfig,
-        tempConfigKeys: global.tempApiConfig ? Object.keys(global.tempApiConfig) : [],
-        hostname: req.headers.host
+        tempConfigKeys: global.tempApiConfig
+          ? Object.keys(global.tempApiConfig)
+          : [],
+        hostname: req.headers.host,
       });
 
       // Return current config (with masked sensitive values)
@@ -100,8 +102,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log("📤 VERCEL DEBUG - Returning config:", {
         serveManagerEnabled: config.serveManager.enabled,
         serveManagerHasUrl: !!config.serveManager.baseUrl,
-        serveManagerHasKey: !!config.serveManager.apiKey && config.serveManager.apiKey !== "",
-        stripeEnabled: config.stripe.enabled
+        serveManagerHasKey:
+          !!config.serveManager.apiKey && config.serveManager.apiKey !== "",
+        stripeEnabled: config.stripe.enabled,
       });
 
       return res.status(200).json(config);

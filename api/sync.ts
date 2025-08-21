@@ -5,7 +5,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Set CORS headers
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
 
     if (req.method === "OPTIONS") {
       return res.status(200).end();
@@ -14,18 +17,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log("🔄 VERCEL DEBUG - Sync endpoint called:", {
       method: req.method,
       url: req.url,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     if (req.method === "POST") {
       // Simple sync response for Vercel
       console.log("✅ VERCEL DEBUG - Sync completed successfully");
-      
+
       return res.status(200).json({
         success: true,
         message: "Sync completed successfully",
         timestamp: new Date().toISOString(),
-        environment: "vercel"
+        environment: "vercel",
       });
     }
 
@@ -34,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: "ready",
         endpoint: "sync",
         environment: "vercel",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -44,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({
       error: "Internal server error",
       details: error instanceof Error ? error.message : "Unknown error",
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }
