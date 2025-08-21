@@ -22,29 +22,35 @@ export class CacheService {
     console.log("🔍 Filters received:", filters);
 
     try {
-      // Fetch directly from ServeManager API
-      const queryParams: any = {
-        page: 1,
-        per_page: 100,
+      // Fetch ALL pages of jobs from ServeManager API
+      const baseQueryParams: any = {
+        per_page: 100, // Max per page
       };
 
       // Convert filters to ServeManager format
       if (filters.client_id) {
         // ServeManager uses filter[client_company_id] not filter[client_id]
-        queryParams["filter[client_company_id]"] = filters.client_id;
+        baseQueryParams["filter[client_company_id]"] = filters.client_id;
       }
       if (filters.status) {
-        queryParams["filter[status]"] = filters.status;
+        baseQueryParams["filter[status]"] = filters.status;
       }
       if (filters.priority) {
-        queryParams["filter[priority]"] = filters.priority;
+        baseQueryParams["filter[priority]"] = filters.priority;
       }
 
-      console.log("🌐 ServeManager query params:", queryParams);
+      console.log("🌐 ServeManager base query params:", baseQueryParams);
 
-      // Build URL with query parameters
-      let endpoint = "/jobs";
-      if (Object.keys(queryParams).length > 0) {
+      // Fetch all pages
+      let allJobs: any[] = [];
+      let currentPage = 1;
+      let hasMorePages = true;
+
+      while (hasMorePages) {
+        const queryParams = { ...baseQueryParams, page: currentPage };
+
+        // Build URL with query parameters
+        let endpoint = "/jobs";
         const params = new URLSearchParams();
         Object.entries(queryParams).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
@@ -52,19 +58,42 @@ export class CacheService {
           }
         });
         endpoint += `?${params.toString()}`;
+
+        console.log(`🔍 Fetching page ${currentPage}: ${endpoint}`);
+
+        const response = await makeServeManagerRequest(endpoint, {
+          method: "GET",
+        });
+
+        if (response && response.data) {
+          const jobs = Array.isArray(response.data)
+            ? response.data
+            : [response.data];
+
+          console.log(`📋 Page ${currentPage}: ${jobs.length} jobs`);
+          allJobs.push(...jobs);
+
+          // Check if there are more pages
+          // ServeManager typically returns fewer than per_page when reaching the end
+          if (jobs.length < 100) {
+            hasMorePages = false;
+            console.log(`🏁 Reached end of pages at page ${currentPage}`);
+          } else {
+            currentPage++;
+            // Safety limit to prevent infinite loops
+            if (currentPage > 50) {
+              console.log(`⚠️ Reached safety limit of 50 pages`);
+              hasMorePages = false;
+            }
+          }
+        } else {
+          hasMorePages = false;
+          console.log(`❌ No data in response for page ${currentPage}`);
+        }
       }
 
-      console.log(`🔍 Final endpoint: ${endpoint}`);
-
-      const response = await makeServeManagerRequest(endpoint, {
-        method: "GET",
-      });
-
-      if (response && response.data) {
-        const jobs = Array.isArray(response.data)
-          ? response.data
-          : [response.data];
-        console.log(`📋 ServeManager returned ${jobs.length} jobs`);
+      if (allJobs.length > 0) {
+        console.log(`📋 ServeManager returned ${allJobs.length} total jobs across ${currentPage} pages`);
 
         // Check if we have client_id filter and log sample client_ids from jobs
       if (filters.client_id) {
