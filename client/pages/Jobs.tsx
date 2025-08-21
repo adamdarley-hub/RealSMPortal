@@ -808,20 +808,40 @@ export default function Jobs() {
             <CardContent className="p-6">
               <div className="text-center space-y-4">
                 <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
-                <h3 className="text-lg font-semibold">Unable to Load Jobs</h3>
+                <h3 className="text-lg font-semibold">Connection Problem</h3>
                 <p className="text-muted-foreground">{error}</p>
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    To get started:
-                  </p>
-                  <ol className="text-sm text-muted-foreground text-left space-y-1 max-w-md mx-auto">
-                    <li>1. Go to Settings → API Configuration</li>
-                    <li>2. Enable ServeManager integration</li>
-                    <li>3. Enter your API credentials</li>
-                    <li>4. Test the connection</li>
-                    <li>5. Save your configuration</li>
-                  </ol>
-                </div>
+                {error.includes('520') || error.includes('terminated') || error.includes('ServeManager') ? (
+                  <div className="space-y-3 p-4 bg-muted/50 rounded-lg max-w-md mx-auto">
+                    <p className="text-sm font-medium text-orange-600">
+                      🚨 ServeManager API appears to be experiencing downtime
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      This is a temporary issue with ServeManager's servers (Error 520).
+                      The app is working correctly, but the data source is unavailable.
+                    </p>
+                    <div className="text-xs text-left space-y-1">
+                      <p className="font-medium">What you can do:</p>
+                      <ul className="space-y-1 text-muted-foreground">
+                        <li>• Wait a few minutes and try again</li>
+                        <li>• Check ServeManager's status directly</li>
+                        <li>• Contact your ServeManager administrator</li>
+                      </ul>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      To configure ServeManager integration:
+                    </p>
+                    <ol className="text-sm text-muted-foreground text-left space-y-1 max-w-md mx-auto">
+                      <li>1. Go to Settings → API Configuration</li>
+                      <li>2. Enable ServeManager integration</li>
+                      <li>3. Enter your API credentials</li>
+                      <li>4. Test the connection</li>
+                      <li>5. Save your configuration</li>
+                    </ol>
+                  </div>
+                )}
                 <div className="flex gap-2 justify-center">
                   <Button onClick={loadJobs} variant="outline" className="gap-2">
                     <RefreshCw className="w-4 h-4" />
