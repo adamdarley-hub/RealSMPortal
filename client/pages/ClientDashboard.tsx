@@ -154,8 +154,19 @@ export default function ClientDashboard() {
   }, [jobs]);
 
   const loadJobs = async (forceSync = false) => {
-    if (!user?.client_id) return;
+    console.log("📊 PRODUCTION DEBUG - loadJobs called", {
+      forceSync,
+      hasUser: !!user,
+      clientId: user?.client_id,
+      currentJobsCount: jobs.length
+    });
 
+    if (!user?.client_id) {
+      console.log("❌ PRODUCTION DEBUG - loadJobs: No client_id, returning early");
+      return;
+    }
+
+    console.log("🔄 PRODUCTION DEBUG - Starting job load for client:", user.client_id);
     setLoading(true);
     setError(null);
 
