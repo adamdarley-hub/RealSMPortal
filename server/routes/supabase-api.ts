@@ -9,8 +9,20 @@ export const getSupabaseJobs: RequestHandler = async (req, res) => {
     const startTime = Date.now();
     console.log('🚀 Supabase jobs API called');
 
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured()) {
+    // Check if Supabase is configured with detailed debugging
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    const isConfigured = isSupabaseConfigured();
+
+    console.log('🔧 Supabase config check:', {
+      hasUrl: !!supabaseUrl,
+      urlPreview: supabaseUrl ? supabaseUrl.substring(0, 20) + '...' : 'none',
+      hasKey: !!supabaseKey,
+      keyPreview: supabaseKey ? supabaseKey.substring(0, 20) + '...' : 'none',
+      isConfigured
+    });
+
+    if (!isConfigured) {
       console.log('⚠️ Supabase not configured, returning mock data for testing');
 
       // Create mock Supabase jobs for testing
