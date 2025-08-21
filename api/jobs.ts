@@ -184,20 +184,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
           } else {
             const errorText = await response.text();
-            console.log(
-              "❌ ServeManager API error:",
-              response.status,
-              errorText,
-            );
+            console.log("❌ VERCEL JOBS - ServeManager API error:", {
+              status: response.status,
+              statusText: response.statusText,
+              errorText: errorText.substring(0, 200),
+              url: url.toString()
+            });
           }
         } catch (error) {
-          console.log("⚠️ ServeManager not available, using mock jobs:", error);
+          console.log("⚠️ VERCEL JOBS - ServeManager request failed:", {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+            baseUrl: servemanagerConfig.baseUrl,
+            hasApiKey: !!servemanagerConfig.apiKey
+          });
         }
       }
 
       // If ServeManager is not configured or failed, return empty array
       console.log(
-        "��� VERCEL DEBUG - ServeManager not available or not configured",
+        "❌ VERCEL DEBUG - ServeManager not available or not configured",
       );
       console.log(
         "🔧 VERCEL DEBUG - Final fallback - returning empty jobs array",
