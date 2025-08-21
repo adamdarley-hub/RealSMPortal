@@ -132,6 +132,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       configuration: {
         environmentVariables: envVars,
         globalConfig: globalConfig,
+        storedConfig: storedConfig,
+        storageAvailable: isStorageAvailable,
+        effectiveValues: {
+          hasBaseUrl: !!baseUrl,
+          hasApiKey: !!apiKey,
+          baseUrlSource: baseUrl === process.env.SERVEMANAGER_BASE_URL ? "environment" :
+                        baseUrl === global.tempApiConfig?.serveManager?.baseUrl ? "global" :
+                        baseUrl === effectiveConfig?.serveManager?.baseUrl ? "storage" : "unknown",
+          apiKeySource: apiKey === process.env.SERVEMANAGER_API_KEY ? "environment" :
+                       apiKey === global.tempApiConfig?.serveManager?.apiKey ? "global" :
+                       apiKey === effectiveConfig?.serveManager?.apiKey ? "storage" : "unknown",
+        },
       },
       serveManagerTest: connectionTest,
     };
