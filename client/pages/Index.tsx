@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -14,12 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   FileText,
   Users,
@@ -121,23 +122,31 @@ export default function Dashboard() {
     return {
       isAdmin: true,
       allowedClientIds: [], // Empty for admin means all clients
-      workspaceId: undefined
+      workspaceId: undefined,
     };
   }, []);
 
   // Security guard: Ensure all queries include proper scoping
-  const validateScopedQuery = useCallback((queryName: string, hasClientFilter: boolean) => {
-    if (!userScope.isAdmin && (!hasClientFilter || userScope.allowedClientIds.length === 0)) {
-      console.warn(`🚨 SECURITY: Query "${queryName}" missing client scoping for non-admin user`);
-      return false;
-    }
-    return true;
-  }, [userScope]);
+  const validateScopedQuery = useCallback(
+    (queryName: string, hasClientFilter: boolean) => {
+      if (
+        !userScope.isAdmin &&
+        (!hasClientFilter || userScope.allowedClientIds.length === 0)
+      ) {
+        console.warn(
+          `🚨 SECURITY: Query "${queryName}" missing client scoping for non-admin user`,
+        );
+        return false;
+      }
+      return true;
+    },
+    [userScope],
+  );
 
   // Load all real data
   const loadDashboardData = useCallback(async () => {
     if (userScope.allowedClientIds.length === 0 && !userScope.isAdmin) {
-      setError('No data in scope for current user');
+      setError("No data in scope for current user");
       setLoading(false);
       return;
     }
@@ -149,26 +158,31 @@ export default function Dashboard() {
       // Build scoped query parameters
       const params = new URLSearchParams();
       if (!userScope.isAdmin && userScope.allowedClientIds.length > 0) {
-        params.append('client_ids', userScope.allowedClientIds.join(','));
+        params.append("client_ids", userScope.allowedClientIds.join(","));
       }
       if (userScope.workspaceId) {
-        params.append('workspace_id', userScope.workspaceId);
+        params.append("workspace_id", userScope.workspaceId);
       }
 
-      if (!validateScopedQuery('loadDashboardData', !userScope.isAdmin)) {
-        throw new Error('Invalid query scoping');
+      if (!validateScopedQuery("loadDashboardData", !userScope.isAdmin)) {
+        throw new Error("Invalid query scoping");
       }
 
       // Fetch all real data
-      const [jobsResponse, clientsResponse, serversResponse, courtCasesResponse] = await Promise.all([
+      const [
+        jobsResponse,
+        clientsResponse,
+        serversResponse,
+        courtCasesResponse,
+      ] = await Promise.all([
         fetch(`/api/jobs?${params.toString()}`),
         fetch(`/api/clients?${params.toString()}`),
         fetch(`/api/servers?${params.toString()}`),
-        fetch(`/api/court_cases?${params.toString()}`)
+        fetch(`/api/court_cases?${params.toString()}`),
       ]);
 
       if (!jobsResponse.ok) {
-        throw new Error('Failed to load jobs data');
+        throw new Error("Failed to load jobs data");
       }
 
       const jobsData = await jobsResponse.json();
@@ -192,33 +206,48 @@ export default function Dashboard() {
       // Calculate real KPIs from job data
       const now = new Date();
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const sevenDaysFromNow = new Date(
+        now.getTime() + 7 * 24 * 60 * 60 * 1000,
+      );
 
       const openJobs = jobs.filter((job: any) => {
-        const status = job.status ? String(job.status).toLowerCase() : '';
-        return ['pending', 'in_progress', 'assigned'].includes(status);
+        const status = job.status ? String(job.status).toLowerCase() : "";
+        return ["pending", "in_progress", "assigned"].includes(status);
       }).length;
 
       const servedJobs = jobs.filter((job: any) => {
-        const status = job.status ? String(job.status).toLowerCase() : '';
-        const serviceStatus = job.service_status ? String(job.service_status).toLowerCase() : '';
-        const jobStatus = job.job_status ? String(job.job_status).toLowerCase() : '';
+        const status = job.status ? String(job.status).toLowerCase() : "";
+        const serviceStatus = job.service_status
+          ? String(job.service_status).toLowerCase()
+          : "";
+        const jobStatus = job.job_status
+          ? String(job.job_status).toLowerCase()
+          : "";
 
-        return status === 'served' ||
-               serviceStatus === 'served' ||
-               jobStatus === 'served';
+        return (
+          status === "served" ||
+          serviceStatus === "served" ||
+          jobStatus === "served"
+        );
       }).length;
 
       const served7d = jobs.filter((job: any) => {
         const completedDate = job.completed_date || job.service_date;
-        const status = job.status ? String(job.status).toLowerCase() : '';
-        return completedDate && new Date(completedDate) >= sevenDaysAgo &&
-               ['served', 'completed'].includes(status);
+        const status = job.status ? String(job.status).toLowerCase() : "";
+        return (
+          completedDate &&
+          new Date(completedDate) >= sevenDaysAgo &&
+          ["served", "completed"].includes(status)
+        );
       }).length;
 
       const upcomingDeadlines = jobs.filter((job: any) => {
         const dueDate = job.due_date;
-        return dueDate && new Date(dueDate) <= sevenDaysFromNow && new Date(dueDate) >= now;
+        return (
+          dueDate &&
+          new Date(dueDate) <= sevenDaysFromNow &&
+          new Date(dueDate) >= now
+        );
       }).length;
 
       // Real KPIs from actual data
@@ -237,16 +266,19 @@ export default function Dashboard() {
       const processedJobs: RecentJob[] = jobs.slice(0, 25).map((job: any) => ({
         id: job.id,
         job_number: job.job_number || job.servemanager_job_number || job.id,
-        client_company: job.client_company || job.client?.company || 'Unknown Client',
-        recipient_name: job.recipient_name || job.defendant_name || 'Unknown Recipient',
-        service_address: job.service_address?.street || job.address?.street || '',
-        city: job.service_address?.city || job.address?.city || '',
-        state: job.service_address?.state || job.address?.state || '',
-        county: job.service_address?.county || job.address?.county || '',
-        status: job.status || job.job_status || 'unknown',
-        priority: job.priority || job.urgency || 'medium',
-        due_date: job.due_date || '',
-        created_at: job.created_at || '',
+        client_company:
+          job.client_company || job.client?.company || "Unknown Client",
+        recipient_name:
+          job.recipient_name || job.defendant_name || "Unknown Recipient",
+        service_address:
+          job.service_address?.street || job.address?.street || "",
+        city: job.service_address?.city || job.address?.city || "",
+        state: job.service_address?.state || job.address?.state || "",
+        county: job.service_address?.county || job.address?.county || "",
+        status: job.status || job.job_status || "unknown",
+        priority: job.priority || job.urgency || "medium",
+        due_date: job.due_date || "",
+        created_at: job.created_at || "",
         amount: job.amount || job.total || job.fee || 0,
         court_case_number: job.case_number || job.court_case?.number,
         plaintiff: job.plaintiff || job.court_case?.plaintiff,
@@ -261,10 +293,11 @@ export default function Dashboard() {
       setCourtCases(realCourtCases);
       setClients(clientsData.clients);
       setServers(serversData.servers);
-
     } catch (error) {
-      console.error('Error loading dashboard:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load dashboard');
+      console.error("Error loading dashboard:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to load dashboard",
+      );
     } finally {
       setLoading(false);
     }
@@ -276,69 +309,91 @@ export default function Dashboard() {
 
   // Filter functions using real data
   const filteredJobs = useMemo(() => {
-    return recentJobs.filter(job => {
+    return recentJobs.filter((job) => {
       const searchTerm = jobsSearch.toLowerCase();
       return (
-        (job.job_number && String(job.job_number).toLowerCase().includes(searchTerm)) ||
-        (job.client_company && String(job.client_company).toLowerCase().includes(searchTerm)) ||
-        (job.recipient_name && String(job.recipient_name).toLowerCase().includes(searchTerm))
+        (job.job_number &&
+          String(job.job_number).toLowerCase().includes(searchTerm)) ||
+        (job.client_company &&
+          String(job.client_company).toLowerCase().includes(searchTerm)) ||
+        (job.recipient_name &&
+          String(job.recipient_name).toLowerCase().includes(searchTerm))
       );
     });
   }, [recentJobs, jobsSearch]);
 
   const filteredCases = useMemo(() => {
-    return courtCases.filter(case_ => {
-      if (casesSearch === '') return true;
+    return courtCases.filter((case_) => {
+      if (casesSearch === "") return true;
 
       const searchTerm = casesSearch.toLowerCase();
       return (
-        (case_.number && String(case_.number).toLowerCase().includes(searchTerm)) ||
-        (case_.plaintiff && String(case_.plaintiff).toLowerCase().includes(searchTerm)) ||
-        (case_.defendant && String(case_.defendant).toLowerCase().includes(searchTerm))
+        (case_.number &&
+          String(case_.number).toLowerCase().includes(searchTerm)) ||
+        (case_.plaintiff &&
+          String(case_.plaintiff).toLowerCase().includes(searchTerm)) ||
+        (case_.defendant &&
+          String(case_.defendant).toLowerCase().includes(searchTerm))
       );
     });
   }, [courtCases, casesSearch]);
 
   // Helper functions
   const getStatusColor = (status: string | null | undefined) => {
-    if (!status) return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+    if (!status)
+      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
 
     switch (String(status).toLowerCase()) {
-      case "served": case "completed": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "in_progress": case "assigned": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-      case "attempted": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      case "pending": return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+      case "served":
+      case "completed":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+      case "in_progress":
+      case "assigned":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+      case "attempted":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      case "pending":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
     }
   };
 
   const getPriorityColor = (priority: string | null | undefined) => {
-    if (!priority) return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+    if (!priority)
+      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
 
     switch (String(priority).toLowerCase()) {
-      case "high": case "urgent": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      case "medium": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      case "low": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+      case "high":
+      case "urgent":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      case "low":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
     }
   };
 
   const formatRelativeTime = (dateString: string) => {
-    if (!dateString) return 'No date';
+    if (!dateString) return "No date";
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
     return `${Math.floor(diffDays / 30)} months ago`;
   };
 
   // Calculate successful serve rate from real data
-  const successfulServeRate = kpis ? Math.round((kpis.servedJobs / Math.max(kpis.totalJobs, 1)) * 100) : 0;
+  const successfulServeRate = kpis
+    ? Math.round((kpis.servedJobs / Math.max(kpis.totalJobs, 1)) * 100)
+    : 0;
 
   // Loading skeleton
   if (loading) {
@@ -352,7 +407,7 @@ export default function Dashboard() {
             </div>
             <Skeleton className="h-10 w-32" />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <Card key={i}>
@@ -402,14 +457,17 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">
-              {userScope.isAdmin 
+              {userScope.isAdmin
                 ? "Complete overview of all process service operations"
-                : "Your process service dashboard"
-              }
+                : "Your process service dashboard"}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={loadDashboardData} className="gap-2">
+            <Button
+              variant="outline"
+              onClick={loadDashboardData}
+              className="gap-2"
+            >
               <RefreshCw className="w-4 h-4" />
               Refresh
             </Button>
@@ -450,7 +508,9 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Successful Serve Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Successful Serve Rate
+              </CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -461,7 +521,9 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Served (7 days)</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Served (7 days)
+              </CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -478,7 +540,9 @@ export default function Dashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpis?.totalClients || 0}</div>
+              <div className="text-2xl font-bold">
+                {kpis?.totalClients || 0}
+              </div>
               <p className="text-xs text-muted-foreground">
                 Active client accounts
               </p>
@@ -487,27 +551,31 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Process Servers</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Process Servers
+              </CardTitle>
               <Building className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpis?.activeServers || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Active servers
-              </p>
+              <div className="text-2xl font-bold">
+                {kpis?.activeServers || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Active servers</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Upcoming Deadlines</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Upcoming Deadlines
+              </CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpis?.upcomingDeadlines || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Due within 7 days
-              </p>
+              <div className="text-2xl font-bold">
+                {kpis?.upcomingDeadlines || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Due within 7 days</p>
             </CardContent>
           </Card>
 
@@ -574,32 +642,49 @@ export default function Dashboard() {
                   </TableHeader>
                   <TableBody>
                     {filteredJobs.map((job) => (
-                      <TableRow 
-                        key={job.id} 
+                      <TableRow
+                        key={job.id}
                         className="hover:bg-muted/50 cursor-pointer"
                         onClick={() => navigate(`/jobs/${job.id}`)}
                       >
-                        <TableCell className="font-medium">{String(job.job_number || '')}</TableCell>
-                        <TableCell>{String(job.client_company?.name || job.client_company || '')}</TableCell>
-                        <TableCell>{String(job.recipient_name || '')}</TableCell>
+                        <TableCell className="font-medium">
+                          {String(job.job_number || "")}
+                        </TableCell>
+                        <TableCell>
+                          {String(
+                            job.client_company?.name ||
+                              job.client_company ||
+                              "",
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {String(job.recipient_name || "")}
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <MapPin className="w-3 h-3" />
-                            {job.city && job.state ? `${String(job.city)}, ${String(job.state)}` : 'Address pending'}
+                            {job.city && job.state
+                              ? `${String(job.city)}, ${String(job.state)}`
+                              : "Address pending"}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(job.status)}>
-                            {String(job.status || '').replace('_', ' ')}
+                            {String(job.status || "").replace("_", " ")}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={getPriorityColor(job.priority)}>
-                            {String(job.priority || '')}
+                          <Badge
+                            variant="outline"
+                            className={getPriorityColor(job.priority)}
+                          >
+                            {String(job.priority || "")}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {job.due_date ? new Date(job.due_date).toLocaleDateString() : 'No deadline'}
+                          {job.due_date
+                            ? new Date(job.due_date).toLocaleDateString()
+                            : "No deadline"}
                         </TableCell>
                         <TableCell className="text-right font-medium">
                           ${Number(job.amount || 0).toFixed(2)}
@@ -608,13 +693,17 @@ export default function Dashboard() {
                     ))}
                   </TableBody>
                 </Table>
-                
+
                 {filteredJobs.length === 0 && (
                   <div className="text-center py-8">
                     <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Jobs Found</h3>
+                    <h3 className="text-lg font-semibold mb-2">
+                      No Jobs Found
+                    </h3>
                     <p className="text-muted-foreground">
-                      {jobsSearch ? "No jobs match your search criteria" : "No recent jobs available"}
+                      {jobsSearch
+                        ? "No jobs match your search criteria"
+                        : "No recent jobs available"}
                     </p>
                   </div>
                 )}
@@ -662,29 +751,44 @@ export default function Dashboard() {
                   </TableHeader>
                   <TableBody>
                     {filteredCases.map((case_) => (
-                      <TableRow
-                        key={case_.id}
-                        className="hover:bg-muted/50"
-                      >
-                        <TableCell className="font-medium">{String(case_.number || '')}</TableCell>
+                      <TableRow key={case_.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">
+                          {String(case_.number || "")}
+                        </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{String(case_.plaintiff || 'Unknown Plaintiff')}</p>
-                            <p className="text-sm text-muted-foreground">vs. {String(case_.defendant || 'Unknown Defendant')}</p>
+                            <p className="font-medium">
+                              {String(case_.plaintiff || "Unknown Plaintiff")}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              vs.{" "}
+                              {String(case_.defendant || "Unknown Defendant")}
+                            </p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{String(case_.court?.name || case_.court || 'Court not specified')}</p>
+                            <p className="font-medium">
+                              {String(
+                                case_.court?.name ||
+                                  case_.court ||
+                                  "Court not specified",
+                              )}
+                            </p>
                             {case_.court?.county && case_.court?.state && (
-                              <p className="text-sm text-muted-foreground">{String(case_.court.county)}, {String(case_.court.state)}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {String(case_.court.county)},{" "}
+                                {String(case_.court.state)}
+                              </p>
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-muted-foreground" />
-                            {case_.filed_date ? new Date(case_.filed_date).toLocaleDateString() : 'Not specified'}
+                            {case_.filed_date
+                              ? new Date(case_.filed_date).toLocaleDateString()
+                              : "Not specified"}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -694,7 +798,9 @@ export default function Dashboard() {
                               {new Date(case_.court_date).toLocaleDateString()}
                             </div>
                           ) : (
-                            <span className="text-muted-foreground">Not scheduled</span>
+                            <span className="text-muted-foreground">
+                              Not scheduled
+                            </span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -708,12 +814,13 @@ export default function Dashboard() {
                 {filteredCases.length === 0 && (
                   <div className="text-center py-8">
                     <Gavel className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Court Cases Found</h3>
+                    <h3 className="text-lg font-semibold mb-2">
+                      No Court Cases Found
+                    </h3>
                     <p className="text-muted-foreground">
-                      {casesSearch 
-                        ? "No cases match your search criteria" 
-                        : "No jobs with case numbers found"
-                      }
+                      {casesSearch
+                        ? "No cases match your search criteria"
+                        : "No jobs with case numbers found"}
                     </p>
                   </div>
                 )}
@@ -724,7 +831,10 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/clients')}>
+          <Card
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate("/clients")}
+          >
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
@@ -736,7 +846,10 @@ export default function Dashboard() {
             </CardHeader>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/jobs')}>
+          <Card
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate("/jobs")}
+          >
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <FileText className="w-5 h-5 text-warning" />
@@ -748,7 +861,10 @@ export default function Dashboard() {
             </CardHeader>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/analytics')}>
+          <Card
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate("/analytics")}
+          >
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-success" />
