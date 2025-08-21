@@ -122,16 +122,20 @@ export default function ApiConfig() {
   };
 
   const saveConfiguration = async () => {
-    // Basic validation - allow masked keys (starting with ***)
-    const hasValidServeManagerKey =
-      config.serveManager.apiKey &&
-      (config.serveManager.apiKey.startsWith("***") ||
-        config.serveManager.apiKey.length > 0);
-
+    // Basic validation - allow masked keys (starting with ***) or any non-empty key
     if (
       config.serveManager.enabled &&
-      (!config.serveManager.baseUrl || !hasValidServeManagerKey)
+      (!config.serveManager.baseUrl ||
+       !config.serveManager.apiKey ||
+       config.serveManager.apiKey.trim() === "")
     ) {
+      console.log("Validation failed:", {
+        enabled: config.serveManager.enabled,
+        hasBaseUrl: !!config.serveManager.baseUrl,
+        hasApiKey: !!config.serveManager.apiKey,
+        apiKeyLength: config.serveManager.apiKey?.length,
+        apiKeyValue: config.serveManager.apiKey?.substring(0, 10) + "..."
+      });
       toast({
         title: "Validation Error",
         description: "Please enter ServeManager API URL and key before saving",
