@@ -52,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         userAgent: req.headers["user-agent"],
       });
 
-      if (servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
+      if (servemanagerConfig.enabled && servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
         console.log(
           "✅ VERCEL DEBUG - ServeManager credentials available, attempting API call",
         );
