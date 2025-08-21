@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === "GET") {
       console.log("Serving invoices data");
 
-      const servemanagerConfig = await getServeManagerConfig();
+      const servemanagerConfig = getServeManagerConfig();
 
       if (
         servemanagerConfig.enabled &&
