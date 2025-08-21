@@ -63,11 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (isBuilderPreview) {
       console.log('🔧 Builder.io preview detected - auto-logging in admin user');
-      const adminUser = mockUsers.find(u => u.role === 'admin');
-      if (adminUser) {
-        setUser(adminUser);
-        localStorage.setItem('serveportal_user', JSON.stringify(adminUser));
-      }
+      setUser(ADMIN_USER);
+      localStorage.setItem('serveportal_user', JSON.stringify(ADMIN_USER));
     }
 
     setIsLoading(false);
