@@ -168,9 +168,14 @@ export default function Dashboard() {
         throw new Error("Invalid query scoping");
       }
 
-      // Fetch all real data - force bypass cache
+      // Detect environment and use appropriate API base
+      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
+      const apiBase = isDevelopment ? 'http://localhost:8081' : '';
+
       const cacheBuster = `&t=${Date.now()}`;
       console.log('🔄 Admin loading data with params:', params.toString());
+      console.log('🏠 Environment:', isDevelopment ? 'Development' : 'Production');
+      console.log('🔗 API Base:', apiBase || 'Vercel Functions');
 
       const [
         jobsResponse,
@@ -178,16 +183,16 @@ export default function Dashboard() {
         serversResponse,
         courtCasesResponse,
       ] = await Promise.all([
-        fetch(`/api/jobs?${params.toString()}${cacheBuster}`, {
+        fetch(`${apiBase}/api/jobs?${params.toString()}${cacheBuster}`, {
           headers: { 'Cache-Control': 'no-cache' }
         }),
-        fetch(`/api/clients?${params.toString()}${cacheBuster}`, {
+        fetch(`${apiBase}/api/clients?${params.toString()}${cacheBuster}`, {
           headers: { 'Cache-Control': 'no-cache' }
         }),
-        fetch(`/api/servers?${params.toString()}${cacheBuster}`, {
+        fetch(`${apiBase}/api/servers?${params.toString()}${cacheBuster}`, {
           headers: { 'Cache-Control': 'no-cache' }
         }),
-        fetch(`/api/court_cases?${params.toString()}${cacheBuster}`, {
+        fetch(`${apiBase}/api/court_cases?${params.toString()}${cacheBuster}`, {
           headers: { 'Cache-Control': 'no-cache' }
         }),
       ]);
