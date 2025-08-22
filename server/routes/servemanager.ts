@@ -522,7 +522,147 @@ export const getClients: RequestHandler = async (req, res) => {
   }
 };
 
-// Get ALL servers/employees - no pagination limits
+// Utility function to get servers data (for cache service) - returns data instead of HTTP response
+export async function getServersData(): Promise<{ servers: any[]; total: number; endpoint_used: string; mock?: boolean }> {
+  try {
+    console.log("=== FETCHING ALL SERVERS/EMPLOYEES ===");
+
+    // Try multiple endpoints as ServeManager might use different names
+    const endpointsToTry = [
+      "/servers",
+      "/employees",
+      "/staff",
+      "/process_servers",
+    ];
+    let allServers: any[] = [];
+    let successfulEndpoint = "";
+
+    for (const baseEndpoint of endpointsToTry) {
+      try {
+        console.log(`Trying endpoint: ${baseEndpoint}`);
+
+        let page = 1;
+        let hasMorePages = true;
+        const maxPages = 50;
+        let endpointServers: any[] = [];
+
+        while (hasMorePages && page <= maxPages) {
+          const params = new URLSearchParams();
+          params.append("per_page", "100");
+          params.append("page", page.toString());
+
+          const endpoint = `${baseEndpoint}?${params.toString()}`;
+
+          try {
+            const pageData = await makeServeManagerRequest(endpoint);
+
+            // Handle different response structures
+            let pageServers: any[] = [];
+
+            // Check different possible response formats
+            if (pageData?.data && Array.isArray(pageData.data)) {
+              pageServers = pageData.data;
+            } else if (pageData?.servers && Array.isArray(pageData.servers)) {
+              pageServers = pageData.servers;
+            } else if (pageData?.employees && Array.isArray(pageData.employees)) {
+              pageServers = pageData.employees;
+            } else if (pageData?.staff && Array.isArray(pageData.staff)) {
+              pageServers = pageData.staff;
+            } else if (Array.isArray(pageData)) {
+              pageServers = pageData;
+            }
+
+            console.log(`${baseEndpoint} page ${page}: Found ${pageServers.length} servers`);
+
+            if (pageServers.length === 0) {
+              hasMorePages = false;
+            } else {
+              endpointServers.push(...pageServers);
+              page++;
+            }
+          } catch (endpointError) {
+            console.error(`Error fetching ${baseEndpoint} page ${page}:`, endpointError);
+            hasMorePages = false;
+          }
+        }
+
+        if (endpointServers.length > 0) {
+          allServers = endpointServers;
+          successfulEndpoint = baseEndpoint;
+          console.log(`Successfully fetched ${allServers.length} servers from ${successfulEndpoint}`);
+          break; // Stop trying other endpoints once we find data
+        }
+      } catch (endpointError) {
+        console.error(`Failed to fetch from ${baseEndpoint}:`, endpointError);
+        continue; // Try next endpoint
+      }
+    }
+
+    console.log(
+      `=== TOTAL SERVERS FETCHED: ${allServers.length} from ${successfulEndpoint} ===`,
+    );
+
+    return {
+      servers: allServers,
+      total: allServers.length,
+      endpoint_used: successfulEndpoint,
+    };
+  } catch (error) {
+    console.error("Error fetching all servers, using mock data:", error);
+
+    // Enhanced mock data with more servers
+    const mockServers = [
+      {
+        id: "server1",
+        name: "Adam Darley",
+        email: "serve@allegiancelegalsolutions.com",
+        phone: "(512) 939-7100",
+        license_number: "PSC-23492",
+        active: true,
+        territories: ["Austin", "Round Rock", "Georgetown"],
+        created_date: "2023-01-15T00:00:00Z",
+      },
+      {
+        id: "server2",
+        name: "John Smith",
+        email: "john@serveportal.com",
+        phone: "(512) 555-0123",
+        license_number: "TX12345",
+        active: true,
+        territories: ["Austin", "Cedar Park"],
+        created_date: "2023-02-20T00:00:00Z",
+      },
+      {
+        id: "server3",
+        name: "Sarah Johnson",
+        email: "sarah@serveportal.com",
+        phone: "(512) 555-0456",
+        license_number: "TX12346",
+        active: true,
+        territories: ["Round Rock", "Pflugerville"],
+        created_date: "2023-03-15T00:00:00Z",
+      },
+      {
+        id: "server4",
+        name: "Mike Davis",
+        email: "mike@serveportal.com",
+        phone: "(512) 555-0567",
+        license_number: "TX12347",
+        active: true,
+        territories: ["Georgetown", "Leander"],
+        created_date: "2023-04-10T00:00:00Z",
+      },
+    ];
+
+    return {
+      servers: mockServers,
+      total: mockServers.length,
+      mock: true,
+    };
+  }
+}
+
+// Get ALL servers/employees - no pagination limits (HTTP endpoint)
 export const getServers: RequestHandler = async (req, res) => {
   try {
     console.log("=== FETCHING ALL SERVERS/EMPLOYEES ===");
