@@ -179,7 +179,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         }
 
         // Perform actual sync
-        const syncResponse = await fetch("/api/sync", {
+        const syncResponse = await safeFetch("/api/sync", {
           method: "POST",
           signal: controller.signal,
           cache: "no-cache",

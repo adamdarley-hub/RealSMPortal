@@ -533,9 +533,9 @@ export default function Jobs() {
     // Note: This is silent and non-blocking - doesn't affect UI performance
   }, [toast]);
 
-  // Smart auto-sync: disabled to improve performance
+  // Smart auto-sync: completely disabled to prevent FullStory conflicts
   const { status: syncStatus } = useAutoSync({
-    enabled: false, // Disabled for better performance
+    enabled: false, // Completely disabled due to FullStory interference
     interval: 90000, // 90 seconds - reduced frequency to prevent timeouts (was 45s)
     onDataUpdate,
   });
