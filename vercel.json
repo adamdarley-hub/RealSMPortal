@@ -2,18 +2,8 @@
   "buildCommand": "npm run build:client",
   "outputDirectory": "dist/spa",
   "devCommand": "npm run dev",
-  "build": {
-    "env": {
-      "NODE_VERSION": "20"
-    }
-  },
   "functions": {
-    "api/[...path].ts": {
-      "runtime": "nodejs20.x"
-    },
-    "api/*.ts": {
-      "runtime": "nodejs20.x"
-    }
+    "api/*.ts": "@vercel/node"
   },
   "rewrites": [
     { "source": "/api/jobs", "destination": "/api/jobs" },
@@ -22,7 +12,7 @@
     { "source": "/api/ping", "destination": "/api/ping" },
     { "source": "/api/sync", "destination": "/api/sync" },
     { "source": "/api/sync/status", "destination": "/api/sync" },
-    { "source": "/api/(.*)", "destination": "/api/[...path]" },
+    { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
