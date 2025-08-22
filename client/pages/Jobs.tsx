@@ -620,9 +620,11 @@ export default function Jobs() {
               }
             };
 
-            const response = await safeFetch(endpoint, {
-              timeout: 15000, // Increased timeout
-              signal: AbortSignal.timeout(8000),
+            const response = await cleanFetch(endpoint, {
+              signal: controller.signal,
+              headers: {
+                'Content-Type': 'application/json'
+              }
             });
 
             if (response.ok) {
