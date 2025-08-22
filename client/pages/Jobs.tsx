@@ -540,69 +540,39 @@ export default function Jobs() {
       try {
         const currentPageNum = Math.floor(filters.offset / filters.limit) + 1;
 
-        // Create AbortController for timeout handling
+        // Simple fetch with single timeout mechanism
+        const endpoint = `/api/jobs?limit=${filters.limit}&page=${currentPageNum}`;
+
+        console.log(`🌐 Trying API endpoint: ${endpoint}`);
+
+        // Use single AbortController with timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
-          console.log("⏰ Request timeout after 15 seconds");
           controller.abort();
         }, 15000);
 
-        // Try multiple API endpoints in order of preference
-        const apiEndpoints = [
-          `/api/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Express backend
-        ];
+        const response = await fetch(endpoint, {
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-        let lastError = null;
+        clearTimeout(timeoutId);
 
-        for (const endpoint of apiEndpoints) {
-          try {
-            console.log(`🌐 Trying API endpoint: ${endpoint}`);
-
-            // Use simple fetch with timeout protection
-            const response = await Promise.race([
-              fetch(endpoint, {
-                signal: controller.signal,
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              }),
-              new Promise<never>((_, reject) =>
-                setTimeout(
-                  () => reject(new Error("Request timeout after 15 seconds")),
-                  15000,
-                ),
-              ),
-            ]);
-
-            if (response.ok) {
-              clearTimeout(timeoutId);
-              const data = await response.json();
-              console.log(
-                `✅ Success with ${endpoint}: ${data.jobs?.length || 0} jobs`,
-              );
-
-              setJobs(data.jobs || []);
-              setTotalJobs(data.total || data.jobs?.length || 0);
-              setUsingMockData(!!data.mock || endpoint.includes("mock"));
-              setError(null);
-              return; // Success - exit function
-            } else {
-              console.log(
-                `❌ ${endpoint} failed with status ${response.status}`,
-              );
-              lastError = new Error(
-                `HTTP ${response.status}: ${response.statusText}`,
-              );
-            }
-          } catch (fetchError) {
-            console.log(`❌ ${endpoint} failed with error:`, fetchError);
-            lastError = fetchError;
-            continue; // Try next endpoint
-          }
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        // If all endpoints failed
-        throw lastError || new Error("All API endpoints failed");
+        const data = await response.json();
+        console.log(
+          `✅ Success with ${endpoint}: ${data.jobs?.length || 0} jobs`,
+        );
+
+        setJobs(data.jobs || []);
+        setTotalJobs(data.total || data.jobs?.length || 0);
+        setUsingMockData(!!data.mock);
+        setError(null);
       } catch (error) {
         console.error("❌ All API calls failed:", error);
 
