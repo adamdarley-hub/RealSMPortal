@@ -140,7 +140,8 @@ export class CacheService {
               // Convert to frontend format
               return {
                 id: mappedJob.id,
-                job_number: mappedJob.job_number || mappedJob.servemanager_job_number,
+                job_number:
+                  mappedJob.job_number || mappedJob.servemanager_job_number,
                 recipient_name: mappedJob.recipient_name || "Unknown Recipient",
                 status: mappedJob.status || "pending",
                 priority: mappedJob.priority || "routine",
@@ -156,7 +157,8 @@ export class CacheService {
                 addresses_attributes: mappedJob.addresses_attributes,
                 court_case_number: mappedJob.court_case_number,
                 plaintiff: mappedJob.plaintiff,
-                defendant_name: mappedJob.defendant_name || mappedJob.recipient_name,
+                defendant_name:
+                  mappedJob.defendant_name || mappedJob.recipient_name,
                 attempt_count: mappedJob.attempt_count || 0,
                 attempts: mappedJob.attempts || [],
                 // Keep raw data for debugging
@@ -184,7 +186,10 @@ export class CacheService {
         console.log(`📊 Total jobs to transform: ${allJobs.length}`);
 
         if (allJobs.length > 0) {
-          console.log("🔍 Sample raw job data:", JSON.stringify(allJobs[0], null, 2));
+          console.log(
+            "🔍 Sample raw job data:",
+            JSON.stringify(allJobs[0], null, 2),
+          );
 
           const transformedJobs = allJobs.map((job) => {
             const mappedJob = mapJobFromServeManager(job);
@@ -192,7 +197,8 @@ export class CacheService {
             // Convert to frontend format
             return {
               id: mappedJob.id,
-              job_number: mappedJob.job_number || mappedJob.servemanager_job_number,
+              job_number:
+                mappedJob.job_number || mappedJob.servemanager_job_number,
               recipient_name: mappedJob.recipient_name || "Unknown Recipient",
               status: mappedJob.status || "pending",
               priority: mappedJob.priority || "routine",
@@ -208,7 +214,8 @@ export class CacheService {
               addresses_attributes: mappedJob.addresses_attributes,
               court_case_number: mappedJob.court_case_number,
               plaintiff: mappedJob.plaintiff,
-              defendant_name: mappedJob.defendant_name || mappedJob.recipient_name,
+              defendant_name:
+                mappedJob.defendant_name || mappedJob.recipient_name,
               attempt_count: mappedJob.attempt_count || 0,
               attempts: mappedJob.attempts || [],
               // Keep raw data for debugging

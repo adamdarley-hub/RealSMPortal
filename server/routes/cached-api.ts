@@ -7,7 +7,7 @@ import { getInitialSyncStatus } from "../services/startup-sync";
 export const getCachedJobs: RequestHandler = async (req, res) => {
   try {
     const startTime = Date.now();
-    console.log('📋 Serving jobs from local cache...');
+    console.log("📋 Serving jobs from local cache...");
 
     const {
       status,
@@ -17,15 +17,15 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
       date_from,
       date_to,
       limit,
-      page
+      page,
     } = req.query;
 
     // Build filters
     const filters: any = {};
-    if (status && status !== 'all') filters.status = status;
-    if (priority && priority !== 'all') filters.priority = priority;
-    if (client_id && client_id !== 'all') filters.client_id = client_id;
-    if (server_id && server_id !== 'all') filters.server_id = server_id;
+    if (status && status !== "all") filters.status = status;
+    if (priority && priority !== "all") filters.priority = priority;
+    if (client_id && client_id !== "all") filters.client_id = client_id;
+    if (server_id && server_id !== "all") filters.server_id = server_id;
     if (date_from) filters.date_from = date_from;
     if (date_to) filters.date_to = date_to;
 
@@ -45,7 +45,7 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
     }
 
     // Optimize job objects for list view - remove heavy fields for better performance
-    const optimizedJobs = jobs.map(job => ({
+    const optimizedJobs = jobs.map((job) => ({
       id: job.id,
       uuid: job.uuid,
       job_number: job.job_number,
@@ -77,30 +77,34 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
       defendant_address: job.defendant_address,
       address: job.address,
       addresses_attributes: job.addresses_attributes,
-      raw_data: job.raw_data ? {
-        addresses_attributes: job.raw_data.addresses_attributes,
-        addresses: job.raw_data.addresses,
-        service_address: job.raw_data.service_address,
-        defendant_address: job.raw_data.defendant_address,
-        address: job.raw_data.address
-      } : undefined,
+      raw_data: job.raw_data
+        ? {
+            addresses_attributes: job.raw_data.addresses_attributes,
+            addresses: job.raw_data.addresses,
+            service_address: job.raw_data.service_address,
+            defendant_address: job.raw_data.defendant_address,
+            address: job.raw_data.address,
+          }
+        : undefined,
       // Exclude heavy fields like attempts, documents for list view (but keep raw_data.addresses)
       _cached: job._cached,
-      _last_synced: job._last_synced
+      _last_synced: job._last_synced,
     }));
 
     const responseTime = Date.now() - startTime;
 
-    console.log(`⚡ Served ${optimizedJobs.length}${isPaginated ? ` of ${allJobs.length}` : ''} jobs from cache (page ${pageNum}) in ${responseTime}ms`);
+    console.log(
+      `⚡ Served ${optimizedJobs.length}${isPaginated ? ` of ${allJobs.length}` : ""} jobs from cache (page ${pageNum}) in ${responseTime}ms`,
+    );
 
     // Add production caching headers with better performance
     res.set({
-      'Cache-Control': 'public, max-age=120, stale-while-revalidate=60', // Cache for 2 minutes, allow stale for 1 minute
-      'ETag': `jobs-${allJobs.length}-${Math.floor(Date.now() / 60000)}`, // ETag changes every minute
-      'X-Response-Time': `${responseTime}ms`,
-      'X-Cache-Status': isPaginated ? 'paginated' : 'full',
-      'X-Cache-Optimized': 'true',
-      'Content-Type': 'application/json; charset=utf-8'
+      "Cache-Control": "public, max-age=120, stale-while-revalidate=60", // Cache for 2 minutes, allow stale for 1 minute
+      ETag: `jobs-${allJobs.length}-${Math.floor(Date.now() / 60000)}`, // ETag changes every minute
+      "X-Response-Time": `${responseTime}ms`,
+      "X-Cache-Status": isPaginated ? "paginated" : "full",
+      "X-Cache-Optimized": "true",
+      "Content-Type": "application/json; charset=utf-8",
     });
 
     res.json({
@@ -114,14 +118,13 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
       paginated: isPaginated,
       optimized: true,
       response_time_ms: responseTime,
-      last_synced: optimizedJobs[0]?._last_synced || null
+      last_synced: optimizedJobs[0]?._last_synced || null,
     });
-    
   } catch (error) {
-    console.error('Error serving cached jobs:', error);
-    res.status(500).json({ 
-      error: 'Failed to get jobs from cache',
-      message: error instanceof Error ? error.message : 'Unknown error'
+    console.error("Error serving cached jobs:", error);
+    res.status(500).json({
+      error: "Failed to get jobs from cache",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -130,18 +133,20 @@ export const getCachedJobs: RequestHandler = async (req, res) => {
 export const getCachedClients: RequestHandler = async (req, res) => {
   try {
     const startTime = Date.now();
-    console.log('👥 Serving clients from local cache...');
-    
+    console.log("👥 Serving clients from local cache...");
+
     const clients = await cacheService.getClientsFromCache();
     const responseTime = Date.now() - startTime;
-    
-    console.log(`⚡ Served ${clients.length} clients from cache in ${responseTime}ms`);
-    
+
+    console.log(
+      `⚡ Served ${clients.length} clients from cache in ${responseTime}ms`,
+    );
+
     // Add production caching headers
     res.set({
-      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes (clients change less frequently)
-      'ETag': `clients-${clients.length}`,
-      'X-Response-Time': `${responseTime}ms`
+      "Cache-Control": "public, max-age=300", // Cache for 5 minutes (clients change less frequently)
+      ETag: `clients-${clients.length}`,
+      "X-Response-Time": `${responseTime}ms`,
     });
 
     res.json({
@@ -149,14 +154,13 @@ export const getCachedClients: RequestHandler = async (req, res) => {
       total: clients.length,
       cached: true,
       response_time_ms: responseTime,
-      last_synced: clients[0]?._last_synced || null
+      last_synced: clients[0]?._last_synced || null,
     });
-    
   } catch (error) {
-    console.error('Error serving cached clients:', error);
-    res.status(500).json({ 
-      error: 'Failed to get clients from cache',
-      message: error instanceof Error ? error.message : 'Unknown error'
+    console.error("Error serving cached clients:", error);
+    res.status(500).json({
+      error: "Failed to get clients from cache",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -165,18 +169,20 @@ export const getCachedClients: RequestHandler = async (req, res) => {
 export const getCachedServers: RequestHandler = async (req, res) => {
   try {
     const startTime = Date.now();
-    console.log('👨‍💼 Serving servers from local cache...');
+    console.log("👨‍💼 Serving servers from local cache...");
 
     const servers = await cacheService.getServersFromCache();
     const responseTime = Date.now() - startTime;
 
-    console.log(`⚡ Served ${servers.length} servers from cache in ${responseTime}ms`);
+    console.log(
+      `⚡ Served ${servers.length} servers from cache in ${responseTime}ms`,
+    );
 
     // Add production caching headers
     res.set({
-      'Cache-Control': 'public, max-age=600', // Cache for 10 minutes (servers change rarely)
-      'ETag': `servers-${servers.length}`,
-      'X-Response-Time': `${responseTime}ms`
+      "Cache-Control": "public, max-age=600", // Cache for 10 minutes (servers change rarely)
+      ETag: `servers-${servers.length}`,
+      "X-Response-Time": `${responseTime}ms`,
     });
 
     res.json({
@@ -184,14 +190,13 @@ export const getCachedServers: RequestHandler = async (req, res) => {
       total: servers.length,
       cached: true,
       response_time_ms: responseTime,
-      last_synced: servers[0]?._last_synced || null
+      last_synced: servers[0]?._last_synced || null,
     });
-
   } catch (error) {
-    console.error('Error serving cached servers:', error);
+    console.error("Error serving cached servers:", error);
     res.status(500).json({
-      error: 'Failed to get servers from cache',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to get servers from cache",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -199,20 +204,19 @@ export const getCachedServers: RequestHandler = async (req, res) => {
 // Trigger manual sync
 export const triggerSync: RequestHandler = async (req, res) => {
   try {
-    console.log('🔄 Manual sync triggered...');
+    console.log("🔄 Manual sync triggered...");
     const results = await cacheService.syncAllData();
-    
+
     res.json({
-      message: 'Sync completed',
+      message: "Sync completed",
       results,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
   } catch (error) {
-    console.error('Error triggering sync:', error);
-    res.status(500).json({ 
-      error: 'Failed to trigger sync',
-      message: error instanceof Error ? error.message : 'Unknown error'
+    console.error("Error triggering sync:", error);
+    res.status(500).json({
+      error: "Failed to trigger sync",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -228,14 +232,13 @@ export const getSyncStatus: RequestHandler = async (req, res) => {
       initial_sync: initialSyncStatus,
       sync_status: syncStatus,
       database_stats: dbStats,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
-    console.error('Error getting sync status:', error);
+    console.error("Error getting sync status:", error);
     res.status(500).json({
-      error: 'Failed to get sync status',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to get sync status",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -251,15 +254,17 @@ export const getCachedJob: RequestHandler = async (req, res) => {
 
     if (!id) {
       res.status(400).json({
-        error: 'Job ID is required',
-        message: 'Please provide a valid job ID'
+        error: "Job ID is required",
+        message: "Please provide a valid job ID",
       });
       return;
     }
 
     // If refresh is requested, fetch fresh data from ServeManager
-    if (refresh === 'true') {
-      console.log(`🔄 Serverless mode: Skipping individual job refresh to prevent API spam - job ${id}`);
+    if (refresh === "true") {
+      console.log(
+        `🔄 Serverless mode: Skipping individual job refresh to prevent API spam - job ${id}`,
+      );
       // In serverless mode, we always have fresh data from bulk fetch, so no individual refresh needed
     }
 
@@ -269,14 +274,14 @@ export const getCachedJob: RequestHandler = async (req, res) => {
     if (!job) {
       console.log(`❌ Job ${id} not found in cache`);
       res.status(404).json({
-        error: 'Job not found',
-        message: `Job with ID ${id} was not found in the cache`
+        error: "Job not found",
+        message: `Job with ID ${id} was not found in the cache`,
       });
       return;
     }
 
     // Debug logging for job 20483264
-    if (id === '20483264') {
+    if (id === "20483264") {
       const attempts = job.attempts || [];
     }
 
@@ -286,14 +291,13 @@ export const getCachedJob: RequestHandler = async (req, res) => {
       ...job,
       cached: true,
       response_time_ms: responseTime,
-      _last_synced: job.last_synced
+      _last_synced: job.last_synced,
     });
-
   } catch (error) {
-    console.error('Error getting job from cache:', error);
+    console.error("Error getting job from cache:", error);
     res.status(500).json({
-      error: 'Failed to get job from cache',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to get job from cache",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
