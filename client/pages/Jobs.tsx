@@ -53,7 +53,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAutoSync } from "@/hooks/use-auto-sync";
 import {
   Job,
   JobsResponse,
@@ -61,7 +60,6 @@ import {
   Server,
   JobFilters,
 } from "@shared/servemanager";
-import { cleanFetch } from "@/utils/bypassAnalytics";
 
 // Helper function to safely extract string values from potentially nested objects
 const safeString = (value: any, fallback: string = ""): string => {
