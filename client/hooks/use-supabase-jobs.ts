@@ -61,8 +61,11 @@ export function useSupabaseJobs(
     setError(null);
     
     try {
+      // Disabled for Vercel compatibility - use /api/jobs instead
+      return { data: { jobs: [], total: 0 }, error: "Supabase endpoint disabled for Vercel" };
+
       const queryParams = buildQueryParams(filters, pagination);
-      const response = await fetch(`/api/v2/jobs?${queryParams}`);
+      const response = await fetch(`/api/jobs?${queryParams}`);
       
       if (!response.ok) {
         // Fallback to legacy API
