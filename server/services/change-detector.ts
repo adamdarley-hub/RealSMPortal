@@ -37,37 +37,18 @@ class ChangeDetector extends EventEmitter {
   }
 
   private async takeSnapshots(jobIds: string[]) {
-    try {
-      const { makeServeManagerRequest } = await import('../routes/servemanager');
-      
-      // If no specific jobs, monitor recent jobs (last 50)
-      if (jobIds.length === 0) {
-        const recentJobs = await makeServeManagerRequest('/jobs?per_page=50&sort=updated_at&order=desc');
-        jobIds = recentJobs.data?.map((job: any) => job.id.toString()) || [];
-      }
-
-      for (const jobId of jobIds) {
-        try {
-          const job = await makeServeManagerRequest(`/jobs/${jobId}`);
-          this.jobSnapshots.set(jobId, {
-            attemptCount: job.attempts?.length || 0,
-            lastUpdated: job.updated_at,
-            status: job.service_status,
-            lastAttemptId: job.attempts?.[job.attempts.length - 1]?.id,
-            documentCount: job.documents_to_be_served?.length || 0
-          });
-        } catch (error) {
-          console.log(`⚠️ Could not snapshot job ${jobId}:`, error.message);
-        }
-      }
-      
-      console.log(`📸 Took snapshots of ${this.jobSnapshots.size} jobs`);
-    } catch (error) {
-      console.error('❌ Failed to take snapshots:', error);
-    }
+    console.log('📸 Serverless mode: Skipping snapshots to prevent API spam');
+    // In serverless mode, we don't need snapshots since we fetch fresh data every time
+    return;
   }
 
   private async detectChanges(jobIds: string[]) {
+    console.log('🔍 Serverless mode: Skipping change detection to prevent API spam');
+    // In serverless mode, we don't need change detection since we fetch fresh data every time
+    return;
+  }
+
+  private async _detectChanges_disabled(jobIds: string[]) {
     try {
       const { makeServeManagerRequest } = await import('../routes/servemanager');
 
