@@ -15,17 +15,21 @@
 ## **Fixes Applied:**
 
 ### ✅ **1. Completely Removed Auto-Sync**
+
 ```typescript
-// BEFORE: 
+// BEFORE:
 import { useAutoSync } from "@/hooks/use-auto-sync";
 const { status: syncStatus } = useAutoSync({ enabled: false });
 
 // AFTER:
 // No import, no usage
-const syncStatus = { /* mock object */ };
+const syncStatus = {
+  /* mock object */
+};
 ```
 
 ### ✅ **2. Simplified Fetch Operations**
+
 ```typescript
 // BEFORE: Complex safeFetch with XMLHttpRequest fallback
 const response = await cleanFetch(endpoint, options);
@@ -33,13 +37,14 @@ const response = await cleanFetch(endpoint, options);
 // AFTER: Simple fetch with timeout
 const response = await Promise.race([
   fetch(endpoint, options),
-  new Promise((_, reject) => 
-    setTimeout(() => reject(new Error('Timeout')), 15000)
-  )
+  new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("Timeout")), 15000),
+  ),
 ]);
 ```
 
 ### ✅ **3. Removed Background Refresh**
+
 ```typescript
 // BEFORE: onDataUpdate callback causing background fetch calls
 const onDataUpdate = useCallback(async () => {
@@ -51,6 +56,7 @@ const onDataUpdate = useCallback(async () => {
 ```
 
 ### ✅ **4. Eliminated Import Dependencies**
+
 ```typescript
 // BEFORE:
 import { useAutoSync } from "@/hooks/use-auto-sync";

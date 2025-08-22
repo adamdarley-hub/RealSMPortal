@@ -7,7 +7,7 @@ interface APICallLog {
   startTime: number;
   endTime?: number;
   duration?: number;
-  status: 'pending' | 'success' | 'error' | 'timeout';
+  status: "pending" | "success" | "error" | "timeout";
   error?: string;
 }
 
@@ -20,7 +20,7 @@ class PerformanceMonitor {
     this.apiCalls.set(callId, {
       endpoint,
       startTime: Date.now(),
-      status: 'pending'
+      status: "pending",
     });
 
     // Track call frequency
@@ -35,7 +35,7 @@ class PerformanceMonitor {
     const endTime = Date.now();
     call.endTime = endTime;
     call.duration = endTime - call.startTime;
-    call.status = success ? 'success' : 'error';
+    call.status = success ? "success" : "error";
     if (error) call.error = error;
 
     this.apiCalls.set(callId, call);
@@ -45,7 +45,7 @@ class PerformanceMonitor {
     const call = this.apiCalls.get(callId);
     if (!call) return;
 
-    call.status = 'timeout';
+    call.status = "timeout";
     call.endTime = Date.now();
     call.duration = call.endTime - call.startTime;
     this.apiCalls.set(callId, call);
@@ -60,13 +60,15 @@ class PerformanceMonitor {
     spammedEndpoints: { endpoint: string; count: number }[];
   } {
     const calls = Array.from(this.apiCalls.values());
-    const completed = calls.filter(c => c.duration !== undefined);
-    
-    const timeouts = calls.filter(c => c.status === 'timeout').length;
-    const errors = calls.filter(c => c.status === 'error').length;
-    const avgDuration = completed.length > 0 
-      ? completed.reduce((sum, c) => sum + (c.duration || 0), 0) / completed.length 
-      : 0;
+    const completed = calls.filter((c) => c.duration !== undefined);
+
+    const timeouts = calls.filter((c) => c.status === "timeout").length;
+    const errors = calls.filter((c) => c.status === "error").length;
+    const avgDuration =
+      completed.length > 0
+        ? completed.reduce((sum, c) => sum + (c.duration || 0), 0) /
+          completed.length
+        : 0;
 
     const slowestCalls = completed
       .sort((a, b) => (b.duration || 0) - (a.duration || 0))
@@ -83,31 +85,33 @@ class PerformanceMonitor {
       errors,
       averageDuration: Math.round(avgDuration),
       slowestCalls,
-      spammedEndpoints
+      spammedEndpoints,
     };
   }
 
   reportIfNeeded(): void {
     const now = Date.now();
-    if (now - this.lastReported > 30000) { // Report every 30 seconds
+    if (now - this.lastReported > 30000) {
+      // Report every 30 seconds
       const report = this.getReport();
-      
+
       if (report.totalCalls > 0) {
-        console.log('📊 Performance Report:', {
+        console.log("📊 Performance Report:", {
           totalCalls: report.totalCalls,
           timeouts: report.timeouts,
           errors: report.errors,
-          avgDuration: `${report.averageDuration}ms`
+          avgDuration: `${report.averageDuration}ms`,
         });
 
         if (report.spammedEndpoints.length > 0) {
-          console.warn('🚨 API Spam Detected:', report.spammedEndpoints);
+          console.warn("🚨 API Spam Detected:", report.spammedEndpoints);
         }
 
         if (report.slowestCalls.length > 0) {
-          console.warn('🐌 Slowest Calls:', report.slowestCalls.map(c => 
-            `${c.endpoint}: ${c.duration}ms`
-          ));
+          console.warn(
+            "🐌 Slowest Calls:",
+            report.slowestCalls.map((c) => `${c.endpoint}: ${c.duration}ms`),
+          );
         }
       }
 

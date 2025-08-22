@@ -42,7 +42,9 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
   const triggerSync = useCallback(
     async (showLoading = true) => {
       if (!enabled) {
-        console.log("⏹️ Auto-sync is disabled - skipping all sync operations including health checks");
+        console.log(
+          "⏹️ Auto-sync is disabled - skipping all sync operations including health checks",
+        );
         return;
       }
 
@@ -268,9 +270,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
     }
 
     if (intervalRef.current || !mountedRef.current) {
-      console.log(
-        "⏭️ Skipping start polling - already running or unmounted",
-      );
+      console.log("⏭️ Skipping start polling - already running or unmounted");
       return;
     }
 
@@ -355,16 +355,18 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
     if (enabled) {
       startPolling();
     } else {
-      console.log('⏹️ Auto-sync disabled - stopping all polling and sync operations');
+      console.log(
+        "⏹️ Auto-sync disabled - stopping all polling and sync operations",
+      );
       stopPolling();
       // Clear any existing status when disabled
       if (mountedRef.current) {
-        setStatus(prev => ({
+        setStatus((prev) => ({
           ...prev,
           isPolling: false,
           isSyncing: false,
           error: null,
-          nextSync: null
+          nextSync: null,
         }));
       }
     }

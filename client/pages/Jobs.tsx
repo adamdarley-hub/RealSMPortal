@@ -499,7 +499,7 @@ export default function Jobs() {
     error: null,
     isOnline: navigator.onLine,
     consecutiveFailures: 0,
-    circuitBreakerOpen: false
+    circuitBreakerOpen: false,
   };
 
   // Load initial data (clients and servers only once)
@@ -567,8 +567,11 @@ export default function Jobs() {
                 },
               }),
               new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Request timeout after 15 seconds')), 15000)
-              )
+                setTimeout(
+                  () => reject(new Error("Request timeout after 15 seconds")),
+                  15000,
+                ),
+              ),
             ]);
 
             if (response.ok) {
@@ -611,9 +614,7 @@ export default function Jobs() {
           errorMessage.includes("FullStory") ||
           errorMessage.includes("Failed to fetch")
         ) {
-          setError(
-            "Analytics interference detected. Please refresh the page.",
-          );
+          setError("Analytics interference detected. Please refresh the page.");
         } else if (errorMessage.includes("timeout")) {
           setError(
             "Request timed out. The server may be busy, please try again.",
