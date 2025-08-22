@@ -579,6 +579,13 @@ export default function Jobs() {
       try {
         const currentPageNum = Math.floor(filters.offset / filters.limit) + 1;
 
+        // Create AbortController for timeout handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log('⏰ Request timeout after 15 seconds');
+          controller.abort();
+        }, 15000);
+
         // Try multiple API endpoints in order of preference
         const apiEndpoints = [
           `/api/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Express backend
@@ -628,6 +635,7 @@ export default function Jobs() {
             });
 
             if (response.ok) {
+              clearTimeout(timeoutId);
               const data = await response.json();
               console.log(
                 `✅ Success with ${endpoint}: ${data.jobs?.length || 0} jobs`,
