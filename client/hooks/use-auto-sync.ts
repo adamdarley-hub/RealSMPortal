@@ -113,9 +113,9 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
             const healthController = new AbortController();
             const healthTimeoutId = setTimeout(() => {
               healthController.abort(
-                new Error("Health check timeout after 5 seconds"),
+                new Error("Health check timeout after 10 seconds"),
               );
-            }, 5000);
+            }, 10000);
 
             const healthCheck = await fetch(endpoint, {
               method: "GET",

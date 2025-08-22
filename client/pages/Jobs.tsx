@@ -181,9 +181,9 @@ export default function Jobs() {
         // Add timeout protection with better error handling
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
-          console.log("⏰ Request timeout after 5 seconds");
+          console.log("⏰ Request timeout after 15 seconds");
           controller.abort();
-        }, 5000); // 5 second timeout for faster feedback
+        }, 15000); // 15 second timeout to handle ServeManager processing
 
         try {
           // Use fast SQLite API with pagination
