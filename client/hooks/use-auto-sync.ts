@@ -153,8 +153,6 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           },
         });
 
-        clearTimeout(timeoutId);
-
         let result = { success: false, message: "Unknown error" };
 
         if (syncResponse.ok) {
