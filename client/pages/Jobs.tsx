@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -48,15 +54,23 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSync } from "@/hooks/use-auto-sync";
-import { Job, JobsResponse, Client, Server, JobFilters } from "@shared/servemanager";
+import {
+  Job,
+  JobsResponse,
+  Client,
+  Server,
+  JobFilters,
+} from "@shared/servemanager";
 
 // Helper function to safely extract string values from potentially nested objects
-const safeString = (value: any, fallback: string = ''): string => {
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number') return value.toString();
-  if (typeof value === 'object' && value) {
+const safeString = (value: any, fallback: string = ""): string => {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return value.toString();
+  if (typeof value === "object" && value) {
     // Try common string properties
-    return value.name || value.title || value.value || value.text || String(value);
+    return (
+      value.name || value.title || value.value || value.text || String(value)
+    );
   }
   return fallback;
 };
@@ -75,8 +89,14 @@ const formatTimeAgo = (date: Date): string => {
   return date.toLocaleDateString();
 };
 
-type SortField = 'recipient' | 'client' | 'status' | 'priority' | 'server' | 'received_date';
-type SortDirection = 'asc' | 'desc';
+type SortField =
+  | "recipient"
+  | "client"
+  | "status"
+  | "priority"
+  | "server"
+  | "received_date";
+type SortDirection = "asc" | "desc";
 
 export default function Jobs() {
   const navigate = useNavigate();
@@ -92,8 +112,8 @@ export default function Jobs() {
     offset: 0,
   });
   const [totalJobs, setTotalJobs] = useState(0);
-  const [sortField, setSortField] = useState<SortField>('received_date');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [sortField, setSortField] = useState<SortField>("received_date");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const { toast } = useToast();
 
   // Pagination helpers
@@ -118,203 +138,236 @@ export default function Jobs() {
     timestamp: 0,
     totalJobs: 0,
     lastOffset: 0,
-    lastLimit: 50
+    lastLimit: 50,
   });
   const CACHE_DURATION = 120000; // 2 minutes - increased to reduce API calls
 
   // Declare load functions first before using them in callbacks
-  const loadJobs = useCallback(async (retryCount = 0, forceRefresh = false) => {
-    // Check cache first (unless force refresh)
-    const now = Date.now();
-    const cache = cacheRef.current;
+  const loadJobs = useCallback(
+    async (retryCount = 0, forceRefresh = false) => {
+      // Check cache first (unless force refresh)
+      const now = Date.now();
+      const cache = cacheRef.current;
 
-    // Check if cache is valid for current request
-    const cacheValid = !forceRefresh &&
-                      cache.jobs.length > 0 &&
-                      (now - cache.timestamp) < CACHE_DURATION &&
-                      cache.lastOffset === filters.offset &&
-                      cache.lastLimit === filters.limit;
+      // Check if cache is valid for current request
+      const cacheValid =
+        !forceRefresh &&
+        cache.jobs.length > 0 &&
+        now - cache.timestamp < CACHE_DURATION &&
+        cache.lastOffset === filters.offset &&
+        cache.lastLimit === filters.limit;
 
-    if (cacheValid) {
-      console.log(`🚀 Using cached data for offset=${filters.offset}, page=${currentPage}`);
-      setJobs(cache.jobs);
-      setTotalJobs(cache.totalJobs);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    const maxRetries = 3;
-    const retryDelay = 1000 * (retryCount + 1); // 1s, 2s, 3s delays
-
-    try {
-      console.log('Loading ALL jobs (no backend filters - using frontend filtering)...');
-
-      // Add timeout protection with better error handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.log('⏰ Request timeout after 5 seconds');
-        controller.abort();
-      }, 5000); // 5 second timeout for faster feedback
-
-      try {
-        // Use fast SQLite API with pagination
-        const currentPageNum = Math.floor(filters.offset / filters.limit) + 1;
-        console.log(`🌐 Making API call to /api/jobs?limit=${filters.limit}&page=${currentPageNum}`);
-        const response = await fetch(`/api/jobs?limit=${filters.limit}&page=${currentPageNum}`, {
-          signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          let errorMessage = 'Failed to load jobs';
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || errorMessage;
-          } catch {
-            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-          }
-          throw new Error(errorMessage);
-        }
-
-        const data: JobsResponse & { mock?: boolean; error?: string; pages_fetched?: number } = await response.json();
-
-        if (!data || !Array.isArray(data.jobs)) {
-          throw new Error('Invalid response format from server');
-        }
-
-        console.log(`📥 Received ${data.jobs.length} jobs from API. First job ID: ${data.jobs[0]?.id}, Total: ${data.total}`);
-        setJobs(data.jobs);
-        setTotalJobs(data.total || data.jobs.length);
-        setUsingMockData(!!data.mock);
-        console.log(`✅ Updated state with ${data.jobs.length} jobs`);
-
-        // Cache the results
-        cacheRef.current = {
-          jobs: data.jobs,
-          clients: cacheRef.current.clients,
-          servers: cacheRef.current.servers,
-          timestamp: now,
-          totalJobs: data.total || data.jobs.length,
-          lastOffset: filters.offset,
-          lastLimit: filters.limit
-        };
-
-        if (data.mock) {
-          console.log('Using mock data due to API error:', data.error);
-          toast({
-            title: "Using Mock Data",
-            description: "Could not connect to ServeManager, showing sample data",
-            variant: "default",
-          });
-        } else {
-          console.log(`✅ Loaded page ${currentPage} (${data.jobs.length} jobs) of ${data.total} total jobs in ${data.response_time_ms || 'unknown'}ms (cached for 30s)`);
-        }
-
-        // Clear any previous errors on success
-        setError(null);
-
-      } catch (fetchError) {
-        clearTimeout(timeoutId);
-        throw fetchError;
-      }
-
-    } catch (error) {
-      console.error(`Error loading jobs (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
-
-      // Handle AbortError gracefully without retrying
-      if (error.name === 'AbortError') {
-        console.log('⚠️ Jobs request was aborted (likely due to timeout or navigation)');
-        setError('Request timed out - ServeManager API may be experiencing issues');
+      if (cacheValid) {
+        console.log(
+          `🚀 Using cached data for offset=${filters.offset}, page=${currentPage}`,
+        );
+        setJobs(cache.jobs);
+        setTotalJobs(cache.totalJobs);
         setLoading(false);
         return;
       }
 
-      // If we haven't exhausted retries and it's a network error, try again
-      if (retryCount < maxRetries && (
-        error instanceof TypeError || // Network errors
-        error.message.includes('Failed to fetch') ||
-        error.message.includes('Supabase is not properly configured')
-      )) {
-        console.log(`Retrying in ${retryDelay}ms...`);
-        setTimeout(() => {
-          loadJobs(retryCount + 1);
-        }, retryDelay);
-        return; // Don't set loading to false or show error yet
-      }
+      setLoading(true);
+      setError(null);
 
-      // Final failure - show error
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load jobs';
-      setError(errorMessage);
+      const maxRetries = 3;
+      const retryDelay = 1000 * (retryCount + 1); // 1s, 2s, 3s delays
 
-      toast({
-        title: "Connection Error",
-        description: `${errorMessage}. Please check your connection and try refreshing.`,
-        variant: "destructive",
-      });
-
-      // Try legacy SQLite API as fallback
       try {
-        console.log('Supabase failed, trying legacy SQLite...');
-        const legacyResponse = await fetch('/api/jobs');
-        if (legacyResponse.ok) {
-          const legacyData = await legacyResponse.json();
-          setJobs(legacyData.jobs || []);
-          setTotalJobs(legacyData.total || 0);
-          setUsingMockData(!!legacyData.mock);
-          setError(null);
-          toast({
-            title: "Using Legacy Database",
-            description: "Supabase unavailable, using slower SQLite fallback",
-            variant: "default",
-          });
-        } else {
-          // Final fallback to mock data
-          const mockResponse = await fetch('/api/mock/jobs');
-          if (mockResponse.ok) {
-            const mockData = await mockResponse.json();
-            setJobs(mockData.jobs || []);
-            setTotalJobs(mockData.total || 0);
-            setUsingMockData(true);
-            setError(null);
-          }
-        }
-      } catch (fallbackError) {
-        console.error('All fallbacks failed:', fallbackError);
-      }
+        console.log(
+          "Loading ALL jobs (no backend filters - using frontend filtering)...",
+        );
 
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+        // Add timeout protection with better error handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log("⏰ Request timeout after 5 seconds");
+          controller.abort();
+        }, 5000); // 5 second timeout for faster feedback
+
+        try {
+          // Use fast SQLite API with pagination
+          const currentPageNum = Math.floor(filters.offset / filters.limit) + 1;
+          console.log(
+            `🌐 Making API call to /api/jobs?limit=${filters.limit}&page=${currentPageNum}`,
+          );
+          const response = await fetch(
+            `/api/jobs?limit=${filters.limit}&page=${currentPageNum}`,
+            {
+              signal: controller.signal,
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            let errorMessage = "Failed to load jobs";
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.message || errorMessage;
+            } catch {
+              errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+          }
+
+          const data: JobsResponse & {
+            mock?: boolean;
+            error?: string;
+            pages_fetched?: number;
+          } = await response.json();
+
+          if (!data || !Array.isArray(data.jobs)) {
+            throw new Error("Invalid response format from server");
+          }
+
+          console.log(
+            `📥 Received ${data.jobs.length} jobs from API. First job ID: ${data.jobs[0]?.id}, Total: ${data.total}`,
+          );
+          setJobs(data.jobs);
+          setTotalJobs(data.total || data.jobs.length);
+          setUsingMockData(!!data.mock);
+          console.log(`✅ Updated state with ${data.jobs.length} jobs`);
+
+          // Cache the results
+          cacheRef.current = {
+            jobs: data.jobs,
+            clients: cacheRef.current.clients,
+            servers: cacheRef.current.servers,
+            timestamp: now,
+            totalJobs: data.total || data.jobs.length,
+            lastOffset: filters.offset,
+            lastLimit: filters.limit,
+          };
+
+          if (data.mock) {
+            console.log("Using mock data due to API error:", data.error);
+            toast({
+              title: "Using Mock Data",
+              description:
+                "Could not connect to ServeManager, showing sample data",
+              variant: "default",
+            });
+          } else {
+            console.log(
+              `✅ Loaded page ${currentPage} (${data.jobs.length} jobs) of ${data.total} total jobs in ${data.response_time_ms || "unknown"}ms (cached for 30s)`,
+            );
+          }
+
+          // Clear any previous errors on success
+          setError(null);
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          throw fetchError;
+        }
+      } catch (error) {
+        console.error(
+          `Error loading jobs (attempt ${retryCount + 1}/${maxRetries + 1}):`,
+          error,
+        );
+
+        // Handle AbortError gracefully without retrying
+        if (error.name === "AbortError") {
+          console.log(
+            "⚠️ Jobs request was aborted (likely due to timeout or navigation)",
+          );
+          setError(
+            "Request timed out - ServeManager API may be experiencing issues",
+          );
+          setLoading(false);
+          return;
+        }
+
+        // If we haven't exhausted retries and it's a network error, try again
+        if (
+          retryCount < maxRetries &&
+          (error instanceof TypeError || // Network errors
+            error.message.includes("Failed to fetch") ||
+            error.message.includes("Supabase is not properly configured"))
+        ) {
+          console.log(`Retrying in ${retryDelay}ms...`);
+          setTimeout(() => {
+            loadJobs(retryCount + 1);
+          }, retryDelay);
+          return; // Don't set loading to false or show error yet
+        }
+
+        // Final failure - show error
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to load jobs";
+        setError(errorMessage);
+
+        toast({
+          title: "Connection Error",
+          description: `${errorMessage}. Please check your connection and try refreshing.`,
+          variant: "destructive",
+        });
+
+        // Try legacy SQLite API as fallback
+        try {
+          console.log("Supabase failed, trying legacy SQLite...");
+          const legacyResponse = await fetch("/api/jobs");
+          if (legacyResponse.ok) {
+            const legacyData = await legacyResponse.json();
+            setJobs(legacyData.jobs || []);
+            setTotalJobs(legacyData.total || 0);
+            setUsingMockData(!!legacyData.mock);
+            setError(null);
+            toast({
+              title: "Using Legacy Database",
+              description: "Supabase unavailable, using slower SQLite fallback",
+              variant: "default",
+            });
+          } else {
+            // Final fallback to mock data
+            const mockResponse = await fetch("/api/mock/jobs");
+            if (mockResponse.ok) {
+              const mockData = await mockResponse.json();
+              setJobs(mockData.jobs || []);
+              setTotalJobs(mockData.total || 0);
+              setUsingMockData(true);
+              setError(null);
+            }
+          }
+        } catch (fallbackError) {
+          console.error("All fallbacks failed:", fallbackError);
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast],
+  );
 
   const loadClients = useCallback(async (forceRefresh = false) => {
     // Check cache first
     const now = Date.now();
     const cache = cacheRef.current;
 
-    if (!forceRefresh && cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.clients.length > 0) {
-      console.log('⚡ Using cached clients data');
+    if (
+      !forceRefresh &&
+      cache.timestamp &&
+      now - cache.timestamp < CACHE_DURATION &&
+      cache.clients.length > 0
+    ) {
+      console.log("⚡ Using cached clients data");
       setClients(cache.clients);
       return;
     }
 
     try {
-      console.log('Loading ALL clients...');
+      console.log("Loading ALL clients...");
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.log('�� Clients request timeout after 10 seconds');
+        console.log("�� Clients request timeout after 10 seconds");
         controller.abort();
       }, 10000); // Increased to 10 seconds
 
-      const response = await fetch('/api/clients', {
-        signal: controller.signal
+      const response = await fetch("/api/clients", {
+        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
@@ -332,22 +385,24 @@ export default function Jobs() {
       }
     } catch (error) {
       // Handle AbortError gracefully
-      if (error.name === 'AbortError') {
-        console.log('⚠️ Clients request was aborted (likely due to timeout or navigation)');
+      if (error.name === "AbortError") {
+        console.log(
+          "⚠️ Clients request was aborted (likely due to timeout or navigation)",
+        );
         return; // Don't try fallbacks for abort errors
       }
 
-      console.error('Error loading clients:', error);
+      console.error("Error loading clients:", error);
       // Try legacy API as fallback
       try {
-        const legacyResponse = await fetch('/api/clients');
+        const legacyResponse = await fetch("/api/clients");
         if (legacyResponse.ok) {
           const legacyData = await legacyResponse.json();
           setClients(legacyData.clients || []);
           cacheRef.current.clients = legacyData.clients || [];
         } else {
           // Try mock clients as final fallback
-          const mockResponse = await fetch('/api/mock/clients');
+          const mockResponse = await fetch("/api/mock/clients");
           if (mockResponse.ok) {
             const mockData = await mockResponse.json();
             setClients(mockData.clients || []);
@@ -355,7 +410,7 @@ export default function Jobs() {
           }
         }
       } catch (mockError) {
-        console.error('All client fallbacks failed:', mockError);
+        console.error("All client fallbacks failed:", mockError);
       }
     }
   }, []);
@@ -365,22 +420,27 @@ export default function Jobs() {
     const now = Date.now();
     const cache = cacheRef.current;
 
-    if (!forceRefresh && cache.timestamp && (now - cache.timestamp) < CACHE_DURATION && cache.servers.length > 0) {
-      console.log('⚡ Using cached servers data');
+    if (
+      !forceRefresh &&
+      cache.timestamp &&
+      now - cache.timestamp < CACHE_DURATION &&
+      cache.servers.length > 0
+    ) {
+      console.log("⚡ Using cached servers data");
       setServers(cache.servers);
       return;
     }
 
     try {
-      console.log('Loading ALL servers/employees...');
+      console.log("Loading ALL servers/employees...");
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.log('⏰ Servers request timeout after 10 seconds');
+        console.log("⏰ Servers request timeout after 10 seconds");
         controller.abort();
       }, 10000); // Increased to 10 seconds
 
-      const response = await fetch('/api/servers', {
-        signal: controller.signal
+      const response = await fetch("/api/servers", {
+        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
@@ -398,22 +458,24 @@ export default function Jobs() {
       }
     } catch (error) {
       // Handle AbortError gracefully
-      if (error.name === 'AbortError') {
-        console.log('⚠️ Servers request was aborted (likely due to timeout or navigation)');
+      if (error.name === "AbortError") {
+        console.log(
+          "⚠️ Servers request was aborted (likely due to timeout or navigation)",
+        );
         return; // Don't try fallbacks for abort errors
       }
 
-      console.error('Error loading servers:', error);
+      console.error("Error loading servers:", error);
       // Try legacy API as fallback
       try {
-        const legacyResponse = await fetch('/api/servers');
+        const legacyResponse = await fetch("/api/servers");
         if (legacyResponse.ok) {
           const legacyData = await legacyResponse.json();
           setServers(legacyData.servers || []);
           cacheRef.current.servers = legacyData.servers || [];
         } else {
           // Try mock servers as final fallback
-          const mockResponse = await fetch('/api/mock/servers');
+          const mockResponse = await fetch("/api/mock/servers");
           if (mockResponse.ok) {
             const mockData = await mockResponse.json();
             setServers(mockData.servers || []);
@@ -421,7 +483,7 @@ export default function Jobs() {
           }
         }
       } catch (mockError) {
-        console.error('All server fallbacks failed:', mockError);
+        console.error("All server fallbacks failed:", mockError);
       }
     }
   };
@@ -433,8 +495,8 @@ export default function Jobs() {
 
     // Always do a silent background check for new data
     try {
-      console.log('🔄 Silent background check for updates...');
-      const response = await fetch('/api/jobs?limit=50');
+      console.log("🔄 Silent background check for updates...");
+      const response = await fetch("/api/jobs?limit=50");
       if (response.ok) {
         const data = await response.json();
         const newJobCount = data.total || 0;
@@ -442,13 +504,15 @@ export default function Jobs() {
 
         // If job count changed, update cache silently
         if (newJobCount !== cachedJobCount) {
-          console.log(`📊 Job count changed: ${cachedJobCount} → ${newJobCount}. Updating cache silently.`);
+          console.log(
+            `📊 Job count changed: ${cachedJobCount} → ${newJobCount}. Updating cache silently.`,
+          );
           cacheRef.current = {
             jobs: data.jobs || [],
             clients: cache.clients,
             servers: cache.servers,
             timestamp: now,
-            totalJobs: newJobCount
+            totalJobs: newJobCount,
           };
           setJobs(data.jobs || []);
           setTotalJobs(newJobCount);
@@ -456,15 +520,15 @@ export default function Jobs() {
           // Show subtle notification
           toast({
             title: "Data Updated",
-            description: `${newJobCount - cachedJobCount > 0 ? 'New' : 'Updated'} jobs detected`,
+            description: `${newJobCount - cachedJobCount > 0 ? "New" : "Updated"} jobs detected`,
             duration: 2000, // Short duration
           });
         } else {
-          console.log('📊 No changes detected in background check');
+          console.log("📊 No changes detected in background check");
         }
       }
     } catch (error) {
-      console.log('⚠️ Background check failed (non-blocking):', error.message);
+      console.log("⚠️ Background check failed (non-blocking):", error.message);
     }
     // Note: This is silent and non-blocking - doesn't affect UI performance
   }, [toast]);
@@ -473,7 +537,7 @@ export default function Jobs() {
   const { status: syncStatus } = useAutoSync({
     enabled: false, // Disabled for better performance
     interval: 90000, // 90 seconds - reduced frequency to prevent timeouts (was 45s)
-    onDataUpdate
+    onDataUpdate,
   });
 
   // Load initial data (clients and servers only once)
@@ -483,7 +547,7 @@ export default function Jobs() {
     const loadInitialData = async () => {
       if (!isMounted) return;
 
-      console.log('🚀 Loading initial clients and servers...');
+      console.log("🚀 Loading initial clients and servers...");
       await loadClients();
       if (!isMounted) return;
 
@@ -500,7 +564,9 @@ export default function Jobs() {
 
   // Load jobs whenever pagination changes
   useEffect(() => {
-    console.log(`📄 Pagination/filter changed - offset: ${filters.offset}, limit: ${filters.limit}, forcing job reload...`);
+    console.log(
+      `📄 Pagination/filter changed - offset: ${filters.offset}, limit: ${filters.limit}, forcing job reload...`,
+    );
 
     const loadJobsForPagination = async () => {
       setLoading(true);
@@ -523,21 +589,27 @@ export default function Jobs() {
 
             const response = await fetch(endpoint, {
               timeout: 8000, // 8 second timeout
-              signal: AbortSignal.timeout(8000)
+              signal: AbortSignal.timeout(8000),
             });
 
             if (response.ok) {
               const data = await response.json();
-              console.log(`✅ Success with ${endpoint}: ${data.jobs?.length || 0} jobs`);
+              console.log(
+                `✅ Success with ${endpoint}: ${data.jobs?.length || 0} jobs`,
+              );
 
               setJobs(data.jobs || []);
               setTotalJobs(data.total || data.jobs?.length || 0);
-              setUsingMockData(!!data.mock || endpoint.includes('mock'));
+              setUsingMockData(!!data.mock || endpoint.includes("mock"));
               setError(null);
               return; // Success - exit function
             } else {
-              console.log(`❌ ${endpoint} failed with status ${response.status}`);
-              lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+              console.log(
+                `❌ ${endpoint} failed with status ${response.status}`,
+              );
+              lastError = new Error(
+                `HTTP ${response.status}: ${response.statusText}`,
+              );
             }
           } catch (fetchError) {
             console.log(`❌ ${endpoint} failed with error:`, fetchError);
@@ -547,11 +619,12 @@ export default function Jobs() {
         }
 
         // If all endpoints failed
-        throw lastError || new Error('All API endpoints failed');
-
+        throw lastError || new Error("All API endpoints failed");
       } catch (error) {
-        console.error('❌ All API calls failed:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load jobs');
+        console.error("❌ All API calls failed:", error);
+        setError(
+          error instanceof Error ? error.message : "Failed to load jobs",
+        );
 
         // Show mock data as final fallback to prevent blank page
         try {
@@ -569,10 +642,13 @@ export default function Jobs() {
     loadJobsForPagination();
   }, [filters.offset, filters.limit]);
 
-  const handleFilterChange = (key: keyof JobFilters, value: string | undefined) => {
-    const newValue = value === 'all' ? undefined : value;
+  const handleFilterChange = (
+    key: keyof JobFilters,
+    value: string | undefined,
+  ) => {
+    const newValue = value === "all" ? undefined : value;
     console.log(`Filter changed: ${key} = ${newValue}`);
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       [key]: newValue,
       offset: 0, // Reset to first page when filtering
@@ -591,74 +667,96 @@ export default function Jobs() {
   const goToNextPage = () => {
     if (hasNextPage) {
       console.log(`🔄 Going to next page: ${currentPage} → ${currentPage + 1}`);
-      console.log(`📊 Current offset: ${filters.offset}, new offset: ${filters.offset + filters.limit}`);
-      setFilters(prev => ({
+      console.log(
+        `📊 Current offset: ${filters.offset}, new offset: ${filters.offset + filters.limit}`,
+      );
+      setFilters((prev) => ({
         ...prev,
-        offset: prev.offset + prev.limit
+        offset: prev.offset + prev.limit,
       }));
     } else {
-      console.log(`�� Cannot go to next page - already at last page ${currentPage}/${totalPages}`);
+      console.log(
+        `�� Cannot go to next page - already at last page ${currentPage}/${totalPages}`,
+      );
     }
   };
 
   const goToPrevPage = () => {
     if (hasPrevPage) {
-      console.log(`🔄 Going to previous page: ${currentPage} → ${currentPage - 1}`);
-      setFilters(prev => ({
+      console.log(
+        `🔄 Going to previous page: ${currentPage} → ${currentPage - 1}`,
+      );
+      setFilters((prev) => ({
         ...prev,
-        offset: Math.max(0, prev.offset - prev.limit)
+        offset: Math.max(0, prev.offset - prev.limit),
       }));
     }
   };
 
   const goToFirstPage = () => {
     console.log(`🔄 Going to first page: ${currentPage} → 1`);
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      offset: 0
+      offset: 0,
     }));
   };
 
   const goToLastPage = () => {
     console.log(`🔄 Going to last page: ${currentPage} ��� ${totalPages}`);
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      offset: (totalPages - 1) * prev.limit
+      offset: (totalPages - 1) * prev.limit,
     }));
   };
 
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "served": return "bg-success text-success-foreground";
-      case "in_progress": return "bg-info text-info-foreground";
-      case "assigned": return "bg-warning text-warning-foreground";
-      case "pending": return "bg-muted text-muted-foreground";
-      case "not_served": return "bg-destructive text-destructive-foreground";
-      case "cancelled": return "bg-secondary text-secondary-foreground";
-      case "completed": return "bg-success text-success-foreground";
-      case "Client Hold": return "bg-orange-500 text-white";
-      case "unassigned": return "bg-blue-500 text-white"; // New/Unassigned jobs
-      case "": return "bg-blue-500 text-white"; // Handle actual empty status from API
-      default: return "bg-muted text-muted-foreground";
+      case "served":
+        return "bg-success text-success-foreground";
+      case "in_progress":
+        return "bg-info text-info-foreground";
+      case "assigned":
+        return "bg-warning text-warning-foreground";
+      case "pending":
+        return "bg-muted text-muted-foreground";
+      case "not_served":
+        return "bg-destructive text-destructive-foreground";
+      case "cancelled":
+        return "bg-secondary text-secondary-foreground";
+      case "completed":
+        return "bg-success text-success-foreground";
+      case "Client Hold":
+        return "bg-orange-500 text-white";
+      case "unassigned":
+        return "bg-blue-500 text-white"; // New/Unassigned jobs
+      case "":
+        return "bg-blue-500 text-white"; // Handle actual empty status from API
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "rush": return "bg-destructive text-destructive-foreground border-destructive";
-      case "routine": return "bg-muted text-muted-foreground border-muted";
-      case "high": return "bg-warning text-warning-foreground border-warning";
-      case "medium": return "bg-info text-info-foreground border-info";
-      case "low": return "bg-success text-success-foreground border-success";
-      default: return "bg-muted text-muted-foreground";
+      case "rush":
+        return "bg-destructive text-destructive-foreground border-destructive";
+      case "routine":
+        return "bg-muted text-muted-foreground border-muted";
+      case "high":
+        return "bg-warning text-warning-foreground border-warning";
+      case "medium":
+        return "bg-info text-info-foreground border-info";
+      case "low":
+        return "bg-success text-success-foreground border-success";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -670,68 +768,93 @@ export default function Jobs() {
   const formatReceivedDate = (dateString: string | null) => {
     if (!dateString) return "Unknown";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
   };
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) return null;
-    return sortDirection === 'asc' ?
-      <ChevronUp className="w-4 h-4" /> :
-      <ChevronDown className="w-4 h-4" />;
+    return sortDirection === "asc" ? (
+      <ChevronUp className="w-4 h-4" />
+    ) : (
+      <ChevronDown className="w-4 h-4" />
+    );
   };
 
   const getSortableValue = (job: Job, field: SortField): string => {
     switch (field) {
-      case 'recipient':
-        return (job.recipient_name || job.defendant_name || job.recipient?.name || 'Unknown Recipient').toLowerCase();
-      case 'client':
-        const clientCompany = typeof job.client_company === 'string' ? job.client_company :
-                             typeof job.client?.company === 'string' ? job.client.company :
-                             job.client?.name?.company || job.client?.name;
-        const clientName = typeof job.client_name === 'string' ? job.client_name :
-                         typeof job.client?.name === 'string' ? job.client.name :
-                         job.client?.name?.name;
-        return (clientCompany || clientName || 'Unknown Client').toLowerCase();
-      case 'status':
-        return (job.status || 'pending').toLowerCase();
-      case 'priority':
-        return (job.priority || 'medium').toLowerCase();
-      case 'server':
-        const serverName = typeof job.server_name === 'string' ? job.server_name :
-                         typeof job.assigned_server === 'string' ? job.assigned_server :
-                         typeof job.server?.name === 'string' ? job.server.name :
-                         job.server?.name?.name;
-        return (serverName || 'unassigned').toLowerCase();
-      case 'received_date':
-        return job.created_at || job.received_date || '';
+      case "recipient":
+        return (
+          job.recipient_name ||
+          job.defendant_name ||
+          job.recipient?.name ||
+          "Unknown Recipient"
+        ).toLowerCase();
+      case "client":
+        const clientCompany =
+          typeof job.client_company === "string"
+            ? job.client_company
+            : typeof job.client?.company === "string"
+              ? job.client.company
+              : job.client?.name?.company || job.client?.name;
+        const clientName =
+          typeof job.client_name === "string"
+            ? job.client_name
+            : typeof job.client?.name === "string"
+              ? job.client.name
+              : job.client?.name?.name;
+        return (clientCompany || clientName || "Unknown Client").toLowerCase();
+      case "status":
+        return (job.status || "pending").toLowerCase();
+      case "priority":
+        return (job.priority || "medium").toLowerCase();
+      case "server":
+        const serverName =
+          typeof job.server_name === "string"
+            ? job.server_name
+            : typeof job.assigned_server === "string"
+              ? job.assigned_server
+              : typeof job.server?.name === "string"
+                ? job.server.name
+                : job.server?.name?.name;
+        return (serverName || "unassigned").toLowerCase();
+      case "received_date":
+        return job.created_at || job.received_date || "";
       default:
-        return '';
+        return "";
     }
   };
 
   // Pagination controls component
   const PaginationControls = () => {
     // Safety check for division by zero
-    const safeTotalPages = Math.max(1, Math.ceil(totalJobs / Math.max(1, filters.limit)));
-    const safeCurrentPage = Math.max(1, Math.floor(filters.offset / Math.max(1, filters.limit)) + 1);
+    const safeTotalPages = Math.max(
+      1,
+      Math.ceil(totalJobs / Math.max(1, filters.limit)),
+    );
+    const safeCurrentPage = Math.max(
+      1,
+      Math.floor(filters.offset / Math.max(1, filters.limit)) + 1,
+    );
 
     return (
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          Showing {Math.min(filters.offset + 1, totalJobs)} to {Math.min(filters.offset + filters.limit, totalJobs)} of {totalJobs} jobs
+          Showing {Math.min(filters.offset + 1, totalJobs)} to{" "}
+          {Math.min(filters.offset + filters.limit, totalJobs)} of {totalJobs}{" "}
+          jobs
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -777,72 +900,111 @@ export default function Jobs() {
   };
 
   // Filter and sort jobs
-  console.log(`🔍 Processing ${jobs.length} jobs. First job ID: ${jobs[0]?.id}, search: "${searchTerm}", filters:`, filters);
-  const filteredAndSortedJobs = (jobs || []).filter(job => {
-    // Search filter
-    const matchesSearch = !searchTerm || (
-      safeString(job.job_number || job.generated_job_id || job.reference).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      safeString(job.client?.name || job.client_name || job.client_company).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      safeString(job.recipient?.name || job.recipient_name || job.defendant_name).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      safeString(job.description || job.notes).toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  console.log(
+    `🔍 Processing ${jobs.length} jobs. First job ID: ${jobs[0]?.id}, search: "${searchTerm}", filters:`,
+    filters,
+  );
+  const filteredAndSortedJobs = (jobs || [])
+    .filter((job) => {
+      // Search filter
+      const matchesSearch =
+        !searchTerm ||
+        safeString(job.job_number || job.generated_job_id || job.reference)
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        safeString(job.client?.name || job.client_name || job.client_company)
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        safeString(
+          job.recipient?.name || job.recipient_name || job.defendant_name,
+        )
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        safeString(job.description || job.notes)
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
 
-    // Status filter
-    const matchesStatus = !filters.status || filters.status === 'all' ||
-      (filters.status === 'unassigned' && (job.status === '' || !job.status)) ||
-      job.status === filters.status;
+      // Status filter
+      const matchesStatus =
+        !filters.status ||
+        filters.status === "all" ||
+        (filters.status === "unassigned" &&
+          (job.status === "" || !job.status)) ||
+        job.status === filters.status;
 
-    // Priority filter
-    const matchesPriority = !filters.priority || filters.priority === 'all' || job.priority === filters.priority;
+      // Priority filter
+      const matchesPriority =
+        !filters.priority ||
+        filters.priority === "all" ||
+        job.priority === filters.priority;
 
-    // Client filter
-    const matchesClient = !filters.client_id || filters.client_id === 'all' || job.client_id === filters.client_id;
+      // Client filter
+      const matchesClient =
+        !filters.client_id ||
+        filters.client_id === "all" ||
+        job.client_id === filters.client_id;
 
-    // Server filter
-    const matchesServer = !filters.server_id || filters.server_id === 'all' ||
-      (filters.server_id === 'unassigned' && (!job.server_id || job.server_id === '')) ||
-      job.server_id === filters.server_id;
+      // Server filter
+      const matchesServer =
+        !filters.server_id ||
+        filters.server_id === "all" ||
+        (filters.server_id === "unassigned" &&
+          (!job.server_id || job.server_id === "")) ||
+        job.server_id === filters.server_id;
 
-    const result = matchesSearch && matchesStatus && matchesPriority && matchesClient && matchesServer;
+      const result =
+        matchesSearch &&
+        matchesStatus &&
+        matchesPriority &&
+        matchesClient &&
+        matchesServer;
 
-    // Debug first job that gets filtered
-    if (job === jobs[0] && (filters.status || filters.priority || filters.client_id || filters.server_id || searchTerm)) {
-      console.log(`Filter debug for job ${job.id}:`, {
-        job: {
-          status: job.status,
-          priority: job.priority,
-          client_id: job.client_id,
-          server_id: job.server_id
-        },
-        filters,
-        searchTerm,
-        matches: {
-          search: matchesSearch,
-          status: matchesStatus,
-          priority: matchesPriority,
-          client: matchesClient,
-          server: matchesServer,
-          result
-        }
-      });
-    }
+      // Debug first job that gets filtered
+      if (
+        job === jobs[0] &&
+        (filters.status ||
+          filters.priority ||
+          filters.client_id ||
+          filters.server_id ||
+          searchTerm)
+      ) {
+        console.log(`Filter debug for job ${job.id}:`, {
+          job: {
+            status: job.status,
+            priority: job.priority,
+            client_id: job.client_id,
+            server_id: job.server_id,
+          },
+          filters,
+          searchTerm,
+          matches: {
+            search: matchesSearch,
+            status: matchesStatus,
+            priority: matchesPriority,
+            client: matchesClient,
+            server: matchesServer,
+            result,
+          },
+        });
+      }
 
-    return result;
-  }).sort((a, b) => {
-    const aValue = getSortableValue(a, sortField);
-    const bValue = getSortableValue(b, sortField);
+      return result;
+    })
+    .sort((a, b) => {
+      const aValue = getSortableValue(a, sortField);
+      const bValue = getSortableValue(b, sortField);
 
-    if (sortField === 'received_date') {
-      // For dates, convert to timestamps for proper sorting
-      const aDate = new Date(aValue).getTime() || 0;
-      const bDate = new Date(bValue).getTime() || 0;
-      return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
-    }
+      if (sortField === "received_date") {
+        // For dates, convert to timestamps for proper sorting
+        const aDate = new Date(aValue).getTime() || 0;
+        const bDate = new Date(bValue).getTime() || 0;
+        return sortDirection === "asc" ? aDate - bDate : bDate - aDate;
+      }
 
-    // For strings, use localeCompare
-    const comparison = aValue.localeCompare(bValue);
-    return sortDirection === 'asc' ? comparison : -comparison;
-  });
+      // For strings, use localeCompare
+      const comparison = aValue.localeCompare(bValue);
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
 
   if (error) {
     return (
@@ -854,14 +1016,17 @@ export default function Jobs() {
                 <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
                 <h3 className="text-lg font-semibold">Connection Problem</h3>
                 <p className="text-muted-foreground">{error}</p>
-                {error.includes('520') || error.includes('terminated') || error.includes('ServeManager') ? (
+                {error.includes("520") ||
+                error.includes("terminated") ||
+                error.includes("ServeManager") ? (
                   <div className="space-y-3 p-4 bg-muted/50 rounded-lg max-w-md mx-auto">
                     <p className="text-sm font-medium text-orange-600">
                       🚨 ServeManager API appears to be experiencing downtime
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      This is a temporary issue with ServeManager's servers (Error 520).
-                      The app is working correctly, but the data source is unavailable.
+                      This is a temporary issue with ServeManager's servers
+                      (Error 520). The app is working correctly, but the data
+                      source is unavailable.
                     </p>
                     <div className="text-xs text-left space-y-1">
                       <p className="font-medium">What you can do:</p>
@@ -887,14 +1052,16 @@ export default function Jobs() {
                   </div>
                 )}
                 <div className="flex gap-2 justify-center">
-                  <Button onClick={loadJobs} variant="outline" className="gap-2">
+                  <Button
+                    onClick={loadJobs}
+                    variant="outline"
+                    className="gap-2"
+                  >
                     <RefreshCw className="w-4 h-4" />
                     Retry
                   </Button>
                   <Button asChild className="gap-2">
-                    <a href="/settings">
-                      Go to Settings
-                    </a>
+                    <a href="/settings">Go to Settings</a>
                   </Button>
                 </div>
               </div>
@@ -920,7 +1087,6 @@ export default function Jobs() {
             </p>
           </div>
           <div className="flex gap-2">
-
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="gap-2">
@@ -945,21 +1111,25 @@ export default function Jobs() {
           <Alert className="border-warning bg-warning/10">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Using Demo Data:</strong> ServeManager API is not responding. Showing sample data for demonstration.
+              <strong>Using Demo Data:</strong> ServeManager API is not
+              responding. Showing sample data for demonstration.
               <Button variant="link" className="p-0 h-auto font-normal" asChild>
-                <a href="/settings" className="underline">Configure API settings</a>
-              </Button> or
+                <a href="/settings" className="underline">
+                  Configure API settings
+                </a>
+              </Button>{" "}
+              or
               <Button
                 variant="link"
                 className="p-0 h-auto font-normal underline ml-1"
-                onClick={() => window.open('/api/debug/servemanager', '_blank')}
+                onClick={() => window.open("/api/debug/servemanager", "_blank")}
               >
                 debug the connection
-              </Button>.
+              </Button>
+              .
             </AlertDescription>
           </Alert>
         )}
-
 
         {/* Filters and Search */}
         <Card>
@@ -988,7 +1158,7 @@ export default function Jobs() {
                 <label className="text-sm font-medium">Status</label>
                 <Select
                   value={filters.status || "all"}
-                  onValueChange={(value) => handleFilterChange('status', value)}
+                  onValueChange={(value) => handleFilterChange("status", value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Status" />
@@ -1012,7 +1182,9 @@ export default function Jobs() {
                 <label className="text-sm font-medium">Priority</label>
                 <Select
                   value={filters.priority || "all"}
-                  onValueChange={(value) => handleFilterChange('priority', value)}
+                  onValueChange={(value) =>
+                    handleFilterChange("priority", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Priority" />
@@ -1029,7 +1201,9 @@ export default function Jobs() {
                 <label className="text-sm font-medium">Client</label>
                 <Select
                   value={filters.client_id || "all"}
-                  onValueChange={(value) => handleFilterChange('client_id', value)}
+                  onValueChange={(value) =>
+                    handleFilterChange("client_id", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Clients" />
@@ -1049,7 +1223,9 @@ export default function Jobs() {
                 <label className="text-sm font-medium">Server</label>
                 <Select
                   value={filters.server_id || "all"}
-                  onValueChange={(value) => handleFilterChange('server_id', value)}
+                  onValueChange={(value) =>
+                    handleFilterChange("server_id", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Servers" />
@@ -1067,7 +1243,11 @@ export default function Jobs() {
               </div>
 
               <div className="flex items-end">
-                <Button variant="outline" onClick={clearFilters} className="w-full">
+                <Button
+                  variant="outline"
+                  onClick={clearFilters}
+                  className="w-full"
+                >
                   Clear Filters
                 </Button>
               </div>
@@ -1099,56 +1279,56 @@ export default function Jobs() {
                 <TableRow>
                   <TableHead
                     className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('recipient')}
+                    onClick={() => handleSort("recipient")}
                   >
                     <div className="flex items-center gap-2">
                       Recipient
-                      {getSortIcon('recipient')}
+                      {getSortIcon("recipient")}
                     </div>
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('client')}
+                    onClick={() => handleSort("client")}
                   >
                     <div className="flex items-center gap-2">
                       Client
-                      {getSortIcon('client')}
+                      {getSortIcon("client")}
                     </div>
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('status')}
+                    onClick={() => handleSort("status")}
                   >
                     <div className="flex items-center gap-2">
                       Status
-                      {getSortIcon('status')}
+                      {getSortIcon("status")}
                     </div>
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('priority')}
+                    onClick={() => handleSort("priority")}
                   >
                     <div className="flex items-center gap-2">
                       Priority
-                      {getSortIcon('priority')}
+                      {getSortIcon("priority")}
                     </div>
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('server')}
+                    onClick={() => handleSort("server")}
                   >
                     <div className="flex items-center gap-2">
                       Server
-                      {getSortIcon('server')}
+                      {getSortIcon("server")}
                     </div>
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('received_date')}
+                    onClick={() => handleSort("received_date")}
                   >
                     <div className="flex items-center gap-2">
                       Received Date
-                      {getSortIcon('received_date')}
+                      {getSortIcon("received_date")}
                     </div>
                   </TableHead>
                 </TableRow>
@@ -1165,13 +1345,17 @@ export default function Jobs() {
                         <p className="font-medium">
                           {(() => {
                             // Safely extract recipient name from various formats
-                            const recipientName = typeof job.recipient_name === 'string' ? job.recipient_name :
-                                                 typeof job.defendant_name === 'string' ? job.defendant_name :
-                                                 typeof job.recipient?.name === 'string' ? job.recipient.name :
-                                                 job.recipient?.name?.name ||
-                                                 `${job.defendant_first_name || ''} ${job.defendant_last_name || ''}`.trim();
+                            const recipientName =
+                              typeof job.recipient_name === "string"
+                                ? job.recipient_name
+                                : typeof job.defendant_name === "string"
+                                  ? job.defendant_name
+                                  : typeof job.recipient?.name === "string"
+                                    ? job.recipient.name
+                                    : job.recipient?.name?.name ||
+                                      `${job.defendant_first_name || ""} ${job.defendant_last_name || ""}`.trim();
 
-                            return recipientName || 'Unknown Recipient';
+                            return recipientName || "Unknown Recipient";
                           })()}
                         </p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -1185,42 +1369,67 @@ export default function Jobs() {
                                 job.address,
                                 job.defendant_address,
                                 // Check ServeManager addresses_attributes array for primary address
-                                job.addresses_attributes?.find((addr: any) => addr.primary === true),
+                                job.addresses_attributes?.find(
+                                  (addr: any) => addr.primary === true,
+                                ),
                                 job.addresses_attributes?.[0], // Fallback to first if no primary
-                                job.raw_data?.addresses_attributes?.find((addr: any) => addr.primary === true),
+                                job.raw_data?.addresses_attributes?.find(
+                                  (addr: any) => addr.primary === true,
+                                ),
                                 job.raw_data?.addresses_attributes?.[0],
                                 // Check raw data sources that ServeManager uses
-                                job.raw_data?.addresses?.find((addr: any) => addr.primary === true),
+                                job.raw_data?.addresses?.find(
+                                  (addr: any) => addr.primary === true,
+                                ),
                                 job.raw_data?.addresses?.[0],
-                                (job as any).addresses?.find((addr: any) => addr.primary === true),
+                                (job as any).addresses?.find(
+                                  (addr: any) => addr.primary === true,
+                                ),
                                 (job as any).addresses?.[0],
                                 // Check nested raw data
                                 job.raw_data?.service_address,
                                 job.raw_data?.defendant_address,
-                                job.raw_data?.address
+                                job.raw_data?.address,
                               ];
 
                               for (const address of possibleAddresses) {
                                 if (!address) continue;
 
                                 // If address is a string, return it directly
-                                if (typeof address === 'string' && address.trim()) {
+                                if (
+                                  typeof address === "string" &&
+                                  address.trim()
+                                ) {
                                   return address.trim();
                                 }
 
                                 // If address is an object, format it
-                                if (typeof address === 'object' && address) {
+                                if (typeof address === "object" && address) {
                                   // Handle ServeManager addresses_attributes format
                                   const parts = [
-                                    address.address1 || address.street || address.street1, // ServeManager uses address1
-                                    address.address2 || address.street2
+                                    address.address1 ||
+                                      address.street ||
+                                      address.street1, // ServeManager uses address1
+                                    address.address2 || address.street2,
                                   ].filter(Boolean);
 
-                                  const street = parts.join(' ');
-                                  const cityState = [address.city, address.state].filter(Boolean).join(', ');
-                                  const zip = address.zip || address.postal_code;
+                                  const street = parts.join(" ");
+                                  const cityState = [
+                                    address.city,
+                                    address.state,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(", ");
+                                  const zip =
+                                    address.zip || address.postal_code;
 
-                                  const formattedAddress = [street, cityState, zip].filter(Boolean).join(', ');
+                                  const formattedAddress = [
+                                    street,
+                                    cityState,
+                                    zip,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(", ");
 
                                   if (formattedAddress.trim()) {
                                     return formattedAddress;
@@ -1228,7 +1437,7 @@ export default function Jobs() {
                                 }
                               }
 
-                              return 'Address pending';
+                              return "Address pending";
                             };
 
                             return getServiceAddressString(job);
@@ -1241,47 +1450,68 @@ export default function Jobs() {
                         <p className="font-medium">
                           {(() => {
                             // Handle client data safely - extract string values from objects
-                            const clientCompany = typeof job.client_company === 'string' ? job.client_company :
-                                                 typeof job.client?.company === 'string' ? job.client.company :
-                                                 job.client?.name?.company || job.client?.name;
-                            const clientName = typeof job.client_name === 'string' ? job.client_name :
-                                             typeof job.client?.name === 'string' ? job.client.name :
-                                             job.client?.name?.name;
+                            const clientCompany =
+                              typeof job.client_company === "string"
+                                ? job.client_company
+                                : typeof job.client?.company === "string"
+                                  ? job.client.company
+                                  : job.client?.name?.company ||
+                                    job.client?.name;
+                            const clientName =
+                              typeof job.client_name === "string"
+                                ? job.client_name
+                                : typeof job.client?.name === "string"
+                                  ? job.client.name
+                                  : job.client?.name?.name;
 
-                            return clientCompany || clientName || 'Unknown Client';
+                            return (
+                              clientCompany || clientName || "Unknown Client"
+                            );
                           })()}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {(() => {
                             // Extract contact name from various formats
-                            const contactName = typeof job.client_name === 'string' ? job.client_name :
-                                              job.client_contact ?
-                                                `${job.client_contact.first_name || ''} ${job.client_contact.last_name || ''}`.trim() :
-                                              typeof job.client?.name === 'string' ? job.client.name :
-                                              job.client?.contact_name;
+                            const contactName =
+                              typeof job.client_name === "string"
+                                ? job.client_name
+                                : job.client_contact
+                                  ? `${job.client_contact.first_name || ""} ${job.client_contact.last_name || ""}`.trim()
+                                  : typeof job.client?.name === "string"
+                                    ? job.client.name
+                                    : job.client?.contact_name;
 
-                            return contactName || 'No contact name';
+                            return contactName || "No contact name";
                           })()}
                         </p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(job.status || 'pending')}>
-                        {(job.status || 'pending').replace('_', ' ')}
+                      <Badge
+                        className={getStatusColor(job.status || "pending")}
+                      >
+                        {(job.status || "pending").replace("_", " ")}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={getPriorityColor(job.priority || 'medium')}>
-                        {job.priority || 'medium'}
+                      <Badge
+                        variant="outline"
+                        className={getPriorityColor(job.priority || "medium")}
+                      >
+                        {job.priority || "medium"}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {(() => {
                         // Safely extract server name from various formats
-                        const serverName = typeof job.server_name === 'string' ? job.server_name :
-                                         typeof job.assigned_server === 'string' ? job.assigned_server :
-                                         typeof job.server?.name === 'string' ? job.server.name :
-                                         job.server?.name?.name;
+                        const serverName =
+                          typeof job.server_name === "string"
+                            ? job.server_name
+                            : typeof job.assigned_server === "string"
+                              ? job.assigned_server
+                              : typeof job.server?.name === "string"
+                                ? job.server.name
+                                : job.server?.name?.name;
 
                         return serverName ? (
                           <div className="flex items-center gap-2">
@@ -1296,7 +1526,9 @@ export default function Jobs() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-muted-foreground" />
-                        {formatReceivedDate(job.created_at || job.received_date)}
+                        {formatReceivedDate(
+                          job.created_at || job.received_date,
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -1309,7 +1541,7 @@ export default function Jobs() {
                 <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Jobs Found</h3>
                 <p className="text-muted-foreground">
-                  {searchTerm || Object.values(filters).some(v => v)
+                  {searchTerm || Object.values(filters).some((v) => v)
                     ? "No jobs match your current filters"
                     : "No jobs available"}
                 </p>

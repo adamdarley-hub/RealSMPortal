@@ -5,12 +5,14 @@ Your Vercel deployment is showing demo data because it's missing the required en
 ## Required Environment Variables for Vercel
 
 ### 1. ServeManager API Configuration
+
 ```
 SERVEMANAGER_API_URL=https://www.servemanager.com/api
 SERVEMANAGER_API_KEY=your_actual_api_key_here
 ```
 
 ### 2. Supabase Configuration
+
 ```
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -18,6 +20,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 ### 3. Other Required Variables
+
 ```
 NODE_VERSION=22
 VITE_PUBLIC_BUILDER_KEY=__BUILDER_PUBLIC_KEY__
@@ -34,11 +37,13 @@ PING_MESSAGE=ping pong
 ## Getting Your API Keys
 
 ### ServeManager API Key
+
 - Log into your ServeManager account
 - Go to API settings
 - Copy your API key
 
-### Supabase Keys  
+### Supabase Keys
+
 - Go to your Supabase project dashboard
 - Settings → API
 - Copy the Project URL and anon/public key
