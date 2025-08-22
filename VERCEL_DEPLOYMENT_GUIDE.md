@@ -33,6 +33,7 @@ VITE_PUBLIC_BUILDER_KEY=__BUILDER_PUBLIC_KEY__
 ### 2. **Deploy Settings**
 
 In Vercel Project Settings:
+
 - **Build Command**: `npm run build:client`
 - **Output Directory**: `dist/spa`
 - **Install Command**: `npm install`
@@ -41,6 +42,7 @@ In Vercel Project Settings:
 ### 3. **Fix Vercel API Routing**
 
 Your `vercel.json` is already configured correctly:
+
 ```json
 {
   "buildCommand": "npm run build:client",
@@ -55,6 +57,7 @@ Your `vercel.json` is already configured correctly:
 ### 4. **Force Redeploy**
 
 After setting environment variables:
+
 1. Go to **Deployments** tab
 2. Click **"Redeploy"** on latest deployment
 3. Select **"Use existing Build Cache"** = NO
@@ -63,27 +66,33 @@ After setting environment variables:
 ## 🔧 CURRENT ISSUES FIXED
 
 ### Performance Issue (API Spam)
+
 Your app is making 50+ redundant calls to ServeManager. This is fixed by:
+
 - Using cached data properly
 - Removing redundant individual job fetches
 - Better error handling
 
 ### Environment Variables
+
 The exact variables your app needs are listed above. Make sure they're set in Vercel.
 
 ## 🚨 TROUBLESHOOTING
 
 ### If You Still See Login Page:
+
 1. **Check Environment Variables**: All must be set in Vercel
 2. **Check Build Logs**: Look for build errors in Vercel dashboard
 3. **Clear Browser Cache**: Hard refresh (Ctrl+F5)
 
 ### If API Calls Fail:
+
 1. **Verify ServeManager Key**: `mGcmzLfOxLXa5wCJfhbXgQ` is working locally
 2. **Check Supabase Keys**: Get them from your Supabase dashboard
 3. **Stripe Keys**: Verify they match your account
 
 ### If Build Fails:
+
 - Node.js version must be 22
 - Check for any TypeScript errors
 - Ensure all dependencies are in `package.json`
