@@ -88,6 +88,54 @@ const formatTimeAgo = (date: Date): string => {
   return date.toLocaleDateString();
 };
 
+// Performance-optimized helper functions
+const getRecipientName = (job: Job): string => {
+  if (typeof job.recipient_name === "string") return job.recipient_name;
+  if (typeof job.defendant_name === "string") return job.defendant_name;
+  if (typeof job.recipient?.name === "string") return job.recipient.name;
+  if (job.recipient?.name?.name) return job.recipient.name.name;
+  const fullName = `${job.defendant_first_name || ""} ${job.defendant_last_name || ""}`.trim();
+  return fullName || "Unknown Recipient";
+};
+
+const getServiceAddress = (job: Job): string => {
+  const addresses = [
+    job.service_address,
+    job.address,
+    job.defendant_address,
+    job.addresses_attributes?.find((addr: any) => addr.primary)?.[0],
+    job.addresses_attributes?.[0],
+  ];
+
+  for (const address of addresses) {
+    if (!address) continue;
+    if (typeof address === "string" && address.trim()) return address.trim();
+    if (typeof address === "object" && address) {
+      const parts = [address.address1 || address.street, address.address2].filter(Boolean);
+      const street = parts.join(" ");
+      const cityState = [address.city, address.state].filter(Boolean).join(", ");
+      const zip = address.zip || address.postal_code;
+      const formatted = [street, cityState, zip].filter(Boolean).join(", ");
+      if (formatted.trim()) return formatted;
+    }
+  }
+  return "Address pending";
+};
+
+const getClientInfo = (job: Job): { company: string; contact: string } => {
+  const company = job.client_company || job.client?.company || job.client?.name?.company || job.client?.name || "Unknown Client";
+  const contact = job.client_name ||
+    (job.client_contact ? `${job.client_contact.first_name || ""} ${job.client_contact.last_name || ""}`.trim() : "") ||
+    job.client?.name ||
+    job.client?.contact_name ||
+    "No contact name";
+  return { company: safeString(company), contact: safeString(contact) };
+};
+
+const getServerName = (job: Job): string | null => {
+  return job.server_name || job.assigned_server || job.server?.name || job.server?.name?.name || null;
+};
+
 type SortField =
   | "recipient"
   | "client"
@@ -1322,148 +1370,17 @@ export default function Jobs() {
                     >
                       <TableCell>
                         <div>
-                          <p className="font-medium">
-                            {(() => {
-                              // Safely extract recipient name from various formats
-                              const recipientName =
-                                typeof job.recipient_name === "string"
-                                  ? job.recipient_name
-                                  : typeof job.defendant_name === "string"
-                                    ? job.defendant_name
-                                    : typeof job.recipient?.name === "string"
-                                      ? job.recipient.name
-                                      : job.recipient?.name?.name ||
-                                        `${job.defendant_first_name || ""} ${job.defendant_last_name || ""}`.trim();
-
-                              return recipientName || "Unknown Recipient";
-                            })()}
-                          </p>
+                          <p className="font-medium">{getRecipientName(job)}</p>
                           <p className="text-sm text-muted-foreground flex items-center gap-1">
                             <MapPin className="w-3 h-3" />
-                            {(() => {
-                              // Use the same comprehensive address lookup as JobDetail.tsx
-                              const getServiceAddressString = (job: any) => {
-                                // Check all possible address sources in priority order
-                                const possibleAddresses = [
-                                  job.service_address,
-                                  job.address,
-                                  job.defendant_address,
-                                  // Check ServeManager addresses_attributes array for primary address
-                                  job.addresses_attributes?.find(
-                                    (addr: any) => addr.primary === true,
-                                  ),
-                                  job.addresses_attributes?.[0], // Fallback to first if no primary
-                                  job.raw_data?.addresses_attributes?.find(
-                                    (addr: any) => addr.primary === true,
-                                  ),
-                                  job.raw_data?.addresses_attributes?.[0],
-                                  // Check raw data sources that ServeManager uses
-                                  job.raw_data?.addresses?.find(
-                                    (addr: any) => addr.primary === true,
-                                  ),
-                                  job.raw_data?.addresses?.[0],
-                                  (job as any).addresses?.find(
-                                    (addr: any) => addr.primary === true,
-                                  ),
-                                  (job as any).addresses?.[0],
-                                  // Check nested raw data
-                                  job.raw_data?.service_address,
-                                  job.raw_data?.defendant_address,
-                                  job.raw_data?.address,
-                                ];
-
-                                for (const address of possibleAddresses) {
-                                  if (!address) continue;
-
-                                  // If address is a string, return it directly
-                                  if (
-                                    typeof address === "string" &&
-                                    address.trim()
-                                  ) {
-                                    return address.trim();
-                                  }
-
-                                  // If address is an object, format it
-                                  if (typeof address === "object" && address) {
-                                    // Handle ServeManager addresses_attributes format
-                                    const parts = [
-                                      address.address1 ||
-                                        address.street ||
-                                        address.street1, // ServeManager uses address1
-                                      address.address2 || address.street2,
-                                    ].filter(Boolean);
-
-                                    const street = parts.join(" ");
-                                    const cityState = [
-                                      address.city,
-                                      address.state,
-                                    ]
-                                      .filter(Boolean)
-                                      .join(", ");
-                                    const zip =
-                                      address.zip || address.postal_code;
-
-                                    const formattedAddress = [
-                                      street,
-                                      cityState,
-                                      zip,
-                                    ]
-                                      .filter(Boolean)
-                                      .join(", ");
-
-                                    if (formattedAddress.trim()) {
-                                      return formattedAddress;
-                                    }
-                                  }
-                                }
-
-                                return "Address pending";
-                              };
-
-                              return getServiceAddressString(job);
-                            })()}
+                            {getServiceAddress(job)}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">
-                            {(() => {
-                              // Handle client data safely - extract string values from objects
-                              const clientCompany =
-                                typeof job.client_company === "string"
-                                  ? job.client_company
-                                  : typeof job.client?.company === "string"
-                                    ? job.client.company
-                                    : job.client?.name?.company ||
-                                      job.client?.name;
-                              const clientName =
-                                typeof job.client_name === "string"
-                                  ? job.client_name
-                                  : typeof job.client?.name === "string"
-                                    ? job.client.name
-                                    : job.client?.name?.name;
-
-                              return (
-                                clientCompany || clientName || "Unknown Client"
-                              );
-                            })()}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {(() => {
-                              // Extract contact name from various formats
-                              const contactName =
-                                typeof job.client_name === "string"
-                                  ? job.client_name
-                                  : job.client_contact
-                                    ? `${job.client_contact.first_name || ""} ${job.client_contact.last_name || ""}`.trim()
-                                    : typeof job.client?.name === "string"
-                                      ? job.client.name
-                                      : job.client?.contact_name;
-
-                              return contactName || "No contact name";
-                            })()}
-                          </p>
+                          <p className="font-medium">{getClientInfo(job).company}</p>
+                          <p className="text-sm text-muted-foreground">{getClientInfo(job).contact}</p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -1482,26 +1399,14 @@ export default function Jobs() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {(() => {
-                          // Safely extract server name from various formats
-                          const serverName =
-                            typeof job.server_name === "string"
-                              ? job.server_name
-                              : typeof job.assigned_server === "string"
-                                ? job.assigned_server
-                                : typeof job.server?.name === "string"
-                                  ? job.server.name
-                                  : job.server?.name?.name;
-
-                          return serverName ? (
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-muted-foreground" />
-                              {serverName}
-                            </div>
-                          ) : (
-                            <Badge variant="secondary">Unassigned</Badge>
-                          );
-                        })()}
+                        {getServerName(job) ? (
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            {getServerName(job)}
+                          </div>
+                        ) : (
+                          <Badge variant="secondary">Unassigned</Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
