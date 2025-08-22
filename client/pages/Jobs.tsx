@@ -94,7 +94,8 @@ const getRecipientName = (job: Job): string => {
   if (typeof job.defendant_name === "string") return job.defendant_name;
   if (typeof job.recipient?.name === "string") return job.recipient.name;
   if (job.recipient?.name?.name) return job.recipient.name.name;
-  const fullName = `${job.defendant_first_name || ""} ${job.defendant_last_name || ""}`.trim();
+  const fullName =
+    `${job.defendant_first_name || ""} ${job.defendant_last_name || ""}`.trim();
   return fullName || "Unknown Recipient";
 };
 
@@ -111,9 +112,14 @@ const getServiceAddress = (job: Job): string => {
     if (!address) continue;
     if (typeof address === "string" && address.trim()) return address.trim();
     if (typeof address === "object" && address) {
-      const parts = [address.address1 || address.street, address.address2].filter(Boolean);
+      const parts = [
+        address.address1 || address.street,
+        address.address2,
+      ].filter(Boolean);
       const street = parts.join(" ");
-      const cityState = [address.city, address.state].filter(Boolean).join(", ");
+      const cityState = [address.city, address.state]
+        .filter(Boolean)
+        .join(", ");
       const zip = address.zip || address.postal_code;
       const formatted = [street, cityState, zip].filter(Boolean).join(", ");
       if (formatted.trim()) return formatted;
@@ -123,9 +129,17 @@ const getServiceAddress = (job: Job): string => {
 };
 
 const getClientInfo = (job: Job): { company: string; contact: string } => {
-  const company = job.client_company || job.client?.company || job.client?.name?.company || job.client?.name || "Unknown Client";
-  const contact = job.client_name ||
-    (job.client_contact ? `${job.client_contact.first_name || ""} ${job.client_contact.last_name || ""}`.trim() : "") ||
+  const company =
+    job.client_company ||
+    job.client?.company ||
+    job.client?.name?.company ||
+    job.client?.name ||
+    "Unknown Client";
+  const contact =
+    job.client_name ||
+    (job.client_contact
+      ? `${job.client_contact.first_name || ""} ${job.client_contact.last_name || ""}`.trim()
+      : "") ||
     job.client?.name ||
     job.client?.contact_name ||
     "No contact name";
@@ -133,7 +147,13 @@ const getClientInfo = (job: Job): { company: string; contact: string } => {
 };
 
 const getServerName = (job: Job): string | null => {
-  return job.server_name || job.assigned_server || job.server?.name || job.server?.name?.name || null;
+  return (
+    job.server_name ||
+    job.assigned_server ||
+    job.server?.name ||
+    job.server?.name?.name ||
+    null
+  );
 };
 
 type SortField =
@@ -1379,8 +1399,12 @@ export default function Jobs() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{getClientInfo(job).company}</p>
-                          <p className="text-sm text-muted-foreground">{getClientInfo(job).contact}</p>
+                          <p className="font-medium">
+                            {getClientInfo(job).company}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {getClientInfo(job).contact}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell>
