@@ -345,7 +345,18 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
     if (enabled) {
       startPolling();
     } else {
+      console.log('⏹️ Auto-sync disabled - stopping all polling and sync operations');
       stopPolling();
+      // Clear any existing status when disabled
+      if (mountedRef.current) {
+        setStatus(prev => ({
+          ...prev,
+          isPolling: false,
+          isSyncing: false,
+          error: null,
+          nextSync: null
+        }));
+      }
     }
 
     return () => {
