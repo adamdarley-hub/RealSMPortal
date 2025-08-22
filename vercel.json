@@ -8,11 +8,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/config", "destination": "/api/config" },
-    { "source": "/api/jobs", "destination": "/api/jobs" },
-    { "source": "/api/clients", "destination": "/api/clients" },
-    { "source": "/api/invoices", "destination": "/api/invoices" },
-    { "source": "/api/ping", "destination": "/api/ping" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
