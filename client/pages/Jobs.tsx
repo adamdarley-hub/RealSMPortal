@@ -487,50 +487,7 @@ export default function Jobs() {
     }
   };
 
-  // Memoize the onDataUpdate callback - smart background refresh
-  const onDataUpdate = useCallback(async () => {
-    const now = Date.now();
-    const cache = cacheRef.current;
-
-    // Always do a silent background check for new data
-    try {
-      console.log("🔄 Silent background check for updates...");
-      const response = await fetch("/api/jobs?limit=50");
-      if (response.ok) {
-        const data = await response.json();
-        const newJobCount = data.total || 0;
-        const cachedJobCount = cache.totalJobs;
-
-        // If job count changed, update cache silently
-        if (newJobCount !== cachedJobCount) {
-          console.log(
-            `📊 Job count changed: ${cachedJobCount} → ${newJobCount}. Updating cache silently.`,
-          );
-          cacheRef.current = {
-            jobs: data.jobs || [],
-            clients: cache.clients,
-            servers: cache.servers,
-            timestamp: now,
-            totalJobs: newJobCount,
-          };
-          setJobs(data.jobs || []);
-          setTotalJobs(newJobCount);
-
-          // Show subtle notification
-          toast({
-            title: "Data Updated",
-            description: `${newJobCount - cachedJobCount > 0 ? "New" : "Updated"} jobs detected`,
-            duration: 2000, // Short duration
-          });
-        } else {
-          console.log("📊 No changes detected in background check");
-        }
-      }
-    } catch (error) {
-      console.log("⚠️ Background check failed (non-blocking):", error.message);
-    }
-    // Note: This is silent and non-blocking - doesn't affect UI performance
-  }, [toast]);
+  // Background refresh completely disabled to prevent fetch errors
 
   // Auto-sync: COMPLETELY DISABLED for Vercel deployment
   // Mock sync status to prevent errors - no background sync operations
@@ -601,44 +558,18 @@ export default function Jobs() {
           try {
             console.log(`🌐 Trying API endpoint: ${endpoint}`);
 
-            // Create safe fetch function to avoid FullStory interference
-            const safeFetch = async (url: string, options: any) => {
-              try {
-                // Try native fetch first
-                const originalFetch = window.fetch;
-                return await originalFetch(url, options);
-              } catch (error) {
-                console.log(
-                  "🔄 Native fetch failed, trying XMLHttpRequest fallback",
-                );
-                // Fallback to XMLHttpRequest if fetch is intercepted
-                return new Promise<Response>((resolve, reject) => {
-                  const xhr = new XMLHttpRequest();
-                  xhr.open("GET", url);
-                  xhr.setRequestHeader("Content-Type", "application/json");
-                  xhr.timeout = options.timeout || 15000;
-                  xhr.onload = () => {
-                    const response = new Response(xhr.responseText, {
-                      status: xhr.status,
-                      statusText: xhr.statusText,
-                      headers: new Headers(),
-                    });
-                    resolve(response);
-                  };
-                  xhr.onerror = () => reject(new Error("Network error"));
-                  xhr.ontimeout = () => reject(new Error("Request timeout"));
-                  xhr.onabort = () => reject(new Error("Request aborted"));
-                  xhr.send();
-                });
-              }
-            };
-
-            const response = await cleanFetch(endpoint, {
-              signal: controller.signal,
-              headers: {
-                "Content-Type": "application/json",
-              },
-            });
+            // Use simple fetch with timeout protection
+            const response = await Promise.race([
+              fetch(endpoint, {
+                signal: controller.signal,
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }),
+              new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Request timeout after 15 seconds')), 15000)
+              )
+            ]);
 
             if (response.ok) {
               clearTimeout(timeoutId);
