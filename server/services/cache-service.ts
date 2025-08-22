@@ -333,7 +333,9 @@ export class CacheService {
       const result = await getServersData();
 
       if (result && result.servers) {
-        return Array.isArray(result.servers) ? result.servers : [result.servers];
+        return Array.isArray(result.servers)
+          ? result.servers
+          : [result.servers];
       }
 
       return [];

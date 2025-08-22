@@ -523,7 +523,12 @@ export const getClients: RequestHandler = async (req, res) => {
 };
 
 // Utility function to get servers data (for cache service) - returns data instead of HTTP response
-export async function getServersData(): Promise<{ servers: any[]; total: number; endpoint_used: string; mock?: boolean }> {
+export async function getServersData(): Promise<{
+  servers: any[];
+  total: number;
+  endpoint_used: string;
+  mock?: boolean;
+}> {
   try {
     console.log("=== FETCHING ALL SERVERS/EMPLOYEES ===");
 
@@ -564,7 +569,10 @@ export async function getServersData(): Promise<{ servers: any[]; total: number;
               pageServers = pageData.data;
             } else if (pageData?.servers && Array.isArray(pageData.servers)) {
               pageServers = pageData.servers;
-            } else if (pageData?.employees && Array.isArray(pageData.employees)) {
+            } else if (
+              pageData?.employees &&
+              Array.isArray(pageData.employees)
+            ) {
               pageServers = pageData.employees;
             } else if (pageData?.staff && Array.isArray(pageData.staff)) {
               pageServers = pageData.staff;
@@ -572,7 +580,9 @@ export async function getServersData(): Promise<{ servers: any[]; total: number;
               pageServers = pageData;
             }
 
-            console.log(`${baseEndpoint} page ${page}: Found ${pageServers.length} servers`);
+            console.log(
+              `${baseEndpoint} page ${page}: Found ${pageServers.length} servers`,
+            );
 
             if (pageServers.length === 0) {
               hasMorePages = false;
@@ -581,7 +591,10 @@ export async function getServersData(): Promise<{ servers: any[]; total: number;
               page++;
             }
           } catch (endpointError) {
-            console.error(`Error fetching ${baseEndpoint} page ${page}:`, endpointError);
+            console.error(
+              `Error fetching ${baseEndpoint} page ${page}:`,
+              endpointError,
+            );
             hasMorePages = false;
           }
         }
@@ -589,7 +602,9 @@ export async function getServersData(): Promise<{ servers: any[]; total: number;
         if (endpointServers.length > 0) {
           allServers = endpointServers;
           successfulEndpoint = baseEndpoint;
-          console.log(`Successfully fetched ${allServers.length} servers from ${successfulEndpoint}`);
+          console.log(
+            `Successfully fetched ${allServers.length} servers from ${successfulEndpoint}`,
+          );
           break; // Stop trying other endpoints once we find data
         }
       } catch (endpointError) {
