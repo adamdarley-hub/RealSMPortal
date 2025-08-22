@@ -124,7 +124,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
             const healthCheck = await safeFetch(endpoint, {
               method: "GET",
-              signal: healthController.signal,
+              timeout: 10000,
               cache: "no-cache",
               headers: {
                 "Cache-Control": "no-cache",
