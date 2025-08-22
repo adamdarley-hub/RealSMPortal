@@ -157,7 +157,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         // Perform actual sync
         const syncResponse = await safeFetch("/api/sync", {
           method: "POST",
-          signal: controller.signal,
+          timeout: 30000,
           cache: "no-cache",
           headers: {
             "Cache-Control": "no-cache",
