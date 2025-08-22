@@ -1333,7 +1333,20 @@ export default function Jobs() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAndSortedJobs.map((job) => (
+                {loading && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      <div className="flex items-center justify-center space-x-2">
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <div>
+                          <p>Loading jobs from ServeManager...</p>
+                          <p className="text-sm text-muted-foreground">This may take 10-15 seconds</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!loading && filteredAndSortedJobs.map((job) => (
                   <TableRow
                     key={job.id}
                     className="hover:bg-muted/50 cursor-pointer"
