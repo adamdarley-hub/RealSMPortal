@@ -61,7 +61,7 @@ import {
   Server,
   JobFilters,
 } from "@shared/servemanager";
-import { safeFetch, logFetchDiagnostics } from "@/utils/safeFetch";
+import { cleanFetch } from "@/utils/bypassAnalytics";
 
 // Helper function to safely extract string values from potentially nested objects
 const safeString = (value: any, fallback: string = ""): string => {
