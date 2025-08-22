@@ -8,6 +8,9 @@
     }
   },
   "functions": {
+    "api/[...path].ts": {
+      "runtime": "nodejs20.x"
+    },
     "api/*.ts": {
       "runtime": "nodejs20.x"
     }
@@ -19,7 +22,7 @@
     { "source": "/api/ping", "destination": "/api/ping" },
     { "source": "/api/sync", "destination": "/api/sync" },
     { "source": "/api/sync/status", "destination": "/api/sync" },
-    { "source": "/api/(.*)", "destination": "/api/index" },
+    { "source": "/api/(.*)", "destination": "/api/[...path]" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
