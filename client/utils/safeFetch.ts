@@ -13,16 +13,31 @@ export async function safeFetch(
   const { timeout = 15000, ...fetchOptions } = options;
 
   try {
-    // Try native fetch first
+    // Try native fetch first with proper timeout handling
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    let timeoutId: NodeJS.Timeout | null = null;
 
-    const response = await window.fetch(url, {
+    // Create a promise that rejects on timeout
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        controller.abort();
+        reject(new Error(`Request timeout after ${timeout}ms`));
+      }, timeout);
+    });
+
+    // Race between fetch and timeout
+    const fetchPromise = window.fetch(url, {
       ...fetchOptions,
       signal: controller.signal,
     });
 
-    clearTimeout(timeoutId);
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
+
+    // Clear timeout if we got a response
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
     return response;
   } catch (error: any) {
     console.log(
