@@ -53,7 +53,8 @@ function FreshDueDate({
   useEffect(() => {
     const fetchDueDate = async () => {
       try {
-        const response = await fetch(`/api/jobs/${jobId}?refresh=true`);
+        // Use cached data to prevent API spam
+        const response = await fetch(`/api/jobs/${jobId}`);
         if (response.ok) {
           const jobData = await response.json();
           setDueDate(jobData.due_date || null);
