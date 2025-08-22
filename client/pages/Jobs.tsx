@@ -533,13 +533,7 @@ export default function Jobs() {
   }, [toast]);
 
   // Auto-sync: COMPLETELY DISABLED for Vercel deployment
-  // const { status: syncStatus } = useAutoSync({
-  //   enabled: false,
-  //   interval: 90000,
-  //   onDataUpdate,
-  // });
-
-  // Mock sync status to prevent errors
+  // Mock sync status to prevent errors - no background sync operations
   const syncStatus = {
     isPolling: false,
     lastSync: null,
