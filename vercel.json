@@ -3,7 +3,9 @@
   "outputDirectory": "dist/spa",
   "devCommand": "npm run dev",
   "functions": {
-    "api/*.ts": "@vercel/node"
+    "api/*.ts": {
+      "runtime": "@vercel/node"
+    }
   },
   "rewrites": [
     { "source": "/api/jobs", "destination": "/api/jobs" },

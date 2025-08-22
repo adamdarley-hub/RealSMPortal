@@ -139,7 +139,7 @@ export default function Jobs() {
     lastOffset: 0,
     lastLimit: 50,
   });
-  const CACHE_DURATION = 120000; // 2 minutes - increased to reduce API calls
+  const CACHE_DURATION = 30000; // 30 seconds - faster updates
 
   // Declare load functions first before using them in callbacks
   const loadJobs = useCallback(
@@ -180,9 +180,9 @@ export default function Jobs() {
         // Add timeout protection with better error handling
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
-          console.log("⏰ Request timeout after 15 seconds");
+          console.log("⏰ Request timeout after 8 seconds");
           controller.abort();
-        }, 15000); // 15 second timeout to handle ServeManager processing
+        }, 8000); // 8 second timeout for faster response
 
         try {
           // Use fast SQLite API with pagination
@@ -305,34 +305,19 @@ export default function Jobs() {
           variant: "destructive",
         });
 
-        // Try legacy SQLite API as fallback
+        // Single fallback to prevent excessive API calls
         try {
-          console.log("Supabase failed, trying legacy SQLite...");
-          const legacyResponse = await fetch("/api/jobs");
-          if (legacyResponse.ok) {
-            const legacyData = await legacyResponse.json();
-            setJobs(legacyData.jobs || []);
-            setTotalJobs(legacyData.total || 0);
-            setUsingMockData(!!legacyData.mock);
+          console.log("Primary API failed, trying single fallback...");
+          const fallbackResponse = await fetch("/api/jobs");
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            setJobs(fallbackData.jobs || []);
+            setTotalJobs(fallbackData.total || 0);
+            setUsingMockData(!!fallbackData.mock);
             setError(null);
-            toast({
-              title: "Using Legacy Database",
-              description: "Supabase unavailable, using slower SQLite fallback",
-              variant: "default",
-            });
-          } else {
-            // Final fallback to mock data
-            const mockResponse = await fetch("/api/mock/jobs");
-            if (mockResponse.ok) {
-              const mockData = await mockResponse.json();
-              setJobs(mockData.jobs || []);
-              setTotalJobs(mockData.total || 0);
-              setUsingMockData(true);
-              setError(null);
-            }
           }
         } catch (fallbackError) {
-          console.error("All fallbacks failed:", fallbackError);
+          console.error("Fallback failed:", fallbackError);
         }
       } finally {
         setLoading(false);
