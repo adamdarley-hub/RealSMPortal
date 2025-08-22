@@ -128,12 +128,20 @@ export default function Jobs() {
     const now = Date.now();
     const cache = cacheRef.current;
 
-    // Temporarily disable cache to debug pagination - always make API calls
-    const cacheValid = false; // DISABLED FOR DEBUGGING
+    // Check if cache is valid for current request
+    const cacheValid = !forceRefresh &&
+                      cache.jobs.length > 0 &&
+                      (now - cache.timestamp) < CACHE_DURATION &&
+                      cache.lastOffset === filters.offset &&
+                      cache.lastLimit === filters.limit;
 
-    console.log(`🔍 Cache DISABLED for debugging - will always make API call for offset=${filters.offset}, page=${currentPage}`);
-
-    // Cache disabled - always make API call
+    if (cacheValid) {
+      console.log(`🚀 Using cached data for offset=${filters.offset}, page=${currentPage}`);
+      setJobs(cache.jobs);
+      setTotalJobs(cache.totalJobs);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);

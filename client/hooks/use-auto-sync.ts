@@ -20,7 +20,7 @@ interface UseAutoSyncOptions {
 export function useAutoSync(options: UseAutoSyncOptions = {}) {
   const {
     enabled = false, // Disabled by default to prevent timeout issues
-    interval = 60000, // 60 seconds default (increased from 30s to reduce server load)
+    interval = 300000, // 5 minutes default (reduced server load significantly)
     onDataUpdate
   } = options;
 
@@ -111,8 +111,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
           console.log(`🏥 Health check trying: ${endpoint}`);
           const healthController = new AbortController();
           const healthTimeoutId = setTimeout(() => {
-            healthController.abort(new Error('Health check timeout after 10 seconds'));
-          }, 10000);
+            healthController.abort(new Error('Health check timeout after 5 seconds'));
+          }, 5000);
 
           const healthCheck = await fetch(endpoint, {
             method: 'GET',
