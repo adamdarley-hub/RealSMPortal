@@ -545,8 +545,8 @@ export default function Jobs() {
   useEffect(() => {
     let isMounted = true;
 
-    // Log fetch diagnostics to help debug FullStory issues
-    logFetchDiagnostics();
+    // Using clean fetch to bypass analytics interference
+    console.log('🔧 Using analytics-bypass fetch implementation');
 
     const loadInitialData = async () => {
       if (!isMounted) return;
