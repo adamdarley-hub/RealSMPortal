@@ -1,10 +1,10 @@
 {
   "name": "fusion-starter",
-  "description": "VERCEL FIX - Node 22.x serverless deployment - FORCE PUSH 2025-08-20-19:58",
+  "description": "VERCEL FIX - Node 20.x serverless deployment - Fixed runtime version",
   "private": true,
   "type": "module",
   "engines": {
-    "node": "22.x"
+    "node": "20.x"
   },
   "pkg": {
     "assets": [
@@ -25,7 +25,7 @@
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc",
-    "postinstall": "echo 'VERCEL DEPLOYMENT - No SQLite dependencies - Node 22.x'"
+    "postinstall": "echo 'VERCEL DEPLOYMENT - No SQLite dependencies - Node 20.x'"
   },
   "dependencies": {
     "@builder.io/react": "8.2.6",
