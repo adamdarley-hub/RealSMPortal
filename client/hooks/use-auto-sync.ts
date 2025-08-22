@@ -111,12 +111,6 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         for (const endpoint of healthEndpoints) {
           try {
             console.log(`🏥 Health check trying: ${endpoint}`);
-            const healthController = new AbortController();
-            const healthTimeoutId = setTimeout(() => {
-              healthController.abort(
-                new Error("Health check timeout after 10 seconds"),
-              );
-            }, 10000);
 
             const healthCheck = await safeFetch(endpoint, {
               method: "GET",
@@ -129,8 +123,6 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
               redirect: "follow",
               mode: "cors",
             });
-
-            clearTimeout(healthTimeoutId);
 
             if (healthCheck.ok) {
               console.log(`✅ Health check passed with: ${endpoint}`);
