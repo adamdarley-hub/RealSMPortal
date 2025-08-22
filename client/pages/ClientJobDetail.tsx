@@ -606,8 +606,8 @@ export default function ClientJobDetail() {
     setLoading(true);
 
     try {
-      // Always get fresh data for client detail view to ensure documents, invoices, affidavits are loaded
-      const url = `/api/jobs/${id}?refresh=true`;
+      // Use bulk cached data instead of individual refresh to prevent API spam
+      const url = `/api/jobs/${id}`;
       const response = await fetch(url);
 
       if (!response.ok) {
