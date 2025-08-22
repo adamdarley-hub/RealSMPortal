@@ -159,15 +159,20 @@ export default function ClientDashboard() {
       forceSync,
       hasUser: !!user,
       clientId: user?.client_id,
-      currentJobsCount: jobs.length
+      currentJobsCount: jobs.length,
     });
 
     if (!user?.client_id) {
-      console.log("❌ PRODUCTION DEBUG - loadJobs: No client_id, returning early");
+      console.log(
+        "❌ PRODUCTION DEBUG - loadJobs: No client_id, returning early",
+      );
       return;
     }
 
-    console.log("🔄 PRODUCTION DEBUG - Starting job load for client:", user.client_id);
+    console.log(
+      "🔄 PRODUCTION DEBUG - Starting job load for client:",
+      user.client_id,
+    );
     setLoading(true);
     setError(null);
 
@@ -284,15 +289,20 @@ export default function ClientDashboard() {
       userName: user?.name,
       userCompany: user?.company,
       userEmail: user?.email,
-      fullUser: user
+      fullUser: user,
     });
 
     if (!user?.client_id) {
-      console.log("❌ PRODUCTION DEBUG - No client_id found, skipping job load");
+      console.log(
+        "❌ PRODUCTION DEBUG - No client_id found, skipping job load",
+      );
       return;
     }
 
-    console.log("✅ PRODUCTION DEBUG - About to load jobs for client:", user.client_id);
+    console.log(
+      "✅ PRODUCTION DEBUG - About to load jobs for client:",
+      user.client_id,
+    );
     loadJobs();
   }, [user?.client_id]);
 
@@ -487,19 +497,21 @@ export default function ClientDashboard() {
       email: user?.email,
       company: user?.company,
       clientId: user?.client_id,
-      hasUser: !!user
+      hasUser: !!user,
     },
     dataState: {
       jobsCount: jobs.length,
       loading,
       error: !!error,
-      hasJobs: jobs.length > 0
+      hasJobs: jobs.length > 0,
     },
-    firstJob: jobs[0] ? {
-      id: jobs[0].id,
-      jobNumber: jobs[0].job_number,
-      recipient: jobs[0].recipient_name
-    } : null
+    firstJob: jobs[0]
+      ? {
+          id: jobs[0].id,
+          jobNumber: jobs[0].job_number,
+          recipient: jobs[0].recipient_name,
+        }
+      : null,
   });
 
   return (
@@ -514,7 +526,8 @@ export default function ClientDashboard() {
             </p>
             {/* Production Debug Info */}
             <div className="text-xs text-gray-500 mt-1 font-mono">
-              DEBUG: {jobs.length} jobs | User: {user?.name} | Client: {user?.client_id} | {window.location.hostname}
+              DEBUG: {jobs.length} jobs | User: {user?.name} | Client:{" "}
+              {user?.client_id} | {window.location.hostname}
             </div>
           </div>
           <Button
