@@ -189,7 +189,7 @@ export default function Jobs() {
           // Use fast SQLite API with pagination
           const currentPageNum = Math.floor(filters.offset / filters.limit) + 1;
           console.log(
-            `🌐 Making API call to /api/jobs?limit=${filters.limit}&page=${currentPageNum}`,
+            `🌐 Making API call to /api/jobs?limit=${filters.limit}&page=${currentPageNum} (may take 10-15 seconds)`,
           );
           const response = await fetch(
             `/api/jobs?limit=${filters.limit}&page=${currentPageNum}`,
