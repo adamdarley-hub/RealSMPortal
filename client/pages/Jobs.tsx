@@ -586,8 +586,38 @@ export default function Jobs() {
           try {
             console.log(`🌐 Trying API endpoint: ${endpoint}`);
 
-            const response = await fetch(endpoint, {
-              timeout: 8000, // 8 second timeout
+            // Create safe fetch function to avoid FullStory interference
+            const safeFetch = async (url: string, options: any) => {
+              try {
+                // Try native fetch first
+                const originalFetch = window.fetch;
+                return await originalFetch(url, options);
+              } catch (error) {
+                console.log('🔄 Native fetch failed, trying XMLHttpRequest fallback');
+                // Fallback to XMLHttpRequest if fetch is intercepted
+                return new Promise<Response>((resolve, reject) => {
+                  const xhr = new XMLHttpRequest();
+                  xhr.open('GET', url);
+                  xhr.setRequestHeader('Content-Type', 'application/json');
+                  xhr.timeout = options.timeout || 15000;
+                  xhr.onload = () => {
+                    const response = new Response(xhr.responseText, {
+                      status: xhr.status,
+                      statusText: xhr.statusText,
+                      headers: new Headers()
+                    });
+                    resolve(response);
+                  };
+                  xhr.onerror = () => reject(new Error('Network error'));
+                  xhr.ontimeout = () => reject(new Error('Request timeout'));
+                  xhr.onabort = () => reject(new Error('Request aborted'));
+                  xhr.send();
+                });
+              }
+            };
+
+            const response = await safeFetch(endpoint, {
+              timeout: 15000, // Increased timeout
               signal: AbortSignal.timeout(8000),
             });
 
