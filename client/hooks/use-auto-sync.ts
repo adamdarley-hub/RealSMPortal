@@ -93,10 +93,39 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
         console.log("🔄 Starting auto-sync request...");
 
-        // Check if fetch is available (could be blocked by extensions)
-        if (typeof fetch === "undefined") {
-          throw new Error("Fetch API is not available");
-        }
+        // Create safe fetch function to avoid FullStory/analytics interference
+        const safeFetch = async (url: string, options: any = {}) => {
+          try {
+            // Try to use original fetch if available
+            const originalFetch = window.fetch;
+            return await originalFetch(url, options);
+          } catch (error) {
+            console.log('🔄 Native fetch failed, trying XMLHttpRequest fallback');
+            // Fallback to XMLHttpRequest if fetch is intercepted
+            return new Promise<Response>((resolve, reject) => {
+              const xhr = new XMLHttpRequest();
+              xhr.open(options.method || 'GET', url);
+              if (options.headers) {
+                Object.entries(options.headers).forEach(([key, value]) => {
+                  xhr.setRequestHeader(key, value as string);
+                });
+              }
+              xhr.timeout = 15000;
+              xhr.onload = () => {
+                const response = new Response(xhr.responseText, {
+                  status: xhr.status,
+                  statusText: xhr.statusText,
+                  headers: new Headers()
+                });
+                resolve(response);
+              };
+              xhr.onerror = () => reject(new Error('Network error'));
+              xhr.ontimeout = () => reject(new Error('Request timeout'));
+              xhr.onabort = () => reject(new Error('Request aborted'));
+              xhr.send(options.body);
+            });
+          }
+        };
 
         // Try multiple health check endpoints in order of preference
         const healthEndpoints = [
@@ -117,7 +146,7 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
               );
             }, 10000);
 
-            const healthCheck = await fetch(endpoint, {
+            const healthCheck = await safeFetch(endpoint, {
               method: "GET",
               signal: healthController.signal,
               cache: "no-cache",
