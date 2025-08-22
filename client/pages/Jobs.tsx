@@ -120,7 +120,7 @@ export default function Jobs() {
     lastOffset: 0,
     lastLimit: 50
   });
-  const CACHE_DURATION = 30000; // 30 seconds
+  const CACHE_DURATION = 120000; // 2 minutes - increased to reduce API calls
 
   // Declare load functions first before using them in callbacks
   const loadJobs = useCallback(async (retryCount = 0, forceRefresh = false) => {
@@ -155,9 +155,9 @@ export default function Jobs() {
       // Add timeout protection with better error handling
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.log('⏰ Request timeout after 10 seconds');
+        console.log('⏰ Request timeout after 5 seconds');
         controller.abort();
-      }, 10000); // 10 second timeout (reduced for faster feedback)
+      }, 5000); // 5 second timeout for faster feedback
 
       try {
         // Use fast SQLite API with pagination
