@@ -934,8 +934,8 @@ export default function JobDetail() {
     try {
       console.log('🔄 Refreshing job data to get fresh document URLs...');
 
-      // Force fresh data from ServeManager
-      const response = await fetch(`/api/servemanager/jobs/${id}?refresh=true&t=${Date.now()}`);
+      // Use cached data to prevent API spam
+      const response = await fetch(`/api/servemanager/jobs/${id}`);
 
       if (response.ok) {
         const rawJobData = await response.json();
@@ -958,8 +958,8 @@ export default function JobDetail() {
         });
       } else {
         // Fallback to forced cache refresh
-        console.log('🔄 ServeManager refresh failed, trying cache refresh...');
-        const cacheResponse = await fetch(`/api/jobs/${id}?refresh=true&t=${Date.now()}`);
+        console.log('🔄 ServeManager failed, trying cache...');
+        const cacheResponse = await fetch(`/api/jobs/${id}`);
 
         if (cacheResponse.ok) {
           const freshJobData = await cacheResponse.json();
@@ -1284,8 +1284,9 @@ export default function JobDetail() {
                         size="sm"
                         onClick={async () => {
                           try {
-                            console.log('🔄 Manual refresh triggered...');
-                            const freshResponse = await fetch(`/api/jobs/${id}?refresh=true`);
+                            console.log('🔄 Manual refresh disabled to prevent API spam');
+                            // Refresh disabled to prevent API spam - data is already fresh from bulk fetch
+                            return;
 
                             if (freshResponse.ok) {
                               const freshJobData = await freshResponse.json();
