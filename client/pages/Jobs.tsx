@@ -534,12 +534,24 @@ export default function Jobs() {
     // Note: This is silent and non-blocking - doesn't affect UI performance
   }, [toast]);
 
-  // Smart auto-sync: completely disabled to prevent FullStory conflicts
-  const { status: syncStatus } = useAutoSync({
-    enabled: false, // Completely disabled due to FullStory interference
-    interval: 90000, // 90 seconds - reduced frequency to prevent timeouts (was 45s)
-    onDataUpdate,
-  });
+  // Auto-sync: COMPLETELY DISABLED for Vercel deployment
+  // const { status: syncStatus } = useAutoSync({
+  //   enabled: false,
+  //   interval: 90000,
+  //   onDataUpdate,
+  // });
+
+  // Mock sync status to prevent errors
+  const syncStatus = {
+    isPolling: false,
+    lastSync: null,
+    nextSync: null,
+    isSyncing: false,
+    error: null,
+    isOnline: navigator.onLine,
+    consecutiveFailures: 0,
+    circuitBreakerOpen: false
+  };
 
   // Load initial data (clients and servers only once)
   useEffect(() => {

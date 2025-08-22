@@ -7,8 +7,19 @@
       "NODE_VERSION": "22"
     }
   },
+  "functions": {
+    "api/*.ts": {
+      "runtime": "nodejs22.x"
+    }
+  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/api/jobs", "destination": "/api/jobs" },
+    { "source": "/api/clients", "destination": "/api/clients" },
+    { "source": "/api/servers", "destination": "/api/servers" },
+    { "source": "/api/ping", "destination": "/api/ping" },
+    { "source": "/api/sync", "destination": "/api/sync" },
+    { "source": "/api/sync/status", "destination": "/api/sync" },
+    { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
