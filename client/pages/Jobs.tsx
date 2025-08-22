@@ -577,8 +577,7 @@ export default function Jobs() {
 
         // Try multiple API endpoints in order of preference
         const apiEndpoints = [
-          `/api/v2/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Supabase (ultra-fast)
-          `/api/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Cached fallback
+          `/api/jobs?limit=${filters.limit}&page=${currentPageNum}`, // Express backend
         ];
 
         let lastError = null;

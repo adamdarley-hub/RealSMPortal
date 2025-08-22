@@ -100,10 +100,10 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
         // Try multiple health check endpoints in order of preference
         const healthEndpoints = [
-          "/api/v2/jobs?limit=1", // Supabase (ultra-fast)
-          "/api/jobs?limit=1", // Cached backend
-          "/api/sync/status", // Sync status check
-        ];
+        "/api/jobs?limit=1", // Express backend
+        "/api/sync/status", // Sync status check
+        "/api/ping", // Basic ping
+      ];
 
         let healthCheckPassed = false;
 
