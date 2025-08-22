@@ -544,6 +544,9 @@ export default function Jobs() {
   useEffect(() => {
     let isMounted = true;
 
+    // Log fetch diagnostics to help debug FullStory issues
+    logFetchDiagnostics();
+
     const loadInitialData = async () => {
       if (!isMounted) return;
 
@@ -651,17 +654,29 @@ export default function Jobs() {
         throw lastError || new Error("All API endpoints failed");
       } catch (error) {
         console.error("❌ All API calls failed:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to load jobs",
-        );
 
-        // Show mock data as final fallback to prevent blank page
-        try {
+        // Check for specific error types
+        const errorMessage = error instanceof Error ? error.message : "Failed to load jobs";
+
+        if (errorMessage.includes('FullStory') || errorMessage.includes('Failed to fetch')) {
+          setError('Network connectivity issue detected. Try refreshing the page.');
+        } else if (errorMessage.includes('timeout')) {
+          setError('Request timed out. The server may be busy, please try again.');
+        } else {
+          setError(errorMessage);
+        }
+
+        // Try to show cached data as fallback
+        if (cacheRef.current.jobs.length > 0) {
+          console.log('📦 Using cached data due to network error');
+          setJobs(cacheRef.current.jobs);
+          setTotalJobs(cacheRef.current.totalJobs);
+          setUsingMockData(false);
+        } else {
+          // Show empty state as final fallback
           setJobs([]);
           setTotalJobs(0);
           setUsingMockData(true);
-        } catch {
-          // Even mock fallback failed
         }
       } finally {
         setLoading(false);
