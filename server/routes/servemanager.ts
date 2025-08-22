@@ -9,6 +9,10 @@ import {
   mapInvoiceFromServeManager,
 } from "../utils/servemanager-mapper";
 import { supabaseSyncService } from "../services/supabase-sync";
+import {
+  getServeManagerConfig as getServeManagerConfigHelper,
+  validateServeManagerConfig,
+} from "../utils/config-helper";
 
 const CONFIG_FILE = path.join(process.cwd(), ".api-config.json");
 const ENCRYPTION_KEY =
@@ -39,40 +43,79 @@ function decrypt(text: string): string {
 
 export async function getServeManagerConfig() {
   try {
-    const data = await fs.readFile(CONFIG_FILE, "utf8");
-    const config = JSON.parse(data);
+    console.log("🔑 Getting ServeManager config...");
 
-    if (!config.serveManager?.enabled) {
-      throw new Error(
-        "ServeManager integration is not enabled. Please configure it in Settings → API Configuration.",
-      );
+    // 1. Check environment variables first (highest priority)
+    const envBaseUrl = process.env.SERVEMANAGER_BASE_URL;
+    const envApiKey = process.env.SERVEMANAGER_API_KEY;
+
+    if (envBaseUrl && envApiKey) {
+      console.log("✅ Using environment variables for ServeManager config");
+      return {
+        baseUrl: envBaseUrl,
+        apiKey: envApiKey,
+      };
     }
 
-    if (!config.serveManager?.baseUrl || !config.serveManager?.apiKey) {
-      throw new Error(
-        "ServeManager API URL or key is missing. Please check your configuration.",
-      );
-    }
-
-    return {
-      baseUrl: config.serveManager.baseUrl,
-      apiKey: decrypt(config.serveManager.apiKey),
-    };
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("ENOENT")) {
-      throw new Error(
-        "ServeManager is not configured yet. Please go to Settings → API Configuration to set it up.",
-      );
-    }
+    // 2. Check global memory (saved from UI)
+    const globalConfig = global.tempApiConfig?.serveManager;
     if (
-      error instanceof Error &&
-      (error.message.includes("enabled") || error.message.includes("missing"))
+      globalConfig?.baseUrl &&
+      globalConfig?.apiKey &&
+      globalConfig?.enabled
     ) {
-      throw error;
+      console.log("✅ Using global memory config for ServeManager:", {
+        hasBaseUrl: !!globalConfig.baseUrl,
+        hasApiKey: !!globalConfig.apiKey,
+        enabled: globalConfig.enabled,
+        baseUrl: globalConfig.baseUrl,
+        apiKeyLength: globalConfig.apiKey?.length || 0,
+      });
+      return {
+        baseUrl: globalConfig.baseUrl,
+        apiKey: globalConfig.apiKey,
+      };
     }
-    throw new Error(
-      "ServeManager configuration not found or invalid. Please check Settings → API Configuration.",
-    );
+
+    // 3. Fallback to file-based config for backward compatibility
+    try {
+      const data = await fs.readFile(CONFIG_FILE, "utf8");
+      const config = JSON.parse(data);
+
+      if (!config.serveManager?.enabled) {
+        throw new Error(
+          "ServeManager integration is not enabled. Please configure it in Settings → API Configuration.",
+        );
+      }
+
+      if (!config.serveManager?.baseUrl || !config.serveManager?.apiKey) {
+        throw new Error(
+          "ServeManager API URL or key is missing. Please check your configuration.",
+        );
+      }
+
+      console.log("✅ Using file-based config for ServeManager");
+      return {
+        baseUrl: config.serveManager.baseUrl,
+        apiKey: decrypt(config.serveManager.apiKey),
+      };
+    } catch (fileError) {
+      console.error("❌ No configuration found in any source:", {
+        environmentVars: { hasBaseUrl: !!envBaseUrl, hasApiKey: !!envApiKey },
+        globalConfig: {
+          exists: !!globalConfig,
+          enabled: globalConfig?.enabled,
+        },
+        fileError: fileError instanceof Error ? fileError.message : "Unknown",
+      });
+
+      throw new Error(
+        "ServeManager is not configured. Please go to Settings → API Configuration to set it up.",
+      );
+    }
+  } catch (error) {
+    console.error("❌ Failed to get ServeManager config:", error);
+    throw error;
   }
 }
 

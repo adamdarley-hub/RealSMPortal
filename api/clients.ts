@@ -1,5 +1,37 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+// Simple config getter to avoid import issues
+function getServeManagerConfig() {
+  // Environment variables take priority
+  const envBaseUrl = process.env.SERVEMANAGER_BASE_URL;
+  const envApiKey = process.env.SERVEMANAGER_API_KEY;
+
+  if (envBaseUrl && envApiKey) {
+    return {
+      baseUrl: envBaseUrl,
+      apiKey: envApiKey,
+      enabled: true,
+    };
+  }
+
+  // Fall back to global memory
+  const globalConfig = global.tempApiConfig?.serveManager;
+  if (globalConfig?.baseUrl && globalConfig?.apiKey) {
+    return {
+      baseUrl: globalConfig.baseUrl,
+      apiKey: globalConfig.apiKey,
+      enabled: globalConfig.enabled || false,
+    };
+  }
+
+  // HARDCODED FALLBACK FOR TESTING
+  return {
+    baseUrl: "https://www.servemanager.com/api",
+    apiKey: "mGcmzLfOxLXa5wCJfhbXgQ",
+    enabled: true,
+  };
+}
+
 // No mock data - all clients come from ServeManager
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -21,12 +53,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // In production, this would fetch from ServeManager API
       // For now, return mock clients for authentication to work
-      const servemanagerConfig = {
-        baseUrl: process.env.SERVEMANAGER_BASE_URL,
-        apiKey: process.env.SERVEMANAGER_API_KEY,
-      };
+      const servemanagerConfig = getServeManagerConfig();
 
-      if (servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
+      if (
+        servemanagerConfig.enabled &&
+        servemanagerConfig.baseUrl &&
+        servemanagerConfig.apiKey
+      ) {
         try {
           // Try to fetch real clients from ServeManager
           const credentials = Buffer.from(

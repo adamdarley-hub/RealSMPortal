@@ -1,6 +1,36 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-// No mock data - all data comes from ServeManager
+// Simple config getter to avoid import issues
+function getServeManagerConfig() {
+  // Environment variables take priority
+  const envBaseUrl = process.env.SERVEMANAGER_BASE_URL;
+  const envApiKey = process.env.SERVEMANAGER_API_KEY;
+
+  if (envBaseUrl && envApiKey) {
+    return {
+      baseUrl: envBaseUrl,
+      apiKey: envApiKey,
+      enabled: true,
+    };
+  }
+
+  // Fall back to global memory
+  const globalConfig = global.tempApiConfig?.serveManager;
+  if (globalConfig?.baseUrl && globalConfig?.apiKey) {
+    return {
+      baseUrl: globalConfig.baseUrl,
+      apiKey: globalConfig.apiKey,
+      enabled: globalConfig.enabled || false,
+    };
+  }
+
+  // HARDCODED FALLBACK FOR TESTING
+  return {
+    baseUrl: "https://www.servemanager.com/api",
+    apiKey: "mGcmzLfOxLXa5wCJfhbXgQ",
+    enabled: true,
+  };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -35,24 +65,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         refresh,
       });
 
-      const servemanagerConfig = {
-        baseUrl: process.env.SERVEMANAGER_BASE_URL,
-        apiKey: process.env.SERVEMANAGER_API_KEY,
-      };
+      // Get ServeManager configuration
+      const servemanagerConfig = getServeManagerConfig();
 
       console.log("🔧 VERCEL DEBUG - ServeManager config check:", {
         hasBaseUrl: !!servemanagerConfig.baseUrl,
         hasApiKey: !!servemanagerConfig.apiKey,
+        enabled: servemanagerConfig.enabled,
         baseUrl: servemanagerConfig.baseUrl,
         apiKeyLength: servemanagerConfig.apiKey?.length || 0,
-        clientId,
-        limit,
-        refresh,
-        hostname: req.headers.host,
-        userAgent: req.headers["user-agent"],
       });
 
-      if (servemanagerConfig.baseUrl && servemanagerConfig.apiKey) {
+      if (
+        servemanagerConfig.enabled &&
+        servemanagerConfig.baseUrl &&
+        servemanagerConfig.apiKey
+      ) {
         console.log(
           "✅ VERCEL DEBUG - ServeManager credentials available, attempting API call",
         );
@@ -109,11 +137,50 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               data.data?.length || 0,
             );
 
+            // LOG THE FULL RAW RESPONSE STRUCTURE
+            console.log("🔍 FULL RAW SERVEMANAGER RESPONSE:");
+            console.log("📋 Response structure:", {
+              hasData: !!data.data,
+              dataLength: data.data?.length || 0,
+              hasMeta: !!data.meta,
+              hasIncluded: !!data.included,
+              includedLength: data.included?.length || 0,
+              metaKeys: data.meta ? Object.keys(data.meta) : [],
+            });
+
             if (data.data && data.data.length > 0) {
+              console.log("📄 FIRST JOB RAW DATA:");
+              console.log(JSON.stringify(data.data[0], null, 2));
+
+              // Log the available fields to help with mapping
               console.log(
-                "📄 Sample job data:",
-                JSON.stringify(data.data[0], null, 2),
+                "🔍 Available job fields:",
+                Object.keys(data.data[0]),
               );
+              if (data.data[0].attributes) {
+                console.log(
+                  "🔍 Available attributes:",
+                  Object.keys(data.data[0].attributes),
+                );
+              }
+              if (data.data[0].relationships) {
+                console.log(
+                  "🔍 Available relationships:",
+                  Object.keys(data.data[0].relationships),
+                );
+              }
+
+              if (data.included && data.included.length > 0) {
+                console.log("📎 FIRST INCLUDED ITEM:");
+                console.log(JSON.stringify(data.included[0], null, 2));
+                console.log("🔍 Included item type:", data.included[0].type);
+                if (data.included[0].attributes) {
+                  console.log(
+                    "🔍 Included attributes:",
+                    Object.keys(data.included[0].attributes),
+                  );
+                }
+              }
             }
 
             // Transform ServeManager data to expected format
@@ -177,7 +244,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (transformedJobs.length > 0) {
               console.log(
                 "📋 Sample transformed job:",
-                JSON.stringify(transformedJobs[0], null, 2),
+                JSON.stringify(transformedJobs[0], null, 2).substring(0, 300),
               );
             }
 
@@ -204,12 +271,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             hasApiKey: !!servemanagerConfig.apiKey,
           });
         }
+      } else {
+        console.log("❌ VERCEL DEBUG - ServeManager not configured:", {
+          enabled: servemanagerConfig.enabled,
+          hasBaseUrl: !!servemanagerConfig.baseUrl,
+          hasApiKey: !!servemanagerConfig.apiKey,
+          envVarsSet: {
+            hasEnvBaseUrl: !!process.env.SERVEMANAGER_BASE_URL,
+            hasEnvApiKey: !!process.env.SERVEMANAGER_API_KEY,
+          },
+        });
       }
 
       // If ServeManager is not configured or failed, return empty array
-      console.log(
-        "❌ VERCEL DEBUG - ServeManager not available or not configured",
-      );
       console.log(
         "🔧 VERCEL DEBUG - Final fallback - returning empty jobs array",
       );
@@ -221,16 +295,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         page: 1,
         limit: parseInt(limit as string) || 100,
         has_more: false,
-        error: "ServeManager API not configured or not available",
+        message:
+          "ServeManager API not configured or not available. Please configure API credentials in Settings.",
       });
     }
 
     return res.status(405).json({ error: "Method not allowed" });
   } catch (error) {
-    console.error("Jobs API error:", error);
+    console.error("❌ VERCEL JOBS - Unhandled error:", error);
     return res.status(500).json({
       error: "Internal server error",
       details: error instanceof Error ? error.message : "Unknown error",
+      message: "Jobs API encountered an error. Please try again.",
     });
   }
 }

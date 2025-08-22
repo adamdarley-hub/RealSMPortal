@@ -1,5 +1,37 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+// Simple config getter to avoid import issues
+function getServeManagerConfig() {
+  // Environment variables take priority
+  const envBaseUrl = process.env.SERVEMANAGER_BASE_URL;
+  const envApiKey = process.env.SERVEMANAGER_API_KEY;
+
+  if (envBaseUrl && envApiKey) {
+    return {
+      baseUrl: envBaseUrl,
+      apiKey: envApiKey,
+      enabled: true,
+    };
+  }
+
+  // Fall back to global memory
+  const globalConfig = global.tempApiConfig?.serveManager;
+  if (globalConfig?.baseUrl && globalConfig?.apiKey) {
+    return {
+      baseUrl: globalConfig.baseUrl,
+      apiKey: globalConfig.apiKey,
+      enabled: globalConfig.enabled || false,
+    };
+  }
+
+  // HARDCODED FALLBACK FOR TESTING
+  return {
+    baseUrl: "https://www.servemanager.com/api",
+    apiKey: "mGcmzLfOxLXa5wCJfhbXgQ",
+    enabled: true,
+  };
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Set CORS headers
@@ -24,20 +56,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       apiKeyLength: process.env.SERVEMANAGER_API_KEY?.length || 0,
     };
 
-    // Check global config
+    // Get effective configuration using simple config utility
+    const config = getServeManagerConfig();
+    const baseUrl = config.baseUrl;
+    const apiKey = config.apiKey;
+
+    // Check global config (for debugging)
     const globalConfig = {
       hasGlobalTempConfig: !!global.tempApiConfig,
       globalServeManager: global.tempApiConfig?.serveManager || null,
     };
 
+    // Configuration summary
+    const configSummary = {
+      effectiveConfigEnabled: config.enabled,
+      hasEffectiveUrl: !!baseUrl,
+      hasEffectiveKey: !!apiKey,
+      configSource: process.env.SERVEMANAGER_BASE_URL
+        ? "environment"
+        : global.tempApiConfig?.serveManager?.baseUrl
+          ? "global"
+          : "stored_or_default",
+    };
+
     // Test ServeManager connection
     let connectionTest = null;
-    const baseUrl =
-      process.env.SERVEMANAGER_BASE_URL ||
-      global.tempApiConfig?.serveManager?.baseUrl;
-    const apiKey =
-      process.env.SERVEMANAGER_API_KEY ||
-      global.tempApiConfig?.serveManager?.apiKey;
 
     if (baseUrl && apiKey) {
       try {
@@ -104,6 +147,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       configuration: {
         environmentVariables: envVars,
         globalConfig: globalConfig,
+        effectiveConfig: configSummary,
       },
       serveManagerTest: connectionTest,
     };

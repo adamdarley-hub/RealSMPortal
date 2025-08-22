@@ -1,6 +1,21 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Create API configurations table for storing service configurations
+CREATE TABLE api_configurations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  service_name TEXT UNIQUE NOT NULL CHECK (service_name IN ('servemanager', 'stripe', 'radar')),
+  base_url TEXT,
+  api_key TEXT,
+  publishable_key TEXT,
+  secret_key TEXT,
+  webhook_secret TEXT,
+  environment TEXT CHECK (environment IN ('test', 'live')),
+  enabled BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Create jobs table
 CREATE TABLE jobs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -138,12 +153,16 @@ CREATE TRIGGER update_attempts_updated_at BEFORE UPDATE ON attempts
 CREATE TRIGGER update_photos_updated_at BEFORE UPDATE ON photos
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_api_configurations_updated_at BEFORE UPDATE ON api_configurations
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE servers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE api_configurations ENABLE ROW LEVEL SECURITY;
 
 -- Create policies (allow all operations for now - can be restricted later)
 CREATE POLICY "Enable all operations for jobs" ON jobs FOR ALL USING (true) WITH CHECK (true);
@@ -151,6 +170,7 @@ CREATE POLICY "Enable all operations for clients" ON clients FOR ALL USING (true
 CREATE POLICY "Enable all operations for servers" ON servers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all operations for attempts" ON attempts FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all operations for photos" ON photos FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Enable all operations for api_configurations" ON api_configurations FOR ALL USING (true) WITH CHECK (true);
 
 -- Create function for getting job with full details
 CREATE OR REPLACE FUNCTION get_job_with_details(job_uuid UUID)
