@@ -2,7 +2,7 @@
 import {
   makeServeManagerRequest,
   getServeManagerConfig,
-  getServers,
+  getServersData,
 } from "../routes/servemanager";
 import { mapJobFromServeManager } from "../utils/servemanager-mapper";
 
