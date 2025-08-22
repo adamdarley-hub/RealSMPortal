@@ -259,32 +259,8 @@ export const getCachedJob: RequestHandler = async (req, res) => {
 
     // If refresh is requested, fetch fresh data from ServeManager
     if (refresh === 'true') {
-      console.log(`🔄 Refresh requested for job ${id}, fetching fresh data...`);
-      try {
-        const { makeServeManagerRequest } = await import('./servemanager');
-        const freshData = await makeServeManagerRequest(`/jobs/${id}`);
-
-        // Unwrap the data if it's wrapped in a data property
-        const actualJobData = freshData.data || freshData;
-
-        // Debug logging for job 20483264 fresh data
-        // Process job data
-
-        // Return fresh data with same structure as cached data
-        const responseTime = Date.now() - startTime;
-        console.log(`🔄 Served fresh job ${id} from ServeManager in ${responseTime}ms`);
-
-        res.json({
-          ...actualJobData,
-          cached: false,
-          response_time_ms: responseTime,
-          _last_synced: new Date().toISOString()
-        });
-        return;
-      } catch (error) {
-        console.error(`❌ Failed to refresh job ${id}:`, error);
-        // Fall back to cache if refresh fails
-      }
+      console.log(`🔄 Serverless mode: Skipping individual job refresh to prevent API spam - job ${id}`);
+      // In serverless mode, we always have fresh data from bulk fetch, so no individual refresh needed
     }
 
     const job = await cacheService.getJobFromCache(id);
