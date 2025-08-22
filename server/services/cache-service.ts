@@ -330,10 +330,10 @@ export class CacheService {
       "Serverless mode: Fetching servers directly from ServeManager (no cache)",
     );
     try {
-      const response = await getServers();
+      const result = await getServersData();
 
-      if (response && response.data) {
-        return Array.isArray(response.data) ? response.data : [response.data];
+      if (result && result.servers) {
+        return Array.isArray(result.servers) ? result.servers : [result.servers];
       }
 
       return [];
