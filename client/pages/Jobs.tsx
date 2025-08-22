@@ -534,7 +534,7 @@ export default function Jobs() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
           controller.abort();
-        }, 15000);
+        }, 8000);
 
         const response = await fetch(endpoint, {
           signal: controller.signal,
