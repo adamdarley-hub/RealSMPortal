@@ -546,7 +546,7 @@ export default function Jobs() {
     let isMounted = true;
 
     // Using clean fetch to bypass analytics interference
-    console.log('🔧 Using analytics-bypass fetch implementation');
+    console.log("🔧 Using analytics-bypass fetch implementation");
 
     const loadInitialData = async () => {
       if (!isMounted) return;
@@ -582,7 +582,7 @@ export default function Jobs() {
         // Create AbortController for timeout handling
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
-          console.log('⏰ Request timeout after 15 seconds');
+          console.log("⏰ Request timeout after 15 seconds");
           controller.abort();
         }, 15000);
 
@@ -604,24 +604,26 @@ export default function Jobs() {
                 const originalFetch = window.fetch;
                 return await originalFetch(url, options);
               } catch (error) {
-                console.log('🔄 Native fetch failed, trying XMLHttpRequest fallback');
+                console.log(
+                  "🔄 Native fetch failed, trying XMLHttpRequest fallback",
+                );
                 // Fallback to XMLHttpRequest if fetch is intercepted
                 return new Promise<Response>((resolve, reject) => {
                   const xhr = new XMLHttpRequest();
-                  xhr.open('GET', url);
-                  xhr.setRequestHeader('Content-Type', 'application/json');
+                  xhr.open("GET", url);
+                  xhr.setRequestHeader("Content-Type", "application/json");
                   xhr.timeout = options.timeout || 15000;
                   xhr.onload = () => {
                     const response = new Response(xhr.responseText, {
                       status: xhr.status,
                       statusText: xhr.statusText,
-                      headers: new Headers()
+                      headers: new Headers(),
                     });
                     resolve(response);
                   };
-                  xhr.onerror = () => reject(new Error('Network error'));
-                  xhr.ontimeout = () => reject(new Error('Request timeout'));
-                  xhr.onabort = () => reject(new Error('Request aborted'));
+                  xhr.onerror = () => reject(new Error("Network error"));
+                  xhr.ontimeout = () => reject(new Error("Request timeout"));
+                  xhr.onabort = () => reject(new Error("Request aborted"));
                   xhr.send();
                 });
               }
@@ -630,8 +632,8 @@ export default function Jobs() {
             const response = await cleanFetch(endpoint, {
               signal: controller.signal,
               headers: {
-                'Content-Type': 'application/json'
-              }
+                "Content-Type": "application/json",
+              },
             });
 
             if (response.ok) {
@@ -667,19 +669,27 @@ export default function Jobs() {
         console.error("❌ All API calls failed:", error);
 
         // Check for specific error types
-        const errorMessage = error instanceof Error ? error.message : "Failed to load jobs";
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to load jobs";
 
-        if (errorMessage.includes('FullStory') || errorMessage.includes('Failed to fetch')) {
-          setError('Network connectivity issue detected. Try refreshing the page.');
-        } else if (errorMessage.includes('timeout')) {
-          setError('Request timed out. The server may be busy, please try again.');
+        if (
+          errorMessage.includes("FullStory") ||
+          errorMessage.includes("Failed to fetch")
+        ) {
+          setError(
+            "Network connectivity issue detected. Try refreshing the page.",
+          );
+        } else if (errorMessage.includes("timeout")) {
+          setError(
+            "Request timed out. The server may be busy, please try again.",
+          );
         } else {
           setError(errorMessage);
         }
 
         // Try to show cached data as fallback
         if (cacheRef.current.jobs.length > 0) {
-          console.log('📦 Using cached data due to network error');
+          console.log("📦 Using cached data due to network error");
           setJobs(cacheRef.current.jobs);
           setTotalJobs(cacheRef.current.totalJobs);
           setUsingMockData(false);
@@ -1396,211 +1406,214 @@ export default function Jobs() {
                         <Loader2 className="w-6 h-6 animate-spin" />
                         <div>
                           <p>Loading jobs from ServeManager...</p>
-                          <p className="text-sm text-muted-foreground">This may take 10-15 seconds</p>
+                          <p className="text-sm text-muted-foreground">
+                            This may take 10-15 seconds
+                          </p>
                         </div>
                       </div>
                     </TableCell>
                   </TableRow>
                 )}
-                {!loading && filteredAndSortedJobs.map((job) => (
-                  <TableRow
-                    key={job.id}
-                    className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() => navigate(`/jobs/${job.id}`)}
-                  >
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {(() => {
-                            // Safely extract recipient name from various formats
-                            const recipientName =
-                              typeof job.recipient_name === "string"
-                                ? job.recipient_name
-                                : typeof job.defendant_name === "string"
-                                  ? job.defendant_name
-                                  : typeof job.recipient?.name === "string"
-                                    ? job.recipient.name
-                                    : job.recipient?.name?.name ||
-                                      `${job.defendant_first_name || ""} ${job.defendant_last_name || ""}`.trim();
+                {!loading &&
+                  filteredAndSortedJobs.map((job) => (
+                    <TableRow
+                      key={job.id}
+                      className="hover:bg-muted/50 cursor-pointer"
+                      onClick={() => navigate(`/jobs/${job.id}`)}
+                    >
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">
+                            {(() => {
+                              // Safely extract recipient name from various formats
+                              const recipientName =
+                                typeof job.recipient_name === "string"
+                                  ? job.recipient_name
+                                  : typeof job.defendant_name === "string"
+                                    ? job.defendant_name
+                                    : typeof job.recipient?.name === "string"
+                                      ? job.recipient.name
+                                      : job.recipient?.name?.name ||
+                                        `${job.defendant_first_name || ""} ${job.defendant_last_name || ""}`.trim();
 
-                            return recipientName || "Unknown Recipient";
-                          })()}
-                        </p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {(() => {
-                            // Use the same comprehensive address lookup as JobDetail.tsx
-                            const getServiceAddressString = (job: any) => {
-                              // Check all possible address sources in priority order
-                              const possibleAddresses = [
-                                job.service_address,
-                                job.address,
-                                job.defendant_address,
-                                // Check ServeManager addresses_attributes array for primary address
-                                job.addresses_attributes?.find(
-                                  (addr: any) => addr.primary === true,
-                                ),
-                                job.addresses_attributes?.[0], // Fallback to first if no primary
-                                job.raw_data?.addresses_attributes?.find(
-                                  (addr: any) => addr.primary === true,
-                                ),
-                                job.raw_data?.addresses_attributes?.[0],
-                                // Check raw data sources that ServeManager uses
-                                job.raw_data?.addresses?.find(
-                                  (addr: any) => addr.primary === true,
-                                ),
-                                job.raw_data?.addresses?.[0],
-                                (job as any).addresses?.find(
-                                  (addr: any) => addr.primary === true,
-                                ),
-                                (job as any).addresses?.[0],
-                                // Check nested raw data
-                                job.raw_data?.service_address,
-                                job.raw_data?.defendant_address,
-                                job.raw_data?.address,
-                              ];
+                              return recipientName || "Unknown Recipient";
+                            })()}
+                          </p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {(() => {
+                              // Use the same comprehensive address lookup as JobDetail.tsx
+                              const getServiceAddressString = (job: any) => {
+                                // Check all possible address sources in priority order
+                                const possibleAddresses = [
+                                  job.service_address,
+                                  job.address,
+                                  job.defendant_address,
+                                  // Check ServeManager addresses_attributes array for primary address
+                                  job.addresses_attributes?.find(
+                                    (addr: any) => addr.primary === true,
+                                  ),
+                                  job.addresses_attributes?.[0], // Fallback to first if no primary
+                                  job.raw_data?.addresses_attributes?.find(
+                                    (addr: any) => addr.primary === true,
+                                  ),
+                                  job.raw_data?.addresses_attributes?.[0],
+                                  // Check raw data sources that ServeManager uses
+                                  job.raw_data?.addresses?.find(
+                                    (addr: any) => addr.primary === true,
+                                  ),
+                                  job.raw_data?.addresses?.[0],
+                                  (job as any).addresses?.find(
+                                    (addr: any) => addr.primary === true,
+                                  ),
+                                  (job as any).addresses?.[0],
+                                  // Check nested raw data
+                                  job.raw_data?.service_address,
+                                  job.raw_data?.defendant_address,
+                                  job.raw_data?.address,
+                                ];
 
-                              for (const address of possibleAddresses) {
-                                if (!address) continue;
+                                for (const address of possibleAddresses) {
+                                  if (!address) continue;
 
-                                // If address is a string, return it directly
-                                if (
-                                  typeof address === "string" &&
-                                  address.trim()
-                                ) {
-                                  return address.trim();
-                                }
+                                  // If address is a string, return it directly
+                                  if (
+                                    typeof address === "string" &&
+                                    address.trim()
+                                  ) {
+                                    return address.trim();
+                                  }
 
-                                // If address is an object, format it
-                                if (typeof address === "object" && address) {
-                                  // Handle ServeManager addresses_attributes format
-                                  const parts = [
-                                    address.address1 ||
-                                      address.street ||
-                                      address.street1, // ServeManager uses address1
-                                    address.address2 || address.street2,
-                                  ].filter(Boolean);
+                                  // If address is an object, format it
+                                  if (typeof address === "object" && address) {
+                                    // Handle ServeManager addresses_attributes format
+                                    const parts = [
+                                      address.address1 ||
+                                        address.street ||
+                                        address.street1, // ServeManager uses address1
+                                      address.address2 || address.street2,
+                                    ].filter(Boolean);
 
-                                  const street = parts.join(" ");
-                                  const cityState = [
-                                    address.city,
-                                    address.state,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(", ");
-                                  const zip =
-                                    address.zip || address.postal_code;
+                                    const street = parts.join(" ");
+                                    const cityState = [
+                                      address.city,
+                                      address.state,
+                                    ]
+                                      .filter(Boolean)
+                                      .join(", ");
+                                    const zip =
+                                      address.zip || address.postal_code;
 
-                                  const formattedAddress = [
-                                    street,
-                                    cityState,
-                                    zip,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(", ");
+                                    const formattedAddress = [
+                                      street,
+                                      cityState,
+                                      zip,
+                                    ]
+                                      .filter(Boolean)
+                                      .join(", ");
 
-                                  if (formattedAddress.trim()) {
-                                    return formattedAddress;
+                                    if (formattedAddress.trim()) {
+                                      return formattedAddress;
+                                    }
                                   }
                                 }
-                              }
 
-                              return "Address pending";
-                            };
+                                return "Address pending";
+                              };
 
-                            return getServiceAddressString(job);
-                          })()}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {(() => {
-                            // Handle client data safely - extract string values from objects
-                            const clientCompany =
-                              typeof job.client_company === "string"
-                                ? job.client_company
-                                : typeof job.client?.company === "string"
-                                  ? job.client.company
-                                  : job.client?.name?.company ||
-                                    job.client?.name;
-                            const clientName =
-                              typeof job.client_name === "string"
-                                ? job.client_name
-                                : typeof job.client?.name === "string"
-                                  ? job.client.name
-                                  : job.client?.name?.name;
-
-                            return (
-                              clientCompany || clientName || "Unknown Client"
-                            );
-                          })()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {(() => {
-                            // Extract contact name from various formats
-                            const contactName =
-                              typeof job.client_name === "string"
-                                ? job.client_name
-                                : job.client_contact
-                                  ? `${job.client_contact.first_name || ""} ${job.client_contact.last_name || ""}`.trim()
+                              return getServiceAddressString(job);
+                            })()}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">
+                            {(() => {
+                              // Handle client data safely - extract string values from objects
+                              const clientCompany =
+                                typeof job.client_company === "string"
+                                  ? job.client_company
+                                  : typeof job.client?.company === "string"
+                                    ? job.client.company
+                                    : job.client?.name?.company ||
+                                      job.client?.name;
+                              const clientName =
+                                typeof job.client_name === "string"
+                                  ? job.client_name
                                   : typeof job.client?.name === "string"
                                     ? job.client.name
-                                    : job.client?.contact_name;
+                                    : job.client?.name?.name;
 
-                            return contactName || "No contact name";
-                          })()}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getStatusColor(job.status || "pending")}
-                      >
-                        {(job.status || "pending").replace("_", " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={getPriorityColor(job.priority || "medium")}
-                      >
-                        {job.priority || "medium"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {(() => {
-                        // Safely extract server name from various formats
-                        const serverName =
-                          typeof job.server_name === "string"
-                            ? job.server_name
-                            : typeof job.assigned_server === "string"
-                              ? job.assigned_server
-                              : typeof job.server?.name === "string"
-                                ? job.server.name
-                                : job.server?.name?.name;
+                              return (
+                                clientCompany || clientName || "Unknown Client"
+                              );
+                            })()}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {(() => {
+                              // Extract contact name from various formats
+                              const contactName =
+                                typeof job.client_name === "string"
+                                  ? job.client_name
+                                  : job.client_contact
+                                    ? `${job.client_contact.first_name || ""} ${job.client_contact.last_name || ""}`.trim()
+                                    : typeof job.client?.name === "string"
+                                      ? job.client.name
+                                      : job.client?.contact_name;
 
-                        return serverName ? (
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-muted-foreground" />
-                            {serverName}
-                          </div>
-                        ) : (
-                          <Badge variant="secondary">Unassigned</Badge>
-                        );
-                      })()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        {formatReceivedDate(
-                          job.created_at || job.received_date,
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                              return contactName || "No contact name";
+                            })()}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={getStatusColor(job.status || "pending")}
+                        >
+                          {(job.status || "pending").replace("_", " ")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={getPriorityColor(job.priority || "medium")}
+                        >
+                          {job.priority || "medium"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          // Safely extract server name from various formats
+                          const serverName =
+                            typeof job.server_name === "string"
+                              ? job.server_name
+                              : typeof job.assigned_server === "string"
+                                ? job.assigned_server
+                                : typeof job.server?.name === "string"
+                                  ? job.server.name
+                                  : job.server?.name?.name;
+
+                          return serverName ? (
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-muted-foreground" />
+                              {serverName}
+                            </div>
+                          ) : (
+                            <Badge variant="secondary">Unassigned</Badge>
+                          );
+                        })()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          {formatReceivedDate(
+                            job.created_at || job.received_date,
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
 

@@ -88,8 +88,8 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
         // Add timeout and better error handling
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
-        controller.abort(new Error("Request timeout after 30 seconds"));
-      }, 30000); // 30 second timeout for sync operations
+          controller.abort(new Error("Request timeout after 30 seconds"));
+        }, 30000); // 30 second timeout for sync operations
 
         console.log("🔄 Starting auto-sync request...");
 
@@ -100,11 +100,13 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
             const originalFetch = window.fetch;
             return await originalFetch(url, options);
           } catch (error) {
-            console.log('🔄 Native fetch failed, trying XMLHttpRequest fallback');
+            console.log(
+              "🔄 Native fetch failed, trying XMLHttpRequest fallback",
+            );
             // Fallback to XMLHttpRequest if fetch is intercepted
             return new Promise<Response>((resolve, reject) => {
               const xhr = new XMLHttpRequest();
-              xhr.open(options.method || 'GET', url);
+              xhr.open(options.method || "GET", url);
               if (options.headers) {
                 Object.entries(options.headers).forEach(([key, value]) => {
                   xhr.setRequestHeader(key, value as string);
@@ -115,13 +117,13 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
                 const response = new Response(xhr.responseText, {
                   status: xhr.status,
                   statusText: xhr.statusText,
-                  headers: new Headers()
+                  headers: new Headers(),
                 });
                 resolve(response);
               };
-              xhr.onerror = () => reject(new Error('Network error'));
-              xhr.ontimeout = () => reject(new Error('Request timeout'));
-              xhr.onabort = () => reject(new Error('Request aborted'));
+              xhr.onerror = () => reject(new Error("Network error"));
+              xhr.ontimeout = () => reject(new Error("Request timeout"));
+              xhr.onabort = () => reject(new Error("Request aborted"));
               xhr.send(options.body);
             });
           }
@@ -129,10 +131,10 @@ export function useAutoSync(options: UseAutoSyncOptions = {}) {
 
         // Try multiple health check endpoints in order of preference
         const healthEndpoints = [
-        "/api/jobs?limit=1", // Express backend
-        "/api/sync/status", // Sync status check
-        "/api/ping", // Basic ping
-      ];
+          "/api/jobs?limit=1", // Express backend
+          "/api/sync/status", // Sync status check
+          "/api/ping", // Basic ping
+        ];
 
         let healthCheckPassed = false;
 
