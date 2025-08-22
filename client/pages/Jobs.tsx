@@ -689,11 +689,19 @@ export default function Jobs() {
           errorMessage.includes("Failed to fetch")
         ) {
           setError(
-            "Network connectivity issue detected. Try refreshing the page.",
+            "Analytics interference detected. Please refresh the page.",
           );
         } else if (errorMessage.includes("timeout")) {
           setError(
             "Request timed out. The server may be busy, please try again.",
+          );
+        } else if (
+          errorMessage.includes("<!doctype") ||
+          errorMessage.includes("Unexpected token") ||
+          errorMessage.includes("SyntaxError")
+        ) {
+          setError(
+            "Vercel deployment issue: API returning HTML instead of JSON. Check environment variables.",
           );
         } else {
           setError(errorMessage);
